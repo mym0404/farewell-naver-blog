@@ -1,0 +1,8 @@
+{
+  "requiredSnippets": [
+    "editorVersion: 2"
+  ],
+  "forbiddenSnippets": [
+    "이웃추가"
+  ]
+}

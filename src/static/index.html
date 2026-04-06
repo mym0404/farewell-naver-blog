@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Naver Blog Exporter</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <p class="eyebrow">Local Export Workflow</p>
+        <h1>Naver Blog Exporter</h1>
+        <p class="lead">블로그를 먼저 스캔한 뒤 카테고리를 고르고 Markdown 규칙을 세세하게 조정해서 export 합니다.</p>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>1. Scan</h2>
+          <p id="scan-status" class="muted">블로그를 아직 스캔하지 않았습니다.</p>
+        </div>
+
+        <div class="form-grid compact-grid">
+          <label class="field">
+            <span>Blog ID 또는 URL</span>
+            <input id="blogIdOrUrl" placeholder="mym0404 또는 https://blog.naver.com/..." />
+          </label>
+
+          <div class="actions">
+            <button type="button" id="scan-button">Scan Categories</button>
+          </div>
+        </div>
+
+        <div id="scan-summary" class="stats"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>2. Categories</h2>
+          <p id="category-status" class="muted">스캔 후 카테고리를 선택할 수 있습니다.</p>
+        </div>
+
+        <div class="toolbar">
+          <input id="category-search" placeholder="카테고리 검색" disabled />
+          <div class="toolbar-actions">
+            <button type="button" id="select-all-categories" disabled>Select All</button>
+            <button type="button" id="clear-all-categories" disabled>Clear</button>
+          </div>
+        </div>
+
+        <div class="selection-summary">
+          <span id="selected-category-count">선택된 카테고리 0개</span>
+        </div>
+
+        <div id="category-list" class="category-list empty">카테고리를 불러오면 여기에 표시됩니다.</div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>3. Export Options</h2>
+          <p class="muted">출력 구조, frontmatter, 링크/미디어 변환 규칙을 개별 설정합니다.</p>
+        </div>
+
+        <form id="export-form" class="form-stack">
+          <div class="form-grid compact-grid">
+            <label class="field">
+              <span>Output Directory</span>
+              <input id="outputDir" value="./output" required />
+            </label>
+          </div>
+
+          <details class="option-group" open>
+            <summary>Scope</summary>
+            <div class="option-grid">
+              <label class="field">
+                <span>Category Match Mode</span>
+                <select id="scope-categoryMode">
+                  <option value="selected-and-descendants">선택 카테고리 + 하위 카테고리</option>
+                  <option value="exact-selected">선택 카테고리만</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Date From</span>
+                <input id="scope-dateFrom" type="date" />
+              </label>
+
+              <label class="field">
+                <span>Date To</span>
+                <input id="scope-dateTo" type="date" />
+              </label>
+            </div>
+          </details>
+
+          <details class="option-group">
+            <summary>Structure</summary>
+            <div class="option-grid">
+              <label class="check">
+                <input id="structure-cleanOutputDir" type="checkbox" checked />
+                <span>Export 전에 output 디렉터리 재생성</span>
+              </label>
+
+              <label class="field">
+                <span>Post Directory Name</span>
+                <input id="structure-postDirectoryName" value="posts" />
+              </label>
+
+              <label class="field">
+                <span>Asset Directory Name</span>
+                <input id="structure-assetDirectoryName" value="assets" />
+              </label>
+
+              <label class="field">
+                <span>Folder Strategy</span>
+                <select id="structure-folderStrategy">
+                  <option value="category-path">카테고리 폴더 경로 유지</option>
+                  <option value="flat">한 폴더에 평탄화</option>
+                </select>
+              </label>
+
+              <label class="check">
+                <input id="structure-includeDateInFilename" type="checkbox" checked />
+                <span>파일명에 날짜 포함</span>
+              </label>
+
+              <label class="check">
+                <input id="structure-includeLogNoInFilename" type="checkbox" checked />
+                <span>파일명에 logNo 포함</span>
+              </label>
+
+              <label class="field">
+                <span>Slug Style</span>
+                <select id="structure-slugStyle">
+                  <option value="kebab">kebab-case</option>
+                  <option value="keep-title">원본 제목 유지</option>
+                </select>
+              </label>
+            </div>
+          </details>
+
+          <details class="option-group">
+            <summary>Frontmatter</summary>
+            <div class="option-grid">
+              <label class="check">
+                <input id="frontmatter-enabled" type="checkbox" checked />
+                <span>Frontmatter 사용</span>
+              </label>
+            </div>
+            <div id="frontmatter-fields" class="checkbox-grid"></div>
+          </details>
+
+          <details class="option-group">
+            <summary>Markdown Rules</summary>
+            <div class="option-grid">
+              <label class="field">
+                <span>Link Style</span>
+                <select id="markdown-linkStyle">
+                  <option value="inlined">inline links</option>
+                  <option value="referenced">reference links</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Link Card Style</span>
+                <select id="markdown-linkCardStyle">
+                  <option value="inline">inline link + description</option>
+                  <option value="quote">blockquote card</option>
+                  <option value="html">HTML card</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Formula Style</span>
+                <select id="markdown-formulaStyle">
+                  <option value="double-dollar">$$ fenced math</option>
+                  <option value="math-fence">```math fence</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Table Style</span>
+                <select id="markdown-tableStyle">
+                  <option value="gfm-or-html">GFM 우선, 복잡한 표는 HTML</option>
+                  <option value="html-only">항상 HTML table</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Video Style</span>
+                <select id="markdown-videoStyle">
+                  <option value="thumbnail-link">썸네일 + 원문 링크</option>
+                  <option value="link-only">링크만</option>
+                  <option value="html">HTML figure</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Image Style</span>
+                <select id="markdown-imageStyle">
+                  <option value="markdown-image">일반 Markdown 이미지</option>
+                  <option value="linked-image">이미지를 원본 링크로 감싸기</option>
+                  <option value="source-only">링크만 남기기</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Image Group Style</span>
+                <select id="markdown-imageGroupStyle">
+                  <option value="split-images">개별 이미지로 분해</option>
+                  <option value="html">HTML 그룹</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Raw HTML Policy</span>
+                <select id="markdown-rawHtmlPolicy">
+                  <option value="keep">보존</option>
+                  <option value="omit">생략</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Divider Style</span>
+                <select id="markdown-dividerStyle">
+                  <option value="dash">---</option>
+                  <option value="asterisk">***</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Code Fence Style</span>
+                <select id="markdown-codeFenceStyle">
+                  <option value="backtick">```</option>
+                  <option value="tilde">~~~</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Heading Level Offset</span>
+                <input id="markdown-headingLevelOffset" type="number" min="-2" max="3" value="0" />
+              </label>
+            </div>
+          </details>
+
+          <details class="option-group">
+            <summary>Assets</summary>
+            <div class="option-grid">
+              <label class="field">
+                <span>Asset Path Mode</span>
+                <select id="assets-assetPathMode">
+                  <option value="relative">로컬 상대경로</option>
+                  <option value="remote">원격 URL 유지</option>
+                </select>
+              </label>
+
+              <label class="check">
+                <input id="assets-downloadImages" type="checkbox" checked />
+                <span>본문 이미지 다운로드</span>
+              </label>
+
+              <label class="check">
+                <input id="assets-downloadThumbnails" type="checkbox" checked />
+                <span>썸네일 다운로드</span>
+              </label>
+
+              <label class="check">
+                <input id="assets-includeImageCaptions" type="checkbox" checked />
+                <span>이미지 캡션 포함</span>
+              </label>
+
+              <label class="field">
+                <span>Thumbnail Source</span>
+                <select id="assets-thumbnailSource">
+                  <option value="post-list-first">post-list 썸네일 우선</option>
+                  <option value="first-body-image">본문 첫 미디어 우선</option>
+                  <option value="none">thumbnail 제외</option>
+                </select>
+              </label>
+            </div>
+          </details>
+
+          <div class="actions">
+            <button type="submit" id="export-button" disabled>Export Selected Categories</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel status-panel">
+        <div class="panel-header">
+          <h2>4. Job Status</h2>
+          <p id="status-text" class="muted">Idle</p>
+        </div>
+        <div id="summary" class="stats"></div>
+        <pre id="logs" class="logs"></pre>
+      </section>
+    </main>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+  </html>

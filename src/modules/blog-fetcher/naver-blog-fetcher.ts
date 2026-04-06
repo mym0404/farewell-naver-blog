@@ -1,0 +1,284 @@
+import path from "node:path"
+import { writeFile } from "node:fs/promises"
+
+import {
+  type CategoryInfo,
+  type EditorVersion,
+  type PostSummary,
+  type ScanResult,
+} from "../../shared/types.js"
+import {
+  delay,
+  ensureDir,
+  getSourceUrl,
+  mapConcurrent,
+  normalizeAssetUrl,
+  sanitizeCategoryName,
+  toKstDateTime,
+} from "../../shared/utils.js"
+
+type CategoryApiItem = {
+  categoryName: string
+  categoryNo: number
+  parentCategoryNo: number | null
+  postCnt: number
+  divisionLine: boolean
+  openYN: boolean
+}
+
+type PostApiItem = {
+  logNo: number
+  titleWithInspectMessage: string
+  addDate: number
+  categoryNo: number
+  categoryName: string
+  smartEditorVersion: number | null
+  thumbnailUrl: string | null
+  notOpen: boolean
+  postBlocked: boolean
+  buddyOpen: boolean
+  bothBuddyOpen: boolean
+}
+
+const pageSize = 30
+const postListConcurrency = 3
+
+const browserHeaders = ({
+  blogId,
+  refererPath = `/PostList.naver?blogId=${blogId}&categoryNo=0&listStyle=style1`,
+}: {
+  blogId: string
+  refererPath?: string
+}) => ({
+  accept: "application/json, text/plain, */*",
+  origin: "https://m.blog.naver.com",
+  referer: `https://m.blog.naver.com${refererPath}`,
+  "user-agent":
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
+  "x-requested-with": "XMLHttpRequest",
+  "sec-fetch-site": "same-origin",
+  "sec-fetch-mode": "cors",
+  "sec-fetch-dest": "empty",
+})
+
+const detectEditorVersion = (value: number | null): EditorVersion | null => {
+  if (value === 2 || value === 3 || value === 4) {
+    return value
+  }
+
+  return null
+}
+
+export class NaverBlogFetcher {
+  readonly blogId: string
+  readonly onLog: ((message: string) => void) | null
+
+  constructor({
+    blogId,
+    onLog,
+  }: {
+    blogId: string
+    onLog?: (message: string) => void
+  }) {
+    this.blogId = blogId
+    this.onLog = onLog ?? null
+  }
+
+  async getPostCount() {
+    const result = await this.fetchJson<{ postCount: number }>({
+      url: `https://m.blog.naver.com/api/blogs/${this.blogId}/contents-count`,
+    })
+
+    return result.postCount
+  }
+
+  async getCategories() {
+    const result = await this.fetchJson<{
+      mylogCategoryList: CategoryApiItem[]
+    }>({
+      url: `https://m.blog.naver.com/api/blogs/${this.blogId}/category-list`,
+    })
+
+    const categories = result.mylogCategoryList.map((category) => ({
+      id: category.categoryNo,
+      name: sanitizeCategoryName(category.categoryName),
+      parentId: category.parentCategoryNo,
+      postCount: category.postCnt,
+      isDivider: category.divisionLine,
+      isOpen: category.openYN,
+      path: [] as string[],
+    }))
+
+    const categoryMap = new Map(categories.map((category) => [category.id, category]))
+
+    const resolvePath = (categoryId: number): string[] => {
+      const category = categoryMap.get(categoryId)
+
+      if (!category || category.isDivider) {
+        return []
+      }
+
+      const parentPath = category.parentId ? resolvePath(category.parentId) : []
+
+      return [...parentPath, category.name]
+    }
+
+    return categories
+      .filter((category) => !category.isDivider && category.isOpen)
+      .map((category) => ({
+        ...category,
+        path: resolvePath(category.id),
+        depth: Math.max(resolvePath(category.id).length - 1, 0),
+      })) satisfies CategoryInfo[]
+  }
+
+  async scanBlog() {
+    const [totalPostCount, categories] = await Promise.all([
+      this.getPostCount(),
+      this.getCategories(),
+    ])
+
+    return {
+      blogId: this.blogId,
+      totalPostCount,
+      categories,
+    } satisfies ScanResult
+  }
+
+  async getAllPosts({
+    expectedTotal,
+  }: {
+    expectedTotal?: number
+  } = {}) {
+    const resolvedExpectedTotal = expectedTotal ?? (await this.getPostCount())
+    const totalPages = Math.max(1, Math.ceil(resolvedExpectedTotal / pageSize))
+    const pageNumbers = Array.from({ length: totalPages }, (_, index) => index + 1)
+    const pageResults = await mapConcurrent({
+      items: pageNumbers,
+      concurrency: postListConcurrency,
+      mapper: async (page) => {
+        const result = await this.fetchJson<{
+          items: PostApiItem[]
+        }>({
+          url: `https://m.blog.naver.com/api/blogs/${this.blogId}/post-list?page=${page}&itemCount=${pageSize}&categoryNo=0`,
+        })
+        const pageItems = result.items
+          .filter((item) => !item.notOpen && !item.postBlocked && !item.buddyOpen && !item.bothBuddyOpen)
+          .map((item) => ({
+            blogId: this.blogId,
+            logNo: String(item.logNo),
+            title: item.titleWithInspectMessage.trim(),
+            publishedAt: toKstDateTime(item.addDate),
+            categoryId: item.categoryNo,
+            categoryName: sanitizeCategoryName(item.categoryName),
+            source: getSourceUrl({ blogId: this.blogId, logNo: String(item.logNo) }),
+            editorVersion: detectEditorVersion(item.smartEditorVersion),
+            thumbnailUrl: item.thumbnailUrl ? normalizeAssetUrl(item.thumbnailUrl) : null,
+          }))
+
+        this.log(`목록 수집 ${page}페이지 완료`)
+
+        return {
+          page,
+          items: pageItems,
+        }
+      },
+    })
+
+    return pageResults
+      .sort((left, right) => left.page - right.page)
+      .flatMap((pageResult) => pageResult.items)
+  }
+
+  async fetchPostHtml(logNo: string) {
+    const response = await fetch(
+      `https://m.blog.naver.com/PostView.naver?blogId=${this.blogId}&logNo=${logNo}`,
+      {
+        headers: {
+          accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          referer: `https://m.blog.naver.com/PostList.naver?blogId=${this.blogId}&categoryNo=0&listStyle=style1`,
+          "user-agent":
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
+        },
+      },
+    )
+
+    if (!response.ok) {
+      throw new Error(`글 HTML 요청 실패: ${response.status} ${response.statusText}`)
+    }
+
+    return response.text()
+  }
+
+  async downloadBinary({
+    sourceUrl,
+    destinationPath,
+  }: {
+    sourceUrl: string
+    destinationPath: string
+  }) {
+    const normalizedSourceUrl = normalizeAssetUrl(sourceUrl)
+    const response = await fetch(normalizedSourceUrl, {
+      headers: {
+        referer: "https://blog.naver.com/",
+        "user-agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error(`자산 다운로드 실패: ${response.status} ${response.statusText}`)
+    }
+
+    const arrayBuffer = await response.arrayBuffer()
+    await ensureDir(path.dirname(destinationPath))
+    await writeFile(destinationPath, Buffer.from(arrayBuffer))
+  }
+
+  private async fetchJson<Result>({
+    url,
+  }: {
+    url: string
+  }): Promise<Result> {
+    const retryDelays = [0, 1_000, 2_000, 4_000]
+    let lastError: Error | null = null
+
+    for (const retryDelay of retryDelays) {
+      if (retryDelay > 0) {
+        await delay(retryDelay)
+      }
+
+      const response = await fetch(url, {
+        headers: browserHeaders({ blogId: this.blogId }),
+      })
+
+      if (!response.ok) {
+        lastError = new Error(`API 요청 실패: ${response.status} ${response.statusText}`)
+
+        if (response.status === 429 || response.status >= 500) {
+          continue
+        }
+
+        throw lastError
+      }
+
+      const payload = (await response.json()) as {
+        isSuccess?: boolean
+        result?: Result
+      }
+
+      if (!payload.result) {
+        lastError = new Error("API 응답에 result가 없습니다.")
+        continue
+      }
+
+      return payload.result
+    }
+
+    throw lastError ?? new Error("API 요청에 실패했습니다.")
+  }
+
+  private log(message: string) {
+    this.onLog?.(message)
+  }
+}

@@ -1,0 +1,58 @@
+import type { SampleCorpusEntry } from "./types.js"
+
+export const sampleCorpus: SampleCorpusEntry[] = [
+  {
+    id: "se4-video-table",
+    blogId: "mym0404",
+    logNo: "221302086471",
+    editorVersion: 4,
+    expectedBlockTypes: ["image", "video", "table"],
+    description: "오래된 SE4 글에서 video, table, image 블록을 검증한다.",
+    notes: ["동영상 썸네일과 표 fallback이 아닌 구조화 파싱을 확인한다."],
+  },
+  {
+    id: "se4-formula-code-linkcard",
+    blogId: "mym0404",
+    logNo: "223034929697",
+    editorVersion: 4,
+    expectedBlockTypes: ["linkCard", "image", "divider", "paragraph", "formula", "code"],
+    description: "수식, 코드, 링크 카드와 본문/구분선을 함께 검증한다.",
+    notes: ["Markdown 렌더링에서 수식과 fenced code block이 유지되어야 한다."],
+  },
+  {
+    id: "se4-image-group",
+    blogId: "mym0404",
+    logNo: "224056819985",
+    editorVersion: 4,
+    expectedBlockTypes: ["paragraph", "divider", "imageGroup"],
+    description: "imageGroup 블록과 문단, 구분선 조합을 검증한다.",
+    notes: ["기본 정책은 이미지 그룹을 개별 이미지 나열로 렌더링한다."],
+  },
+  {
+    id: "se4-quote-formula-code",
+    blogId: "mym0404",
+    logNo: "222619228134",
+    editorVersion: 4,
+    expectedBlockTypes: ["linkCard", "image", "divider", "paragraph", "quote", "formula", "code"],
+    description: "인용문과 수식, 코드가 섞인 SE4 글을 검증한다.",
+    notes: ["quote 블록과 formula/code를 동시에 검증하는 대표 샘플이다."],
+  },
+  {
+    id: "se2-legacy",
+    blogId: "mym0404",
+    logNo: "220496669802",
+    editorVersion: 2,
+    expectedBlockTypes: ["paragraph"],
+    description: "SE2 raw HTML 본문을 paragraph 중심으로 변환하는지 검증한다.",
+    notes: ["구형 에디터 글의 기본 경로를 유지한다."],
+  },
+  {
+    id: "se3-legacy",
+    blogId: "mym0404",
+    logNo: "221236891086",
+    editorVersion: 3,
+    expectedBlockTypes: ["paragraph"],
+    description: "SE3 글 파싱과 chrome 텍스트 제거를 검증한다.",
+    notes: ["블로그 chrome 누수 없이 본문만 남아야 한다."],
+  },
+]
