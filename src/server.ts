@@ -4,5 +4,5 @@ const port = Number(process.env.PORT ?? "4173")
 const server = createHttpServer()
 
 server.listen(port, () => {
-  console.log(`Naver Blog Exporter running at http://localhost:${port}`)
+  console.log(`Goodbye Naver Blog running at http://localhost:${port}`)
 })

@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 
-import { fireEvent, render, screen } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { userEvent } from "@testing-library/user-event"
-import { describe, expect, it, vi } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
 import "@testing-library/jest-dom/vitest"
 
@@ -14,6 +14,10 @@ import {
 } from "../../src/shared/export-options.js"
 import type { ExportOptions } from "../../src/shared/types.js"
 import { ExportOptionsPanel } from "../../src/ui/features/options/export-options-panel.js"
+
+afterEach(() => {
+  cleanup()
+})
 
 const query = <T extends HTMLElement>(selector: string) => {
   const element = document.querySelector(selector)
@@ -86,6 +90,7 @@ describe("ExportOptionsPanel", () => {
     await user.click(query<HTMLInputElement>("#structure-includeLogNoInFilename"))
     await user.selectOptions(query<HTMLSelectElement>("#structure-slugStyle"), "keep-title")
 
+    await user.click(screen.getByRole("tab", { name: "Frontmatter" }))
     await user.click(query<HTMLInputElement>("#frontmatter-enabled"))
     await user.click(query<HTMLInputElement>('[data-frontmatter-field="title"] input[type="checkbox"]'))
     fireEvent.change(query<HTMLInputElement>('[data-frontmatter-field="title"] [data-alias-input="true"]'), {
@@ -175,7 +180,9 @@ describe("ExportOptionsPanel", () => {
     expect(latestOptions.assets.thumbnailSource).toBe("none")
   })
 
-  it("uses segmented tabs and a multi-column frontmatter grid", () => {
+  it("uses segmented tabs and a multi-column frontmatter grid", async () => {
+    const user = userEvent.setup()
+
     render(
       <ExportOptionsPanel
         outputDir="./output"
@@ -189,8 +196,38 @@ describe("ExportOptionsPanel", () => {
       />,
     )
 
-    expect(query<HTMLElement>(".option-tabs-list").className).toContain("sm:grid-cols-4")
+    expect(query<HTMLElement>(".option-tabs-list").className).toContain("sm:grid-cols-5")
+    await user.click(screen.getByRole("tab", { name: "Frontmatter" }))
     expect(query<HTMLElement>("#frontmatter-fields").className).toContain("md:grid-cols-2")
     expect(query<HTMLElement>("#frontmatter-fields").className).toContain("2xl:grid-cols-3")
+  })
+
+  it("disables path and download asset options in base64 embedding mode", async () => {
+    const user = userEvent.setup()
+    const options = defaultExportOptions()
+
+    options.assets.imageContentMode = "base64"
+
+    render(
+      <ExportOptionsPanel
+        outputDir="./output"
+        options={options}
+        optionDescriptions={optionDescriptions}
+        frontmatterFieldOrder={frontmatterFieldOrder}
+        frontmatterFieldMeta={frontmatterFieldMeta}
+        frontmatterValidationErrors={[]}
+        onOutputDirChange={vi.fn()}
+        onOptionsChange={vi.fn()}
+      />,
+    )
+
+    await user.click(screen.getByRole("tab", { name: "Assets" }))
+
+    expect(query<HTMLSelectElement>("#assets-assetPathMode")).toBeDisabled()
+    expect(query<HTMLInputElement>("#assets-downloadImages")).toBeDisabled()
+    expect(query<HTMLInputElement>("#assets-downloadThumbnails")).toBeDisabled()
+    expect(query<HTMLSelectElement>("#assets-stickerAssetMode")).not.toBeDisabled()
+    expect(query<HTMLInputElement>("#assets-includeImageCaptions")).not.toBeDisabled()
+    expect(query<HTMLSelectElement>("#assets-thumbnailSource")).not.toBeDisabled()
   })
 })

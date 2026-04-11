@@ -68,6 +68,8 @@ pnpm install
 pnpm start
 ```
 
+또는 같은 동작으로 `pnpm dev`를 사용할 수 있습니다.
+
 브라우저에서 `http://localhost:4173`을 열면 로컬 UI가 뜹니다.
 
 ## 사용 방법

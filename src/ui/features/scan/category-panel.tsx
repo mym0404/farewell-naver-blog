@@ -12,6 +12,14 @@ import {
 import { Checkbox } from "../../components/ui/checkbox.js"
 import { Input } from "../../components/ui/input.js"
 import { ScrollArea } from "../../components/ui/scroll-area.js"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../../components/ui/table.js"
 
 export const CategoryPanel = ({
   scanResult,
@@ -129,52 +137,52 @@ export const CategoryPanel = ({
         ) : (
           <div id="category-list" className="category-list overflow-hidden rounded-2xl border border-slate-200 bg-white">
             <ScrollArea className="h-[min(28rem,52vh)] overflow-hidden">
-              <table className="w-full min-w-[42rem] border-collapse text-left">
-                <thead className="sticky top-0 z-10 bg-slate-50/95 backdrop-blur">
-                  <tr className="border-b border-slate-200">
-                    <th className="w-16 px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">선택</th>
-                    <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">카테고리</th>
-                    <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">경로</th>
-                    <th className="w-24 px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">깊이</th>
-                    <th className="w-24 px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">글 수</th>
-                  </tr>
-                </thead>
-                <tbody>
+              <Table className="min-w-[42rem]">
+                <TableHeader className="sticky top-0 z-10">
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="w-14">선택</TableHead>
+                    <TableHead>카테고리</TableHead>
+                    <TableHead>경로</TableHead>
+                    <TableHead className="w-20">깊이</TableHead>
+                    <TableHead className="w-24">글 수</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {filteredCategories.map((category) => {
                     const checked = selectedCategoryIds.includes(category.id)
                     const categoryPath = category.path.join(" / ")
 
                     return (
-                      <tr
+                      <TableRow
                         key={category.id}
-                        className="category-item border-b border-slate-200 last:border-b-0 transition hover:bg-slate-50/80"
+                        className="category-item last:border-b-0"
                         data-category-id={category.id}
                       >
-                        <td className="px-4 py-3 align-middle">
+                        <TableCell className="w-14">
                           <Checkbox
                             checked={checked}
                             aria-label={categoryPath}
                             onCheckedChange={(next) => onCategoryToggle(category.id, next === true)}
                           />
-                        </td>
-                        <td className="px-4 py-3 align-middle">
-                          <div className="grid gap-1">
+                        </TableCell>
+                        <TableCell>
+                          <div className="grid gap-0.5">
                             <span className="font-semibold text-slate-900">{category.name}</span>
                             <span className="text-sm text-slate-500">{categoryPath}</span>
                           </div>
-                        </td>
-                        <td className="px-4 py-3 align-middle text-sm text-slate-600">{categoryPath}</td>
-                        <td className="px-4 py-3 align-middle text-sm font-medium text-slate-700">{category.depth}</td>
-                        <td className="px-4 py-3 align-middle">
-                          <Badge className="category-count min-w-10 justify-center rounded-full border-slate-300 px-3 py-1" variant="outline">
+                        </TableCell>
+                        <TableCell className="text-slate-600">{categoryPath}</TableCell>
+                        <TableCell className="text-sm font-medium text-slate-700">{category.depth}</TableCell>
+                        <TableCell>
+                          <Badge className="category-count min-w-10 justify-center rounded-full border-slate-300 px-2.5 py-0.5" variant="outline">
                             {category.postCount}
                           </Badge>
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     )
                   })}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </ScrollArea>
           </div>
         )}

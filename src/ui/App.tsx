@@ -510,7 +510,7 @@ export const App = () => {
       <aside className="app-sidebar hidden xl:sticky xl:top-0 xl:block xl:h-screen xl:min-w-0" aria-label="Dashboard sections">
         <div className="app-sidebar-shell grid h-screen content-start gap-4 overflow-x-hidden overflow-y-auto border-r border-white/10 bg-[#1f3045] [background-image:linear-gradient(180deg,rgba(255,255,255,0.05),transparent),linear-gradient(180deg,var(--sidebar-background),#182637)] p-5 text-slate-50 shadow-[16px_0_32px_rgba(11,22,36,0.16)]">
           <div className="sidebar-brand">
-            <strong className="text-lg font-semibold tracking-[-0.03em] text-white">Naver Blog Exporter</strong>
+            <strong className="text-lg font-semibold tracking-[-0.03em] text-white">Goodbye Naver Blog</strong>
           </div>
 
           <Separator className="sidebar-separator bg-white/10" />

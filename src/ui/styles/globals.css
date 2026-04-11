@@ -66,6 +66,21 @@ select {
   font: inherit;
 }
 
+button:not(:disabled),
+select:not(:disabled),
+a[href],
+summary,
+label[for],
+[role="button"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+
+button:disabled,
+select:disabled,
+[role="button"][aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
 a {
   color: inherit;
   text-decoration: none;

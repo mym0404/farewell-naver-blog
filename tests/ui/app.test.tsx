@@ -173,10 +173,11 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "카테고리 스캔" }))
 
     await screen.findByText("mym0404 스캔 완료")
-    expect(await screen.findByText("글 제목을 기록합니다.")).toBeInTheDocument()
     expect(document.querySelector("#scan-button")?.closest("#scan-workbench")).not.toBeNull()
     expect(document.querySelector("#export-button")?.closest(".app-sidebar")).not.toBeNull()
 
+    await user.click(screen.getByRole("tab", { name: "Frontmatter" }))
+    expect(await screen.findByText("글 제목을 기록합니다.")).toBeInTheDocument()
     const titleAliasInput = screen.getByPlaceholderText("title")
     const sourceAliasInput = screen.getByPlaceholderText("source")
     await user.type(titleAliasInput, "shared")
@@ -232,6 +233,8 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "전체" }))
     const item = screen.getByRole("button", { name: /test\.md/ })
     await user.click(item)
+    expect(document.querySelector("#job-file-tree table")).not.toBeNull()
+    expect(document.querySelector("#category-list table")).not.toBeNull()
 
     const modal = screen.getByRole("dialog", { name: "결과 미리보기" })
     expect(within(modal).getByText("결과 미리보기")).toBeInTheDocument()

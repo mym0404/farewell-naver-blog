@@ -5,6 +5,7 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 
 ## Source Of Truth
 - 구조와 상태 흐름: `src/ui/App.tsx`
+- 브라우저 메타와 favicon: `index.html`, `src/ui/assets/favicon.svg`
 - semantic token: `src/ui/styles/globals.css`
 - 화면 표현과 반응형 레이아웃: `src/ui/**/*.tsx`의 Tailwind utility class
 - Markdown renderer: `src/ui/lib/markdown.tsx`
@@ -12,6 +13,8 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 
 ## 관련 코드
 - [../../../src/ui/App.tsx](../../../src/ui/App.tsx)
+- [../../../index.html](../../../index.html)
+- [../../../src/ui/assets/favicon.svg](../../../src/ui/assets/favicon.svg)
 - [../../../src/ui/styles/globals.css](../../../src/ui/styles/globals.css)
 - [../../../src/ui/features/options/export-options-panel.tsx](../../../src/ui/features/options/export-options-panel.tsx)
 - [../../../src/ui/features/preview/preview-panel.tsx](../../../src/ui/features/preview/preview-panel.tsx)
@@ -28,6 +31,7 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 - 메인 캔버스는 밝은 blue-neutral surface, 좌측은 deep navy sidebar를 사용한다.
 - Blog ID 입력과 카테고리 스캔 액션은 본문 첫 카드 상단에 둔다.
 - 카테고리 패널은 카드 나열 대신 고정 높이 scroll area 안의 표로 유지한다.
+- 앱의 관리용 표는 compact row density를 기본으로 하고, 파일/상태 확인도 카드 리스트보다 표를 우선한다.
 - 상단 hero card, KPI strip, 3개 workbench board를 같은 shadcn card hierarchy 안에 둔다.
 - preview, options, status는 각각 독립 board지만 spacing, border, shadow rhythm을 공유한다.
 - layout은 desktop에서 `sidebar + fluid main`, mobile에서는 single-column stack으로 접힌다.
@@ -52,15 +56,17 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 - `CardHeader/CardDescription/CardContent`를 기본 계층으로 사용한다. 큰 feature도 임의 wrapper 대신 card composition으로 쪼갠다.
 - 헤더 카피는 짧게 유지하고, `Stage`, `Command Rail` 같은 장식성 라벨은 두지 않는다.
 - 텍스트 입력은 `Input`, 상태 pill과 count는 `Badge`, 오류/가이드 배너는 `Alert`, 탭 그룹은 `Tabs`, modal은 `Dialog`를 우선한다.
+- 앱 표는 `src/ui/components/ui/table.tsx` 공용 컴포넌트를 사용하고, header/cell padding은 compact 기본값을 유지한다.
 - feature 전용 화면 스타일은 별도 CSS 파일 대신 각 컴포넌트의 Tailwind utility class로 유지한다.
 - `globals.css`는 토큰, base element reset, native `select` 기본 스타일만 담당한다.
 - 바깥 frame spacing은 CSS 파일이 아니라 `App.tsx` 셸 utility에서만 제어한다.
 - category/search/output/preview/status의 DOM hook은 유지한다.
   `#blogIdOrUrl`, `#scan-button`, `#preview-button`, `#export-button`, `#job-file-tree`, `#markdown-modal`, `[data-preview-mode]`, `[data-job-filter]`, `#summary`, `#status-text`, `#logs`
-- option panel은 `Tabs`로 `범위 / 구조 / Markdown / Assets`를 구분한다.
-- 설정 탭 4개는 상단 전체 폭을 쓰는 segmented control로 유지한다.
+- option panel은 `Tabs`로 `범위 / 구조 / Frontmatter / Markdown / Assets`를 구분한다.
+- 설정 탭 5개는 상단 전체 폭을 쓰는 segmented control로 유지한다.
 - 탭 active 상태는 떠 보이는 흰 pill 하나만 남기고, underline이나 과한 shadow를 겹치지 않는다.
 - frontmatter 필드 목록은 데스크톱에서 2~3열 grid로 보여 주고, 각 필드 안에서 토글/설명/alias 입력을 함께 묶는다.
+- `Assets`에서 `Image Content Mode`가 `base64`면 `Asset Path Mode`, `본문 이미지 다운로드`, `썸네일 다운로드`는 비활성화한다.
 - preview는 floating segmented toggle로 `소스보기 / 같이보기 / 결과보기`를 유지한다.
 - preview는 `source`와 `rendered` 단일 모드에서 항상 1열 full-width pane을 쓰고, `split`에서만 2열로 나눈다.
 - preview source `pre`와 rendered article은 같은 내부 padding rhythm을 유지한다.
@@ -68,6 +74,7 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 
 ## Icon Rules
 - 프로젝트 아이콘은 Remix icon만 사용한다.
+- favicon은 `ri-file-transfer-fill` 기반 SVG를 사용한다.
 - 허용 위치는 `네비게이션 보조 / 상태 / 파일 / 액션`이다.
 - 상단 브랜드 장식 아이콘은 금지한다.
 - 텍스트만으로 충분한 곳에는 아이콘을 억지로 추가하지 않는다.
@@ -84,7 +91,7 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 - 현재 contrast gate 대상에는 category status, preview status, panel description, field help, frontmatter description, results description, file meta, modal meta, markdown frontmatter key, sidebar brand/nav/summary/action text가 포함된다.
 - smoke screenshot capture는 `docs/generated/ui-review/round-01`부터 `round-05`까지 동일 시나리오로 누적한다.
 - smoke는 desktop/mobile 모두 viewport horizontal overflow와 flush shell 정렬도 같이 검사한다.
-- smoke는 desktop options 탭이 4열 grid인지, frontmatter 필드가 다열 grid로 접히는지도 같이 검사한다.
+- smoke는 desktop options 탭이 5열 grid인지, frontmatter 필드가 다열 grid로 접히는지도 같이 검사한다.
 - smoke는 preview `source / rendered / split` 세 모드의 width와 내부 padding 일관성도 같이 검사한다.
 - contrast gate는 translucent sidebar card까지 ancestor background를 합성해서 계산한다.
 

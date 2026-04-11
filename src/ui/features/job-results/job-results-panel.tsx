@@ -18,6 +18,14 @@ import {
 } from "../../components/ui/dialog.js"
 import { ScrollArea } from "../../components/ui/scroll-area.js"
 import { Separator } from "../../components/ui/separator.js"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../../components/ui/table.js"
 import { MarkdownDocument } from "../../lib/markdown.js"
 import { cn } from "../../lib/cn.js"
 
@@ -106,15 +114,6 @@ export const JobResultsPanel = ({
     return true
   })
 
-  const groupedItems = jobItems.reduce<Map<string, ExportJobItem[]>>((groups, item) => {
-    const groupKey = item.outputPath?.split("/").slice(0, -1).join(" / ") || "failed"
-    const items = groups.get(groupKey) ?? []
-
-    items.push(item)
-    groups.set(groupKey, items)
-    return groups
-  }, new Map())
-
   return (
     <>
       <Card
@@ -160,7 +159,7 @@ export const JobResultsPanel = ({
                 </div>
               </div>
 
-              {groupedItems.size === 0 ? (
+              {jobItems.length === 0 ? (
                 <div
                   id="job-file-tree"
                   className="job-file-tree empty grid min-h-28 place-items-center rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-6 text-center text-sm text-slate-500"
@@ -174,71 +173,69 @@ export const JobResultsPanel = ({
                   id="job-file-tree"
                   className="job-file-tree job-file-tree-scroll h-[min(32rem,62vh)] overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white"
                 >
-                  <div className="job-file-tree-content grid gap-3 p-3">
-                    {Array.from(groupedItems.entries()).map(([groupKey, items]) => (
-                      <section key={groupKey} className="job-tree-group grid gap-3">
-                        <header className="job-tree-group-header flex items-center justify-between gap-3">
-                          <span className="text-sm font-semibold text-slate-500">{groupKey}</span>
-                          <Badge variant="outline" className="rounded-full border-slate-300 px-3 py-1">
-                            {items.length}
-                          </Badge>
-                        </header>
-                        <div className="job-tree-group-body grid gap-2">
-                          {items.map((item) => {
-                            const severity = buildJobItemSeverity(item)
-                            const fileLabel = item.outputPath?.split("/").pop() ?? `${item.logNo}.diagnostics`
-                            const meta = severityMeta[severity]
+                  <Table className="min-w-[58rem]">
+                    <TableHeader className="sticky top-0 z-10">
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead className="w-[26rem]">파일</TableHead>
+                        <TableHead>경로</TableHead>
+                        <TableHead className="w-28">상태</TableHead>
+                        <TableHead className="w-20">경고</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {jobItems.map((item) => {
+                        const severity = buildJobItemSeverity(item)
+                        const fileLabel = item.outputPath?.split("/").pop() ?? `${item.logNo}.diagnostics`
+                        const groupKey = item.outputPath?.split("/").slice(0, -1).join(" / ") || "failed"
+                        const meta = severityMeta[severity]
 
-                            return (
-                              <button
-                                key={item.id}
+                        return (
+                          <TableRow
+                            key={item.id}
+                            className={cn(
+                              "last:border-b-0",
+                              severity === "warning" ? "bg-amber-50/20" : severity === "error" ? "bg-rose-50/20" : "",
+                            )}
+                            data-severity={severity}
+                          >
+                            <TableCell className="min-w-0">
+                              <Button
                                 type="button"
-                                className={cn(
-                                  "job-tree-item flex w-full flex-col gap-3 rounded-2xl border bg-white px-4 py-4 text-left transition hover:-translate-y-0.5 hover:shadow-[0_16px_36px_rgba(22,33,50,0.08)] sm:flex-row sm:items-center sm:justify-between",
-                                  severity === "warning"
-                                    ? "border-amber-200 hover:border-amber-300"
-                                    : severity === "error"
-                                      ? "border-rose-200 hover:border-rose-300"
-                                      : "border-slate-200 hover:border-primary/40",
-                                )}
+                                variant="ghost"
+                                size="sm"
+                                className="job-results-row inline-flex h-auto min-h-0 w-full items-start justify-start rounded-xl px-2 py-1.5 text-left hover:bg-slate-100"
                                 data-job-item-id={item.id}
                                 data-severity={severity}
                                 onClick={() => onItemSelect(item)}
                               >
-                                <span className="job-tree-item-main flex min-w-0 flex-1 items-start gap-3 sm:items-center">
-                                  <span
-                                    className={cn(
-                                      "job-tree-item-icon inline-flex size-10 items-center justify-center rounded-2xl",
-                                      severity === "warning"
-                                        ? "bg-amber-100 text-amber-700"
-                                        : severity === "error"
-                                          ? "bg-rose-100 text-rose-700"
-                                          : "bg-slate-100 text-slate-700",
-                                    )}
-                                    aria-hidden="true"
-                                  >
-                                    <i className={meta.iconClass} />
-                                  </span>
-                                  <span className="job-tree-item-copy grid min-w-0 gap-1">
-                                    <strong className="truncate text-base font-semibold tracking-[-0.03em] text-slate-900">
-                                      {fileLabel}
-                                    </strong>
-                                    <small className="text-sm text-slate-500">{item.title}</small>
-                                  </span>
+                                <span className="grid min-w-0 gap-0.5">
+                                  <strong className="truncate text-sm font-semibold text-slate-900">{fileLabel}</strong>
+                                  <span className="truncate text-xs text-slate-500">{item.title}</span>
                                 </span>
-                                <Badge
-                                  className="job-tree-item-badge"
-                                  variant={severity === "success" ? "secondary" : meta.badge}
-                                >
-                                  {severity === "warning" ? `${meta.label} ${item.warningCount}` : meta.label}
-                                </Badge>
-                              </button>
-                            )
-                          })}
-                        </div>
-                      </section>
-                    ))}
-                  </div>
+                              </Button>
+                            </TableCell>
+                            <TableCell className="text-xs text-slate-600">
+                              <div className="grid gap-0.5">
+                                <span className="truncate">{groupKey}</span>
+                                <span className="truncate text-slate-400">{item.outputPath ?? "diagnostics only"}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                className="min-w-16 justify-center rounded-full px-2.5 py-0.5"
+                                variant={severity === "success" ? "secondary" : meta.badge}
+                              >
+                                {meta.label}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-sm font-medium text-slate-700">
+                              {item.warningCount > 0 ? item.warningCount : "0"}
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
+                    </TableBody>
+                  </Table>
                 </ScrollArea>
               )}
             </section>

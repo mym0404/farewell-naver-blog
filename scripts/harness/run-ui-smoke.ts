@@ -28,8 +28,7 @@ const contrastTargets = [
   { selector: ".field-help", minRatio: 4.5 },
   { selector: ".frontmatter-description", minRatio: 4.5 },
   { selector: ".results-description", minRatio: 4.5 },
-  { selector: ".job-tree-item-copy small", minRatio: 4.5 },
-  { selector: ".job-tree-group-header span", minRatio: 4.5 },
+  { selector: ".job-results-row span", minRatio: 4.5 },
   { selector: "#markdown-modal-meta span", minRatio: 4.5 },
   { selector: ".markdown-frontmatter-key", minRatio: 4.5 },
   { selector: ".scan-status-note", minRatio: 4.5 },
@@ -83,7 +82,7 @@ const captureReviewScreens = async ({
     path: path.join(captureDir, "desktop-overview.png"),
     fullPage: true,
   })
-  await page.click("#job-file-tree .job-tree-item")
+  await page.click("#job-file-tree [data-job-item-id]")
   await page.waitForSelector("#markdown-modal")
   await page.screenshot({
     path: path.join(captureDir, "desktop-modal.png"),
@@ -527,6 +526,7 @@ const run = async () => {
     await page.waitForFunction(
       () => document.querySelector("#scan-status")?.textContent?.includes("스캔 완료") ?? false,
     )
+    await page.getByRole("tab", { name: "Frontmatter" }).click()
     await page.waitForSelector('[data-frontmatter-field="title"] .frontmatter-description')
 
     const frontmatterDescription = await page
@@ -558,7 +558,7 @@ const run = async () => {
         .split(/\s+/)
         .filter(Boolean).length
 
-      return tabColumns === 4 && frontmatterColumns >= 2
+      return tabColumns === 5 && frontmatterColumns >= 2
     })
 
     if (!optionsLayoutOk) {
@@ -841,7 +841,7 @@ const run = async () => {
       throw new Error("manifest totalPosts invariant failed")
     }
 
-    await page.waitForSelector("#job-file-tree .job-tree-item")
+    await page.waitForSelector("#job-file-tree [data-job-item-id]")
     await page.click('[data-job-filter="errors"]')
     await page.waitForTimeout(200)
 
@@ -852,7 +852,7 @@ const run = async () => {
     }
 
     await page.click('[data-job-filter="all"]')
-    await page.click("#job-file-tree .job-tree-item")
+    await page.click("#job-file-tree [data-job-item-id]")
     await page.waitForSelector("#markdown-modal")
 
     const modalText = await page.locator("#markdown-modal-body").textContent()

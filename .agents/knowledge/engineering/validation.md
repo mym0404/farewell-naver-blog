@@ -23,6 +23,8 @@
 - `pnpm check`: `check:full` alias
 
 ## Focused Commands
+- `pnpm dev`: `pnpm start` alias
+- `pnpm start`: UI build 후 로컬 서버 실행
 - `pnpm typecheck`: TypeScript 무출력 검사
 - `pnpm test:offline`: 네트워크 없는 로컬 테스트
 - `pnpm test:coverage`: V8 coverage 리포트 생성과 90% threshold 확인
