@@ -17,6 +17,9 @@
 - `pnpm samples:verify`
 - `pnpm smoke:ui`
 
+## Manual Verification
+- `scripts/export-single-post.ts`는 exporter와 동일한 Markdown/export option 규칙으로 특정 `blogId + logNo` 글 1건을 바로 렌더링한다.
+
 ## Workflow
 1. 사용자가 블로그 ID 또는 URL을 입력한다.
 2. scan으로 전체 공개 글 수와 카테고리 목록을 확인한다.

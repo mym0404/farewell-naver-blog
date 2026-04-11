@@ -64,7 +64,18 @@ const createLinkFormatter = ({
   }
 }
 
-const renderParagraph = (text: string) => text.trim()
+const isDegenerateMarkdownLine = (line: string) => /^[*_~`]+$/.test(line.trim())
+
+const normalizeMarkdownText = (text: string) =>
+  text
+    .replace(/([^\s*])\*{4,}([^\s*])/g, "$1**$2")
+    .split("\n")
+    .map((line) => line.trimEnd())
+    .filter((line) => line.trim() && !isDegenerateMarkdownLine(line))
+    .join("\n")
+    .trim()
+
+const renderParagraph = (text: string) => normalizeMarkdownText(text)
 
 const renderQuote = (text: string) =>
   text
@@ -110,7 +121,26 @@ const renderLinkCardBlock = ({
   formatLink: (input: { label: string; url: string }) => string
 }) => {
   const title = block.card.title || block.card.url
-  const description = block.card.description
+  const description = normalizeMarkdownText(block.card.description)
+    .split("\n")
+    .filter((line) => {
+      const trimmed = line.trim()
+
+      if (!trimmed) {
+        return false
+      }
+
+      if (/^[()]+$/.test(trimmed)) {
+        return false
+      }
+
+      if (trimmed === block.card.url) {
+        return false
+      }
+
+      return true
+    })
+    .join("\n")
 
   if (options.markdown.linkCardStyle === "quote") {
     return [title, description, block.card.url]

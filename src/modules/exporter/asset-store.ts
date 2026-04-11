@@ -2,7 +2,13 @@ import path from "node:path"
 
 import type { AssetRecord, ExportOptions } from "../../shared/types.js"
 import { normalizeAssetUrl, relativePathFrom } from "../../shared/utils.js"
-import { NaverBlogFetcher } from "../blog-fetcher/naver-blog-fetcher.js"
+
+type AssetDownloader = {
+  downloadBinary: (input: {
+    sourceUrl: string
+    destinationPath: string
+  }) => Promise<void>
+}
 
 const extensionFromUrl = (value: string) => {
   try {
@@ -17,22 +23,22 @@ const extensionFromUrl = (value: string) => {
 
 export class AssetStore {
   readonly outputDir: string
-  readonly fetcher: NaverBlogFetcher
+  readonly downloader: AssetDownloader
   readonly options: Pick<ExportOptions, "assets" | "structure">
   readonly cache = new Map<string, string>()
   readonly counters = new Map<string, number>()
 
   constructor({
     outputDir,
-    fetcher,
+    downloader,
     options,
   }: {
     outputDir: string
-    fetcher: NaverBlogFetcher
+    downloader: AssetDownloader
     options: Pick<ExportOptions, "assets" | "structure">
   }) {
     this.outputDir = outputDir
-    this.fetcher = fetcher
+    this.downloader = downloader
     this.options = options
   }
 
@@ -87,7 +93,7 @@ export class AssetStore {
     )
 
     this.counters.set(counterKey, nextIndex)
-    await this.fetcher.downloadBinary({
+    await this.downloader.downloadBinary({
       sourceUrl: normalizedSourceUrl,
       destinationPath: absolutePath,
     })

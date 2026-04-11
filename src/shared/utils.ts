@@ -92,7 +92,7 @@ export const relativePathFrom = ({
 }) => path.relative(path.dirname(from), to).split(path.sep).join("/")
 
 export const compactText = (value: string) =>
-  value.replace(/\u200b/g, "").replace(/\s+/g, " ").trim()
+  value.replace(/\u200b/g, "").replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim()
 
 export const normalizeAssetUrl = (value: string) => {
   const trimmed = value.trim()

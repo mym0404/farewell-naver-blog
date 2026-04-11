@@ -202,4 +202,42 @@ describe("renderMarkdownPost", () => {
     expect(rendered.markdown).toMatch(/\[External article\]\[ref-\d+\]/)
     expect(rendered.markdown).not.toContain("<div>raw</div>")
   })
+
+  it("drops degenerate emphasis-only paragraphs and malformed link-card descriptions", async () => {
+    const rendered = await renderMarkdownPost({
+      post,
+      category,
+      parsedPost: {
+        ...parsedPost,
+        blocks: [
+          { type: "paragraph", text: "****" },
+          {
+            type: "linkCard",
+            card: {
+              title: "[1보] 속보",
+              description: "(",
+              url: "https://example.com/breaking",
+              imageUrl: null,
+            },
+          },
+        ],
+      },
+      markdownFilePath: "/tmp/output/posts/Algorithm/test.md",
+      reviewedWarnings: [],
+      options: defaultExportOptions(),
+      resolveAsset: async ({
+        kind,
+        sourceUrl,
+      }) =>
+        ({
+          kind,
+          sourceUrl,
+          relativePath: `../../assets/223034929697/${kind}-01.png`,
+        }) satisfies AssetRecord,
+    })
+
+    expect(rendered.markdown).not.toContain("\n****\n")
+    expect(rendered.markdown).not.toContain("\n(\n")
+    expect(rendered.markdown).toContain("[1보] 속보")
+  })
 })

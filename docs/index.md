@@ -29,6 +29,8 @@
 - [validation-harness.md](./validation-harness.md)
 - [samples/index.md](./samples/index.md)
 - [runbooks/browser-verification.md](./runbooks/browser-verification.md)
+- [runbooks/single-post-verification.md](./runbooks/single-post-verification.md)
+- [naver-blog-300-audit-progress.md](./naver-blog-300-audit-progress.md)
 - [plans/README.md](./plans/README.md)
 - [references/harness-engineering-notes.md](./references/harness-engineering-notes.md)
 - [generated/quality-score.md](./generated/quality-score.md)

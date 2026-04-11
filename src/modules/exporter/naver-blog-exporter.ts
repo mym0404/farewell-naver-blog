@@ -13,11 +13,7 @@ import type {
 import {
   ensureDir,
   extractBlogId,
-  getDateSlug,
   recreateDir,
-  sanitizeCategoryName,
-  sanitizePathSegment,
-  slugifyTitle,
   toErrorMessage,
 } from "../../shared/utils.js"
 import { NaverBlogFetcher } from "../blog-fetcher/naver-blog-fetcher.js"
@@ -25,150 +21,8 @@ import { renderMarkdownPost } from "../converter/markdown-renderer.js"
 import { parsePostHtml } from "../parser/post-parser.js"
 import { reviewParsedPost } from "../reviewer/post-reviewer.js"
 import { AssetStore } from "./asset-store.js"
-
-const getCategoryForPost = ({
-  categories,
-  categoryId,
-  categoryName,
-}: {
-  categories: Map<number, CategoryInfo>
-  categoryId: number
-  categoryName: string
-}) => {
-  const matchedCategory = categories.get(categoryId)
-
-  if (matchedCategory) {
-    return matchedCategory
-  }
-
-  return {
-    id: categoryId,
-    name: sanitizeCategoryName(categoryName) || "Uncategorized",
-    parentId: null,
-    postCount: 0,
-    isDivider: false,
-    isOpen: true,
-    path: [sanitizeCategoryName(categoryName) || "Uncategorized"],
-    depth: 0,
-  } satisfies CategoryInfo
-}
-
-const resolveSelectedCategoryIds = ({
-  categories,
-  options,
-}: {
-  categories: CategoryInfo[]
-  options: ExportOptions
-}) => {
-  if (options.scope.categoryIds.length === 0) {
-    return new Set<number>()
-  }
-
-  if (options.scope.categoryMode === "exact-selected") {
-    return new Set(options.scope.categoryIds)
-  }
-
-  const selectedSet = new Set(options.scope.categoryIds)
-  const resolved = new Set<number>(options.scope.categoryIds)
-
-  for (const category of categories) {
-    if (category.path.length === 0) {
-      continue
-    }
-
-    const matchesAncestor = options.scope.categoryIds.some((selectedId) => {
-      if (!selectedSet.has(selectedId)) {
-        return false
-      }
-
-      const selectedCategory = categories.find((item) => item.id === selectedId)
-
-      if (!selectedCategory) {
-        return false
-      }
-
-      return selectedCategory.path.every((segment, index) => category.path[index] === segment)
-    })
-
-    if (matchesAncestor) {
-      resolved.add(category.id)
-    }
-  }
-
-  return resolved
-}
-
-const filterPosts = ({
-  posts,
-  categories,
-  options,
-}: {
-  posts: PostSummary[]
-  categories: CategoryInfo[]
-  options: ExportOptions
-}) => {
-  const selectedCategoryIds = resolveSelectedCategoryIds({
-    categories,
-    options,
-  })
-  const from = options.scope.dateFrom ? `${options.scope.dateFrom}T00:00:00+09:00` : null
-  const to = options.scope.dateTo ? `${options.scope.dateTo}T23:59:59+09:00` : null
-
-  return posts.filter((post) => {
-    const inCategory =
-      selectedCategoryIds.size === 0 || selectedCategoryIds.has(post.categoryId)
-    const inDateRange =
-      (!from || post.publishedAt >= from) &&
-      (!to || post.publishedAt <= to)
-
-    return inCategory && inDateRange
-  })
-}
-
-const buildMarkdownFilePath = ({
-  outputDir,
-  post,
-  category,
-  options,
-}: {
-  outputDir: string
-  post: PostSummary
-  category: CategoryInfo
-  options: ExportOptions
-}) => {
-  const segments = [
-    outputDir,
-    options.structure.postDirectoryName,
-  ]
-
-  if (options.structure.folderStrategy === "category-path") {
-    const categorySegments = (category.path.length > 0 ? category.path : [category.name]).map(
-      sanitizePathSegment,
-    )
-
-    segments.push(...categorySegments)
-  }
-
-  const nameParts: string[] = []
-
-  if (options.structure.includeDateInFilename) {
-    nameParts.push(getDateSlug(post.publishedAt))
-  }
-
-  if (options.structure.includeLogNoInFilename) {
-    nameParts.push(post.logNo)
-  }
-
-  if (options.structure.slugStyle === "kebab") {
-    nameParts.push(slugifyTitle(post.title))
-  } else {
-    nameParts.push(sanitizePathSegment(post.title))
-  }
-
-  const fileName = `${nameParts.filter(Boolean).join("-") || post.logNo}.md`
-
-  return path.join(...segments, fileName)
-}
+import { filterPostsByScope } from "./export-scope.js"
+import { buildMarkdownFilePath, getCategoryForPost } from "./export-paths.js"
 
 export class NaverBlogExporter {
   readonly request: ExportRequest
@@ -209,7 +63,18 @@ export class NaverBlogExporter {
     })
     const assetStore = new AssetStore({
       outputDir,
-      fetcher,
+      downloader: fetcher,
+      options,
+    })
+
+    const [scan, posts] = await Promise.all([
+      fetcher.scanBlog(),
+      fetcher.getAllPosts(),
+    ])
+    const categoryMap = new Map(scan.categories.map((category) => [category.id, category]))
+    const filteredPosts = filterPostsByScope({
+      posts,
+      categories: scan.categories,
       options,
     })
 
@@ -221,16 +86,6 @@ export class NaverBlogExporter {
       this.onLog(`출력 디렉터리 유지: ${outputDir}`)
     }
 
-    const [scan, posts] = await Promise.all([
-      fetcher.scanBlog(),
-      fetcher.getAllPosts(),
-    ])
-    const categoryMap = new Map(scan.categories.map((category) => [category.id, category]))
-    const filteredPosts = filterPosts({
-      posts,
-      categories: scan.categories,
-      options,
-    })
     const manifest: ExportManifest = {
       blogId,
       profile: this.request.profile,

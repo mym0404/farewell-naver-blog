@@ -43,6 +43,66 @@ const getStandaloneImages = ({
   return textWithoutImages ? [] : images
 }
 
+const isSpacerBlock = ({
+  element,
+  tagName,
+}: {
+  element: ReturnType<CheerioAPI>
+  tagName: string
+}) => {
+  if (tagName !== "p" && tagName !== "div") {
+    return false
+  }
+
+  const clone = element.clone()
+
+  clone.find("br").remove()
+
+  if (clone.find("img,iframe,video,table").length > 0) {
+    return false
+  }
+
+  return compactText(clone.text()) === ""
+}
+
+const parseSingleColumnTableAsParagraphs = ({
+  parsedTable,
+  options,
+}: {
+  parsedTable: ReturnType<typeof parseHtmlTable>
+  options: Pick<ExportOptions, "markdown">
+}) => {
+  const isSingleColumn =
+    !parsedTable.complex &&
+    parsedTable.rows.length > 0 &&
+    parsedTable.rows.every(
+      (row) => row.length === 1 && row[0]?.colspan === 1 && row[0]?.rowspan === 1,
+    )
+
+  if (!isSingleColumn) {
+    return null
+  }
+
+  const paragraphs = parsedTable.rows
+    .map((row) =>
+      convertHtmlToMarkdown({
+        html: row[0]?.html ?? "",
+        options,
+      }),
+    )
+    .map((text) => text.trim())
+    .filter(Boolean)
+    .map(
+      (text) =>
+        ({
+          type: "paragraph",
+          text,
+        }) satisfies AstBlock,
+    )
+
+  return paragraphs.length > 0 ? paragraphs : null
+}
+
 export const parseSe2Post = ({
   $,
   tags,
@@ -76,6 +136,17 @@ export const parseSe2Post = ({
 
     if (tagName === "table") {
       const parsedTable = parseHtmlTable({ $, table: element })
+
+      const flattenedTable = parseSingleColumnTableAsParagraphs({
+        parsedTable,
+        options,
+      })
+
+      if (flattenedTable) {
+        blocks.push(...flattenedTable)
+        return
+      }
+
       blocks.push({
         type: "table",
         rows: parsedTable.rows,
@@ -133,6 +204,10 @@ export const parseSe2Post = ({
 
     if (standaloneImages.length > 1) {
       blocks.push({ type: "imageGroup", images: standaloneImages })
+      return
+    }
+
+    if (isSpacerBlock({ element, tagName })) {
       return
     }
 

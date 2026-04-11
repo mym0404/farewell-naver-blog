@@ -28,12 +28,26 @@
 - `pnpm docs:check`: 문서 링크, 필수 섹션, generated freshness 검사
 - `pnpm parser:check`: capability, fixture, 테스트, 샘플 대응 검사
 - `pnpm samples:verify`: 실샘플 fetch -> parse -> render 검증
+- `pnpm exec tsx scripts/export-single-post.ts`: 브라우저로 확인한 공개 글 1건을 바로 Markdown과 diagnostics report로 다시 확인하는 단건 검증 명령
 - `pnpm smoke:ui`: scan -> category select -> export UI smoke 검증
 - `pnpm quality:report`: generated 리포트 갱신
 - `pnpm check:local`: 로컬 전용 오프라인 검증
 - `pnpm exec lefthook run pre-commit`: 커밋 전 `pnpm test:offline` 실행
 - `pnpm exec lefthook run pre-push`: 푸시 전 `pnpm check:local` 실행
 - `.github/workflows/required-checks.yml`: PR에서 `pnpm check:full` 실행
+
+## Manual Single-Post Check
+이 예시는 `blogId`, `logNo`, `outputDir`, `report`, `post.md`, `metadata-cache.json` 경로를 1건 분량으로 보여주는 기준값이다. 같은 블로그를 반복 검증할 때는 `metadata-cache.json`을 재사용한다.
+
+```bash
+pnpm exec tsx scripts/export-single-post.ts \
+  --blogId mym0404 \
+  --logNo 223034929697 \
+  --outputDir tmp/manual-audit/223034929697/output \
+  --report tmp/manual-audit/223034929697/report.json \
+  --manualReviewMarkdownPath tmp/manual-audit/223034929697/post.md \
+  --metadataCachePath tmp/manual-audit/223034929697/metadata-cache.json
+```
 
 ## Failure Rules
 - core docs 누락, dead link, 필수 heading 누락은 실패

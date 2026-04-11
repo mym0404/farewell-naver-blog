@@ -41,6 +41,35 @@ describe("parseSe4Post", () => {
     expect(parsed.tags).toEqual(["algo", "math"])
   })
 
+  it("groups recommendation panel text dumps into a compact markdown list", () => {
+    const parsed = parseSe4Fixture(`
+      <div class="se-component se-text">
+        ${createModuleScript({ type: "v2_text" })}
+        <p class="se-text-paragraph"><span class="__se-hash-tag">#오늘의트렌드</span> <span class="__se-hash-tag">#케이크토퍼</span></p>
+        <p class="se-text-paragraph">추천트렌드 새로보기현재 추천아이템 판1추천아이템 판 총 갯수8</p>
+        <p class="se-text-paragraph">이런 상품 어때요2단형3단형</p>
+        <p class="se-text-paragraph">케이크토퍼 영어 한글 자유문구나무픽</p>
+        <p class="se-text-paragraph"><span class="__se-hash-tag">#파티용품</span></p>
+        <p class="se-text-paragraph">여름잠옷 원피스 여성잠옷 반팔 면 파자마 나시 홈웨어 세트</p>
+        <p class="se-text-paragraph"><span class="__se-hash-tag">#엘제이룸홈웨어</span> <span class="__se-hash-tag">#공주잠옷</span></p>
+        <p class="se-text-paragraph">CGS 캘리포니아 제너럴 스토어 스트라이프 티셔츠</p>
+        <p class="se-text-paragraph"><span class="__se-hash-tag">#티셔츠</span> <span class="__se-hash-tag">#스트라이프티셔츠</span></p>
+      </div>
+    `)
+
+    expect(parsed.blocks).toEqual([
+      { type: "paragraph", text: "#오늘의트렌드 #케이크토퍼" },
+      {
+        type: "paragraph",
+        text: [
+          "- 케이크토퍼 영어 한글 자유문구나무픽 #파티용품",
+          "- 여름잠옷 원피스 여성잠옷 반팔 면 파자마 나시 홈웨어 세트 #엘제이룸홈웨어 #공주잠옷",
+          "- CGS 캘리포니아 제너럴 스토어 스트라이프 티셔츠 #티셔츠 #스트라이프티셔츠",
+        ].join("\n"),
+      },
+    ])
+  })
+
   it("parses section title components into heading blocks", () => {
     const parsed = parseSe4Fixture(`
       <div class="se-component se-sectionTitle">
@@ -291,6 +320,115 @@ console.log(value)
           sourceUrl: "https://example.com/image.png",
           alt: "diagram",
           caption: "image caption",
+        },
+      },
+    ])
+  })
+
+  it("parses image strip components into imageGroup blocks", () => {
+    const parsed = parseSe4Fixture(`
+      <div class="se-component se-imageStrip se-imageStrip2 se-l-default">
+        <div class="se-module se-module-image">
+          <a class="se-module-image-link" data-linkdata='{"src":"https://example.com/strip-1.png"}'>
+            <img src="https://example.com/strip-1.png?type=w80_blur" alt="" />
+          </a>
+        </div>
+        <div class="se-module se-module-image">
+          <a class="se-module-image-link" data-linkdata='{"src":"https://example.com/strip-2.png"}'>
+            <img src="https://example.com/strip-2.png?type=w80_blur" alt="" />
+          </a>
+        </div>
+      </div>
+    `)
+
+    expect(parsed.blocks).toEqual([
+      {
+        type: "imageGroup",
+        images: [
+          {
+            sourceUrl: "https://example.com/strip-1.png",
+            alt: "",
+            caption: null,
+          },
+          {
+            sourceUrl: "https://example.com/strip-2.png",
+            alt: "",
+            caption: null,
+          },
+        ],
+      },
+    ])
+  })
+
+  it("parses sticker components into image blocks", () => {
+    const parsed = parseSe4Fixture(`
+      <div class="se-component se-sticker se-l-default">
+        <div class="se-module se-module-sticker">
+          <a class="__se_sticker_link" data-linkdata='{"src":"https://example.com/sticker.png","width":"370","height":"320"}'>
+            <img class="se-sticker-image" src="https://example.com/sticker.png?type=p100_100" alt="" />
+          </a>
+        </div>
+      </div>
+    `)
+
+    expect(parsed.blocks).toEqual([
+      {
+        type: "image",
+        image: {
+          sourceUrl: "https://example.com/sticker.png?type=p100_100",
+          alt: "",
+          caption: null,
+        },
+      },
+    ])
+  })
+
+  it("parses places map components into place link cards", () => {
+    const parsed = parseSe4Fixture(`
+      <div class="se-component se-placesMap se-l-default">
+        <div class="se-module se-module-map-image">
+          <img src="https://example.com/map.png" alt="" />
+        </div>
+        <div class="se-module se-module-map-text">
+          <a
+            class="se-map-info"
+            href="#"
+            data-linkdata='{"placeId":"13491802","name":"첨성대","address":"경상북도 경주시 인왕동 839-1","bookingUrl":null}'
+          >
+            <strong class="se-map-title">첨성대</strong>
+            <p class="se-map-address">경상북도 경주시 인왕동 839-1</p>
+          </a>
+        </div>
+        <div class="se-module se-module-map-text">
+          <a
+            class="se-map-info"
+            href="#"
+            data-linkdata='{"placeId":"1712968835","name":"외가 황리단길본점","address":"경상북도 경주시 사정로57번길 7 외가","bookingUrl":"https://booking.naver.com/booking/6/bizes/899193"}'
+          >
+            <strong class="se-map-title">외가 황리단길본점</strong>
+            <p class="se-map-address">경상북도 경주시 사정로57번길 7 외가</p>
+          </a>
+        </div>
+      </div>
+    `)
+
+    expect(parsed.blocks).toEqual([
+      {
+        type: "linkCard",
+        card: {
+          title: "첨성대",
+          description: "경상북도 경주시 인왕동 839-1",
+          url: "https://map.naver.com/p/search/%EC%B2%A8%EC%84%B1%EB%8C%80",
+          imageUrl: null,
+        },
+      },
+      {
+        type: "linkCard",
+        card: {
+          title: "외가 황리단길본점",
+          description: "경상북도 경주시 사정로57번길 7 외가",
+          url: "https://booking.naver.com/booking/6/bizes/899193",
+          imageUrl: null,
         },
       },
     ])

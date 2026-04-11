@@ -50,9 +50,9 @@ const parseImageLink = ($link: ReturnType<CheerioAPI>) => {
   const linkData = parseJsonAttribute($link.attr("data-linkdata"))
   const imageNode = $link.find("img").first()
   const sourceUrl = [
+    typeof linkData?.src === "string" ? linkData.src : null,
     imageNode.attr("data-lazy-src"),
     imageNode.attr("src"),
-    typeof linkData?.src === "string" ? linkData.src : null,
   ]
     .find((candidate): candidate is string => Boolean(candidate?.trim()))
     ?.trim()
@@ -70,14 +70,133 @@ const parseImageLink = ($link: ReturnType<CheerioAPI>) => {
   } satisfies ImageData
 }
 
+const buildNaverMapSearchUrl = (query: string) =>
+  `https://map.naver.com/p/search/${encodeURIComponent(query)}`
+
+const parseStickerBlock = ($component: ReturnType<CheerioAPI>) => {
+  const stickerLink = $component.find("a.__se_sticker_link").first()
+  const linkData = parseJsonAttribute(stickerLink.attr("data-linkdata"))
+  const sourceUrl = [
+    $component.find("img.se-sticker-image").attr("src") ?? null,
+    typeof linkData?.src === "string" ? linkData.src : null,
+  ]
+    .find((candidate): candidate is string => Boolean(candidate?.trim()))
+    ?.trim()
+
+  if (!sourceUrl) {
+    return null
+  }
+
+  return {
+    type: "image",
+    image: {
+      sourceUrl: normalizeAssetUrl(sourceUrl),
+      alt: "",
+      caption: null,
+    },
+  } satisfies AstBlock
+}
+
+const parseImageStripBlock = ($component: ReturnType<CheerioAPI>) => {
+  const images = $component
+    .find("a.se-module-image-link")
+    .toArray()
+    .map((node) => parseImageLink($component.find(node)))
+    .filter((image): image is ImageData => Boolean(image))
+
+  if (images.length === 0) {
+    return null
+  }
+
+  return {
+    type: "imageGroup",
+    images,
+  } satisfies AstBlock
+}
+
+const parsePlacesMapBlock = ({
+  $component,
+  moduleData,
+}: {
+  $component: ReturnType<CheerioAPI>
+  moduleData: Record<string, unknown> | null
+}): Extract<AstBlock, { type: "linkCard" }>[] => {
+  const data = (moduleData?.data ?? {}) as {
+    places?: Array<{
+      placeId?: string
+      name?: string
+      address?: string
+      bookingUrl?: string | null
+    }>
+  }
+
+  const placesFromModule = (data.places ?? []).flatMap((place) => {
+      const title = compactText(place.name ?? "")
+      const description = compactText(place.address ?? "")
+
+      if (!title) {
+        return []
+      }
+
+      return [
+        {
+          type: "linkCard",
+          card: {
+            title,
+            description,
+            url:
+              typeof place.bookingUrl === "string" && place.bookingUrl.trim()
+                ? place.bookingUrl.trim()
+                : buildNaverMapSearchUrl(title),
+            imageUrl: null,
+          },
+        } satisfies Extract<AstBlock, { type: "linkCard" }>,
+      ]
+    })
+
+  if (placesFromModule.length > 0) {
+    return placesFromModule
+  }
+
+  return $component
+    .find("a.se-map-info")
+    .toArray()
+    .flatMap((node) => {
+      const $link = $component.find(node)
+      const linkData = parseJsonAttribute($link.attr("data-linkdata"))
+      const title = compactText($link.find(".se-map-title").text()) || compactText(String(linkData?.name ?? ""))
+      const description =
+        compactText($link.find(".se-map-address").text()) || compactText(String(linkData?.address ?? ""))
+
+      if (!title) {
+        return []
+      }
+
+      return [
+        {
+          type: "linkCard",
+          card: {
+            title,
+            description,
+            url:
+              typeof linkData?.bookingUrl === "string" && linkData.bookingUrl.trim()
+                ? linkData.bookingUrl.trim()
+                : buildNaverMapSearchUrl(title),
+            imageUrl: null,
+          },
+        } satisfies Extract<AstBlock, { type: "linkCard" }>,
+      ]
+    })
+}
+
 const parseTextBlocks = ({
   $component,
   options,
 }: {
   $component: ReturnType<CheerioAPI>
   options: Pick<ExportOptions, "markdown">
-}) =>
-  $component
+}) => {
+  const texts = $component
     .find("p.se-text-paragraph")
     .toArray()
     .map((paragraph) =>
@@ -88,13 +207,89 @@ const parseTextBlocks = ({
     )
     .map((text) => compactText(text))
     .filter(Boolean)
-    .map(
-      (text) =>
-        ({
-          type: "paragraph",
-          text,
-        }) satisfies AstBlock,
-    )
+
+  const recommendationBlocks = parseRecommendationTextBlocks(texts)
+
+  if (recommendationBlocks) {
+    return recommendationBlocks
+  }
+
+  return texts.map(
+    (text) =>
+      ({
+        type: "paragraph",
+        text,
+      }) satisfies AstBlock,
+  )
+}
+
+const recommendationHeaderPatterns = [/^추천트렌드/, /^이런 상품 어때요/]
+const recommendationNoisePatterns = [
+  ...recommendationHeaderPatterns,
+  /^요즘 많이 찾는/,
+  /^추천검색어/,
+]
+
+const isHashtagParagraph = (text: string) =>
+  text
+    .split(/\s+/)
+    .filter(Boolean)
+    .every((token) => token.startsWith("#"))
+
+const parseRecommendationTextBlocks = (texts: string[]) => {
+  const recommendationStartIndex = texts.findIndex((text) =>
+    recommendationHeaderPatterns.some((pattern) => pattern.test(text)),
+  )
+
+  if (recommendationStartIndex === -1 || texts.length - recommendationStartIndex < 6) {
+    return null
+  }
+
+  const introBlocks = texts.slice(0, recommendationStartIndex).map(
+    (text) =>
+      ({
+        type: "paragraph",
+        text,
+      }) satisfies AstBlock,
+  )
+  const items: string[] = []
+  let currentItem: string | null = null
+
+  texts.slice(recommendationStartIndex).forEach((text) => {
+    if (recommendationNoisePatterns.some((pattern) => pattern.test(text))) {
+      return
+    }
+
+    if (isHashtagParagraph(text)) {
+      if (currentItem) {
+        currentItem = `${currentItem} ${text}`.trim()
+      }
+      return
+    }
+
+    if (currentItem) {
+      items.push(currentItem)
+    }
+
+    currentItem = text
+  })
+
+  if (currentItem) {
+    items.push(currentItem)
+  }
+
+  if (items.length < 3) {
+    return null
+  }
+
+  return [
+    ...introBlocks,
+    {
+      type: "paragraph",
+      text: items.map((item) => `- ${item}`).join("\n"),
+    } satisfies AstBlock,
+  ]
+}
 
 const parseQuoteBlock = ({
   $component,
@@ -540,6 +735,16 @@ export const parseSe4Post = ({
         return
       }
 
+      if (moduleType === "v2_map" || $component.hasClass("se-placesMap")) {
+        blocks.push(
+          ...parsePlacesMapBlock({
+            $component,
+            moduleData,
+          }),
+        )
+        return
+      }
+
       if (moduleType === "v2_table" || $component.hasClass("se-table")) {
         const tableBlock = parseTableBlock({
           $,
@@ -554,11 +759,29 @@ export const parseSe4Post = ({
         return
       }
 
+      if ($component.hasClass("se-imageStrip")) {
+        const imageStrip = parseImageStripBlock($component)
+
+        if (imageStrip) {
+          blocks.push(imageStrip)
+        }
+        return
+      }
+
       if (moduleType === "v2_imageGroup") {
         const imageGroup = parseImageGroupBlock($component)
 
         if (imageGroup) {
           blocks.push(imageGroup)
+        }
+        return
+      }
+
+      if ($component.hasClass("se-sticker")) {
+        const stickerBlock = parseStickerBlock($component)
+
+        if (stickerBlock) {
+          blocks.push(stickerBlock)
         }
         return
       }

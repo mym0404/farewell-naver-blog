@@ -130,15 +130,40 @@ console.log(oldSchool)
   })
 
   it("keeps empty unsupported html as rawHtml blocks", () => {
-    const parsed = parseSe2Fixture("<div></div>")
+    const parsed = parseSe2Fixture("<section></section>")
 
     expect(parsed.blocks).toEqual([
       {
         type: "rawHtml",
-        html: "<div></div>",
-        reason: "se2:div",
+        html: "<section></section>",
+        reason: "se2:section",
       },
     ])
-    expect(parsed.warnings).toContain("SE2 블록을 해석하지 못해 raw HTML로 남겼습니다: <div>")
+    expect(parsed.warnings).toContain("SE2 블록을 해석하지 못해 raw HTML로 남겼습니다: <section>")
+  })
+
+  it("skips empty styled spacer paragraphs instead of keeping rawHtml", () => {
+    const parsed = parseSe2Fixture(`
+      <p style="" _foo="MsoNormal"><span lang="EN-US" style="font-size:12pt;">&nbsp;</span></p>
+      <p><br></p>
+      <div><br></div>
+    `)
+
+    expect(parsed.blocks).toEqual([])
+    expect(parsed.warnings).toEqual([])
+  })
+
+  it("flattens single-column layout tables into paragraph blocks", () => {
+    const parsed = parseSe2Fixture(`
+      <table>
+        <tr><td><p>첫 줄<br>둘째 줄</p></td></tr>
+        <tr><td><p>셋째 줄</p></td></tr>
+      </table>
+    `)
+
+    expect(parsed.blocks).toEqual([
+      { type: "paragraph", text: "첫 줄  \n둘째 줄" },
+      { type: "paragraph", text: "셋째 줄" },
+    ])
   })
 })
