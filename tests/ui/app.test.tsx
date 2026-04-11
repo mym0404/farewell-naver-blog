@@ -2,7 +2,7 @@
 
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import { userEvent } from "@testing-library/user-event"
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import "@testing-library/jest-dom/vitest"
 
@@ -14,6 +14,7 @@ import {
 } from "../../src/shared/export-options.js"
 import type { ExportJobState, ScanResult } from "../../src/shared/types.js"
 import { App } from "../../src/ui/App.js"
+import { markdownShowcase } from "../fixtures/markdown-showcase.js"
 
 const buildJsonResponse = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -40,17 +41,7 @@ const scanResult: ScanResult = {
   ],
 }
 
-const previewMarkdown = `---
-postTitle: "테스트 글"
-source: https://blog.naver.com/mym0404/1
-blogId: mym0404
-logNo: "1"
----
-
-# 제목
-
-> ⚠️ Warning: parser note
-`
+const previewMarkdown = markdownShowcase
 
 const completedJob: ExportJobState = {
   id: "job-1",
@@ -102,7 +93,19 @@ const completedJob: ExportJobState = {
 }
 
 afterEach(() => {
+  vi.unstubAllGlobals()
   vi.restoreAllMocks()
+})
+
+beforeEach(() => {
+  vi.stubGlobal(
+    "ResizeObserver",
+    class ResizeObserverMock {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    },
+  )
 })
 
 describe("App", () => {
@@ -171,6 +174,8 @@ describe("App", () => {
 
     await screen.findByText("mym0404 스캔 완료")
     expect(await screen.findByText("글 제목을 기록합니다.")).toBeInTheDocument()
+    expect(document.querySelector("#scan-button")?.closest("#scan-workbench")).not.toBeNull()
+    expect(document.querySelector("#export-button")?.closest(".app-sidebar")).not.toBeNull()
 
     const titleAliasInput = screen.getByPlaceholderText("title")
     const sourceAliasInput = screen.getByPlaceholderText("source")
@@ -178,7 +183,7 @@ describe("App", () => {
     await user.type(sourceAliasInput, "shared")
 
     expect(await screen.findByText(/title와 source가 같은 alias "shared"/)).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "선택한 카테고리 내보내기" })).toBeDisabled()
+    expect(screen.getByRole("button", { name: "내보내기" })).toBeDisabled()
 
     await user.clear(titleAliasInput)
     await user.type(titleAliasInput, "postTitle")
@@ -200,12 +205,16 @@ describe("App", () => {
       expect(renderedPreview?.textContent).toContain("Frontmatter")
       expect(renderedPreview?.textContent).toContain("postTitle:")
     })
+    expect(document.querySelector("#preview-rendered .hljs-keyword")).not.toBeNull()
 
-    await user.click(screen.getByRole("button", { name: "선택한 카테고리 내보내기" }))
+    await user.click(screen.getByRole("button", { name: "내보내기" }))
     await waitFor(() => {
       expect(document.querySelector("#status-text")?.textContent).toContain("completed")
       expect(document.querySelector("#summary")?.textContent).toContain("1")
     })
+    const previewOrder =
+      document.querySelector("#preview-panel")?.compareDocumentPosition(document.querySelector("#status-panel") ?? document.body) ?? 0
+    expect((previewOrder & Node.DOCUMENT_POSITION_FOLLOWING) !== 0).toBe(true)
 
     await user.click(screen.getByRole("button", { name: "에러" }))
     expect(screen.getByRole("button", { name: "에러" })).toHaveClass("is-active")

@@ -11,6 +11,7 @@ import {
 } from "../../components/ui/card.js"
 import { Checkbox } from "../../components/ui/checkbox.js"
 import { Input } from "../../components/ui/input.js"
+import { ScrollArea } from "../../components/ui/scroll-area.js"
 
 export const CategoryPanel = ({
   scanResult,
@@ -45,21 +46,25 @@ export const CategoryPanel = ({
   })
 
   return (
-    <Card className="board-card" id="category-panel">
-      <CardHeader className="panel-header">
-        <div className="panel-heading">
-          <p className="section-kicker">Stage 1</p>
-          <CardTitle className="section-title">카테고리 범위</CardTitle>
+    <Card
+      className="board-card overflow-hidden border-white/80 bg-white/90 shadow-[0_24px_60px_rgba(22,33,50,0.08)] backdrop-blur"
+      id="category-panel"
+    >
+      <CardHeader className="panel-header gap-4 border-b border-slate-200/70 bg-white/70 p-6 sm:flex sm:items-start sm:justify-between">
+        <div className="panel-heading space-y-2">
+          <CardTitle className="section-title text-2xl font-semibold tracking-[-0.04em] text-slate-900">
+            카테고리 선택
+          </CardTitle>
         </div>
-        <CardDescription id="category-status" className="panel-description">
+        <CardDescription id="category-status" className="panel-description max-w-2xl text-sm leading-7 text-slate-600">
           {categoryStatus}
         </CardDescription>
       </CardHeader>
 
-      <CardContent className="panel-body">
-        <div className="toolbar category-toolbar">
-          <label className="input-stack toolbar-search">
-            <span className="toolbar-label">검색</span>
+      <CardContent className="panel-body grid gap-5 p-6">
+        <div className="toolbar category-toolbar grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+          <label className="input-stack toolbar-search grid gap-2">
+            <span className="toolbar-label text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">검색</span>
             <Input
               id="category-search"
               placeholder="카테고리 검색"
@@ -69,12 +74,13 @@ export const CategoryPanel = ({
             />
           </label>
 
-          <div className="toolbar-actions">
+          <div className="toolbar-actions flex flex-wrap items-center gap-3">
             <Button
               type="button"
               variant="outline"
               id="select-all-categories"
               disabled={!scanResult}
+              className="min-h-10 rounded-xl border-slate-300 bg-white px-4"
               onClick={onSelectAll}
             >
               <i className="ri-check-double-line" aria-hidden="true" />
@@ -83,9 +89,9 @@ export const CategoryPanel = ({
             <Button
               type="button"
               variant="ghost"
-              className="ghost-button"
               id="clear-all-categories"
               disabled={!scanResult}
+              className="ghost-button min-h-10 rounded-xl px-4 text-slate-600"
               onClick={onClearAll}
             >
               <i className="ri-eraser-line" aria-hidden="true" />
@@ -94,41 +100,82 @@ export const CategoryPanel = ({
           </div>
         </div>
 
-        <div className="selection-summary">
+        <div className="selection-summary flex flex-col gap-3 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
           <span id="selected-category-count">
             선택된 카테고리 {selectedCount}개 / {categories.length}개
           </span>
-          <Badge variant={selectedCount > 0 ? "secondary" : "outline"}>{selectedCount > 0 ? "선택됨" : "미선택"}</Badge>
+          <Badge
+            variant={selectedCount > 0 ? "secondary" : "outline"}
+            className="w-fit rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]"
+          >
+            {selectedCount > 0 ? "선택됨" : "미선택"}
+          </Badge>
         </div>
 
         {!scanResult ? (
-          <div id="category-list" className="category-list empty">
+          <div
+            id="category-list"
+            className="category-list empty grid min-h-24 place-items-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/80 px-4 py-6 text-center text-sm text-slate-500"
+          >
             카테고리를 불러오면 여기에 표시됩니다.
           </div>
         ) : filteredCategories.length === 0 ? (
-          <div id="category-list" className="category-list empty">
+          <div
+            id="category-list"
+            className="category-list empty grid min-h-24 place-items-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/80 px-4 py-6 text-center text-sm text-slate-500"
+          >
             검색 결과가 없습니다.
           </div>
         ) : (
-          <div id="category-list" className="category-list">
-            {filteredCategories.map((category) => {
-              const checked = selectedCategoryIds.includes(category.id)
+          <div id="category-list" className="category-list overflow-hidden rounded-2xl border border-slate-200 bg-white">
+            <ScrollArea className="h-[min(28rem,52vh)] overflow-hidden">
+              <table className="w-full min-w-[42rem] border-collapse text-left">
+                <thead className="sticky top-0 z-10 bg-slate-50/95 backdrop-blur">
+                  <tr className="border-b border-slate-200">
+                    <th className="w-16 px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">선택</th>
+                    <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">카테고리</th>
+                    <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">경로</th>
+                    <th className="w-24 px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">깊이</th>
+                    <th className="w-24 px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">글 수</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredCategories.map((category) => {
+                    const checked = selectedCategoryIds.includes(category.id)
+                    const categoryPath = category.path.join(" / ")
 
-              return (
-                <label key={category.id} className="category-item" style={{ ["--depth" as string]: category.depth }}>
-                  <Checkbox checked={checked} onCheckedChange={(next) => onCategoryToggle(category.id, next === true)} />
-                  <span className="category-meta">
-                    <span className="category-label">{category.path.join(" / ")}</span>
-                    <span className="category-subtitle">
-                      depth {category.depth} · posts {category.postCount}
-                    </span>
-                  </span>
-                  <Badge className="category-count" variant="outline">
-                    {category.postCount}
-                  </Badge>
-                </label>
-              )
-            })}
+                    return (
+                      <tr
+                        key={category.id}
+                        className="category-item border-b border-slate-200 last:border-b-0 transition hover:bg-slate-50/80"
+                        data-category-id={category.id}
+                      >
+                        <td className="px-4 py-3 align-middle">
+                          <Checkbox
+                            checked={checked}
+                            aria-label={categoryPath}
+                            onCheckedChange={(next) => onCategoryToggle(category.id, next === true)}
+                          />
+                        </td>
+                        <td className="px-4 py-3 align-middle">
+                          <div className="grid gap-1">
+                            <span className="font-semibold text-slate-900">{category.name}</span>
+                            <span className="text-sm text-slate-500">{categoryPath}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 align-middle text-sm text-slate-600">{categoryPath}</td>
+                        <td className="px-4 py-3 align-middle text-sm font-medium text-slate-700">{category.depth}</td>
+                        <td className="px-4 py-3 align-middle">
+                          <Badge className="category-count min-w-10 justify-center rounded-full border-slate-300 px-3 py-1" variant="outline">
+                            {category.postCount}
+                          </Badge>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </ScrollArea>
           </div>
         )}
       </CardContent>

@@ -38,4 +38,4 @@
 - Markdown renderer: `src/modules/converter/markdown-renderer.ts`
 - exporter flow: `src/modules/exporter/naver-blog-exporter.ts`
 - HTTP API: `src/server/http-server.ts`
-- UI shell: `index.html`, `src/ui/App.tsx`, `src/ui/styles/dashboard.css`
+- UI shell: `index.html`, `src/ui/App.tsx`, `src/ui/styles/globals.css`, `src/ui/features/*`

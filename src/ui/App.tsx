@@ -23,12 +23,13 @@ import { Separator } from "./components/ui/separator.js"
 import { CategoryPanel } from "./features/scan/category-panel.js"
 import { ExportOptionsPanel } from "./features/options/export-options-panel.js"
 import { JobResultsPanel } from "./features/job-results/job-results-panel.js"
+import { PreviewPanel } from "./features/preview/preview-panel.js"
 import { useExportJob } from "./hooks/use-export-job.js"
 import type { ExportDefaultsResponse, ExportPreviewResult } from "./lib/api.js"
 import { fetchJson, postJson } from "./lib/api.js"
+import { cn } from "./lib/cn.js"
 
-const previewIdleStatus =
-  "스캔 후 카테고리를 고르면 현재 선택 범위의 대표 글을 기준으로 예시 Markdown을 확인할 수 있습니다."
+const previewIdleStatus = "스캔 후 카테고리를 고르면 예시 Markdown을 확인할 수 있습니다."
 
 const fallbackDefaults: ExportDefaultsResponse = {
   profile: "gfm",
@@ -39,11 +40,14 @@ const fallbackDefaults: ExportDefaultsResponse = {
 }
 
 const navigationItems = [
-  { href: "#scan-workbench", label: "블로그 스캔", iconClass: "ri-radar-line" },
-  { href: "#category-panel", label: "카테고리 선택", iconClass: "ri-folder-chart-line" },
-  { href: "#export-panel", label: "출력 설정", iconClass: "ri-equalizer-3-line" },
-  { href: "#status-panel", label: "작업 상태", iconClass: "ri-file-list-3-line" },
+  { id: "scan-workbench", href: "#scan-workbench", label: "블로그 스캔", iconClass: "ri-radar-line" },
+  { id: "category-panel", href: "#category-panel", label: "카테고리 선택", iconClass: "ri-folder-chart-line" },
+  { id: "export-panel", href: "#export-panel", label: "출력 설정", iconClass: "ri-equalizer-3-line" },
+  { id: "preview-panel", href: "#preview-panel", label: "미리보기", iconClass: "ri-markdown-line" },
+  { id: "status-panel", href: "#status-panel", label: "작업 상태", iconClass: "ri-file-list-3-line" },
 ] as const
+
+type SectionId = (typeof navigationItems)[number]["id"]
 
 const createErrorJobState = (error: string, request: { blogIdOrUrl: string; outputDir: string; options: ExportOptions }) =>
   ({
@@ -70,6 +74,42 @@ const createErrorJobState = (error: string, request: { blogIdOrUrl: string; outp
     error,
   }) satisfies ExportJobState
 
+const getRailStatus = ({
+  job,
+  scanPending,
+  scanResult,
+}: {
+  job: ExportJobState | null
+  scanPending: boolean
+  scanResult: ScanResult | null
+}) => {
+  if (job) {
+    return job.status
+  }
+
+  if (scanPending) {
+    return "running"
+  }
+
+  if (scanResult) {
+    return "ready"
+  }
+
+  return "idle"
+}
+
+const statusPillClass = (status: string) =>
+  cn(
+    "rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]",
+    status === "completed" || status === "ready"
+      ? "bg-emerald-100 text-emerald-800"
+      : status === "running" || status === "queued" || status === "success"
+        ? "bg-amber-100 text-amber-800"
+        : status === "failed"
+          ? "bg-rose-100 text-rose-800"
+          : "bg-slate-100 text-slate-600",
+  )
+
 export const App = () => {
   const [defaults, setDefaults] = useState(fallbackDefaults)
   const [blogIdOrUrl, setBlogIdOrUrl] = useState("")
@@ -87,6 +127,7 @@ export const App = () => {
   const [scanPending, setScanPending] = useState(false)
   const [selectedItem, setSelectedItem] = useState<ExportJobItem | null>(null)
   const [activeJobFilter, setActiveJobFilter] = useState<"all" | "warnings" | "errors">("all")
+  const [activeSectionId, setActiveSectionId] = useState<SectionId>(navigationItems[0].id)
   const { job, submitting, setJob, startJob } = useExportJob()
 
   const frontmatterValidationErrors = useMemo(
@@ -98,6 +139,11 @@ export const App = () => {
   const selectedCount = scanResult ? selectedCategoryIds.length : 0
   const exportDisabled = !scanResult || frontmatterValidationErrors.length > 0
   const previewDisabled = exportDisabled
+  const railStatus = getRailStatus({
+    job,
+    scanPending,
+    scanResult,
+  })
 
   useEffect(() => {
     let cancelled = false
@@ -150,7 +196,65 @@ export const App = () => {
     return () => document.removeEventListener("keydown", handleKeyDown)
   }, [])
 
-  const markPreviewDirty = (message = "옵션이 바뀌었습니다. export 전에 예시 Markdown을 다시 확인하세요.") => {
+  useEffect(() => {
+    const sections = navigationItems
+      .map((item) => document.querySelector<HTMLElement>(item.href))
+      .filter((section): section is HTMLElement => section instanceof HTMLElement)
+
+    if (sections.length === 0) {
+      return
+    }
+
+    const resolveActiveSection = () => {
+      let nextSectionId = sections[0].id as SectionId
+
+      for (const section of sections) {
+        if (section.getBoundingClientRect().top <= 168) {
+          nextSectionId = section.id as SectionId
+        }
+      }
+
+      setActiveSectionId((current) => (current === nextSectionId ? current : nextSectionId))
+    }
+
+    const observer =
+      typeof IntersectionObserver !== "undefined"
+        ? new IntersectionObserver(
+            (entries) => {
+              const visibleEntries = entries.filter((entry) => entry.isIntersecting)
+
+              if (visibleEntries.length === 0) {
+                resolveActiveSection()
+                return
+              }
+
+              const nextSection = visibleEntries.sort(
+                (left, right) =>
+                  Math.abs(left.boundingClientRect.top - 168) - Math.abs(right.boundingClientRect.top - 168),
+              )[0]
+
+              setActiveSectionId(nextSection.target.id as SectionId)
+            },
+            {
+              rootMargin: "-168px 0px -55% 0px",
+              threshold: [0.05, 0.2, 0.4, 0.65],
+            },
+          )
+        : null
+
+    if (observer) {
+      sections.forEach((section) => observer.observe(section))
+    }
+    resolveActiveSection()
+    window.addEventListener("scroll", resolveActiveSection, { passive: true })
+
+    return () => {
+      observer?.disconnect()
+      window.removeEventListener("scroll", resolveActiveSection)
+    }
+  }, [])
+
+  const markPreviewDirty = (message = "옵션이 바뀌었습니다. 예시를 다시 확인하세요.") => {
     setPreviewDirty(true)
     setPreviewStatus(message)
   }
@@ -206,7 +310,7 @@ export const App = () => {
 
       setScanResult(nextScanResult)
       setScanStatus(`${nextScanResult.blogId} 스캔 완료`)
-      setCategoryStatus("export 할 카테고리를 선택하세요.")
+      setCategoryStatus("내보낼 카테고리를 선택하세요.")
       setOptions((current) => ({
         ...current,
         scope: {
@@ -214,7 +318,7 @@ export const App = () => {
           categoryIds: nextScanResult.categories.map((category) => category.id),
         },
       }))
-      resetPreview("스캔이 끝났습니다. 현재 선택 범위의 대표 글로 예시 Markdown을 확인할 수 있습니다.")
+      resetPreview("스캔이 끝났습니다. 예시 Markdown을 확인할 수 있습니다.")
     } catch (error) {
       resetScanState(error instanceof Error ? error.message : String(error))
     } finally {
@@ -335,146 +439,285 @@ export const App = () => {
     }
   }
 
-  const summaryCards = scanResult
+  const scanSummaryCards = scanResult
     ? [
-        { tone: "primary", label: "Blog ID", value: scanResult.blogId, note: "scan 완료", iconClass: "ri-pages-line" },
+        { tone: "primary", label: "블로그", value: scanResult.blogId, note: "스캔 완료", iconClass: "ri-pages-line" },
         {
           tone: "cyan",
-          label: "Total Posts",
+          label: "전체 글",
           value: String(scanResult.totalPostCount),
-          note: "전체 포스트 수",
+          note: "블로그 전체 글 수",
           iconClass: "ri-article-line",
         },
         {
           tone: "green",
-          label: "Categories",
+          label: "카테고리",
           value: String(scanResult.categories.length),
           note: "발견된 카테고리",
           iconClass: "ri-folder-chart-line",
         },
         {
           tone: "neutral",
-          label: "Selection",
+          label: "선택",
           value: String(selectedCount),
           note: "현재 선택 범위",
           iconClass: "ri-checkbox-multiple-line",
         },
       ]
     : [
-        { tone: "primary", label: "Blog ID", value: "Ready", note: "scan 대기 중", iconClass: "ri-pages-line" },
-        { tone: "cyan", label: "Total Posts", value: "0", note: "스캔 후 계산됩니다", iconClass: "ri-article-line" },
-        { tone: "green", label: "Categories", value: "0", note: "선택 범위 없음", iconClass: "ri-folder-chart-line" },
+        { tone: "primary", label: "블로그", value: "Ready", note: "스캔 대기 중", iconClass: "ri-pages-line" },
+        { tone: "cyan", label: "전체 글", value: "0", note: "스캔 후 계산됩니다", iconClass: "ri-article-line" },
+        { tone: "green", label: "카테고리", value: "0", note: "선택 범위 없음", iconClass: "ri-folder-chart-line" },
         {
           tone: "neutral",
-          label: "Selection",
+          label: "선택",
           value: "0",
           note: "카테고리를 고르면 반영됩니다",
           iconClass: "ri-checkbox-multiple-line",
         },
       ]
 
+  const totalItems = job?.progress.total ?? 0
+  const completedItems = job?.progress.completed ?? 0
+  const failedItems = job?.progress.failed ?? 0
+  const remainingItems = Math.max(totalItems - completedItems - failedItems, 0)
+  const activeItem = navigationItems.find((item) => item.id === activeSectionId) ?? navigationItems[0]
+
+  const railSummaryCards = [
+    { label: "총 글", value: String(totalItems || scanResult?.totalPostCount || 0) },
+    { label: "완료", value: String(completedItems) },
+    { label: "남음", value: String(job ? remainingItems : selectedCount) },
+    { label: "경고", value: String(job?.progress.warnings ?? 0) },
+    { label: "실패", value: String(failedItems) },
+  ]
+  const mobileSummaryCards = [
+    { label: "총 글", value: String(totalItems || scanResult?.totalPostCount || 0) },
+    { label: "완료", value: String(completedItems) },
+    { label: "남음", value: String(job ? remainingItems : selectedCount) },
+    { label: "실패", value: String(failedItems) },
+  ]
+
   const scanStatusTone = scanPending ? "running" : scanResult ? "success" : "idle"
 
   return (
-    <main className="dashboard-shell">
-      <aside className="app-sidebar" aria-label="Dashboard sections">
-        <div className="sidebar-brand">
-          <div className="sidebar-brand-copy">
-            <strong>Naver Blog Exporter</strong>
-            <span>네이버 블로그 Markdown 내보내기</span>
+    <main className="dashboard-shell relative grid min-h-screen w-full max-w-full overflow-x-clip xl:grid-cols-[20rem_minmax(0,1fr)]">
+      <div
+        id="dashboard-backdrop"
+        className="dashboard-backdrop pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_right,rgba(51,102,255,0.16),transparent_22%),radial-gradient(circle_at_bottom_left,rgba(79,140,255,0.08),transparent_28%),linear-gradient(180deg,#f8fbff_0%,var(--background)_100%)]"
+        aria-hidden="true"
+      />
+
+      <aside className="app-sidebar hidden xl:sticky xl:top-0 xl:block xl:h-screen xl:min-w-0" aria-label="Dashboard sections">
+        <div className="app-sidebar-shell grid h-screen content-start gap-4 overflow-x-hidden overflow-y-auto border-r border-white/10 bg-[#1f3045] [background-image:linear-gradient(180deg,rgba(255,255,255,0.05),transparent),linear-gradient(180deg,var(--sidebar-background),#182637)] p-5 text-slate-50 shadow-[16px_0_32px_rgba(11,22,36,0.16)]">
+          <div className="sidebar-brand">
+            <strong className="text-lg font-semibold tracking-[-0.03em] text-white">Naver Blog Exporter</strong>
           </div>
+
+          <Separator className="sidebar-separator bg-white/10" />
+
+          <div className="sidebar-section grid gap-3">
+            <p className="sidebar-heading text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-300">
+              작업 순서
+            </p>
+            <nav className="sidebar-nav grid gap-2">
+              {navigationItems.map((item) => (
+                <a
+                  key={item.href}
+                  className={cn(
+                    "sidebar-link flex min-h-12 items-center gap-3 rounded-2xl border px-4 py-3 text-sm font-medium transition",
+                    item.id === activeSectionId
+                      ? "is-active border-white/10 bg-white/10 text-white"
+                      : "border-transparent text-slate-300 hover:border-white/10 hover:bg-white/5 hover:text-white",
+                  )}
+                  data-section-link={item.id}
+                  href={item.href}
+                  aria-current={item.id === activeSectionId ? "true" : undefined}
+                >
+                  <i className={item.iconClass} aria-hidden="true" />
+                  <span>{item.label}</span>
+                </a>
+              ))}
+            </nav>
+          </div>
+
+          <Card className="sidebar-summary-card border-white/10 bg-white/5 text-slate-50 shadow-none">
+            <CardHeader className="sidebar-summary-header p-4 pb-3">
+              <div className="sidebar-summary-heading flex items-start justify-between gap-3">
+                <div>
+                  <CardTitle className="sidebar-summary-title text-lg font-semibold tracking-[-0.03em] text-white">진행</CardTitle>
+                </div>
+                <Badge id="status-text" className={statusPillClass(railStatus)} data-status={railStatus}>
+                  {railStatus}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="sidebar-summary-content grid gap-3 px-4 pb-4 pt-0">
+              <div id="summary" className="sidebar-summary-grid grid grid-cols-2 gap-3" aria-live="polite">
+                {railSummaryCards.map((card) => (
+                  <article key={card.label} className="sidebar-summary-metric grid gap-1 rounded-2xl border border-white/10 bg-[#22354c] px-4 py-3">
+                    <span className="text-xs font-medium text-[#d6e2f1]">{card.label}</span>
+                    <strong className="text-lg font-semibold tracking-[-0.03em] text-white">{card.value}</strong>
+                  </article>
+                ))}
+              </div>
+              <Button
+                type="button"
+                id="export-button"
+                variant="outline"
+                size="lg"
+                className="min-h-11 rounded-xl border-white/20 bg-transparent !text-white hover:bg-white/10"
+                disabled={exportDisabled || submitting}
+                onClick={handleSubmit}
+              >
+                <i className={`${submitting ? "ri-loader-4-line motion-safe:animate-spin" : "ri-download-2-line"}`} aria-hidden="true" />
+                <span>{submitting ? "작업 등록 중" : "내보내기"}</span>
+              </Button>
+            </CardContent>
+          </Card>
         </div>
+      </aside>
 
-        <Separator className="sidebar-separator" />
+      <div className="dashboard-main grid min-w-0 max-w-full gap-5 overflow-x-clip px-0 pb-0 pt-0">
+        <section
+          className="mobile-command-bar sticky top-0 z-30 grid gap-3 border-b border-slate-200/80 bg-white/92 px-4 py-3 shadow-[0_18px_36px_rgba(22,33,50,0.08)] backdrop-blur xl:hidden"
+          aria-label="Mobile command rail"
+        >
+          <div className="mobile-rail flex items-center justify-between gap-3">
+            <div className="mobile-rail-copy grid gap-1">
+              <span className="mobile-rail-label text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">현재 단계</span>
+              <strong className="mobile-rail-step text-sm font-semibold tracking-[-0.02em] text-slate-900">{activeItem.label}</strong>
+            </div>
+            <Badge className={statusPillClass(railStatus)} data-status={railStatus}>
+              {railStatus}
+            </Badge>
+          </div>
 
-        <div className="sidebar-section">
-          <p className="sidebar-heading">작업 순서</p>
-          <nav className="sidebar-nav">
-            {navigationItems.map((item, index) => (
+          <nav className="mobile-nav flex gap-2 overflow-auto" aria-label="작업 순서">
+            {navigationItems.map((item) => (
               <a
-                key={item.href}
-                className={`sidebar-link${index === 0 ? " is-active" : ""}`}
+                key={`mobile-${item.href}`}
+                className={cn(
+                  "sidebar-link mobile-nav-link flex min-h-9 min-w-max items-center gap-2 rounded-full border px-3 py-2 text-sm font-medium transition",
+                  item.id === activeSectionId
+                    ? "is-active border-transparent bg-primary text-primary-foreground"
+                    : "border-slate-200 bg-white text-slate-600",
+                )}
+                data-mobile-section-link={item.id}
                 href={item.href}
+                aria-current={item.id === activeSectionId ? "true" : undefined}
               >
                 <i className={item.iconClass} aria-hidden="true" />
                 <span>{item.label}</span>
               </a>
             ))}
           </nav>
-        </div>
 
-        <Card className="sidebar-summary-card">
-          <CardHeader className="sidebar-summary-header">
-            <CardDescription className="sidebar-summary-kicker">Ready Check</CardDescription>
-            <CardTitle className="sidebar-summary-title">현재 세션</CardTitle>
-          </CardHeader>
-          <CardContent className="sidebar-summary-content">
-            <div className="sidebar-summary-row">
-              <span>Preview</span>
-              <Badge variant={previewDirty ? "secondary" : "outline"}>{previewDirty ? "변경됨" : "동기화"}</Badge>
-            </div>
-            <div className="sidebar-summary-row">
-              <span>Export</span>
-              <Badge variant={job?.status === "failed" ? "destructive" : "secondary"}>{job?.status ?? "idle"}</Badge>
-            </div>
-          </CardContent>
-        </Card>
-      </aside>
+          <div className="mobile-utility-row flex items-start gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="min-h-10 shrink-0 rounded-full px-4"
+              aria-label={submitting ? "빠른 내보내기 등록 중" : "빠른 내보내기"}
+              disabled={exportDisabled || submitting}
+              onClick={handleSubmit}
+            >
+              <i className={`${submitting ? "ri-loader-4-line motion-safe:animate-spin" : "ri-download-2-line"}`} aria-hidden="true" />
+              <span>{submitting ? "등록 중" : "내보내기"}</span>
+            </Button>
 
-      <div className="dashboard-main">
-        <Card className="hero-panel" id="scan-workbench">
-          <CardHeader className="hero-panel-header">
-            <div className="hero-copy">
-              <p className="eyebrow">Naver Blog Markdown Export</p>
-              <CardTitle className="hero-title">네이버 블로그 내보내기</CardTitle>
-              <CardDescription className="hero-description">
-                네이버 블로그를 스캔한 뒤 카테고리 범위를 고르고, Markdown과 asset 출력 규칙을 한 화면에서 조정합니다.
-              </CardDescription>
+            <div className="mobile-summary-strip flex flex-1 gap-2 overflow-auto" aria-live="polite">
+              {mobileSummaryCards.map((card) => (
+                <article
+                  key={`mobile-${card.label}`}
+                  className="mobile-summary-metric inline-flex min-h-10 min-w-max items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2"
+                >
+                  <span className="text-[11px] font-medium text-slate-500">{card.label}</span>
+                  <strong className="text-sm font-semibold text-slate-900">{card.value}</strong>
+                </article>
+              ))}
             </div>
-            <Badge id="scan-status" className="scan-status-badge" data-status={scanStatusTone}>
-              {scanStatus}
-            </Badge>
-          </CardHeader>
-          <CardContent className="hero-panel-content">
-            <div className="scan-toolbar">
-              <label className="input-stack scan-field">
-                <span>Blog ID 또는 URL</span>
-                <Input
-                  id="blogIdOrUrl"
-                  placeholder="mym0404 또는 https://blog.naver.com/..."
-                  value={blogIdOrUrl}
-                  onChange={(event) => handleBlogInputChange(event.target.value)}
-                />
-              </label>
+          </div>
+        </section>
 
-              <div className="scan-actions">
-                <Button type="button" id="scan-button" size="lg" disabled={scanPending} onClick={handleScan}>
+        <section id="scan-workbench" className="dashboard-section scan-workbench-section grid gap-4 px-4 pt-4 xl:px-6 xl:pt-6">
+          <Card className="hero-panel overflow-hidden border-white/80 bg-white/90 shadow-[0_24px_60px_rgba(22,33,50,0.08)] backdrop-blur">
+            <CardHeader className="hero-panel-header gap-4 border-b border-slate-200/70 bg-white/70 p-6 sm:flex sm:items-start sm:justify-between">
+              <div className="hero-copy space-y-2">
+                <CardTitle className="hero-title text-[clamp(2rem,3vw,3.4rem)] font-semibold leading-[1.02] tracking-[-0.06em] text-slate-900">
+                  블로그 스캔
+                </CardTitle>
+                <CardDescription className="hero-description max-w-3xl text-sm leading-7 text-slate-600">
+                  Blog ID를 입력하고 카테고리를 불러옵니다.
+                </CardDescription>
+              </div>
+              <div className="scan-status-stack grid justify-items-start gap-3">
+                <Badge id="scan-status" className={statusPillClass(scanStatusTone)} data-status={scanStatusTone}>
+                  {scanStatus}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="grid gap-4 p-6">
+              <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+                <label className="grid gap-2">
+                  <span className="text-sm font-semibold text-slate-900">Blog ID 또는 URL</span>
+                  <Input
+                    id="blogIdOrUrl"
+                    placeholder="mym0404 또는 https://blog.naver.com/..."
+                    value={blogIdOrUrl}
+                    onChange={(event) => handleBlogInputChange(event.target.value)}
+                  />
+                </label>
+                <Button
+                  type="button"
+                  id="scan-button"
+                  size="lg"
+                  className="min-h-11 rounded-xl px-5"
+                  disabled={scanPending}
+                  onClick={handleScan}
+                >
                   <i className={`${scanPending ? "ri-loader-4-line motion-safe:animate-spin" : "ri-radar-line"}`} aria-hidden="true" />
                   <span>{scanPending ? "스캔 중" : "카테고리 스캔"}</span>
                 </Button>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <section id="scan-summary" className="kpi-strip" aria-live="polite">
-          {summaryCards.map((card) => (
-            <Card key={card.label} className="metric-card" data-tone={card.tone}>
-              <CardContent className="metric-card-content">
-                <div className="metric-card-icon" aria-hidden="true">
-                  <i className={card.iconClass} />
-                </div>
-                <div className="metric-card-copy">
-                  <span>{card.label}</span>
-                  <strong>{card.value}</strong>
-                  <small>{card.note}</small>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+          <section id="scan-summary" className="kpi-strip grid gap-4 md:grid-cols-2 2xl:grid-cols-4" aria-live="polite">
+            {scanSummaryCards.map((card) => (
+              <Card
+                key={card.label}
+                className="metric-card overflow-hidden border-white/80 bg-white/90 shadow-[0_18px_40px_rgba(22,33,50,0.06)]"
+                data-tone={card.tone}
+              >
+                <CardContent className="metric-card-content flex items-center gap-4 p-5">
+                  <div
+                    className={cn(
+                      "metric-card-icon inline-flex size-12 items-center justify-center rounded-2xl text-lg",
+                      card.tone === "primary"
+                        ? "bg-primary/10 text-primary"
+                        : card.tone === "cyan"
+                          ? "bg-cyan-50 text-cyan-700"
+                          : card.tone === "green"
+                            ? "bg-emerald-50 text-emerald-700"
+                            : "bg-slate-100 text-slate-700",
+                    )}
+                    aria-hidden="true"
+                  >
+                    <i className={card.iconClass} />
+                  </div>
+                  <div className="metric-card-copy grid gap-1">
+                    <span className="text-sm font-medium text-slate-500">{card.label}</span>
+                    <strong className="text-4xl font-semibold tracking-[-0.05em] text-slate-900">{card.value}</strong>
+                    <small className="text-sm text-slate-500">{card.note}</small>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </section>
         </section>
 
-        <div className="content-grid">
+        <div className="content-grid grid min-w-0 gap-5 px-4 pb-5 xl:px-6 xl:pb-6">
           <CategoryPanel
             scanResult={scanResult}
             selectedCategoryIds={selectedCategoryIds}
@@ -494,18 +737,19 @@ export const App = () => {
             frontmatterFieldOrder={defaults.frontmatterFieldOrder}
             frontmatterFieldMeta={defaults.frontmatterFieldMeta}
             frontmatterValidationErrors={frontmatterValidationErrors}
+            onOutputDirChange={setOutputDir}
+            onOptionsChange={updateOptions}
+          />
+
+          <PreviewPanel
             preview={preview}
             previewDirty={previewDirty}
             previewStatus={previewStatus}
             previewMode={previewMode}
-            previewPending={previewPending}
-            exportPending={submitting}
             disabled={previewDisabled}
-            onOutputDirChange={setOutputDir}
-            onOptionsChange={updateOptions}
+            pending={previewPending}
             onPreview={handlePreview}
             onPreviewModeChange={setPreviewMode}
-            onSubmit={handleSubmit}
           />
 
           <JobResultsPanel

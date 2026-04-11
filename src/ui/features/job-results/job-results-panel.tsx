@@ -16,8 +16,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../../components/ui/dialog.js"
+import { ScrollArea } from "../../components/ui/scroll-area.js"
 import { Separator } from "../../components/ui/separator.js"
 import { MarkdownDocument } from "../../lib/markdown.js"
+import { cn } from "../../lib/cn.js"
 
 type JobFilter = "all" | "warnings" | "errors"
 
@@ -41,24 +43,6 @@ const getJobItems = (job: ExportJobState | null) => {
   return job.items
 }
 
-const getSummaryCards = (job: ExportJobState | null) => {
-  if (!job) {
-    return [
-      { label: "Status", value: "Ready" },
-      { label: "Completed", value: "0" },
-      { label: "Failed", value: "0" },
-      { label: "Warnings", value: "0" },
-    ]
-  }
-
-  return [
-    { label: "Status", value: job.status },
-    { label: "Completed", value: String(job.progress.completed) },
-    { label: "Failed", value: String(job.progress.failed) },
-    { label: "Warnings", value: String(job.progress.warnings) },
-  ]
-}
-
 const buildModalMarkdown = (item: ExportJobItem) => {
   if (item.markdown) {
     return item.markdown
@@ -80,6 +64,18 @@ const severityMeta = {
   warning: { badge: "outline" as const, label: "경고", iconClass: "ri-alert-line" },
   error: { badge: "destructive" as const, label: "에러", iconClass: "ri-error-warning-line" },
 }
+
+const jobStatusClass = (status: string | undefined) =>
+  cn(
+    "status-pill rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]",
+    status === "completed" || status === "ready"
+      ? "bg-emerald-100 text-emerald-800"
+      : status === "running" || status === "queued"
+        ? "bg-amber-100 text-amber-800"
+        : status === "failed"
+          ? "bg-rose-100 text-rose-800"
+          : "bg-slate-100 text-slate-600",
+  )
 
 export const JobResultsPanel = ({
   job,
@@ -121,43 +117,40 @@ export const JobResultsPanel = ({
 
   return (
     <>
-      <Card className="board-card" id="status-panel">
-        <CardHeader className="panel-header">
-          <div className="panel-heading">
-            <p className="section-kicker">Stage 3</p>
-            <CardTitle className="section-title">작업 상태</CardTitle>
+      <Card
+        className="board-card overflow-hidden border-white/80 bg-white/90 shadow-[0_24px_60px_rgba(22,33,50,0.08)] backdrop-blur"
+        id="status-panel"
+      >
+        <CardHeader className="panel-header gap-4 border-b border-slate-200/70 bg-white/70 p-6 sm:flex sm:items-start sm:justify-between">
+          <div className="panel-heading space-y-2">
+            <CardTitle className="section-title text-2xl font-semibold tracking-[-0.04em] text-slate-900">
+              작업 상태
+            </CardTitle>
+            <CardDescription className="panel-description max-w-3xl text-sm leading-7 text-slate-600">
+              결과와 로그를 확인합니다.
+            </CardDescription>
           </div>
-          <Badge id="status-text" className="status-pill" data-status={job?.status ?? "idle"}>
+          <Badge className={jobStatusClass(job?.status)} data-status={job?.status ?? "idle"}>
             {job?.status ?? "Idle"}
           </Badge>
         </CardHeader>
 
-        <CardContent className="status-layout">
-          <div id="summary" className="stats" aria-live="polite">
-            {getSummaryCards(job).map((card) => (
-              <article key={card.label} className="stat-card">
-                <span>{card.label}</span>
-                <strong>{card.value}</strong>
-              </article>
-            ))}
-          </div>
-
-          <div className="results-grid">
-            <section className="job-results-panel">
-              <div className="job-results-header">
+        <CardContent className="status-layout grid gap-5 p-6">
+          <div className="results-grid grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(20rem,0.8fr)]">
+            <section className="job-results-panel grid gap-4 rounded-[1.5rem] border border-slate-200 bg-slate-50/80 p-4">
+              <div className="job-results-header grid gap-4 lg:flex lg:items-start lg:justify-between">
                 <div>
-                  <p className="section-kicker">완료 리스트</p>
-                  <CardDescription className="results-description">
-                    성공, 경고, 실패 결과를 파일 트리로 보고 Markdown 또는 진단 내용을 확인합니다.
+                  <CardDescription className="results-description text-sm leading-7 text-slate-600">
+                    파일을 눌러 내용을 확인합니다.
                   </CardDescription>
                 </div>
-                <div className="job-filter-group" role="tablist" aria-label="완료 리스트 필터">
+                <div className="job-filter-group flex flex-wrap items-center gap-2" role="tablist" aria-label="완료 리스트 필터">
                   {(["all", "warnings", "errors"] as const).map((filter) => (
                     <Button
                       key={filter}
                       type="button"
                       variant={activeJobFilter === filter ? "outline" : "ghost"}
-                      className={`job-filter-button${activeJobFilter === filter ? " is-active" : ""}`}
+                      className={`job-filter-button min-w-16 rounded-full px-4 ${activeJobFilter === filter ? "is-active border-slate-400 bg-white" : "text-slate-600"}`}
                       data-job-filter={filter}
                       onClick={() => onFilterChange(filter)}
                     >
@@ -168,72 +161,102 @@ export const JobResultsPanel = ({
               </div>
 
               {groupedItems.size === 0 ? (
-                <div id="job-file-tree" className="job-file-tree empty">
+                <div
+                  id="job-file-tree"
+                  className="job-file-tree empty grid min-h-28 place-items-center rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-6 text-center text-sm text-slate-500"
+                >
                   {activeJobFilter === "all"
                     ? "완료된 결과가 여기에 표시됩니다."
                     : "현재 필터에 맞는 결과가 없습니다."}
                 </div>
               ) : (
-                <div id="job-file-tree" className="job-file-tree">
-                  {Array.from(groupedItems.entries()).map(([groupKey, items]) => (
-                    <section key={groupKey} className="job-tree-group">
-                      <header className="job-tree-group-header">
-                        <span>{groupKey}</span>
-                        <Badge variant="outline">{items.length}</Badge>
-                      </header>
-                      <div className="job-tree-group-body">
-                        {items.map((item) => {
-                          const severity = buildJobItemSeverity(item)
-                          const fileLabel = item.outputPath?.split("/").pop() ?? `${item.logNo}.diagnostics`
-                          const meta = severityMeta[severity]
+                <ScrollArea
+                  id="job-file-tree"
+                  className="job-file-tree job-file-tree-scroll h-[min(32rem,62vh)] overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white"
+                >
+                  <div className="job-file-tree-content grid gap-3 p-3">
+                    {Array.from(groupedItems.entries()).map(([groupKey, items]) => (
+                      <section key={groupKey} className="job-tree-group grid gap-3">
+                        <header className="job-tree-group-header flex items-center justify-between gap-3">
+                          <span className="text-sm font-semibold text-slate-500">{groupKey}</span>
+                          <Badge variant="outline" className="rounded-full border-slate-300 px-3 py-1">
+                            {items.length}
+                          </Badge>
+                        </header>
+                        <div className="job-tree-group-body grid gap-2">
+                          {items.map((item) => {
+                            const severity = buildJobItemSeverity(item)
+                            const fileLabel = item.outputPath?.split("/").pop() ?? `${item.logNo}.diagnostics`
+                            const meta = severityMeta[severity]
 
-                          return (
-                            <button
-                              key={item.id}
-                              type="button"
-                              className="job-tree-item"
-                              data-job-item-id={item.id}
-                              data-severity={severity}
-                              onClick={() => onItemSelect(item)}
-                            >
-                              <span className="job-tree-item-main">
-                                <span className="job-tree-item-icon" aria-hidden="true">
-                                  <i className={meta.iconClass} />
-                                </span>
-                                <span className="job-tree-item-copy">
-                                  <strong>{fileLabel}</strong>
-                                  <small>{item.title}</small>
-                                </span>
-                              </span>
-                              <Badge
-                                className="job-tree-item-badge"
-                                variant={severity === "success" ? "secondary" : meta.badge}
+                            return (
+                              <button
+                                key={item.id}
+                                type="button"
+                                className={cn(
+                                  "job-tree-item flex w-full flex-col gap-3 rounded-2xl border bg-white px-4 py-4 text-left transition hover:-translate-y-0.5 hover:shadow-[0_16px_36px_rgba(22,33,50,0.08)] sm:flex-row sm:items-center sm:justify-between",
+                                  severity === "warning"
+                                    ? "border-amber-200 hover:border-amber-300"
+                                    : severity === "error"
+                                      ? "border-rose-200 hover:border-rose-300"
+                                      : "border-slate-200 hover:border-primary/40",
+                                )}
+                                data-job-item-id={item.id}
+                                data-severity={severity}
+                                onClick={() => onItemSelect(item)}
                               >
-                                {severity === "warning" ? `${meta.label} ${item.warningCount}` : meta.label}
-                              </Badge>
-                            </button>
-                          )
-                        })}
-                      </div>
-                    </section>
-                  ))}
-                </div>
+                                <span className="job-tree-item-main flex min-w-0 flex-1 items-start gap-3 sm:items-center">
+                                  <span
+                                    className={cn(
+                                      "job-tree-item-icon inline-flex size-10 items-center justify-center rounded-2xl",
+                                      severity === "warning"
+                                        ? "bg-amber-100 text-amber-700"
+                                        : severity === "error"
+                                          ? "bg-rose-100 text-rose-700"
+                                          : "bg-slate-100 text-slate-700",
+                                    )}
+                                    aria-hidden="true"
+                                  >
+                                    <i className={meta.iconClass} />
+                                  </span>
+                                  <span className="job-tree-item-copy grid min-w-0 gap-1">
+                                    <strong className="truncate text-base font-semibold tracking-[-0.03em] text-slate-900">
+                                      {fileLabel}
+                                    </strong>
+                                    <small className="text-sm text-slate-500">{item.title}</small>
+                                  </span>
+                                </span>
+                                <Badge
+                                  className="job-tree-item-badge"
+                                  variant={severity === "success" ? "secondary" : meta.badge}
+                                >
+                                  {severity === "warning" ? `${meta.label} ${item.warningCount}` : meta.label}
+                                </Badge>
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </section>
+                    ))}
+                  </div>
+                </ScrollArea>
               )}
             </section>
 
-            <section className="logs-panel">
-              <div className="logs-header">
+            <section className="logs-panel grid gap-4 rounded-[1.5rem] border border-slate-200 bg-slate-50/80 p-4">
+              <div className="logs-header grid gap-3">
                 <div>
-                  <p className="section-kicker">작업 로그</p>
-                  <CardDescription className="results-description">
-                    export 진행, 오류, manifest 생성 여부를 시간 순서대로 확인합니다.
+                  <CardDescription className="results-description text-sm leading-7 text-slate-600">
+                    작업 로그
                   </CardDescription>
                 </div>
               </div>
               <Separator />
-              <pre id="logs" className="logs" aria-live="polite">
-                {job?.logs.map((entry) => `[${entry.timestamp}] ${entry.message}`).join("\n") ?? ""}
-              </pre>
+              <ScrollArea id="logs" className="logs-scroll h-[min(28rem,56vh)] overflow-hidden rounded-[1.5rem] border border-slate-800 bg-slate-950" aria-live="polite">
+                <pre className="logs min-h-full bg-slate-950 px-4 py-4 font-mono text-[0.88rem] leading-7 text-slate-100">
+                  {job?.logs.map((entry) => `[${entry.timestamp}] ${entry.message}`).join("\n") ?? ""}
+                </pre>
+              </ScrollArea>
             </section>
           </div>
         </CardContent>
@@ -243,18 +266,17 @@ export const JobResultsPanel = ({
         <Dialog open onOpenChange={(open) => !open && onModalClose()}>
           <DialogContent
             id="markdown-modal"
-            className="markdown-modal-dialog"
+            className="markdown-modal-dialog h-[min(88vh,56rem)] w-[min(68rem,calc(100vw-2rem))] max-w-[min(68rem,calc(100vw-2rem))] grid-rows-[auto_auto_minmax(0,1fr)] gap-4 rounded-[1.5rem] p-5"
             showCloseButton={false}
           >
-            <DialogHeader className="markdown-modal-header">
+            <DialogHeader className="markdown-modal-header grid gap-4 sm:flex sm:items-start sm:justify-between">
               <div>
-                <p className="section-kicker">Markdown Preview</p>
-                <DialogTitle>결과 미리보기</DialogTitle>
+                <DialogTitle className="text-2xl font-semibold tracking-[-0.04em] text-slate-900">결과 미리보기</DialogTitle>
               </div>
               <Button
                 type="button"
                 variant="ghost"
-                className="ghost-button"
+                className="ghost-button min-h-10 rounded-xl px-4"
                 id="markdown-modal-close"
                 onClick={onModalClose}
               >
@@ -264,27 +286,29 @@ export const JobResultsPanel = ({
             <DialogDescription className="sr-only">
               export 결과 Markdown 또는 진단 내용을 확인합니다.
             </DialogDescription>
-            <div id="markdown-modal-meta" className="markdown-modal-meta">
-              <article className="preview-meta-card">
-                <span>Item</span>
-                <strong>{selectedItem.title}</strong>
+            <div id="markdown-modal-meta" className="markdown-modal-meta grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <article className="preview-meta-card grid gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                <span className="text-sm font-medium text-slate-500">Item</span>
+                <strong className="truncate text-base font-semibold tracking-[-0.03em] text-slate-900">{selectedItem.title}</strong>
               </article>
-              <article className="preview-meta-card">
-                <span>Status</span>
-                <strong>{selectedItem.status}</strong>
+              <article className="preview-meta-card grid gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                <span className="text-sm font-medium text-slate-500">Status</span>
+                <strong className="truncate text-base font-semibold tracking-[-0.03em] text-slate-900">{selectedItem.status}</strong>
               </article>
-              <article className="preview-meta-card">
-                <span>Warnings</span>
-                <strong>{selectedItem.warningCount}</strong>
+              <article className="preview-meta-card grid gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                <span className="text-sm font-medium text-slate-500">Warnings</span>
+                <strong className="truncate text-base font-semibold tracking-[-0.03em] text-slate-900">{selectedItem.warningCount}</strong>
               </article>
-              <article className="preview-meta-card">
-                <span>Output</span>
-                <strong>{selectedItem.outputPath ?? "diagnostics only"}</strong>
+              <article className="preview-meta-card grid gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                <span className="text-sm font-medium text-slate-500">Output</span>
+                <strong className="truncate text-base font-semibold tracking-[-0.03em] text-slate-900">{selectedItem.outputPath ?? "diagnostics only"}</strong>
               </article>
             </div>
-            <article id="markdown-modal-body" className="markdown-modal-body">
-              <MarkdownDocument markdown={buildModalMarkdown(selectedItem)} />
-            </article>
+            <ScrollArea id="markdown-modal-body" className="markdown-modal-body overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white">
+              <article className="markdown-modal-content min-h-full px-4 py-4">
+                <MarkdownDocument markdown={buildModalMarkdown(selectedItem)} />
+              </article>
+            </ScrollArea>
           </DialogContent>
         </Dialog>
       ) : null}

@@ -6,14 +6,16 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 ## Source Of Truth
 - 구조와 상태 흐름: `src/ui/App.tsx`
 - semantic token: `src/ui/styles/globals.css`
-- 앱 전용 layout/surface 보정: `src/ui/styles/dashboard.css`
+- 화면 표현과 반응형 레이아웃: `src/ui/**/*.tsx`의 Tailwind utility class
 - Markdown renderer: `src/ui/lib/markdown.tsx`
 - 브라우저 검증: `scripts/harness/run-ui-smoke.ts`, `docs/runbooks/browser-verification.md`
 
 ## 관련 코드
 - [../../../src/ui/App.tsx](../../../src/ui/App.tsx)
 - [../../../src/ui/styles/globals.css](../../../src/ui/styles/globals.css)
-- [../../../src/ui/styles/dashboard.css](../../../src/ui/styles/dashboard.css)
+- [../../../src/ui/features/options/export-options-panel.tsx](../../../src/ui/features/options/export-options-panel.tsx)
+- [../../../src/ui/features/preview/preview-panel.tsx](../../../src/ui/features/preview/preview-panel.tsx)
+- [../../../src/ui/features/job-results/job-results-panel.tsx](../../../src/ui/features/job-results/job-results-panel.tsx)
 - [../../../src/ui/lib/markdown.tsx](../../../src/ui/lib/markdown.tsx)
 - [../../../scripts/harness/run-ui-smoke.ts](../../../scripts/harness/run-ui-smoke.ts)
 
@@ -24,9 +26,12 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 
 ## Style Direction
 - 메인 캔버스는 밝은 blue-neutral surface, 좌측은 deep navy sidebar를 사용한다.
+- Blog ID 입력과 카테고리 스캔 액션은 본문 첫 카드 상단에 둔다.
+- 카테고리 패널은 카드 나열 대신 고정 높이 scroll area 안의 표로 유지한다.
 - 상단 hero card, KPI strip, 3개 workbench board를 같은 shadcn card hierarchy 안에 둔다.
 - preview, options, status는 각각 독립 board지만 spacing, border, shadow rhythm을 공유한다.
 - layout은 desktop에서 `sidebar + fluid main`, mobile에서는 single-column stack으로 접힌다.
+- 최상위 shell은 viewport에 바로 붙는다. 바깥 프레임용 여백이나 화면 바깥으로 밀리는 horizontal overflow를 두지 않는다.
 
 ## Tokens
 - Background: `#F4F7FB`
@@ -45,11 +50,15 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 
 ## Component Rules
 - `CardHeader/CardDescription/CardContent`를 기본 계층으로 사용한다. 큰 feature도 임의 wrapper 대신 card composition으로 쪼갠다.
+- 헤더 카피는 짧게 유지하고, `Stage`, `Command Rail` 같은 장식성 라벨은 두지 않는다.
 - 텍스트 입력은 `Input`, 상태 pill과 count는 `Badge`, 오류/가이드 배너는 `Alert`, 탭 그룹은 `Tabs`, modal은 `Dialog`를 우선한다.
-- custom CSS는 layout, responsive folding, markdown skin, feature surface 보정만 담당한다.
+- feature 전용 화면 스타일은 별도 CSS 파일 대신 각 컴포넌트의 Tailwind utility class로 유지한다.
+- `globals.css`는 토큰, base element reset, native `select` 기본 스타일만 담당한다.
+- 바깥 frame spacing은 CSS 파일이 아니라 `App.tsx` 셸 utility에서만 제어한다.
 - category/search/output/preview/status의 DOM hook은 유지한다.
   `#blogIdOrUrl`, `#scan-button`, `#preview-button`, `#export-button`, `#job-file-tree`, `#markdown-modal`, `[data-preview-mode]`, `[data-job-filter]`, `#summary`, `#status-text`, `#logs`
 - option panel은 `Tabs`로 `범위 / 구조 / Markdown / Assets`를 구분한다.
+- 설정 탭 4개는 시각적으로 작아 보이지 않게 충분한 높이와 padding을 유지한다.
 - preview는 floating segmented toggle로 `소스보기 / 같이보기 / 결과보기`를 유지한다.
 - 결과 modal과 preview renderer는 모두 `react-markdown + remark-gfm + remark-math + rehype-katex + rehype-sanitize` 경로를 사용한다.
 
@@ -61,17 +70,21 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 
 ## Accessibility
 - normal text contrast는 밝은 surface 기준 최소 `4.5:1`을 유지한다.
+- sidebar brand, nav, summary title, action button도 예외 없이 `4.5:1` 이상을 유지한다.
 - `text-muted-foreground`와 커스텀 설명 텍스트는 모두 같은 contrast policy를 따라야 한다.
 - 버튼, filter chip, 상태 badge는 높이와 baseline이 흔들리지 않게 유지한다.
 - focus ring은 primary halo를 사용하고, 상태는 색뿐 아니라 텍스트와 border로도 구분한다.
 
 ## Validation Rules
 - `scripts/harness/run-ui-smoke.ts`의 contrast gate selector는 회귀 방지 대상이다.
-- 현재 contrast gate 대상에는 category status, preview status, panel description, field help, frontmatter description, results description, file meta, modal meta, markdown frontmatter key가 포함된다.
+- 현재 contrast gate 대상에는 category status, preview status, panel description, field help, frontmatter description, results description, file meta, modal meta, markdown frontmatter key, sidebar brand/nav/summary/action text가 포함된다.
 - smoke screenshot capture는 `docs/generated/ui-review/round-01`부터 `round-05`까지 동일 시나리오로 누적한다.
+- smoke는 desktop/mobile 모두 viewport horizontal overflow와 flush shell 정렬도 같이 검사한다.
+- contrast gate는 translucent sidebar card까지 ancestor background를 합성해서 계산한다.
 
 ## Anti-Patterns
 - raw hex를 feature component 내부 className에 직접 넣는 것
 - `muted`를 설명문, disabled, meta, 상태 문구에 구분 없이 재사용하는 것
 - sidebar brand에 장식 아이콘을 다시 넣는 것
 - preview/status/logs를 서로 다른 시각 언어로 따로 노는 패널로 분리하는 것
+- `dashboard.css` 같은 화면 전용 스타일 시트를 다시 도입하는 것

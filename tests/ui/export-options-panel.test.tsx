@@ -14,33 +14,6 @@ import {
 } from "../../src/shared/export-options.js"
 import type { ExportOptions } from "../../src/shared/types.js"
 import { ExportOptionsPanel } from "../../src/ui/features/options/export-options-panel.js"
-import type { ExportPreviewResult } from "../../src/ui/lib/api.js"
-
-const preview: ExportPreviewResult = {
-  candidatePost: {
-    blogId: "mym0404",
-    logNo: "1",
-    title: "테스트 글",
-    publishedAt: "2026-04-11T04:00:00.000Z",
-    categoryId: 101,
-    categoryName: "NestJS",
-    source: "https://blog.naver.com/mym0404/1",
-    editorVersion: 4,
-    thumbnailUrl: null,
-  },
-  markdown: `---
-postTitle: "테스트 글"
----
-
-# 제목`,
-  markdownFilePath: "posts/NestJS/test.md",
-  editorVersion: 4,
-  blockTypes: ["heading"],
-  parserWarnings: ["parser warning"],
-  reviewerWarnings: [],
-  renderWarnings: [],
-  assetPaths: [],
-}
 
 const query = <T extends HTMLElement>(selector: string) => {
   const element = document.querySelector(selector)
@@ -53,13 +26,10 @@ const query = <T extends HTMLElement>(selector: string) => {
 }
 
 describe("ExportOptionsPanel", () => {
-  it("wires preview controls and option updaters across all groups", async () => {
+  it("wires option updaters across all groups", async () => {
     const user = userEvent.setup()
     let latestOptions: ExportOptions = defaultExportOptions()
     let latestOutputDir = "./output"
-    const onPreview = vi.fn()
-    const onPreviewModeChange = vi.fn()
-    const onSubmit = vi.fn()
     const onOutputDirChange = vi.fn((value: string) => {
       latestOutputDir = value
     })
@@ -75,18 +45,8 @@ describe("ExportOptionsPanel", () => {
         frontmatterFieldOrder={frontmatterFieldOrder}
         frontmatterFieldMeta={frontmatterFieldMeta}
         frontmatterValidationErrors={['title와 source가 같은 alias "shared"를 사용할 수 없습니다.']}
-        preview={preview}
-        previewDirty
-        previewStatus="preview status"
-        previewMode="source"
-        previewPending={false}
-        exportPending={false}
-        disabled={false}
         onOutputDirChange={onOutputDirChange}
         onOptionsChange={onOptionsChange}
-        onPreview={onPreview}
-        onPreviewModeChange={onPreviewModeChange}
-        onSubmit={onSubmit}
       />,
     )
 
@@ -95,10 +55,6 @@ describe("ExportOptionsPanel", () => {
         value: "/tmp/export",
       },
     })
-    await user.click(screen.getByRole("button", { name: "예시 보기" }))
-    await user.click(screen.getByTitle("같이보기"))
-    await user.click(screen.getByTitle("결과보기"))
-    await user.click(screen.getByRole("button", { name: "선택한 카테고리 내보내기" }))
 
     await user.click(screen.getByRole("tab", { name: "범위" }))
     await user.selectOptions(query<HTMLSelectElement>("#scope-categoryMode"), "exact-selected")
@@ -182,10 +138,6 @@ describe("ExportOptionsPanel", () => {
     await user.click(query<HTMLInputElement>("#assets-includeImageCaptions"))
     await user.selectOptions(query<HTMLSelectElement>("#assets-thumbnailSource"), "none")
 
-    expect(onPreview).toHaveBeenCalledTimes(1)
-    expect(onPreviewModeChange).toHaveBeenCalledWith("split")
-    expect(onPreviewModeChange).toHaveBeenCalledWith("rendered")
-    expect(onSubmit).toHaveBeenCalledTimes(1)
     expect(latestOutputDir).toBe("/tmp/export")
     expect(onOptionsChange).toHaveBeenCalled()
 

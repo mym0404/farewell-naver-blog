@@ -12,7 +12,9 @@
 ## 관련 코드
 - [../../index.html](../../index.html)
 - [../../src/ui/App.tsx](../../src/ui/App.tsx)
-- [../../src/ui/styles/dashboard.css](../../src/ui/styles/dashboard.css)
+- [../../src/ui/styles/globals.css](../../src/ui/styles/globals.css)
+- [../../src/ui/features/options/export-options-panel.tsx](../../src/ui/features/options/export-options-panel.tsx)
+- [../../src/ui/features/preview/preview-panel.tsx](../../src/ui/features/preview/preview-panel.tsx)
 - [../../.agents/knowledge/product/ui-dashboard-design-system.md](../../.agents/knowledge/product/ui-dashboard-design-system.md)
 - [../../src/server/http-server.ts](../../src/server/http-server.ts)
 - [../../scripts/harness/run-ui-smoke.ts](../../scripts/harness/run-ui-smoke.ts)
@@ -44,23 +46,33 @@
 
 루프마다 확인할 기준:
 - 좌측 사이드바, 상단 툴바, KPI strip 정렬이 어긋나지 않는지
+- Blog ID 입력과 카테고리 스캔 버튼이 본문 첫 카드 상단에 있는지
+- 카테고리 패널이 카드 더미가 아니라 고정 높이 표로 보이는지
+- 모바일 sticky command bar가 과하게 높아지거나 본문을 덮어버리지 않는지
+- 사이드바에 `Command Rail`, `Stage` 같은 불필요한 텍스트가 다시 생기지 않는지
 - Sidebar brand에 장식 아이콘이 다시 들어오지 않았는지
 - 모바일 가로 스크롤이 없는지
+- 데스크톱도 body 기준 좌우 스크롤이 생기지 않는지
+- 좌측 rail과 모바일 sticky rail이 window edge에 바로 붙어 있는지
 - KPI 카드 숫자와 상태 배지 대비가 충분한지
 - 설명 텍스트, helper text, modal meta, 파일 subtitle이 거의 보이지 않는 상태가 아닌지
+- drawer의 브랜드, 메뉴, 진행 카드, 내보내기 버튼 텍스트가 어둡게 가라앉지 않는지
 - focus, disabled, loading 상태가 구분되는지
 - 상태 패널과 작업 패널이 같은 메인 보드 안에서 자연스럽게 읽히는지
 - 로그, 요약, 카테고리 패널이 같은 시각 언어를 유지하는지
 - preview 후보 글 정보와 Markdown 예시가 현재 선택 범위와 맞는지
 - preview와 export 결과 모두 HTML 태그를 본문에 남기지 않는지
 - preview mode toggle이 source/split/rendered 상태를 올바르게 전환하는지
+- preview의 frontmatter/value block이 모바일에서 세로로 찌그러지지 않는지
 - frontmatter alias 충돌 시 오류가 즉시 보이고 export가 막히는지
 - 완료 파일 트리에서 경고/에러 아이콘과 필터가 일관되게 동작하는지
 - Modal Markdown preview가 데스크톱과 모바일에서 읽기 어렵지 않은지
+- 설정 탭 4개 높이가 너무 낮지 않고 클릭 타깃이 충분한지
 
 ## Contrast Gate
 - smoke는 핵심 selector의 computed foreground/background 대비를 계산하고 `4.5:1` 미만이면 실패한다.
-- 회귀 대상 selector는 `#category-status`, `#preview-status`, `.panel-description`, `.field-help`, `.frontmatter-description`, `.results-description`, `.job-tree-item-copy small`, `#markdown-modal-meta span`, `.markdown-frontmatter-key`다.
+- smoke는 desktop/mobile 모두 viewport horizontal overflow가 1px를 넘으면 실패한다.
+- 회귀 대상 selector는 `#category-status`, `#preview-status`, `.panel-description`, `.field-help`, `.frontmatter-description`, `.results-description`, `.job-tree-item-copy small`, `#markdown-modal-meta span`, `.markdown-frontmatter-key`, `.sidebar-brand strong`, `.sidebar-heading`, `.sidebar-link span`, `.sidebar-summary-title`, `.sidebar-summary-metric span`, `#export-button span`다.
 - 새 설명 텍스트나 helper UI를 추가하면 smoke 대상 selector도 같이 확장한다.
 
 ## Icon Policy

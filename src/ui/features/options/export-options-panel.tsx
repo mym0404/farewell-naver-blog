@@ -9,7 +9,6 @@ import type {
 
 import { Alert, AlertDescription, AlertTitle } from "../../components/ui/alert.js"
 import { Badge } from "../../components/ui/badge.js"
-import { Button } from "../../components/ui/button.js"
 import {
   Card,
   CardContent,
@@ -18,10 +17,7 @@ import {
   CardTitle,
 } from "../../components/ui/card.js"
 import { Input } from "../../components/ui/input.js"
-import { Separator } from "../../components/ui/separator.js"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs.js"
-import type { ExportPreviewResult } from "../../lib/api.js"
-import { PreviewPanel } from "../preview/preview-panel.js"
 
 const OptionField = ({
   optionKey,
@@ -34,28 +30,48 @@ const OptionField = ({
   description?: string
   children: ReactNode
 }) => (
-  <label className="field" data-option-key={optionKey}>
-    <span>{label}</span>
+  <label
+    className="field grid min-h-[7.75rem] gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(22,33,50,0.04)]"
+    data-option-key={optionKey}
+  >
+    <span className="text-sm font-semibold text-slate-900">{label}</span>
     {children}
-    {description ? <small className="field-help">{description}</small> : null}
+    {description ? <small className="field-help text-sm leading-6 text-slate-500">{description}</small> : null}
   </label>
 )
 
 const CheckField = ({
+  inputId,
   optionKey,
   label,
   description,
-  children,
+  checked,
+  onChange,
 }: {
+  inputId: string
   optionKey: string
   label: string
   description?: string
-  children: ReactNode
+  checked: boolean
+  onChange: (checked: boolean) => void
 }) => (
-  <label className="check" data-option-key={optionKey}>
-    {children}
-    <span>{label}</span>
-    {description ? <small className="field-help">{description}</small> : null}
+  <label
+    className="check flex min-h-[7.75rem] flex-col gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(22,33,50,0.04)]"
+    data-option-key={optionKey}
+  >
+    <span className="check-head flex items-start gap-3">
+      <input
+        id={inputId}
+        className="mt-0.5 size-[1.1rem] shrink-0 accent-primary"
+        type="checkbox"
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+      />
+      <span className="check-copy grid min-w-0 gap-1">
+        <span className="check-title text-sm font-semibold text-slate-900">{label}</span>
+      </span>
+    </span>
+    {description ? <small className="field-help text-sm leading-6 text-slate-500">{description}</small> : null}
   </label>
 )
 
@@ -68,14 +84,14 @@ const OptionSection = ({
   note: string
   children: ReactNode
 }) => (
-  <section className="option-section">
-    <div className="option-section-header">
+  <section className="option-section grid gap-4 rounded-[1.5rem] border border-slate-200 bg-slate-50/80 p-4">
+    <div className="option-section-header flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div>
-        <h3>{title}</h3>
-        <p>{note}</p>
+        <h3 className="text-lg font-semibold tracking-[-0.03em] text-slate-900">{title}</h3>
+        <p className="mt-1 text-sm leading-6 text-slate-500">{note}</p>
       </div>
     </div>
-    <div className="option-grid">{children}</div>
+    <div className="option-grid grid gap-4 xl:grid-cols-2">{children}</div>
   </section>
 )
 
@@ -86,18 +102,8 @@ export const ExportOptionsPanel = ({
   frontmatterFieldOrder,
   frontmatterFieldMeta,
   frontmatterValidationErrors,
-  preview,
-  previewDirty,
-  previewStatus,
-  previewMode,
-  previewPending,
-  exportPending,
-  disabled,
   onOutputDirChange,
   onOptionsChange,
-  onPreview,
-  onPreviewModeChange,
-  onSubmit,
 }: {
   outputDir: string
   options: ExportOptions
@@ -105,88 +111,58 @@ export const ExportOptionsPanel = ({
   frontmatterFieldOrder: FrontmatterFieldName[]
   frontmatterFieldMeta: Record<FrontmatterFieldName, FrontmatterFieldMeta>
   frontmatterValidationErrors: string[]
-  preview: ExportPreviewResult | null
-  previewDirty: boolean
-  previewStatus: string
-  previewMode: "source" | "split" | "rendered"
-  previewPending: boolean
-  exportPending: boolean
-  disabled: boolean
   onOutputDirChange: (value: string) => void
   onOptionsChange: (updater: (current: ExportOptions) => ExportOptions) => void
-  onPreview: () => void
-  onPreviewModeChange: (mode: "source" | "split" | "rendered") => void
-  onSubmit: () => void
 }) => {
   const description = (key: string) => optionDescriptions[key]
 
   return (
-    <Card className="board-card" id="export-panel">
-      <CardHeader className="panel-header">
-        <div className="panel-heading">
-          <p className="section-kicker">Stage 2</p>
-          <CardTitle className="section-title">출력 설정</CardTitle>
+    <Card
+      className="board-card overflow-hidden border-white/80 bg-white/90 shadow-[0_24px_60px_rgba(22,33,50,0.08)] backdrop-blur"
+      id="export-panel"
+    >
+      <CardHeader className="panel-header gap-4 border-b border-slate-200/70 bg-white/70 p-6 sm:flex sm:items-start sm:justify-between">
+        <div className="panel-heading space-y-2">
+          <CardTitle className="section-title text-2xl font-semibold tracking-[-0.04em] text-slate-900">
+            출력 설정
+          </CardTitle>
         </div>
-        <CardDescription className="panel-description">
-          구조, frontmatter, Markdown, asset 규칙을 semantic token과 shadcn 카드 계층으로 조정합니다.
+        <CardDescription className="panel-description max-w-3xl text-sm leading-7 text-slate-600">
+          내보내기 규칙을 설정합니다.
         </CardDescription>
       </CardHeader>
 
-      <CardContent className="panel-body">
-        <form
-          id="export-form"
-          className="form-stack"
-          onSubmit={(event) => {
-            event.preventDefault()
-            onSubmit()
-          }}
-        >
-          <div className="control-bar">
-            <label className="field control-field">
-              <span>출력 경로</span>
+      <CardContent className="panel-body grid gap-5 p-6">
+        <div id="export-form" className="form-stack grid gap-5">
+          <div className="control-bar grid">
+            <label className="field control-field grid min-h-0 gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(22,33,50,0.04)]">
+              <span className="text-sm font-semibold text-slate-900">출력 경로</span>
               <Input id="outputDir" value={outputDir} required onChange={(event) => onOutputDirChange(event.target.value)} />
+              <small className="field-help text-sm leading-6 text-slate-500">결과를 저장할 위치입니다.</small>
             </label>
-
-            <div className="export-actions">
-              <Button type="submit" id="export-button" size="lg" disabled={disabled || exportPending}>
-                <i className={`${exportPending ? "ri-loader-4-line motion-safe:animate-spin" : "ri-download-2-line"}`} aria-hidden="true" />
-                {exportPending ? "작업 등록 중" : "선택한 카테고리 내보내기"}
-              </Button>
-            </div>
           </div>
 
-          <PreviewPanel
-            preview={preview}
-            previewDirty={previewDirty}
-            previewStatus={previewStatus}
-            previewMode={previewMode}
-            disabled={disabled}
-            pending={previewPending}
-            onPreview={onPreview}
-            onPreviewModeChange={onPreviewModeChange}
-          />
-
-          <Tabs className="option-tabs" defaultValue="structure">
-            <TabsList className="option-tabs-list">
-              <TabsTrigger value="scope">
+          <Tabs className="option-tabs grid gap-4" defaultValue="structure">
+            <TabsList className="option-tabs-list flex h-auto w-full flex-wrap justify-start gap-2 rounded-2xl bg-slate-100/90 p-2.5">
+              <TabsTrigger value="scope" className="min-h-12 rounded-xl px-4 py-3 text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm">
                 <i className="ri-focus-3-line" aria-hidden="true" />
                 범위
               </TabsTrigger>
-              <TabsTrigger value="structure">
+              <TabsTrigger value="structure" className="min-h-12 rounded-xl px-4 py-3 text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm">
                 <i className="ri-layout-grid-line" aria-hidden="true" />
                 구조
               </TabsTrigger>
-              <TabsTrigger value="markdown">
+              <TabsTrigger value="markdown" className="min-h-12 rounded-xl px-4 py-3 text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm">
                 <i className="ri-markdown-line" aria-hidden="true" />
                 Markdown
               </TabsTrigger>
-              <TabsTrigger value="assets">
+              <TabsTrigger value="assets" className="min-h-12 rounded-xl px-4 py-3 text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm">
                 <i className="ri-image-2-line" aria-hidden="true" />
                 Assets
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="scope" className="option-tab-panel">
+            <TabsContent value="scope" className="option-tab-panel mt-0">
               <OptionSection title="Scope" note="Selection and date window">
                 <OptionField
                   optionKey="scope-categoryMode"
@@ -247,29 +223,25 @@ export const ExportOptionsPanel = ({
               </OptionSection>
             </TabsContent>
 
-            <TabsContent value="structure" className="option-tab-panel">
-              <div className="option-tab-stack">
+            <TabsContent value="structure" className="option-tab-panel mt-0">
+              <div className="option-tab-stack grid gap-4">
                 <OptionSection title="Structure" note="Output folders and file naming">
                   <CheckField
+                    inputId="structure-cleanOutputDir"
                     optionKey="structure-cleanOutputDir"
                     label="Export 전에 output 디렉터리 재생성"
                     description={description("structure-cleanOutputDir")}
-                  >
-                    <input
-                      id="structure-cleanOutputDir"
-                      type="checkbox"
-                      checked={options.structure.cleanOutputDir}
-                      onChange={(event) =>
-                        onOptionsChange((current) => ({
-                          ...current,
-                          structure: {
-                            ...current.structure,
-                            cleanOutputDir: event.target.checked,
-                          },
-                        }))
-                      }
-                    />
-                  </CheckField>
+                    checked={options.structure.cleanOutputDir}
+                    onChange={(checked) =>
+                      onOptionsChange((current) => ({
+                        ...current,
+                        structure: {
+                          ...current.structure,
+                          cleanOutputDir: checked,
+                        },
+                      }))
+                    }
+                  />
 
                   <OptionField
                     optionKey="structure-postDirectoryName"
@@ -335,46 +307,38 @@ export const ExportOptionsPanel = ({
                   </OptionField>
 
                   <CheckField
+                    inputId="structure-includeDateInFilename"
                     optionKey="structure-includeDateInFilename"
                     label="파일명에 날짜 포함"
                     description={description("structure-includeDateInFilename")}
-                  >
-                    <input
-                      id="structure-includeDateInFilename"
-                      type="checkbox"
-                      checked={options.structure.includeDateInFilename}
-                      onChange={(event) =>
-                        onOptionsChange((current) => ({
-                          ...current,
-                          structure: {
-                            ...current.structure,
-                            includeDateInFilename: event.target.checked,
-                          },
-                        }))
-                      }
-                    />
-                  </CheckField>
+                    checked={options.structure.includeDateInFilename}
+                    onChange={(checked) =>
+                      onOptionsChange((current) => ({
+                        ...current,
+                        structure: {
+                          ...current.structure,
+                          includeDateInFilename: checked,
+                        },
+                      }))
+                    }
+                  />
 
                   <CheckField
+                    inputId="structure-includeLogNoInFilename"
                     optionKey="structure-includeLogNoInFilename"
                     label="파일명에 logNo 포함"
                     description={description("structure-includeLogNoInFilename")}
-                  >
-                    <input
-                      id="structure-includeLogNoInFilename"
-                      type="checkbox"
-                      checked={options.structure.includeLogNoInFilename}
-                      onChange={(event) =>
-                        onOptionsChange((current) => ({
-                          ...current,
-                          structure: {
-                            ...current.structure,
-                            includeLogNoInFilename: event.target.checked,
-                          },
-                        }))
-                      }
-                    />
-                  </CheckField>
+                    checked={options.structure.includeLogNoInFilename}
+                    onChange={(checked) =>
+                      onOptionsChange((current) => ({
+                        ...current,
+                        structure: {
+                          ...current.structure,
+                          includeLogNoInFilename: checked,
+                        },
+                      }))
+                    }
+                  />
 
                   <OptionField optionKey="structure-slugStyle" label="Slug Style" description={description("structure-slugStyle")}>
                     <select
@@ -399,33 +363,45 @@ export const ExportOptionsPanel = ({
                 <OptionSection title="Frontmatter" note="Metadata envelope">
                   <div className="frontmatter-toolbar">
                     <CheckField
+                      inputId="frontmatter-enabled"
                       optionKey="frontmatter-enabled"
                       label="Frontmatter 사용"
                       description={description("frontmatter-enabled")}
+                      checked={options.frontmatter.enabled}
+                      onChange={(checked) =>
+                        onOptionsChange((current) => ({
+                          ...current,
+                          frontmatter: {
+                            ...current.frontmatter,
+                            enabled: checked,
+                          },
+                        }))
+                      }
+                    />
+                    <div
+                      className={`frontmatter-state-card flex min-h-[7.75rem] flex-col justify-between gap-3 rounded-2xl border bg-white px-4 py-4 shadow-[0_12px_30px_rgba(22,33,50,0.04)] sm:flex-row sm:items-start ${frontmatterValidationErrors.length > 0 ? "border-rose-200" : "border-slate-200"}`}
+                      data-state={frontmatterValidationErrors.length > 0 ? "error" : "default"}
                     >
-                      <input
-                        id="frontmatter-enabled"
-                        type="checkbox"
-                        checked={options.frontmatter.enabled}
-                        onChange={(event) =>
-                          onOptionsChange((current) => ({
-                            ...current,
-                            frontmatter: {
-                              ...current.frontmatter,
-                              enabled: event.target.checked,
-                            },
-                          }))
-                        }
-                      />
-                    </CheckField>
-                    <Badge variant={frontmatterValidationErrors.length > 0 ? "destructive" : "secondary"}>
-                      {frontmatterValidationErrors.length > 0 ? "alias 오류" : "정상"}
-                    </Badge>
+                      <div className="frontmatter-state-copy grid min-w-0 gap-2">
+                        <span className="frontmatter-state-label text-sm font-semibold text-slate-900">Alias 상태</span>
+                        <p className="frontmatter-description text-sm leading-6 text-slate-500">
+                          {frontmatterValidationErrors.length > 0
+                            ? "중복 또는 비어 있는 alias를 먼저 정리해야 export와 preview가 다시 활성화됩니다."
+                            : "현재 frontmatter alias 구성이 유효합니다."}
+                        </p>
+                      </div>
+                      <Badge
+                        className="frontmatter-state-badge flex min-w-[4.5rem] justify-center rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]"
+                        variant={frontmatterValidationErrors.length > 0 ? "destructive" : "secondary"}
+                      >
+                        {frontmatterValidationErrors.length > 0 ? "alias 오류" : "정상"}
+                      </Badge>
+                    </div>
                   </div>
 
                   <Alert
                     id="frontmatter-status"
-                    className="frontmatter-alert"
+                    className="frontmatter-alert rounded-2xl border-slate-200 bg-white px-4 py-4"
                     data-state={frontmatterValidationErrors.length > 0 ? "error" : "default"}
                     variant={frontmatterValidationErrors.length > 0 ? "destructive" : "default"}
                   >
@@ -437,7 +413,7 @@ export const ExportOptionsPanel = ({
                     </AlertDescription>
                   </Alert>
 
-                  <div id="frontmatter-fields" className="frontmatter-grid">
+                  <div id="frontmatter-fields" className="frontmatter-grid grid gap-3">
                     {frontmatterFieldOrder.map((fieldName) => {
                       const fieldMeta = frontmatterFieldMeta[fieldName]
                       const fieldEnabled = options.frontmatter.fields[fieldName]
@@ -446,13 +422,15 @@ export const ExportOptionsPanel = ({
                       return (
                         <div
                           key={fieldName}
-                          className="frontmatter-row"
+                          className={`frontmatter-row grid gap-4 rounded-2xl border bg-white px-4 py-4 shadow-[0_12px_30px_rgba(22,33,50,0.04)] xl:grid-cols-[minmax(0,1.1fr)_minmax(16rem,0.9fr)] ${hasError ? "border-rose-200 ring-1 ring-rose-100" : "border-slate-200"}`}
                           data-frontmatter-field={fieldName}
                           data-state={hasError ? "error" : "default"}
                         >
-                          <div className="frontmatter-main">
-                            <label className="frontmatter-toggle">
+                          <div className="frontmatter-main grid gap-3">
+                            <label className="frontmatter-toggle inline-flex items-center gap-3">
                               <input
+                                id={`frontmatter-field-${fieldName}`}
+                                className="size-[1.1rem] shrink-0 accent-primary"
                                 type="checkbox"
                                 value={fieldName}
                                 checked={fieldEnabled}
@@ -469,12 +447,12 @@ export const ExportOptionsPanel = ({
                                   }))
                                 }
                               />
-                              <span>{fieldMeta.label}</span>
+                              <span className="frontmatter-toggle-copy text-sm font-semibold text-slate-900">{fieldMeta.label}</span>
                             </label>
-                            <p className="frontmatter-description">{fieldMeta.description}</p>
+                            <p className="frontmatter-description text-sm leading-6 text-slate-500">{fieldMeta.description}</p>
                           </div>
-                          <label className="field frontmatter-alias-field">
-                            <span>Export Key Alias</span>
+                          <label className="field frontmatter-alias-field grid min-h-0 gap-2 rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-4">
+                            <span className="text-sm font-semibold text-slate-900">Export Key Alias</span>
                             <Input
                               data-alias-input="true"
                               data-field-name={fieldName}
@@ -503,7 +481,7 @@ export const ExportOptionsPanel = ({
               </div>
             </TabsContent>
 
-            <TabsContent value="markdown" className="option-tab-panel">
+            <TabsContent value="markdown" className="option-tab-panel mt-0">
               <OptionSection title="Markdown Rules" note="Links, media, code and tables">
                 <OptionField optionKey="markdown-linkStyle" label="Link Style" description={description("markdown-linkStyle")}>
                   <select
@@ -800,7 +778,7 @@ export const ExportOptionsPanel = ({
               </OptionSection>
             </TabsContent>
 
-            <TabsContent value="assets" className="option-tab-panel">
+            <TabsContent value="assets" className="option-tab-panel mt-0">
               <OptionSection title="Assets" note="Download and reference strategy">
                 <OptionField
                   optionKey="assets-assetPathMode"
@@ -872,67 +850,55 @@ export const ExportOptionsPanel = ({
                 </OptionField>
 
                 <CheckField
+                  inputId="assets-downloadImages"
                   optionKey="assets-downloadImages"
                   label="본문 이미지 다운로드"
                   description={description("assets-downloadImages")}
-                >
-                  <input
-                    id="assets-downloadImages"
-                    type="checkbox"
-                    checked={options.assets.downloadImages}
-                    onChange={(event) =>
-                      onOptionsChange((current) => ({
-                        ...current,
-                        assets: {
-                          ...current.assets,
-                          downloadImages: event.target.checked,
-                        },
-                      }))
-                    }
-                  />
-                </CheckField>
+                  checked={options.assets.downloadImages}
+                  onChange={(checked) =>
+                    onOptionsChange((current) => ({
+                      ...current,
+                      assets: {
+                        ...current.assets,
+                        downloadImages: checked,
+                      },
+                    }))
+                  }
+                />
 
                 <CheckField
+                  inputId="assets-downloadThumbnails"
                   optionKey="assets-downloadThumbnails"
                   label="썸네일 다운로드"
                   description={description("assets-downloadThumbnails")}
-                >
-                  <input
-                    id="assets-downloadThumbnails"
-                    type="checkbox"
-                    checked={options.assets.downloadThumbnails}
-                    onChange={(event) =>
-                      onOptionsChange((current) => ({
-                        ...current,
-                        assets: {
-                          ...current.assets,
-                          downloadThumbnails: event.target.checked,
-                        },
-                      }))
-                    }
-                  />
-                </CheckField>
+                  checked={options.assets.downloadThumbnails}
+                  onChange={(checked) =>
+                    onOptionsChange((current) => ({
+                      ...current,
+                      assets: {
+                        ...current.assets,
+                        downloadThumbnails: checked,
+                      },
+                    }))
+                  }
+                />
 
                 <CheckField
+                  inputId="assets-includeImageCaptions"
                   optionKey="assets-includeImageCaptions"
                   label="이미지 캡션 포함"
                   description={description("assets-includeImageCaptions")}
-                >
-                  <input
-                    id="assets-includeImageCaptions"
-                    type="checkbox"
-                    checked={options.assets.includeImageCaptions}
-                    onChange={(event) =>
-                      onOptionsChange((current) => ({
-                        ...current,
-                        assets: {
-                          ...current.assets,
-                          includeImageCaptions: event.target.checked,
-                        },
-                      }))
-                    }
-                  />
-                </CheckField>
+                  checked={options.assets.includeImageCaptions}
+                  onChange={(checked) =>
+                    onOptionsChange((current) => ({
+                      ...current,
+                      assets: {
+                        ...current.assets,
+                        includeImageCaptions: checked,
+                      },
+                    }))
+                  }
+                />
 
                 <OptionField
                   optionKey="assets-thumbnailSource"
@@ -960,7 +926,7 @@ export const ExportOptionsPanel = ({
               </OptionSection>
             </TabsContent>
           </Tabs>
-        </form>
+        </div>
       </CardContent>
     </Card>
   )

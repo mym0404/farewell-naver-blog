@@ -1,11 +1,15 @@
 import { mkdtemp, readFile, rm } from "node:fs/promises"
+import { createElement } from "react"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { mkdir } from "node:fs/promises"
 
 import { chromium } from "playwright"
+import { renderToStaticMarkup } from "react-dom/server"
 
 import { createHttpServer } from "../../src/server/http-server.js"
+import { MarkdownDocument } from "../../src/ui/lib/markdown.js"
+import { markdownShowcase } from "../../tests/fixtures/markdown-showcase.js"
 
 const responseTimeoutMs = 90_000
 const desktopViewport = {
@@ -28,7 +32,30 @@ const contrastTargets = [
   { selector: ".job-tree-group-header span", minRatio: 4.5 },
   { selector: "#markdown-modal-meta span", minRatio: 4.5 },
   { selector: ".markdown-frontmatter-key", minRatio: 4.5 },
+  { selector: ".scan-status-note", minRatio: 4.5 },
+  { selector: ".sidebar-brand strong", minRatio: 4.5 },
+  { selector: ".sidebar-heading", minRatio: 4.5 },
+  { selector: ".sidebar-link span", minRatio: 4.5 },
+  { selector: ".sidebar-summary-title", minRatio: 4.5 },
+  { selector: ".sidebar-summary-metric span", minRatio: 4.5 },
+  { selector: "#export-button span", minRatio: 4.5 },
 ] as const
+
+const assertRendererFixture = () => {
+  const markup = renderToStaticMarkup(createElement(MarkdownDocument, { markdown: markdownShowcase }))
+
+  if (!markup.includes("hljs")) {
+    throw new Error("renderer fixture did not produce highlighted code blocks")
+  }
+
+  if (!markup.includes("<table")) {
+    throw new Error("renderer fixture did not render tables")
+  }
+
+  if (!markup.includes("Warning: parser note")) {
+    throw new Error("renderer fixture did not preserve warning callouts")
+  }
+}
 
 const getCaptureDir = () => {
   const index = process.argv.indexOf("--capture-dir")
@@ -104,16 +131,156 @@ const assertTextContrast = async ({
   const evaluationScript = `
     (() => {
       const targets = ${JSON.stringify(contrastTargets)};
+      const colorProbe = document.createElement("canvas").getContext("2d");
 
-      function parseColor(value) {
-        const match = value.match(/rgba?\\(([^)]+)\\)/i)
-
-        if (!match) {
-          return [255, 255, 255, 1]
+      function normalizeColor(value) {
+        if (!colorProbe) {
+          return value;
         }
 
-        const [r, g, b, a = "1"] = match[1].split(",").map((part) => part.trim())
-        return [Number(r), Number(g), Number(b), Number(a)]
+        colorProbe.fillStyle = "#ffffff";
+
+        try {
+          colorProbe.fillStyle = value;
+          return colorProbe.fillStyle;
+        } catch {
+          return value;
+        }
+      }
+
+      function parseOklch(value) {
+        const match = value.match(/^oklch\\(([^)]+)\\)$/i)
+
+        if (!match) {
+          return null
+        }
+
+        const [colorPart, alphaPart] = match[1].split("/").map((part) => part.trim())
+        const parts = colorPart.split(/\\s+/)
+
+        if (parts.length < 3) {
+          return null
+        }
+
+        const parseChannel = (channel) =>
+          channel.endsWith("%") ? Number(channel.slice(0, -1)) / 100 : Number(channel)
+
+        const lightness = parseChannel(parts[0])
+        const chroma = Number(parts[1])
+        const hue = Number(parts[2]) * Math.PI / 180
+        const alpha = alphaPart ? parseChannel(alphaPart) : 1
+
+        const a = chroma * Math.cos(hue)
+        const b = chroma * Math.sin(hue)
+
+        const lRoot = lightness + 0.3963377774 * a + 0.2158037573 * b
+        const mRoot = lightness - 0.1055613458 * a - 0.0638541728 * b
+        const sRoot = lightness - 0.0894841775 * a - 1.291485548 * b
+
+        const l = lRoot ** 3
+        const m = mRoot ** 3
+        const s = sRoot ** 3
+
+        const toSrgb = (channel) => {
+          const clipped = Math.min(1, Math.max(0, channel))
+          const gammaCorrected =
+            clipped <= 0.0031308
+              ? 12.92 * clipped
+              : 1.055 * Math.pow(clipped, 1 / 2.4) - 0.055
+
+          return Math.round(gammaCorrected * 255)
+        }
+
+        return [
+          toSrgb(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s),
+          toSrgb(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s),
+          toSrgb(-0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s),
+          alpha,
+        ]
+      }
+
+      function parseOklab(value) {
+        const match = value.match(/^oklab\\(([^)]+)\\)$/i)
+
+        if (!match) {
+          return null
+        }
+
+        const [colorPart, alphaPart] = match[1].split("/").map((part) => part.trim())
+        const parts = colorPart.split(/\\s+/)
+
+        if (parts.length < 3) {
+          return null
+        }
+
+        const parseChannel = (channel) =>
+          channel.endsWith("%") ? Number(channel.slice(0, -1)) / 100 : Number(channel)
+
+        const lightness = parseChannel(parts[0])
+        const a = Number(parts[1])
+        const b = Number(parts[2])
+        const alpha = alphaPart ? parseChannel(alphaPart) : 1
+
+        const lRoot = lightness + 0.3963377774 * a + 0.2158037573 * b
+        const mRoot = lightness - 0.1055613458 * a - 0.0638541728 * b
+        const sRoot = lightness - 0.0894841775 * a - 1.291485548 * b
+
+        const l = lRoot ** 3
+        const m = mRoot ** 3
+        const s = sRoot ** 3
+
+        const toSrgb = (channel) => {
+          const clipped = Math.min(1, Math.max(0, channel))
+          const gammaCorrected =
+            clipped <= 0.0031308
+              ? 12.92 * clipped
+              : 1.055 * Math.pow(clipped, 1 / 2.4) - 0.055
+
+          return Math.round(gammaCorrected * 255)
+        }
+
+        return [
+          toSrgb(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s),
+          toSrgb(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s),
+          toSrgb(-0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s),
+          alpha,
+        ]
+      }
+
+      function parseColor(value) {
+        const oklch = parseOklch(value)
+
+        if (oklch) {
+          return oklch
+        }
+
+        const oklab = parseOklab(value)
+
+        if (oklab) {
+          return oklab
+        }
+
+        const normalized = normalizeColor(value);
+        const rgbMatch = normalized.match(/rgba?\\(([^)]+)\\)/i)
+
+        if (rgbMatch) {
+          const [r, g, b, a = "1"] = rgbMatch[1].split(",").map((part) => part.trim())
+          return [Number(r), Number(g), Number(b), Number(a)]
+        }
+
+        const hexMatch = normalized.match(/^#([0-9a-f]{6}|[0-9a-f]{8})$/i)
+
+        if (hexMatch) {
+          const hex = hexMatch[1]
+          const hasAlpha = hex.length === 8
+          const r = Number.parseInt(hex.slice(0, 2), 16)
+          const g = Number.parseInt(hex.slice(2, 4), 16)
+          const b = Number.parseInt(hex.slice(4, 6), 16)
+          const a = hasAlpha ? Number.parseInt(hex.slice(6, 8), 16) / 255 : 1
+          return [r, g, b, a]
+        }
+
+        return [255, 255, 255, 1]
       }
 
       function toLinear(channel) {
@@ -135,21 +302,32 @@ const assertTextContrast = async ({
       }
 
       function findBackground(element) {
+        const chain = []
         let current = element
-        const fallback = [255, 255, 255]
 
         while (current) {
-          const style = window.getComputedStyle(current)
-          const background = parseColor(style.backgroundColor)
-
-          if (background[3] > 0) {
-            return background[3] >= 0.98 ? background.slice(0, 3) : blend(background, [...fallback, 1])
-          }
-
+          chain.push(window.getComputedStyle(current).backgroundColor)
           current = current.parentElement
         }
 
-        return fallback
+        let background = parseColor(window.getComputedStyle(document.body).backgroundColor)
+
+        for (let index = chain.length - 1; index >= 0; index -= 1) {
+          const layer = parseColor(chain[index])
+
+          if (layer[3] <= 0) {
+            continue
+          }
+
+          if (layer[3] >= 0.98) {
+            background = layer
+            continue
+          }
+
+          background = [...blend(layer, background), 1]
+        }
+
+        return background.slice(0, 3)
       }
 
       function contrastRatio(foreground, background) {
@@ -206,6 +384,90 @@ const assertTextContrast = async ({
   }
 }
 
+const assertStickyTop = async ({
+  page,
+  selector,
+  label,
+}: {
+  page: import("playwright").Page
+  selector: string
+  label: string
+}) => {
+  const currentScroll = await page.evaluate(() => window.scrollY)
+  const before = await page.locator(selector).evaluate((element) => element.getBoundingClientRect().top)
+  await page.evaluate(() => window.scrollTo({ top: document.body.scrollHeight }))
+  await page.waitForTimeout(150)
+  const after = await page.locator(selector).evaluate((element) => element.getBoundingClientRect().top)
+  await page.evaluate((nextScroll) => window.scrollTo({ top: nextScroll }), currentScroll)
+
+  if (Math.abs(before - after) > 1.5) {
+    throw new Error(`${label} did not stay sticky`)
+  }
+}
+
+const assertNoHorizontalOverflow = async ({
+  page,
+  label,
+}: {
+  page: import("playwright").Page
+  label: string
+}) => {
+  const overflow = await page.evaluate(() => {
+    const root = document.documentElement
+    const body = document.body
+    const appRoot = document.querySelector<HTMLElement>("#root")
+
+    return {
+      root: root.scrollWidth - root.clientWidth,
+      body: body.scrollWidth - body.clientWidth,
+      app: appRoot ? appRoot.scrollWidth - appRoot.clientWidth : 0,
+    }
+  })
+
+  const worstOverflow = Math.max(overflow.root, overflow.body, overflow.app)
+
+  if (worstOverflow > 1) {
+    throw new Error(`${label} introduced horizontal overflow (${worstOverflow}px)`)
+  }
+}
+
+const assertFrameFlush = async ({
+  page,
+  selector,
+  label,
+}: {
+  page: import("playwright").Page
+  selector: string
+  label: string
+}) => {
+  const rect = await page.locator(selector).evaluate((element) => {
+    const bounds = element.getBoundingClientRect()
+    return {
+      left: bounds.left,
+      top: bounds.top,
+    }
+  })
+
+  if (Math.abs(rect.left) > 1.5 || Math.abs(rect.top) > 1.5) {
+    throw new Error(`${label} was not flush with the viewport`)
+  }
+}
+
+const assertNavActive = async ({
+  page,
+  sectionId,
+}: {
+  page: import("playwright").Page
+  sectionId: string
+}) => {
+  await page.locator(`#${sectionId}`).scrollIntoViewIfNeeded()
+  await page.waitForFunction(
+    (nextSectionId) =>
+      document.querySelector(`[data-section-link="${nextSectionId}"]`)?.className.includes("is-active") ?? false,
+    sectionId,
+  )
+}
+
 const run = async () => {
   const server = createHttpServer()
   await new Promise<void>((resolve) => {
@@ -237,7 +499,20 @@ const run = async () => {
   })
 
   try {
+    assertRendererFixture()
     await page.goto(baseUrl)
+    await assertNoHorizontalOverflow({
+      page,
+      label: "initial desktop layout",
+    })
+    await assertFrameFlush({
+      page,
+      selector: ".app-sidebar-shell",
+      label: "desktop sidebar shell",
+    })
+    await page.waitForFunction(
+      () => document.querySelector('[data-section-link="scan-workbench"]')?.className.includes("is-active") ?? false,
+    )
     await page.fill("#blogIdOrUrl", "mym0404")
 
     const scanResponsePromise = page.waitForResponse(
@@ -262,6 +537,11 @@ const run = async () => {
       throw new Error("frontmatter description missing")
     }
 
+    await assertNavActive({
+      page,
+      sectionId: "category-panel",
+    })
+
     await page.fill('[data-frontmatter-field="title"] input[data-alias-input="true"]', "shared")
     await page.fill('[data-frontmatter-field="source"] input[data-alias-input="true"]', "shared")
 
@@ -282,7 +562,26 @@ const run = async () => {
     await page.fill("#category-search", "NestJS")
     await page.click("#clear-all-categories")
     await page.waitForSelector(".category-item")
+    const categoryTableLayoutOk = await page.evaluate(() => {
+      const categoryList = document.querySelector<HTMLElement>("#category-list")
+      const table = categoryList?.querySelector("table")
+      const scrollArea = categoryList?.querySelector<HTMLElement>('[data-slot="scroll-area"]')
+
+      if (!categoryList || !table || !scrollArea) {
+        return false
+      }
+
+      return scrollArea.clientHeight >= 260 && scrollArea.clientHeight <= 560
+    })
+
+    if (!categoryTableLayoutOk) {
+      throw new Error("category panel did not render as a fixed-height table")
+    }
     await page.click('.category-item [data-slot="checkbox"]')
+    await assertNavActive({
+      page,
+      sectionId: "export-panel",
+    })
     await page.fill("#outputDir", outputDir)
     await page.getByRole("tab", { name: "Assets" }).click()
     await page.waitForSelector("#assets-assetPathMode")
@@ -296,6 +595,10 @@ const run = async () => {
       { timeout: responseTimeoutMs },
     )
 
+    await assertNavActive({
+      page,
+      sectionId: "preview-panel",
+    })
     await page.click("#preview-button")
     await previewResponsePromise
     await page.waitForFunction(
@@ -331,6 +634,31 @@ const run = async () => {
       throw new Error("preview rendered pane missing markdown result")
     }
 
+    await page.click('[data-preview-mode="split"]')
+    await page.waitForFunction(
+      () => document.querySelector('[data-preview-mode="split"]')?.className.includes("is-active") ?? false,
+    )
+
+    const previewLayoutOk = await page.evaluate(() => {
+      const previewPanel = document.querySelector<HTMLElement>("#preview-panel")
+      const statusPanel = document.querySelector<HTMLElement>("#status-panel")
+      const sourcePane = document.querySelector<HTMLElement>(".preview-markdown-shell")
+      const renderedPane = document.querySelector<HTMLElement>("#preview-rendered")
+
+      if (!previewPanel || !statusPanel || !sourcePane || !renderedPane) {
+        return false
+      }
+
+      const previewBeforeStatus =
+        (previewPanel.compareDocumentPosition(statusPanel) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
+
+      return previewBeforeStatus && sourcePane.clientHeight > 280 && renderedPane.clientHeight > 280
+    })
+
+    if (!previewLayoutOk) {
+      throw new Error("preview section order or scrollable pane sizing was incorrect")
+    }
+
     const exportResponsePromise = page.waitForResponse(
       (response) =>
         response.url() === `${baseUrl}/api/export` &&
@@ -350,6 +678,11 @@ const run = async () => {
       timeoutMs: 90_000,
     })
 
+    await assertNavActive({
+      page,
+      sectionId: "status-panel",
+    })
+
     const manifestResponse = await context.request.get(`${baseUrl}/api/export/${jobId}/manifest`)
 
     if (!manifestResponse.ok()) {
@@ -366,7 +699,7 @@ const run = async () => {
     }
     const summaryText = await page.locator("#summary").textContent()
 
-    if (!summaryText?.includes("Completed")) {
+    if (!summaryText?.includes("완료") || !summaryText?.includes("1")) {
       throw new Error("UI summary did not show completed state")
     }
 
@@ -398,11 +731,90 @@ const run = async () => {
       throw new Error("markdown modal did not render content")
     }
 
+    await assertStickyTop({
+      page,
+      selector: ".app-sidebar",
+      label: "desktop sidebar",
+    })
+    await assertStickyTop({
+      page,
+      selector: "#dashboard-backdrop",
+      label: "background backdrop",
+    })
+
     await assertTextContrast({
       page,
     })
+    await assertNoHorizontalOverflow({
+      page,
+      label: "desktop export flow",
+    })
 
     await page.click("#markdown-modal-close")
+
+    await page.setViewportSize(mobileViewport)
+    await page.waitForTimeout(150)
+    const mobileRailVisible = await page.locator(".mobile-command-bar").isVisible()
+
+    if (!mobileRailVisible) {
+      throw new Error("mobile sticky rail was not visible")
+    }
+
+    const desktopSidebarVisible = await page.locator(".app-sidebar").evaluate((element) => {
+      return window.getComputedStyle(element).display !== "none"
+    })
+
+    if (desktopSidebarVisible) {
+      throw new Error("desktop sidebar should be hidden on mobile")
+    }
+
+    await assertStickyTop({
+      page,
+      selector: ".mobile-command-bar",
+      label: "mobile rail",
+    })
+    await assertNoHorizontalOverflow({
+      page,
+      label: "mobile layout",
+    })
+    await assertFrameFlush({
+      page,
+      selector: ".mobile-command-bar",
+      label: "mobile command rail",
+    })
+    await page.locator("#export-panel").scrollIntoViewIfNeeded()
+    await page.waitForTimeout(150)
+
+    const mobileCommandBarHeight = await page.locator(".mobile-command-bar").evaluate((element) => element.getBoundingClientRect().height)
+
+    if (mobileCommandBarHeight > 360) {
+      throw new Error(`mobile command bar is too tall: ${mobileCommandBarHeight}`)
+    }
+
+    await page.locator("#preview-panel").scrollIntoViewIfNeeded()
+    await page.waitForTimeout(150)
+
+    const previewMobileLayoutOk = await page.evaluate(() => {
+      const frontmatterItem = document.querySelector<HTMLElement>("#preview-rendered .markdown-frontmatter-item")
+      const frontmatterValue = frontmatterItem?.querySelector<HTMLElement>("pre")
+
+      if (!frontmatterItem || !frontmatterValue) {
+        return false
+      }
+
+      const columns = window.getComputedStyle(frontmatterItem).gridTemplateColumns.trim().split(/\s+/)
+      const itemRect = frontmatterItem.getBoundingClientRect()
+      const valueRect = frontmatterValue.getBoundingClientRect()
+
+      return columns.length === 1 && valueRect.width > itemRect.width * 0.7 && valueRect.height < 160
+    })
+
+    if (!previewMobileLayoutOk) {
+      throw new Error("mobile preview frontmatter layout collapsed")
+    }
+
+    await page.setViewportSize(desktopViewport)
+    await page.waitForTimeout(150)
 
     if (captureDir) {
       await captureReviewScreens({
