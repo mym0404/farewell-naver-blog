@@ -306,6 +306,105 @@ describe("single-post cli", () => {
     }
   })
 
+  it("passes frontmatter aliases through options JSON", async () => {
+    const rootDir = await mkdtemp(path.join(tmpdir(), "single-post-cli-"))
+    const outputDir = path.join(rootDir, "output")
+    const optionsPath = path.join(rootDir, "options.json")
+
+    await mkdir(outputDir, { recursive: true })
+    await writeFile(
+      optionsPath,
+      JSON.stringify({ frontmatter: { aliases: { title: "postTitle", publishedAt: "published_on" } } }),
+      "utf8",
+    )
+
+    const exportSinglePost = vi.fn(async ({ options }) => ({
+      post: {
+        blogId: "my-blog",
+        logNo: "123456789012",
+        title: "Single post",
+        publishedAt: "2024-01-02T03:04:05+09:00",
+        categoryId: 11,
+        categoryName: "JavaScript",
+        source: "https://blog.naver.com/my-blog/123456789012",
+        editorVersion: 4,
+        thumbnailUrl: null,
+      },
+      markdown: "# hello\n",
+      markdownFilePath: path.join(outputDir, "posts", "single-post.md"),
+      editorVersion: 4,
+      blockTypes: ["paragraph"],
+      parserWarnings: [],
+      reviewerWarnings: [],
+      renderWarnings: [],
+      assetPaths: [],
+      options,
+    }))
+
+    try {
+      await runSinglePostCli({
+        argv: [
+          "--blogId",
+          "my-blog",
+          "--logNo",
+          "123456789012",
+          "--outputDir",
+          outputDir,
+          "--options",
+          optionsPath,
+        ],
+        exportSinglePost: exportSinglePost as RunSinglePostExportFn,
+        stdoutWrite: vi.fn(),
+        stderrWrite: vi.fn(),
+      })
+
+      expect(exportSinglePost).toHaveBeenCalledTimes(1)
+      expect(exportSinglePost.mock.calls[0][0].options.frontmatter.aliases.title).toBe("postTitle")
+      expect(exportSinglePost.mock.calls[0][0].options.frontmatter.aliases.publishedAt).toBe("published_on")
+    } finally {
+      await rm(rootDir, { recursive: true, force: true })
+    }
+  })
+
+  it("fails fast when frontmatter aliases collide", async () => {
+    const rootDir = await mkdtemp(path.join(tmpdir(), "single-post-cli-"))
+    const outputDir = path.join(rootDir, "output")
+    const optionsPath = path.join(rootDir, "options.json")
+
+    await mkdir(outputDir, { recursive: true })
+    await writeFile(
+      optionsPath,
+      JSON.stringify({ frontmatter: { aliases: { title: "post", source: "post" } } }),
+      "utf8",
+    )
+
+    const exportSinglePost = vi.fn()
+
+    try {
+      await expect(
+        runSinglePostCli({
+          argv: [
+            "--blogId",
+            "my-blog",
+            "--logNo",
+            "123456789012",
+            "--outputDir",
+            outputDir,
+            "--options",
+            optionsPath,
+          ],
+          exportSinglePost: exportSinglePost as RunSinglePostExportFn,
+          stdoutWrite: vi.fn(),
+          stderrWrite: vi.fn(),
+        }),
+      ).rejects.toThrow('title와 source가 같은 alias "post"를 사용하고 있습니다.')
+
+      expect(exportSinglePost).not.toHaveBeenCalled()
+    } finally {
+      await rm(rootDir, { recursive: true, force: true })
+    }
+  })
+
   it("fails fast when options JSON is malformed", async () => {
     const rootDir = await mkdtemp(path.join(tmpdir(), "single-post-cli-"))
     const outputDir = path.join(rootDir, "output")

@@ -41,6 +41,9 @@
 - `GET /api/export/:jobId`
 - `GET /api/export/:jobId/manifest`
 
+`GET /api/export-defaults` 응답은 기본 `options` 외에 `frontmatterFieldOrder`, `frontmatterFieldMeta`를 포함한다.
+`frontmatterFieldMeta`의 각 항목은 `label`, `description`, `defaultAlias`를 내려 UI 설명과 placeholder의 source of truth로 사용한다.
+
 ## Manifest Invariants
 - `totalPosts = successCount + failureCount`
 - `warningCount`는 post warning 총합과 일치해야 한다.
@@ -50,3 +53,8 @@
 ## Frontmatter Rules
 - `category`는 객체가 아니라 카테고리 이름 문자열로 기록한다.
 - `categoryPath`는 상위 경로 배열로 따로 기록한다.
+- 각 frontmatter field는 UI에서 on/off와 alias를 같이 조정할 수 있다.
+- 각 field는 UI에서 한 줄 설명과 alias 입력을 함께 보여준다.
+- alias가 비어 있으면 기본 field 이름을 그대로 사용한다.
+- alias는 영문자 또는 `_`로 시작하고, 이후에는 영문자, 숫자, `-`, `_`만 허용한다.
+- 활성화된 field끼리 같은 alias를 사용하면 export를 시작하지 않는다.

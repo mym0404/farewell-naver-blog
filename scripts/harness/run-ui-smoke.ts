@@ -65,18 +65,38 @@ const run = async () => {
     await page.waitForFunction(
       () => document.querySelector("#scan-status")?.textContent?.includes("스캔 완료") ?? false,
     )
+    await page.waitForSelector('[data-frontmatter-field="title"] .frontmatter-description')
+
+    const frontmatterDescription = await page
+      .locator('[data-frontmatter-field="title"] .frontmatter-description')
+      .textContent()
+
+    if (!frontmatterDescription?.includes("글 제목")) {
+      throw new Error("frontmatter description missing")
+    }
+
+    await page.fill('[data-frontmatter-field="title"] input[data-alias-input="true"]', "shared")
+    await page.fill('[data-frontmatter-field="source"] input[data-alias-input="true"]', "shared")
+
+    const frontmatterStatusText = await page.locator("#frontmatter-status").textContent()
+
+    if (!frontmatterStatusText?.includes('title와 source가 같은 alias "shared"')) {
+      throw new Error("frontmatter alias collision was not shown")
+    }
+
+    const exportDisabledWithCollision = await page.locator("#export-button").isDisabled()
+
+    if (!exportDisabledWithCollision) {
+      throw new Error("export button should be disabled when aliases collide")
+    }
+
+    await page.fill('[data-frontmatter-field="source"] input[data-alias-input="true"]', "")
+    await page.fill('[data-frontmatter-field="title"] input[data-alias-input="true"]', "postTitle")
     await page.fill("#category-search", "NestJS")
     await page.click("#clear-all-categories")
     await page.waitForSelector(".category-item")
     await page.check('.category-item input[type="checkbox"]')
     await page.fill("#outputDir", outputDir)
-    await page.locator('details:has(summary:text("Assets"))').evaluate((element) => {
-      if (!(element instanceof HTMLDetailsElement)) {
-        throw new Error("Assets details element not found")
-      }
-
-      element.open = true
-    })
     await page.selectOption("#assets-assetPathMode", "remote")
     await page.uncheck("#assets-downloadImages")
     await page.uncheck("#assets-downloadThumbnails")
@@ -137,6 +157,14 @@ const run = async () => {
 
     if (!exportedMarkdown.startsWith("---")) {
       throw new Error("exported markdown missing frontmatter")
+    }
+
+    if (!exportedMarkdown.includes("postTitle:")) {
+      throw new Error("exported markdown did not use frontmatter alias")
+    }
+
+    if (exportedMarkdown.includes("\ntitle:")) {
+      throw new Error("exported markdown still used the original title key")
     }
 
     console.log(`smoke:ui passed (${jobId})`)

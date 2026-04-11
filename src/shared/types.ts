@@ -25,6 +25,12 @@ export type FrontmatterFieldName =
   | "exportedAt"
   | "assetPaths"
 
+export type FrontmatterFieldMeta = {
+  label: string
+  description: string
+  defaultAlias: string
+}
+
 export type MarkdownLinkStyle = "inlined" | "referenced"
 
 export type LinkCardStyle = "inline" | "quote" | "html"
@@ -68,6 +74,7 @@ export type ExportOptions = {
   frontmatter: {
     enabled: boolean
     fields: Record<FrontmatterFieldName, boolean>
+    aliases: Record<FrontmatterFieldName, string>
   }
   markdown: {
     linkStyle: MarkdownLinkStyle

@@ -27,6 +27,7 @@
 - [export-spec.md](./export-spec.md)
 - [parser-block-catalog.md](./parser-block-catalog.md)
 - [validation-harness.md](./validation-harness.md)
+- [ui-dashboard-design-system.md](./ui-dashboard-design-system.md)
 - [samples/index.md](./samples/index.md)
 - [runbooks/browser-verification.md](./runbooks/browser-verification.md)
 - [runbooks/single-post-verification.md](./runbooks/single-post-verification.md)

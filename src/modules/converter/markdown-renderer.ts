@@ -9,6 +9,7 @@ import type {
   ParsedPost,
   PostSummary,
 } from "../../shared/types.js"
+import { getFrontmatterExportKey } from "../../shared/export-options.js"
 import { unique } from "../../shared/utils.js"
 
 const escapeTableCell = (value: string) =>
@@ -183,9 +184,11 @@ const renderGfmTable = (block: Extract<AstBlock, { type: "table" }>) => {
 
 const buildFrontmatter = ({
   fields,
+  aliases,
   values,
 }: {
   fields: Record<FrontmatterFieldName, boolean>
+  aliases: Record<FrontmatterFieldName, string>
   values: Record<FrontmatterFieldName, unknown>
 }) => {
   const frontmatter: Record<string, unknown> = {}
@@ -205,7 +208,12 @@ const buildFrontmatter = ({
       continue
     }
 
-    frontmatter[key] = value
+    const alias = getFrontmatterExportKey({
+      fieldName: key,
+      alias: aliases[key],
+    })
+
+    frontmatter[alias] = value
   }
 
   return frontmatter
@@ -538,6 +546,7 @@ export const renderMarkdownPost = async ({
   const frontmatter = options.frontmatter.enabled
     ? buildFrontmatter({
         fields: options.frontmatter.fields,
+        aliases: options.frontmatter.aliases,
         values: frontmatterValues,
       })
     : null

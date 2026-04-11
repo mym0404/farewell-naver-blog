@@ -9,8 +9,14 @@ import { fileURLToPath } from "node:url"
 
 import { NaverBlogFetcher } from "../modules/blog-fetcher/naver-blog-fetcher.js"
 import { NaverBlogExporter } from "../modules/exporter/naver-blog-exporter.js"
-import { cloneExportOptions, defaultExportOptions, frontmatterFieldOrder } from "../shared/export-options.js"
-import type { ExportOptions, ExportRequest } from "../shared/types.js"
+import {
+  cloneExportOptions,
+  defaultExportOptions,
+  frontmatterFieldMeta,
+  frontmatterFieldOrder,
+  type PartialExportOptions,
+} from "../shared/export-options.js"
+import type { ExportRequest } from "../shared/types.js"
 import { extractBlogId, toErrorMessage } from "../shared/utils.js"
 import { JobStore } from "./job-store.js"
 
@@ -120,6 +126,7 @@ export const createHttpServer = () => {
             profile: "gfm",
             options: defaultExportOptions(),
             frontmatterFieldOrder,
+            frontmatterFieldMeta,
           },
         })
         return
@@ -161,7 +168,7 @@ export const createHttpServer = () => {
         const payload = JSON.parse(rawBody) as {
           blogIdOrUrl?: string
           outputDir?: string
-          options?: Partial<ExportOptions>
+          options?: PartialExportOptions
         }
 
         if (!payload.blogIdOrUrl?.trim() || !payload.outputDir?.trim()) {
@@ -175,12 +182,26 @@ export const createHttpServer = () => {
           return
         }
 
-        const exportRequest: ExportRequest = {
-          blogIdOrUrl: payload.blogIdOrUrl.trim(),
-          outputDir: payload.outputDir.trim(),
-          profile: "gfm",
-          options: cloneExportOptions(payload.options),
+        let exportRequest: ExportRequest
+
+        try {
+          exportRequest = {
+            blogIdOrUrl: payload.blogIdOrUrl.trim(),
+            outputDir: payload.outputDir.trim(),
+            profile: "gfm",
+            options: cloneExportOptions(payload.options),
+          }
+        } catch (error) {
+          sendJson({
+            response,
+            statusCode: 400,
+            body: {
+              error: toErrorMessage(error),
+            },
+          })
+          return
         }
+
         const job = jobStore.create(exportRequest)
 
         jobStore.appendLog(job.id, "작업을 큐에 등록했습니다.")

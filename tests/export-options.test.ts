@@ -1,0 +1,86 @@
+import { describe, expect, it } from "vitest"
+
+import {
+  cloneExportOptions,
+  frontmatterFieldMeta,
+  getFrontmatterExportKey,
+  validateFrontmatterAliases,
+} from "../src/shared/export-options.js"
+
+describe("export options", () => {
+  it("merges frontmatter aliases with defaults", () => {
+    const options = cloneExportOptions({
+      frontmatter: {
+        aliases: {
+          title: "postTitle",
+        },
+      },
+    })
+
+    expect(options.frontmatter.aliases.title).toBe("postTitle")
+    expect(options.frontmatter.aliases.source).toBe("")
+    expect(options.frontmatter.fields.title).toBe(true)
+  })
+
+  it("returns field name when alias is blank", () => {
+    expect(
+      getFrontmatterExportKey({
+        fieldName: "title",
+        alias: "  ",
+      }),
+    ).toBe("title")
+  })
+
+  it("detects invalid alias format and collisions only for enabled fields", () => {
+    const errors = validateFrontmatterAliases({
+      enabled: true,
+      fields: {
+        title: true,
+        source: true,
+        blogId: false,
+        logNo: false,
+        publishedAt: false,
+        category: false,
+        categoryPath: false,
+        editorVersion: false,
+        visibility: false,
+        tags: false,
+        thumbnail: false,
+        video: false,
+        warnings: false,
+        exportedAt: false,
+        assetPaths: false,
+      },
+      aliases: {
+        title: "9bad",
+        source: "dup",
+        blogId: "",
+        logNo: "",
+        publishedAt: "",
+        category: "",
+        categoryPath: "",
+        editorVersion: "",
+        visibility: "",
+        tags: "",
+        thumbnail: "",
+        video: "",
+        warnings: "",
+        exportedAt: "",
+        assetPaths: "dup",
+      },
+    })
+
+    expect(errors).toEqual([
+      "title alias는 영문자 또는 _로 시작하고 영문자, 숫자, -, _만 사용할 수 있습니다.",
+    ])
+  })
+
+  it("exposes label, description and default alias metadata for each field", () => {
+    expect(frontmatterFieldMeta.title).toEqual({
+      label: "title",
+      description: "글 제목을 기록합니다.",
+      defaultAlias: "title",
+    })
+    expect(frontmatterFieldMeta.assetPaths.defaultAlias).toBe("assetPaths")
+  })
+})

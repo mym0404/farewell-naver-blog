@@ -14,7 +14,7 @@ const allowedStructureKeys = [
   "includeLogNoInFilename",
   "slugStyle",
 ] as const
-const allowedFrontmatterKeys = ["enabled", "fields"] as const
+const allowedFrontmatterKeys = ["enabled", "fields", "aliases"] as const
 const allowedFrontmatterFieldKeys = [
   "title",
   "source",
@@ -276,6 +276,24 @@ const validateFrontmatterOptions = (value: unknown, optionsPath: string) => {
     }
 
     frontmatter.fields = fields
+  }
+
+  if ("aliases" in value) {
+    const aliasesValue = value.aliases
+    assertPlainObject(aliasesValue, "frontmatter.aliases", optionsPath)
+    assertAllowedKeys(aliasesValue, allowedFrontmatterFieldKeys, "frontmatter.aliases", optionsPath)
+
+    const aliases = { ...frontmatter.aliases }
+
+    for (const key of allowedFrontmatterFieldKeys) {
+      if (key in aliasesValue) {
+        const aliasValue = aliasesValue[key]
+        assertString(aliasValue, `frontmatter.aliases.${key}`, optionsPath)
+        aliases[key] = aliasValue
+      }
+    }
+
+    frontmatter.aliases = aliases
   }
 
   return frontmatter

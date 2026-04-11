@@ -203,6 +203,40 @@ describe("renderMarkdownPost", () => {
     expect(rendered.markdown).not.toContain("<div>raw</div>")
   })
 
+  it("renders frontmatter keys with configured aliases", async () => {
+    const options = defaultExportOptions()
+
+    options.frontmatter.aliases.title = "postTitle"
+    options.frontmatter.aliases.publishedAt = "published_on"
+    options.frontmatter.aliases.source = "postSource"
+    options.frontmatter.fields.source = false
+
+    const rendered = await renderMarkdownPost({
+      post,
+      category,
+      parsedPost,
+      markdownFilePath: "/tmp/output/posts/Algorithm/test.md",
+      reviewedWarnings: [],
+      options,
+      resolveAsset: async ({
+        kind,
+        sourceUrl,
+      }) =>
+        ({
+          kind,
+          sourceUrl,
+          relativePath: `../../assets/223034929697/${kind}-01.png`,
+        }) satisfies AssetRecord,
+    })
+
+    expect(rendered.markdown).toContain("postTitle: 테스트 글")
+    expect(rendered.markdown).toContain("published_on: 2023-03-04T13:00:00+09:00")
+    expect(rendered.markdown).not.toContain("\npostSource:")
+    expect(rendered.markdown).not.toContain("\nsource: https://blog.naver.com/mym0404/223034929697")
+    expect(rendered.markdown).not.toContain("\ntitle: 테스트 글")
+    expect(rendered.markdown).not.toContain("\npublishedAt: 2023-03-04T13:00:00+09:00")
+  })
+
   it("drops degenerate emphasis-only paragraphs and malformed link-card descriptions", async () => {
     const rendered = await renderMarkdownPost({
       post,
