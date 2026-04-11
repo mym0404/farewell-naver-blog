@@ -36,3 +36,7 @@
 - 루트 `AGENTS.md`는 짧은 router로 유지하고 knowledge base와 항상 동기화해야 한다.
 - 저장소 동작이 바뀌면 관련 knowledge 문서도 같은 변경에 포함되어야 한다.
 - stale 하거나 중복된 가이드는 흩어 두지 말고 knowledge 문서로 통합한다.
+
+# ExecPlans
+
+When writing complex features or significant refactors, use an ExecPlan (as described in .agents/PLANS.md) from design to implementation.
