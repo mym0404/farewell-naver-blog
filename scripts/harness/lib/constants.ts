@@ -1,22 +1,35 @@
 export const coreDocs = [
   "docs/index.md",
-  "docs/architecture.md",
-  "docs/export-spec.md",
-  "docs/parser-block-catalog.md",
-  "docs/validation-harness.md",
-  "docs/samples/index.md",
   "docs/runbooks/browser-verification.md",
+  "docs/runbooks/single-post-verification.md",
   "docs/plans/README.md",
-  "docs/references/harness-engineering-notes.md",
   "docs/generated/quality-score.md",
   "docs/generated/sample-coverage.md",
 ] as const
 
+export const coreKnowledgeDocs = [
+  ".agents/knowledge/index.md",
+  ".agents/knowledge/engineering/index.md",
+  ".agents/knowledge/engineering/stack.md",
+  ".agents/knowledge/engineering/coding-guidelines.md",
+  ".agents/knowledge/engineering/validation.md",
+  ".agents/knowledge/engineering/harness-engineering-notes.md",
+  ".agents/knowledge/architecture/index.md",
+  ".agents/knowledge/architecture/principles.md",
+  ".agents/knowledge/architecture/system-map.md",
+  ".agents/knowledge/architecture/parser-block-catalog.md",
+  ".agents/knowledge/product/index.md",
+  ".agents/knowledge/product/domain.md",
+  ".agents/knowledge/product/product-outline.md",
+  ".agents/knowledge/product/sample-corpus.md",
+  ".agents/knowledge/product/ui-dashboard-design-system.md",
+] as const
+
 export const keyDocsForAgents = [
-  "docs/index.md",
-  "docs/architecture.md",
-  "docs/export-spec.md",
-  "docs/validation-harness.md",
+  ".agents/knowledge/index.md",
+  ".agents/knowledge/engineering/index.md",
+  ".agents/knowledge/architecture/index.md",
+  ".agents/knowledge/product/index.md",
 ] as const
 
 export const requiredDocHeadings = [

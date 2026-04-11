@@ -9,7 +9,7 @@
 ## 관련 코드
 - [../../src/shared/parser-capabilities.ts](../../src/shared/parser-capabilities.ts)
 - [../../src/shared/sample-corpus.ts](../../src/shared/sample-corpus.ts)
-- [../../docs/samples/index.md](../../docs/samples/index.md)
+- [../../.agents/knowledge/product/sample-corpus.md](../../.agents/knowledge/product/sample-corpus.md)
 - [../../scripts/harness/generate-quality-report.ts](../../scripts/harness/generate-quality-report.ts)
 
 ## 검증 방법

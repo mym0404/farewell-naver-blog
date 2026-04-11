@@ -4,14 +4,14 @@
 이 문서는 parser가 지원하는 공용 블록 타입, editor version별 지원 범위, fallback 정책, 대표 샘플을 카탈로그화한다.
 
 ## Source Of Truth
-실제 기준은 [../src/shared/parser-capabilities.ts](../src/shared/parser-capabilities.ts) 이다.
+실제 기준은 [../../../src/shared/parser-capabilities.ts](../../../src/shared/parser-capabilities.ts) 이다.
 
 ## 관련 코드
-- [../src/shared/parser-capabilities.ts](../src/shared/parser-capabilities.ts)
-- [../src/modules/parser/post-parser.ts](../src/modules/parser/post-parser.ts)
-- [../src/modules/parser/se2-parser.ts](../src/modules/parser/se2-parser.ts)
-- [../src/modules/parser/se3-parser.ts](../src/modules/parser/se3-parser.ts)
-- [../src/modules/parser/se4-parser.ts](../src/modules/parser/se4-parser.ts)
+- [../../../src/shared/parser-capabilities.ts](../../../src/shared/parser-capabilities.ts)
+- [../../../src/modules/parser/post-parser.ts](../../../src/modules/parser/post-parser.ts)
+- [../../../src/modules/parser/se2-parser.ts](../../../src/modules/parser/se2-parser.ts)
+- [../../../src/modules/parser/se3-parser.ts](../../../src/modules/parser/se3-parser.ts)
+- [../../../src/modules/parser/se4-parser.ts](../../../src/modules/parser/se4-parser.ts)
 
 ## 검증 방법
 - `pnpm parser:check`

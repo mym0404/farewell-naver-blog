@@ -1,6 +1,6 @@
 import path from "node:path"
 
-import { coreDocs, keyDocsForAgents, requiredDocHeadings } from "./constants.js"
+import { coreDocs, coreKnowledgeDocs, keyDocsForAgents, requiredDocHeadings } from "./constants.js"
 import { pathExists, readUtf8, repoPath, toRepoRelativePath, walkFiles } from "./paths.js"
 
 const localLinkPattern = /!?\[[^\]]*\]\(([^)]+)\)/g
@@ -70,14 +70,20 @@ const collectResolvedLinks = ({
 
 export const collectDocStatus = async () => {
   const docsRoot = repoPath("docs")
-  const markdownFiles = (await walkFiles(docsRoot))
+  const knowledgeRoot = repoPath(".agents", "knowledge")
+  const markdownFiles = [
+    ...(await walkFiles(docsRoot)),
+    ...(await walkFiles(knowledgeRoot).catch(() => [])),
+  ]
     .filter((filePath) => filePath.endsWith(".md"))
     .sort()
   const agentsPath = repoPath("AGENTS.md")
   const missingCoreDocs: string[] = []
+  const missingKnowledgeDocs: string[] = []
   const headingFailures: string[] = []
   const deadLinks: string[] = []
   const existingCoreDocs: string[] = []
+  const existingKnowledgeDocs: string[] = []
 
   for (const docPath of coreDocs) {
     const absolutePath = repoPath(docPath)
@@ -88,6 +94,24 @@ export const collectDocStatus = async () => {
     }
 
     existingCoreDocs.push(docPath)
+    const content = await readUtf8(absolutePath)
+
+    for (const heading of requiredDocHeadings) {
+      if (!content.includes(heading)) {
+        headingFailures.push(`${docPath}: missing ${heading}`)
+      }
+    }
+  }
+
+  for (const docPath of coreKnowledgeDocs) {
+    const absolutePath = repoPath(docPath)
+
+    if (!(await pathExists(absolutePath))) {
+      missingKnowledgeDocs.push(docPath)
+      continue
+    }
+
+    existingKnowledgeDocs.push(docPath)
     const content = await readUtf8(absolutePath)
 
     for (const heading of requiredDocHeadings) {
@@ -112,6 +136,24 @@ export const collectDocStatus = async () => {
   const unlinkedCoreDocs = coreDocs
     .filter((docPath) => docPath !== "docs/index.md")
     .filter((docPath) => !docsIndexLinks.has(docPath))
+
+  const linkedKnowledgePaths = new Set<string>()
+
+  for (const filePath of markdownFiles.filter((filePath) => normalizeDocPath(filePath).includes(".agents/knowledge/"))) {
+    const content = await readUtf8(filePath)
+    const linkResult = collectResolvedLinks({
+      filePath,
+      content,
+    })
+
+    for (const resolvedPath of linkResult.resolvedPaths) {
+      linkedKnowledgePaths.add(resolvedPath)
+    }
+  }
+
+  const unlinkedKnowledgeDocs = coreKnowledgeDocs
+    .filter((docPath) => docPath !== ".agents/knowledge/index.md")
+    .filter((docPath) => !linkedKnowledgePaths.has(docPath) && !agentsLinks.has(docPath))
 
   for (const filePath of [agentsPath, ...markdownFiles]) {
     const content = await readUtf8(filePath)
@@ -144,11 +186,14 @@ export const collectDocStatus = async () => {
 
   return {
     missingCoreDocs,
+    missingKnowledgeDocs,
     missingAgentLinks,
     unlinkedCoreDocs,
+    unlinkedKnowledgeDocs,
     headingFailures,
     deadLinks,
-    coreDocCount: existingCoreDocs.length,
-    validCoreDocCount: existingCoreDocs.length - headingFailures.length,
+    coreDocCount: existingCoreDocs.length + existingKnowledgeDocs.length,
+    validCoreDocCount:
+      existingCoreDocs.length + existingKnowledgeDocs.length - headingFailures.length,
   }
 }

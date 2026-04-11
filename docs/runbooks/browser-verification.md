@@ -12,7 +12,7 @@
 ## 관련 코드
 - [../../src/static/index.html](../../src/static/index.html)
 - [../../src/static/app.js](../../src/static/app.js)
-- [../ui-dashboard-design-system.md](../ui-dashboard-design-system.md)
+- [../../.agents/knowledge/product/ui-dashboard-design-system.md](../../.agents/knowledge/product/ui-dashboard-design-system.md)
 - [../../src/server/http-server.ts](../../src/server/http-server.ts)
 - [../../scripts/harness/run-ui-smoke.ts](../../scripts/harness/run-ui-smoke.ts)
 

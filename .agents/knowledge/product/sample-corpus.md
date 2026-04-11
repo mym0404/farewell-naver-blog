@@ -4,12 +4,12 @@
 이 문서는 실샘플 검증에 사용하는 공개 네이버 블로그 글과 그 대표 블록을 정의한다.
 
 ## Source Of Truth
-실제 샘플 목록은 [../../src/shared/sample-corpus.ts](../../src/shared/sample-corpus.ts) 이다.
+실제 샘플 목록은 [../../../src/shared/sample-corpus.ts](../../../src/shared/sample-corpus.ts) 이다.
 
 ## 관련 코드
-- [../../src/shared/sample-corpus.ts](../../src/shared/sample-corpus.ts)
-- [../../tests/naver.integration.test.ts](../../tests/naver.integration.test.ts)
-- [../../scripts/harness/verify-sample-exports.ts](../../scripts/harness/verify-sample-exports.ts)
+- [../../../src/shared/sample-corpus.ts](../../../src/shared/sample-corpus.ts)
+- [../../../tests/naver.integration.test.ts](../../../tests/naver.integration.test.ts)
+- [../../../scripts/harness/verify-sample-exports.ts](../../../scripts/harness/verify-sample-exports.ts)
 
 ## 검증 방법
 - `pnpm samples:verify`

@@ -7,10 +7,10 @@
 실제 토큰과 컴포넌트 규칙은 `src/static/styles.css`, 구조는 `src/static/index.html`, 상태 렌더링은 `src/static/app.js`가 기준이다.
 
 ## 관련 코드
-- [../src/static/index.html](../src/static/index.html)
-- [../src/static/styles.css](../src/static/styles.css)
-- [../src/static/app.js](../src/static/app.js)
-- [./runbooks/browser-verification.md](./runbooks/browser-verification.md)
+- [../../../src/static/index.html](../../../src/static/index.html)
+- [../../../src/static/styles.css](../../../src/static/styles.css)
+- [../../../src/static/app.js](../../../src/static/app.js)
+- [../../../docs/runbooks/browser-verification.md](../../../docs/runbooks/browser-verification.md)
 
 ## 검증 방법
 - `pnpm check:quick`

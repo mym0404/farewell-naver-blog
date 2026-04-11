@@ -1,0 +1,33 @@
+# Coding Guidelines
+
+## 목적
+이 저장소에서 반복적으로 지켜야 하는 구현 우선순위와 문서 동기화 원칙을 정리한다.
+
+## Source Of Truth
+- 실제 규칙은 루트 `AGENTS.md`, 코드 구조, 검증 스크립트, 테스트 흐름을 기준으로 유지한다.
+
+## 관련 코드
+- [../../../AGENTS.md](../../../AGENTS.md)
+- [../../../src/shared/parser-capabilities.ts](../../../src/shared/parser-capabilities.ts)
+- [../../../scripts/harness/run-ui-smoke.ts](../../../scripts/harness/run-ui-smoke.ts)
+
+## 검증 방법
+- `pnpm check:quick`
+- 필요 시 변경 영역에 맞는 focused command
+
+## Repo-Specific Priorities
+- repo 바깥 지식보다 저장소 안의 코드, 설정, 테스트를 우선한다.
+- 구조, 샘플, 검증 기준은 숨기지 말고 코드와 문서에 남긴다.
+- parser, renderer, exporter, UI/API를 바꾸면 관련 문서와 harness를 함께 본다.
+- generated 문서는 직접 고치지 않고 스크립트로 다시 만든다.
+
+## Change Discipline
+- parser 범위를 넓힐 때는 `src/shared/parser-capabilities.ts`, 샘플 corpus, 테스트를 함께 맞춘다.
+- exporter나 renderer 규약을 바꾸면 `manifest`, Markdown 출력, export spec, smoke 흐름이 같이 맞아야 한다.
+- UI 변경은 정적 DOM id와 smoke selector 계약을 함부로 깨지 않도록 주의한다.
+- 단건 검증이 필요하면 `scripts/export-single-post.ts`로 실제 공개 글 하나를 다시 확인한다.
+
+## Documentation Discipline
+- evergreen 지식은 `.agents/knowledge/`가 기준이다.
+- `docs/`는 사용자 문서, 검증 문서, generated 보고서를 담는다.
+- 코드 동작이 바뀌면 knowledge와 관련 docs를 같이 갱신한다.

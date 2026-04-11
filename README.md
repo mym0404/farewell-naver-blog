@@ -175,8 +175,8 @@ pnpm check:full
 ## 문서
 
 - [docs/index.md](./docs/index.md)
-- [docs/architecture.md](./docs/architecture.md)
-- [docs/export-spec.md](./docs/export-spec.md)
-- [docs/validation-harness.md](./docs/validation-harness.md)
-- [docs/parser-block-catalog.md](./docs/parser-block-catalog.md)
-- [docs/samples/index.md](./docs/samples/index.md)
+- [.agents/knowledge/architecture/index.md](./.agents/knowledge/architecture/index.md)
+- [.agents/knowledge/product/index.md](./.agents/knowledge/product/index.md)
+- [.agents/knowledge/engineering/validation.md](./.agents/knowledge/engineering/validation.md)
+- [.agents/knowledge/architecture/parser-block-catalog.md](./.agents/knowledge/architecture/parser-block-catalog.md)
+- [.agents/knowledge/product/sample-corpus.md](./.agents/knowledge/product/sample-corpus.md)

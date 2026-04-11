@@ -48,9 +48,9 @@
   - Accept a narrower downloader dependency so the single-post exporter can be unit-tested without a concrete `NaverBlogFetcher` instance.
 - `docs/index.md`
   - Link the new runbook and the audit tracker.
-- `docs/export-spec.md`
+- `.agents/knowledge/product/product-outline.md`
   - Document that the single-post CLI uses the same Markdown/export options as the exporter.
-- `docs/validation-harness.md`
+- `.agents/knowledge/engineering/validation.md`
   - Add the manual single-post verification command and where its outputs live.
 - `docs/runbooks/browser-verification.md`
   - Point the manual browser loop at the new single-post CLI instead of only the UI export flow.
@@ -784,8 +784,8 @@ PASS  tests/naver.single-post-export.integration.test.ts
 - Create: `docs/naver-blog-300-audit-progress.md`
 - Create: `docs/runbooks/single-post-verification.md`
 - Modify: `docs/index.md`
-- Modify: `docs/export-spec.md`
-- Modify: `docs/validation-harness.md`
+- Modify: `.agents/knowledge/product/product-outline.md`
+- Modify: `.agents/knowledge/engineering/validation.md`
 - Modify: `docs/runbooks/browser-verification.md`
 
 - [ ] **Step 1: Add the single-file audit tracker template**
@@ -849,14 +849,14 @@ pnpm exec tsx scripts/export-single-post.ts \
 - [naver-blog-300-audit-progress.md](../../naver-blog-300-audit-progress.md)
 ```
 
-`docs/export-spec.md`
+`.agents/knowledge/product/product-outline.md`
 
 ```md
 ## Manual Verification
 - `scripts/export-single-post.ts` 는 exporter와 동일한 Markdown/export option 규칙으로 특정 글 1건을 바로 렌더링한다.
 ```
 
-`docs/validation-harness.md`
+`.agents/knowledge/engineering/validation.md`
 
 ```md
 ## Manual Single-Post Check

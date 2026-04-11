@@ -10,16 +10,21 @@ const run = async () => {
   const docStatus = await collectDocStatus()
   const failures = [
     ...docStatus.missingCoreDocs.map((item) => `missing core doc: ${item}`),
+    ...docStatus.missingKnowledgeDocs.map((item) => `missing knowledge doc: ${item}`),
     ...docStatus.missingAgentLinks.map((item) => `AGENTS.md missing link: ${item}`),
     ...docStatus.unlinkedCoreDocs.map((item) => `docs/index.md missing link: ${item}`),
+    ...docStatus.unlinkedKnowledgeDocs.map((item) => `knowledge index missing link: ${item}`),
     ...docStatus.headingFailures,
     ...docStatus.deadLinks.map((item) => `dead link: ${item}`),
   ]
-  const parserCatalogContent = await readFile(repoPath("docs", "parser-block-catalog.md"), "utf8")
+  const parserCatalogContent = await readFile(
+    repoPath(".agents", "knowledge", "architecture", "parser-block-catalog.md"),
+    "utf8",
+  )
 
   for (const capability of parserCapabilities) {
     if (!parserCatalogContent.includes(`\`${capability.blockType}\``)) {
-      failures.push(`parser-block-catalog.md missing blockType entry: ${capability.blockType}`)
+      failures.push(`parser block catalog missing blockType entry: ${capability.blockType}`)
     }
   }
 
@@ -50,7 +55,7 @@ const run = async () => {
   }
 
   console.log(
-    `docs:check passed (${docStatus.coreDocCount} core docs, ${generatedDocs.length} generated docs)`,
+    `docs:check passed (${docStatus.coreDocCount} tracked docs, ${generatedDocs.length} generated docs)`,
   )
 }
 

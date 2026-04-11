@@ -8,7 +8,7 @@
 
 ## 관련 코드
 - [../../AGENTS.md](../../AGENTS.md)
-- [../validation-harness.md](../validation-harness.md)
+- [../../.agents/knowledge/engineering/validation.md](../../.agents/knowledge/engineering/validation.md)
 
 ## 검증 방법
 - `pnpm docs:check`

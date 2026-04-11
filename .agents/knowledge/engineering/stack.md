@@ -1,0 +1,44 @@
+# Stack And Tooling
+
+## 목적
+런타임, 핵심 의존성, 애플리케이션 진입점, 디렉터리 구조를 빠르게 파악하도록 돕는다.
+
+## Source Of Truth
+- 실제 스택 계약은 `package.json`, `src/`, `scripts/`, `tests/`가 기준이다.
+
+## 관련 코드
+- [../../../package.json](../../../package.json)
+- [../../../src/server.ts](../../../src/server.ts)
+- [../../../scripts/export-single-post.ts](../../../scripts/export-single-post.ts)
+
+## 검증 방법
+- `pnpm typecheck`
+- `pnpm check:quick`
+
+## Runtime
+- Node.js 기반 ESM 저장소다.
+- 패키지 매니저는 `pnpm`이다.
+- 실행 엔트리는 `tsx`를 사용한다.
+
+## Core Libraries
+- `yaml`: frontmatter 직렬화
+- `cheerio`, `jsdom`: HTML 파싱과 DOM 처리
+- `turndown`, `turndown-plugin-gfm`: HTML to Markdown 변환
+- `playwright`: UI smoke와 브라우저 검증
+- `vitest`: 테스트 러너
+- `typescript`: 정적 타입체크
+
+## Application Surfaces
+- `src/server.ts`, `src/server/http-server.ts`: 로컬 HTTP 서버와 API
+- `src/static/*`: scan, category select, export 옵션을 다루는 정적 웹 UI
+- `src/modules/exporter/*`: 전체 export 실행과 단건 export
+- `scripts/export-single-post.ts`: 단건 수동 검증 CLI
+- `scripts/harness/*`: docs, parser, samples, UI smoke, quality report 검증
+
+## Repo Shape
+- `src/modules`: fetcher, parser, reviewer, converter, exporter
+- `src/server`: job store와 HTTP API
+- `src/shared`: 타입, 옵션, parser capability, sample corpus, 유틸
+- `src/static`: 브라우저 UI
+- `tests`: unit, integration, smoke 보조 테스트
+- `docs`: 사용자 문서와 generated 보고서
