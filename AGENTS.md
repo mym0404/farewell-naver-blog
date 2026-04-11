@@ -9,6 +9,7 @@
 - parser, renderer, exporter, UI/API를 바꾸면 문서와 harness를 함께 확인한다.
 - generated 문서는 수동 편집하지 않고 스크립트로 갱신한다.
 - repo 밖의 추측보다 저장소 안의 코드, 설정, 테스트를 우선한다.
+- 이 프로젝트에서는 작업 완료를 `코드 변경 + commit + push`까지 포함한 기본 흐름으로 취급한다.
 
 ## Validation Commands
 - 빠른 확인: `pnpm check:quick`
