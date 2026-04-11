@@ -11,49 +11,81 @@
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
-    <main class="app-shell">
-      <header class="panel dashboard-header">
-        <div class="header-copy">
-          <p class="eyebrow">Dark-First Export Dashboard</p>
-          <h1>Naver Blog Exporter</h1>
-          <p class="lead">
-            블로그를 스캔하고, 카테고리 범위를 고른 뒤, Markdown 변환 규칙을 한 화면에서 조정합니다.
-          </p>
+    <main class="dashboard-shell">
+      <aside class="app-sidebar" aria-label="Dashboard sections">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-mark">
+            <i class="ri-dashboard-3-line" aria-hidden="true"></i>
+          </div>
+          <div class="sidebar-brand-copy">
+            <strong>Naver Blog Exporter</strong>
+            <span>네이버 블로그 Markdown 내보내기</span>
+          </div>
         </div>
 
-        <div class="header-workbench">
-          <div class="header-section-label">
-            <i class="ri-radar-line inline-icon" aria-hidden="true"></i>
-            <span>Scan Workspace</span>
+        <div class="sidebar-section">
+          <p class="sidebar-heading">작업 순서</p>
+          <nav class="sidebar-nav">
+            <a class="sidebar-link is-active" href="#scan-workbench">
+              <i class="ri-radar-line" aria-hidden="true"></i>
+              <span>블로그 스캔</span>
+            </a>
+            <a class="sidebar-link" href="#category-panel">
+              <i class="ri-folder-chart-line" aria-hidden="true"></i>
+              <span>카테고리 선택</span>
+            </a>
+            <a class="sidebar-link" href="#export-panel">
+              <i class="ri-sliders-line" aria-hidden="true"></i>
+              <span>출력 설정</span>
+            </a>
+            <a class="sidebar-link" href="#status-panel">
+              <i class="ri-pulse-line" aria-hidden="true"></i>
+              <span>작업 상태</span>
+            </a>
+          </nav>
+        </div>
+
+      </aside>
+
+      <div class="dashboard-main">
+        <header class="topbar-panel" id="scan-workbench">
+          <div class="topbar-bar">
+            <div class="topbar-copy">
+              <p class="eyebrow">Naver Blog Markdown Export</p>
+              <h1>네이버 블로그 내보내기</h1>
+              <p class="lead">
+                네이버 블로그를 스캔한 뒤 카테고리 범위를 고르고, Markdown과 asset 출력 규칙을 한 화면에서 조정합니다.
+              </p>
+            </div>
           </div>
-          <div class="form-grid compact-grid">
-            <label class="field">
+
+          <div class="scan-toolbar">
+            <label class="field scan-field">
               <span>Blog ID 또는 URL</span>
               <input id="blogIdOrUrl" placeholder="mym0404 또는 https://blog.naver.com/..." />
             </label>
 
-            <div class="actions">
+            <div class="actions scan-actions">
               <button type="button" id="scan-button">
                 <i class="ri-radar-line button-icon" aria-hidden="true"></i>
-                <span>Scan Categories</span>
+                <span>카테고리 스캔</span>
               </button>
             </div>
+
+            <p id="scan-status" class="status-pill" aria-live="polite">블로그를 아직 스캔하지 않았습니다.</p>
           </div>
+        </header>
 
-          <p id="scan-status" class="muted status-pill" aria-live="polite">블로그를 아직 스캔하지 않았습니다.</p>
-          <div id="scan-summary" class="stats stats-compact" aria-live="polite"></div>
-        </div>
-      </header>
+        <section id="scan-summary" class="kpi-strip" aria-live="polite"></section>
 
-      <div class="dashboard-layout">
-        <section class="workspace-column">
-          <section class="panel section-panel">
+        <div class="content-grid">
+          <section class="board-card" id="category-panel">
             <div class="panel-header">
               <div>
                 <p class="section-kicker">Stage 1</p>
                 <h2 class="section-title">
                   <i class="ri-folder-2-line title-icon" aria-hidden="true"></i>
-                  <span>Category Scope</span>
+                  <span>카테고리 범위</span>
                 </h2>
               </div>
               <p id="category-status" class="muted">스캔 후 카테고리를 선택할 수 있습니다.</p>
@@ -63,50 +95,65 @@
               <label class="toolbar-search">
                 <span class="toolbar-label">
                   <i class="ri-search-line inline-icon" aria-hidden="true"></i>
-                  <span>Filter</span>
+                  <span>검색</span>
                 </span>
                 <input id="category-search" placeholder="카테고리 검색" disabled />
               </label>
 
               <div class="toolbar-actions">
-                <button type="button" class="ghost-button" id="select-all-categories" disabled>Select All</button>
-                <button type="button" class="ghost-button" id="clear-all-categories" disabled>Clear</button>
+                <button type="button" class="ghost-button" id="select-all-categories" disabled>전체 선택</button>
+                <button type="button" class="ghost-button" id="clear-all-categories" disabled>전체 해제</button>
               </div>
             </div>
 
             <div class="selection-summary">
-              <span id="selected-category-count">선택된 카테고리 0개</span>
+              <span id="selected-category-count">선택된 카테고리 0개 / 0개</span>
             </div>
 
             <div id="category-list" class="category-list empty">카테고리를 불러오면 여기에 표시됩니다.</div>
           </section>
 
-          <section class="panel section-panel">
+          <section class="board-card" id="export-panel">
             <div class="panel-header">
               <div>
                 <p class="section-kicker">Stage 2</p>
                 <h2 class="section-title">
                   <i class="ri-sliders-line title-icon" aria-hidden="true"></i>
-                  <span>Export Controls</span>
+                  <span>출력 설정</span>
                 </h2>
               </div>
-              <p class="muted">출력 구조와 Markdown 규칙을 카드 단위로 조정합니다.</p>
+              <p class="muted">구조, frontmatter, Markdown, asset 규칙을 카드 단위로 조정합니다.</p>
             </div>
 
             <form id="export-form" class="form-stack">
               <div class="control-bar">
                 <label class="field control-field">
-                  <span>Output Directory</span>
+                  <span>출력 경로</span>
                   <input id="outputDir" value="./output" required />
                 </label>
 
-                <div class="actions">
+                <div class="actions export-actions">
                   <button type="submit" id="export-button" disabled>
                     <i class="ri-download-cloud-2-line button-icon" aria-hidden="true"></i>
-                    <span>Export Selected Categories</span>
+                    <span>선택한 카테고리 내보내기</span>
                   </button>
                 </div>
               </div>
+
+              <section class="preview-panel">
+                <div class="preview-panel-header">
+                  <div>
+                    <p class="section-kicker">Preview</p>
+                    <h3 class="preview-title">예시 Markdown 구조</h3>
+                  </div>
+                  <button type="button" id="preview-button" class="ghost-button" disabled>예시 보기</button>
+                </div>
+                <p id="preview-status" class="muted preview-status">
+                  스캔 후 카테고리를 고르면 현재 선택 범위의 대표 글을 기준으로 예시 Markdown을 확인할 수 있습니다.
+                </p>
+                <div id="preview-meta" class="preview-meta empty">preview 대상 글 정보가 여기에 표시됩니다.</div>
+                <pre id="preview-markdown" class="preview-markdown">아직 preview가 없습니다.</pre>
+              </section>
 
               <div class="option-grid-board">
                 <details class="option-group" open>
@@ -243,7 +290,6 @@
                       <select id="markdown-linkCardStyle">
                         <option value="inline">inline link + description</option>
                         <option value="quote">blockquote card</option>
-                        <option value="html">HTML card</option>
                       </select>
                     </label>
 
@@ -258,8 +304,7 @@
                     <label class="field">
                       <span>Table Style</span>
                       <select id="markdown-tableStyle">
-                        <option value="gfm-or-html">GFM 우선, 복잡한 표는 HTML</option>
-                        <option value="html-only">항상 HTML table</option>
+                        <option value="gfm-or-html">Markdown 우선, 복잡한 표는 best-effort 변환</option>
                       </select>
                     </label>
 
@@ -268,7 +313,6 @@
                       <select id="markdown-videoStyle">
                         <option value="thumbnail-link">썸네일 + 원문 링크</option>
                         <option value="link-only">링크만</option>
-                        <option value="html">HTML figure</option>
                       </select>
                     </label>
 
@@ -285,15 +329,6 @@
                       <span>Image Group Style</span>
                       <select id="markdown-imageGroupStyle">
                         <option value="split-images">개별 이미지로 분해</option>
-                        <option value="html">HTML 그룹</option>
-                      </select>
-                    </label>
-
-                    <label class="field">
-                      <span>Raw HTML Policy</span>
-                      <select id="markdown-rawHtmlPolicy">
-                        <option value="keep">보존</option>
-                        <option value="omit">생략</option>
                       </select>
                     </label>
 
@@ -368,50 +403,31 @@
               </div>
             </form>
           </section>
-        </section>
 
-        <aside class="status-column">
-          <section class="panel status-panel">
+          <section class="board-card" id="status-panel">
             <div class="panel-header">
               <div>
                 <p class="section-kicker">Stage 3</p>
                 <h2 class="section-title">
                   <i class="ri-pulse-line title-icon" aria-hidden="true"></i>
-                  <span>Job Status</span>
+                  <span>작업 상태</span>
                 </h2>
               </div>
-              <p id="status-text" class="muted status-pill">Idle</p>
+              <p id="status-text" class="status-pill">Idle</p>
             </div>
 
-            <div id="summary" class="stats" aria-live="polite"></div>
-            <pre id="logs" class="logs" aria-live="polite"></pre>
-          </section>
-
-          <section class="panel rail-panel">
-            <p class="section-kicker">Design Focus</p>
-            <h2 class="section-title">
-              <i class="ri-eye-line title-icon" aria-hidden="true"></i>
-              <span>Operational Readability</span>
-            </h2>
-            <p class="muted rail-copy">
-              스캔 상태, 선택 범위, 출력 규칙, 실행 로그를 같은 화면에서 빠르게 확인할 수 있도록 정보 밀도를 높였습니다.
-            </p>
-            <div class="rail-list">
-              <div class="rail-item">
-                <span class="rail-item-title">Palette</span>
-                <span class="rail-item-value">Slate / Blue / Green</span>
-              </div>
-              <div class="rail-item">
-                <span class="rail-item-title">Typography</span>
-                <span class="rail-item-value">Fira Sans / Fira Code</span>
-              </div>
-              <div class="rail-item">
-                <span class="rail-item-title">Motion</span>
-                <span class="rail-item-value">Subtle, state-driven</span>
+            <div class="status-layout">
+              <div id="summary" class="stats" aria-live="polite"></div>
+              <div class="logs-panel">
+                <div class="logs-header">
+                  <p class="section-kicker">작업 로그</p>
+                  <p class="muted">export 진행, 오류, manifest 생성 여부를 시간 순서대로 확인합니다.</p>
+                </div>
+                <pre id="logs" class="logs" aria-live="polite"></pre>
               </div>
             </div>
           </section>
-        </aside>
+        </div>
       </div>
     </main>
 

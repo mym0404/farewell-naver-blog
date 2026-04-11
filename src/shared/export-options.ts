@@ -226,7 +226,7 @@ export const defaultExportOptions = (): ExportOptions => ({
     videoStyle: "thumbnail-link",
     imageStyle: "markdown-image",
     imageGroupStyle: "split-images",
-    rawHtmlPolicy: "keep",
+    rawHtmlPolicy: "omit",
     dividerStyle: "dash",
     codeFenceStyle: "backtick",
     headingLevelOffset: 0,

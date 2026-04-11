@@ -21,7 +21,6 @@ const createService = ({
   })
 
   service.use(gfm)
-  service.keep(["iframe", "video", "audio"])
   service.addRule("hardBreak", {
     filter: "br",
     replacement: () => "  \n",

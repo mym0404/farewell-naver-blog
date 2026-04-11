@@ -100,6 +100,28 @@ const run = async () => {
     await page.selectOption("#assets-assetPathMode", "remote")
     await page.uncheck("#assets-downloadImages")
     await page.uncheck("#assets-downloadThumbnails")
+    const previewResponsePromise = page.waitForResponse(
+      (response) =>
+        response.url() === `${baseUrl}/api/preview` &&
+        response.request().method() === "POST",
+    )
+
+    await page.click("#preview-button")
+    await previewResponsePromise
+    await page.waitForFunction(
+      () =>
+        document.querySelector("#preview-markdown")?.textContent?.includes("postTitle:") ?? false,
+    )
+
+    const previewMarkdown = await page.locator("#preview-markdown").textContent()
+
+    if (!previewMarkdown?.includes("postTitle:")) {
+      throw new Error("preview markdown missing frontmatter alias")
+    }
+
+    if (/<[a-z][^>]*>/i.test(previewMarkdown)) {
+      throw new Error("preview markdown still contains html")
+    }
 
     const exportResponsePromise = page.waitForResponse(
       (response) =>
@@ -165,6 +187,10 @@ const run = async () => {
 
     if (exportedMarkdown.includes("\ntitle:")) {
       throw new Error("exported markdown still used the original title key")
+    }
+
+    if (/<[a-z][^>]*>/i.test(exportedMarkdown)) {
+      throw new Error("exported markdown still contains html")
     }
 
     console.log(`smoke:ui passed (${jobId})`)

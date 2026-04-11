@@ -168,6 +168,10 @@ describe("renderMarkdownPost", () => {
     options.markdown.linkStyle = "referenced"
     options.markdown.imageStyle = "source-only"
     options.markdown.rawHtmlPolicy = "omit"
+    options.markdown.linkCardStyle = "html"
+    options.markdown.videoStyle = "html"
+    options.markdown.imageGroupStyle = "html"
+    options.markdown.tableStyle = "html-only"
 
     const rendered = await renderMarkdownPost({
       post,
@@ -201,6 +205,9 @@ describe("renderMarkdownPost", () => {
     expect(rendered.markdown).toContain("```math\nf(n)=n+1\n```")
     expect(rendered.markdown).toMatch(/\[External article\]\[ref-\d+\]/)
     expect(rendered.markdown).not.toContain("<div>raw</div>")
+    expect(rendered.markdown).not.toContain("<table")
+    expect(rendered.markdown).not.toContain("<img")
+    expect(rendered.markdown).not.toContain("<figure")
   })
 
   it("renders frontmatter keys with configured aliases", async () => {

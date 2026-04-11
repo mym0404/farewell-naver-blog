@@ -50,6 +50,9 @@ describe("http server", () => {
             title: string
           }
         }
+        markdown: {
+          rawHtmlPolicy: string
+        }
       }
     }
 
@@ -60,5 +63,6 @@ describe("http server", () => {
       defaultAlias: "title",
     })
     expect(body.options.frontmatter.aliases.title).toBe("")
+    expect(body.options.markdown.rawHtmlPolicy).toBe("omit")
   })
 })

@@ -1,5 +1,7 @@
 import YAML from "yaml"
 
+import { convertHtmlToMarkdown } from "./html-fragment-converter.js"
+
 import type {
   AssetRecord,
   AstBlock,
@@ -151,7 +153,9 @@ const renderLinkCardBlock = ({
   }
 
   if (options.markdown.linkCardStyle === "html") {
-    return `<div class="naver-link-card"><p><strong>${title}</strong></p><p>${description}</p><p><a href="${block.card.url}">${block.card.url}</a></p></div>`
+    return [formatLink({ label: title, url: block.card.url }), description, block.card.url]
+      .filter(Boolean)
+      .join("\n")
   }
 
   return [formatLink({ label: title, url: block.card.url }), description, block.card.url]
@@ -357,7 +361,7 @@ export const renderMarkdownPost = async ({
     })
 
     if (options.markdown.videoStyle === "html") {
-      return `<figure class="naver-video">${thumbnailPath ? `<img src="${thumbnailPath}" alt="${block.video.title}" />` : ""}<figcaption><a href="${block.video.sourceUrl}">${block.video.title}</a></figcaption></figure>`
+      warnings.push("video html 옵션은 지원하지 않아 Markdown 링크 형식으로 변환했습니다.")
     }
 
     if (options.markdown.videoStyle === "link-only") {
@@ -388,11 +392,14 @@ export const renderMarkdownPost = async ({
   }
 
   const renderTableBlock = (block: Extract<AstBlock, { type: "table" }>) => {
-    if (options.markdown.tableStyle === "html-only") {
-      return block.html
+    if (block.rows.length > 0) {
+      return renderGfmTable(block)
     }
 
-    return block.complex ? block.html : renderGfmTable(block)
+    return convertHtmlToMarkdown({
+      html: block.html,
+      options,
+    })
   }
 
   for (const block of parsedPost.blocks) {
@@ -455,20 +462,7 @@ export const renderMarkdownPost = async ({
 
     if (block.type === "imageGroup") {
       if (options.markdown.imageGroupStyle === "html") {
-        const imageTags: string[] = []
-
-        for (const image of block.images) {
-          const assetPath = await resolveAssetPath({
-            kind: "image",
-            sourceUrl: image.sourceUrl,
-          })
-
-          maybeRecordBodyThumbnail(assetPath)
-          imageTags.push(`<img src="${assetPath}" alt="${image.alt}" />`)
-        }
-
-        sections.push(`<div class="naver-image-group">${imageTags.join("")}</div>`)
-        continue
+        warnings.push("imageGroup html 옵션은 지원하지 않아 개별 이미지 Markdown으로 변환했습니다.")
       }
 
       const groupSections: string[] = []
@@ -514,7 +508,18 @@ export const renderMarkdownPost = async ({
         continue
       }
 
-      sections.push(block.html)
+      const convertedMarkdown = convertHtmlToMarkdown({
+        html: block.html,
+        options,
+      })
+
+      if (!convertedMarkdown) {
+        warnings.push(`raw HTML 블록을 생략했습니다: ${block.reason}`)
+        continue
+      }
+
+      warnings.push(`raw HTML 블록을 Markdown으로 변환했습니다: ${block.reason}`)
+      sections.push(convertedMarkdown)
     }
   }
 

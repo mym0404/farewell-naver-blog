@@ -15,12 +15,19 @@ const frontmatterStatusNode = document.querySelector("#frontmatter-status")
 const statusText = document.querySelector("#status-text")
 const summaryNode = document.querySelector("#summary")
 const logsNode = document.querySelector("#logs")
+const previewButton = document.querySelector("#preview-button")
+const previewStatusNode = document.querySelector("#preview-status")
+const previewMetaNode = document.querySelector("#preview-meta")
+const previewMarkdownNode = document.querySelector("#preview-markdown")
 
 let defaults = null
 let scanResult = null
 let activeJobId = null
 let pollingHandle = null
 let frontmatterValidationErrors = []
+let previewDirty = true
+
+const frontmatterDefaultStatusText = "각 필드의 설명과 export key alias를 여기서 조정합니다."
 
 const frontmatterFieldLabels = {
   title: "title",
@@ -181,7 +188,7 @@ const createDefaultOptionsFallback = () => ({
     videoStyle: "thumbnail-link",
     imageStyle: "markdown-image",
     imageGroupStyle: "split-images",
-    rawHtmlPolicy: "keep",
+    rawHtmlPolicy: "omit",
     dividerStyle: "dash",
     codeFenceStyle: "backtick",
     headingLevelOffset: 0,
@@ -199,6 +206,7 @@ const frontmatterAliasPattern = /^[A-Za-z_][A-Za-z0-9_-]*$/
 
 const setExportAvailability = () => {
   exportButton.disabled = !scanResult || frontmatterValidationErrors.length > 0
+  previewButton.disabled = !scanResult || frontmatterValidationErrors.length > 0
 }
 
 const setStatus = (value) => {
@@ -209,18 +217,10 @@ const setStatus = (value) => {
 const setSummary = (job) => {
   if (!job) {
     summaryNode.innerHTML = `
-      <div class="stat-card">
-        <span>Status</span>
-        <strong>Ready</strong>
-      </div>
-      <div class="stat-card">
-        <span>Completed</span>
-        <strong>0</strong>
-      </div>
-      <div class="stat-card">
-        <span>Warnings</span>
-        <strong>0</strong>
-      </div>
+      <div class="stat-card"><span>Status</span><strong>Ready</strong></div>
+      <div class="stat-card"><span>Completed</span><strong>0</strong></div>
+      <div class="stat-card"><span>Failed</span><strong>0</strong></div>
+      <div class="stat-card"><span>Warnings</span><strong>0</strong></div>
     `
     return
   }
@@ -249,13 +249,32 @@ const setLogs = (logs) => {
       : logs.map((log) => `[${log.timestamp}] ${log.message}`).join("\n")
 }
 
+const resetPreview = ({
+  status,
+  meta = "preview 대상 글 정보가 여기에 표시됩니다.",
+  markdown = "아직 preview가 없습니다.",
+} = {}) => {
+  previewStatusNode.textContent =
+    status ??
+    "스캔 후 카테고리를 고르면 현재 선택 범위의 대표 글을 기준으로 예시 Markdown을 확인할 수 있습니다."
+  previewMetaNode.className = "preview-meta empty"
+  previewMetaNode.textContent = meta
+  previewMarkdownNode.textContent = markdown
+  previewDirty = true
+}
+
+const markPreviewDirty = (status = "옵션이 바뀌었습니다. export 전에 예시 Markdown을 다시 확인하세요.") => {
+  previewStatusNode.textContent = status
+  previewDirty = true
+}
+
 const setFrontmatterStatus = () => {
   if (!frontmatterStatusNode) {
     return
   }
 
   if (frontmatterValidationErrors.length === 0) {
-    frontmatterStatusNode.textContent = "각 필드의 설명과 export key alias를 여기서 조정합니다."
+    frontmatterStatusNode.textContent = frontmatterDefaultStatusText
     frontmatterStatusNode.dataset.state = "default"
     return
   }
@@ -292,6 +311,11 @@ const validateFrontmatterAliases = () => {
   const frontmatterEnabled = document.querySelector("#frontmatter-enabled").checked
   const aliasOwners = new Map()
   const errors = []
+  const errorFields = new Set()
+
+  getFrontmatterRows().forEach((row) => {
+    row.dataset.state = "default"
+  })
 
   getFrontmatterRows().forEach((row) => {
     const fieldName = row.dataset.frontmatterField
@@ -315,6 +339,7 @@ const validateFrontmatterAliases = () => {
 
     if (alias && !frontmatterAliasPattern.test(alias)) {
       errors.push(`${fieldName} alias는 영문자 또는 _로 시작하고 영문자, 숫자, -, _만 사용할 수 있습니다.`)
+      errorFields.add(fieldName)
       return
     }
 
@@ -322,10 +347,18 @@ const validateFrontmatterAliases = () => {
 
     if (existingOwner) {
       errors.push(`${existingOwner}와 ${fieldName}가 같은 alias "${exportKey}"를 사용하고 있습니다.`)
+      errorFields.add(existingOwner)
+      errorFields.add(fieldName)
       return
     }
 
     aliasOwners.set(exportKey, fieldName)
+  })
+
+  getFrontmatterRows().forEach((row) => {
+    if (row.dataset.frontmatterField && errorFields.has(row.dataset.frontmatterField)) {
+      row.dataset.state = "error"
+    }
   })
 
   frontmatterValidationErrors = errors
@@ -343,18 +376,60 @@ const updateSelectedCategoryCount = () => {
   const totalCount = scanResult?.categories.length ?? 0
 
   selectedCategoryCountNode.textContent = `선택된 카테고리 ${selectedCount}개 / ${totalCount}개`
+  renderScanSummary()
+  markPreviewDirty()
 }
 
 const renderScanSummary = () => {
   if (!scanResult) {
-    scanSummaryNode.innerHTML = ""
+    scanSummaryNode.innerHTML = `
+      <article class="metric-card metric-card-primary">
+        <span>Blog ID</span>
+        <strong>Ready</strong>
+        <small>scan 대기 중</small>
+      </article>
+      <article class="metric-card metric-card-cyan">
+        <span>Total Posts</span>
+        <strong>0</strong>
+        <small>스캔 후 계산됩니다</small>
+      </article>
+      <article class="metric-card metric-card-green">
+        <span>Categories</span>
+        <strong>0</strong>
+        <small>선택 범위 없음</small>
+      </article>
+      <article class="metric-card metric-card-neutral">
+        <span>Selection</span>
+        <strong>0</strong>
+        <small>카테고리를 고르면 반영됩니다</small>
+      </article>
+    `
     return
   }
 
+  const selectedCount = collectSelectedCategoryIds().length || scanResult.categories.length
+
   scanSummaryNode.innerHTML = `
-    <div class="stat-card"><span>Blog ID</span><strong>${scanResult.blogId}</strong></div>
-    <div class="stat-card"><span>Total Posts</span><strong>${scanResult.totalPostCount}</strong></div>
-    <div class="stat-card"><span>Categories</span><strong>${scanResult.categories.length}</strong></div>
+    <article class="metric-card metric-card-primary">
+      <span>Blog ID</span>
+      <strong>${scanResult.blogId}</strong>
+      <small>scan 완료</small>
+    </article>
+    <article class="metric-card metric-card-cyan">
+      <span>Total Posts</span>
+      <strong>${scanResult.totalPostCount}</strong>
+      <small>전체 포스트 수</small>
+    </article>
+    <article class="metric-card metric-card-green">
+      <span>Categories</span>
+      <strong>${scanResult.categories.length}</strong>
+      <small>발견된 카테고리</small>
+    </article>
+    <article class="metric-card metric-card-neutral">
+      <span>Selection</span>
+      <strong>${selectedCount}</strong>
+      <small>현재 선택 범위</small>
+    </article>
   `
 }
 
@@ -411,8 +486,10 @@ const disableCategorySelection = () => {
   clearAllCategoriesButton.disabled = true
   categoryStatus.textContent = "스캔 후 카테고리를 선택할 수 있습니다."
   scanResult = null
+  selectedCategoryCountNode.textContent = "선택된 카테고리 0개 / 0개"
   renderScanSummary()
   renderCategoryList()
+  resetPreview()
   setExportAvailability()
 }
 
@@ -455,7 +532,7 @@ const buildOptionsPayload = () => ({
     videoStyle: document.querySelector("#markdown-videoStyle").value,
     imageStyle: document.querySelector("#markdown-imageStyle").value,
     imageGroupStyle: document.querySelector("#markdown-imageGroupStyle").value,
-    rawHtmlPolicy: document.querySelector("#markdown-rawHtmlPolicy").value,
+    rawHtmlPolicy: "omit",
     dividerStyle: document.querySelector("#markdown-dividerStyle").value,
     codeFenceStyle: document.querySelector("#markdown-codeFenceStyle").value,
     headingLevelOffset: Number(document.querySelector("#markdown-headingLevelOffset").value || "0"),
@@ -490,13 +567,15 @@ const applyDefaults = () => {
   document.querySelector("#structure-slugStyle").value = options.structure.slugStyle
   document.querySelector("#frontmatter-enabled").checked = options.frontmatter.enabled
   document.querySelector("#markdown-linkStyle").value = options.markdown.linkStyle
-  document.querySelector("#markdown-linkCardStyle").value = options.markdown.linkCardStyle
+  document.querySelector("#markdown-linkCardStyle").value =
+    options.markdown.linkCardStyle === "html" ? "inline" : options.markdown.linkCardStyle
   document.querySelector("#markdown-formulaStyle").value = options.markdown.formulaStyle
-  document.querySelector("#markdown-tableStyle").value = options.markdown.tableStyle
-  document.querySelector("#markdown-videoStyle").value = options.markdown.videoStyle
+  document.querySelector("#markdown-tableStyle").value = "gfm-or-html"
+  document.querySelector("#markdown-videoStyle").value =
+    options.markdown.videoStyle === "html" ? "thumbnail-link" : options.markdown.videoStyle
   document.querySelector("#markdown-imageStyle").value = options.markdown.imageStyle
-  document.querySelector("#markdown-imageGroupStyle").value = options.markdown.imageGroupStyle
-  document.querySelector("#markdown-rawHtmlPolicy").value = options.markdown.rawHtmlPolicy
+  document.querySelector("#markdown-imageGroupStyle").value =
+    options.markdown.imageGroupStyle === "html" ? "split-images" : options.markdown.imageGroupStyle
   document.querySelector("#markdown-dividerStyle").value = options.markdown.dividerStyle
   document.querySelector("#markdown-codeFenceStyle").value = options.markdown.codeFenceStyle
   document.querySelector("#markdown-headingLevelOffset").value = String(options.markdown.headingLevelOffset)
@@ -514,11 +593,13 @@ const applyDefaults = () => {
 
       return `
         <div class="frontmatter-row" data-frontmatter-field="${fieldName}">
-          <label class="check frontmatter-check">
-            <input type="checkbox" value="${fieldName}" ${checked} />
-            <span>${fieldMeta?.label ?? frontmatterFieldLabels[fieldName] ?? fieldName}</span>
-          </label>
-          <p class="frontmatter-description">${fieldMeta?.description ?? ""}</p>
+          <div class="frontmatter-main">
+            <label class="frontmatter-toggle">
+              <input type="checkbox" value="${fieldName}" ${checked} />
+              <span>${fieldMeta?.label ?? frontmatterFieldLabels[fieldName] ?? fieldName}</span>
+            </label>
+            <p class="frontmatter-description">${fieldMeta?.description ?? ""}</p>
+          </div>
           <label class="field frontmatter-alias-field">
             <span>Export Key Alias</span>
             <input
@@ -541,16 +622,93 @@ const applyDefaults = () => {
   })
 
   frontmatterFieldsNode.querySelectorAll('input[data-alias-input="true"]').forEach((input) => {
-    input.addEventListener("input", validateFrontmatterAliases)
+    input.addEventListener("input", () => {
+      validateFrontmatterAliases()
+      markPreviewDirty()
+    })
   })
 
   document.querySelector("#frontmatter-enabled").onchange = () => {
     syncFrontmatterAliasDisabledState()
     validateFrontmatterAliases()
+    markPreviewDirty()
   }
 
   syncFrontmatterAliasDisabledState()
   validateFrontmatterAliases()
+}
+
+const renderPreview = (preview) => {
+  previewStatusNode.textContent = preview.renderWarnings.length
+    ? "preview는 현재 옵션 기준으로 렌더링했습니다. 경고가 있으면 아래 글 요약에서 함께 확인하세요."
+    : "preview는 현재 옵션 기준으로 렌더링했습니다. 본문 HTML은 export 결과에 남기지 않습니다."
+  previewMetaNode.className = "preview-meta"
+  previewMetaNode.innerHTML = `
+    <article class="preview-meta-card">
+      <span>Candidate Post</span>
+      <strong>${preview.candidatePost.title}</strong>
+    </article>
+    <article class="preview-meta-card">
+      <span>Category</span>
+      <strong>${preview.candidatePost.categoryName}</strong>
+    </article>
+    <article class="preview-meta-card">
+      <span>Editor</span>
+      <strong>SE${preview.editorVersion}</strong>
+    </article>
+    <article class="preview-meta-card">
+      <span>Warnings</span>
+      <strong>${preview.parserWarnings.length + preview.reviewerWarnings.length + preview.renderWarnings.length}</strong>
+    </article>
+  `
+  previewMarkdownNode.textContent = preview.markdown
+  previewDirty = false
+}
+
+const loadPreview = async () => {
+  if (!scanResult) {
+    resetPreview()
+    return
+  }
+
+  validateFrontmatterAliases()
+
+  if (frontmatterValidationErrors.length > 0) {
+    previewStatusNode.textContent = "Frontmatter alias 오류를 먼저 해결해야 preview를 볼 수 있습니다."
+    return
+  }
+
+  previewButton.disabled = true
+  previewStatusNode.textContent = "대표 글을 가져와 예시 Markdown을 렌더링하는 중입니다."
+
+  try {
+    const response = await fetch("/api/preview", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        blogIdOrUrl: blogIdInput.value.trim(),
+        outputDir: outputDirInput.value.trim(),
+        options: buildOptionsPayload(),
+      }),
+    })
+    const body = await response.json()
+
+    if (!response.ok) {
+      throw new Error(body.error ?? "preview failed")
+    }
+
+    renderPreview(body)
+  } catch (error) {
+    previewStatusNode.textContent = error instanceof Error ? error.message : String(error)
+    previewMetaNode.className = "preview-meta empty"
+    previewMetaNode.textContent = "preview 대상 글을 불러오지 못했습니다."
+    previewMarkdownNode.textContent = "preview를 생성하지 못했습니다."
+    previewDirty = true
+  } finally {
+    setExportAvailability()
+  }
 }
 
 const pollJob = async () => {
@@ -628,6 +786,9 @@ scanButton.addEventListener("click", async () => {
     clearAllCategoriesButton.disabled = false
     renderScanSummary()
     renderCategoryList()
+    resetPreview({
+      status: "스캔이 끝났습니다. 현재 선택 범위의 대표 글로 예시 Markdown을 확인할 수 있습니다.",
+    })
     setExportAvailability()
   } catch (error) {
     disableCategorySelection()
@@ -656,6 +817,18 @@ clearAllCategoriesButton.addEventListener("click", () => {
     input.checked = false
   })
   updateSelectedCategoryCount()
+})
+
+previewButton.addEventListener("click", loadPreview)
+
+document.querySelector("#export-form").addEventListener("input", (event) => {
+  if (event.target === previewButton) {
+    return
+  }
+
+  if (scanResult && !previewDirty) {
+    markPreviewDirty()
+  }
 })
 
 document.querySelector("#export-form").addEventListener("submit", async (event) => {
@@ -723,3 +896,4 @@ disableCategorySelection()
 setSummary(null)
 setLogs([])
 setFrontmatterStatus()
+resetPreview()

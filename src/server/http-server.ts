@@ -8,6 +8,7 @@ import path from "node:path"
 import { fileURLToPath } from "node:url"
 
 import { NaverBlogFetcher } from "../modules/blog-fetcher/naver-blog-fetcher.js"
+import { buildExportPreview } from "../modules/exporter/export-preview.js"
 import { NaverBlogExporter } from "../modules/exporter/naver-blog-exporter.js"
 import {
   cloneExportOptions,
@@ -217,6 +218,49 @@ export const createHttpServer = () => {
             jobId: job.id,
           },
         })
+        return
+      }
+
+      if (method === "POST" && url.pathname === "/api/preview") {
+        const rawBody = await readBody(request)
+        const payload = JSON.parse(rawBody) as {
+          blogIdOrUrl?: string
+          outputDir?: string
+          options?: PartialExportOptions
+        }
+
+        if (!payload.blogIdOrUrl?.trim() || !payload.outputDir?.trim()) {
+          sendJson({
+            response,
+            statusCode: 400,
+            body: {
+              error: "blogIdOrUrl와 outputDir는 필수입니다.",
+            },
+          })
+          return
+        }
+
+        try {
+          const preview = await buildExportPreview({
+            blogIdOrUrl: payload.blogIdOrUrl.trim(),
+            outputDir: payload.outputDir.trim(),
+            options: cloneExportOptions(payload.options),
+          })
+
+          sendJson({
+            response,
+            statusCode: 200,
+            body: preview,
+          })
+        } catch (error) {
+          sendJson({
+            response,
+            statusCode: 400,
+            body: {
+              error: toErrorMessage(error),
+            },
+          })
+        }
         return
       }
 
