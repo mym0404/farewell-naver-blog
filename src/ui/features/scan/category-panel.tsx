@@ -27,10 +27,16 @@ export const CategoryPanel = ({
   selectedCategoryIds,
   categorySearch,
   categoryStatus,
+  categoryMode,
+  dateFrom,
+  dateTo,
   selectedCount,
   selectedPostCount,
   totalPostCount,
   onCategorySearchChange,
+  onCategoryModeChange,
+  onDateFromChange,
+  onDateToChange,
   onSelectAll,
   onClearAll,
   onCategoryToggle,
@@ -39,10 +45,16 @@ export const CategoryPanel = ({
   selectedCategoryIds: number[]
   categorySearch: string
   categoryStatus: string
+  categoryMode: "selected-and-descendants" | "exact-selected"
+  dateFrom: string | null
+  dateTo: string | null
   selectedCount: number
   selectedPostCount: number
   totalPostCount: number
   onCategorySearchChange: (value: string) => void
+  onCategoryModeChange: (value: "selected-and-descendants" | "exact-selected") => void
+  onDateFromChange: (value: string | null) => void
+  onDateToChange: (value: string | null) => void
   onSelectAll: () => void
   onClearAll: () => void
   onCategoryToggle: (categoryId: number, checked: boolean) => void
@@ -76,6 +88,45 @@ export const CategoryPanel = ({
       </CardHeader>
 
       <CardContent className="panel-body grid gap-5 p-6">
+        <div className="grid gap-4 xl:grid-cols-3">
+          <label className="field grid min-h-0 gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(22,33,50,0.04)]">
+            <span className="text-sm font-semibold text-slate-900">Category Match Mode</span>
+            <select
+              id="scope-categoryMode"
+              value={categoryMode}
+              disabled={!scanResult}
+              onChange={(event) =>
+                onCategoryModeChange(event.target.value as "selected-and-descendants" | "exact-selected")
+              }
+            >
+              <option value="selected-and-descendants">선택 카테고리 + 하위 카테고리</option>
+              <option value="exact-selected">선택 카테고리만</option>
+            </select>
+          </label>
+
+          <label className="field grid min-h-0 gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(22,33,50,0.04)]">
+            <span className="text-sm font-semibold text-slate-900">Date From</span>
+            <Input
+              id="scope-dateFrom"
+              type="date"
+              value={dateFrom ?? ""}
+              disabled={!scanResult}
+              onChange={(event) => onDateFromChange(event.target.value || null)}
+            />
+          </label>
+
+          <label className="field grid min-h-0 gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(22,33,50,0.04)]">
+            <span className="text-sm font-semibold text-slate-900">Date To</span>
+            <Input
+              id="scope-dateTo"
+              type="date"
+              value={dateTo ?? ""}
+              disabled={!scanResult}
+              onChange={(event) => onDateToChange(event.target.value || null)}
+            />
+          </label>
+        </div>
+
         <div className="toolbar category-toolbar grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
           <label className="input-stack toolbar-search grid gap-2">
             <span className="toolbar-label text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">검색</span>

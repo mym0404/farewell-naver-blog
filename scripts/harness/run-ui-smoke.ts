@@ -24,6 +24,10 @@ const mobileViewport = {
 } as const
 
 const contrastTargets = [
+  { selector: ".wizard-step-label", minRatio: 4.5 },
+  { selector: ".wizard-heading .panel-description", minRatio: 4.5 },
+  { selector: ".wizard-summary-metric span", minRatio: 4.5 },
+  { selector: "#status-text", minRatio: 4.5 },
   { selector: "#category-status", minRatio: 4.5 },
   { selector: ".panel-description", minRatio: 4.5 },
   { selector: ".field-help", minRatio: 4.5 },
@@ -31,11 +35,6 @@ const contrastTargets = [
   { selector: ".results-description", minRatio: 4.5 },
   { selector: ".job-results-row span", minRatio: 4.5 },
   { selector: ".scan-status-note", minRatio: 4.5 },
-  { selector: ".sidebar-brand strong", minRatio: 4.5 },
-  { selector: ".sidebar-heading", minRatio: 4.5 },
-  { selector: ".sidebar-link span", minRatio: 4.5 },
-  { selector: ".sidebar-summary-title", minRatio: 4.5 },
-  { selector: ".sidebar-summary-metric span", minRatio: 4.5 },
   { selector: "#export-button span", minRatio: 4.5 },
 ] as const
 
@@ -708,18 +707,16 @@ const assertFrameFlush = async ({
   }
 }
 
-const assertNavActive = async ({
+const waitForStepView = async ({
   page,
-  sectionId,
+  step,
 }: {
   page: import("playwright").Page
-  sectionId: string
+  step: string
 }) => {
-  await page.locator(`#${sectionId}`).scrollIntoViewIfNeeded()
   await page.waitForFunction(
-    (nextSectionId) =>
-      document.querySelector(`[data-section-link="${nextSectionId}"]`)?.className.includes("is-active") ?? false,
-    sectionId,
+    (nextStep) => document.querySelector(`[data-step-view="${nextStep}"]`) instanceof HTMLElement,
+    step,
   )
 }
 
@@ -754,6 +751,7 @@ const run = async () => {
   })
 
   const mockState: {
+    scanRequestCount: number
     uploadAttempt: 0 | 1 | 2
     uploadFetchCount: number
     uploadPayload: null | {
@@ -761,6 +759,7 @@ const run = async () => {
       providerFields: Record<string, string>
     }
   } = {
+    scanRequestCount: 0,
     uploadAttempt: 0,
     uploadFetchCount: 0,
     uploadPayload: null,
@@ -785,6 +784,7 @@ const run = async () => {
     }
 
     if (pathname === "/api/scan" && request.method() === "POST") {
+      mockState.scanRequestCount += 1
       await route.fulfill(buildJsonResponse(scanResult))
       return
     }
@@ -901,14 +901,10 @@ const run = async () => {
       page,
       label: "initial desktop layout",
     })
-    await assertFrameFlush({
+    await waitForStepView({
       page,
-      selector: ".app-sidebar-shell",
-      label: "desktop sidebar shell",
+      step: "blog-input",
     })
-    await page.waitForFunction(
-      () => document.querySelector('[data-section-link="scan-workbench"]')?.className.includes("is-active") ?? false,
-    )
     await page.fill("#blogIdOrUrl", "mym0404")
 
     const scanResponsePromise = page.waitForResponse(
@@ -920,73 +916,55 @@ const run = async () => {
 
     await page.click("#scan-button")
     await scanResponsePromise
-    await page.waitForFunction(
-      () => document.querySelector("#scan-status")?.textContent?.includes("스캔 완료") ?? false,
-    )
-    await page.getByRole("tab", { name: "Frontmatter" }).click()
-    await page.waitForSelector('[data-frontmatter-field="title"] .frontmatter-description')
-
-    const frontmatterDescription = await page
-      .locator('[data-frontmatter-field="title"] .frontmatter-description')
-      .textContent()
-
-    if (!frontmatterDescription?.includes("글 제목")) {
-      throw new Error("frontmatter description missing")
-    }
-
-    const optionsLayoutOk = await page.evaluate(() => {
-      const tabsList = document.querySelector<HTMLElement>(".option-tabs-list")
-      const frontmatterGrid = document.querySelector<HTMLElement>("#frontmatter-fields")
-
-      if (!tabsList || !frontmatterGrid) {
-        return false
-      }
-
-      const tabColumns = window
-        .getComputedStyle(tabsList)
-        .gridTemplateColumns
-        .trim()
-        .split(/\s+/)
-        .filter(Boolean).length
-      const frontmatterColumns = window
-        .getComputedStyle(frontmatterGrid)
-        .gridTemplateColumns
-        .trim()
-        .split(/\s+/)
-        .filter(Boolean).length
-
-      return tabColumns === 5 && frontmatterColumns >= 2
-    })
-
-    if (!optionsLayoutOk) {
-      throw new Error("options tabs or frontmatter grid layout regressed")
-    }
-
-    await assertNavActive({
+    await waitForStepView({
       page,
-      sectionId: "category-panel",
+      step: "category-selection",
     })
 
-    await page.fill('[data-frontmatter-field="title"] input[data-alias-input="true"]', "shared")
-    await page.fill('[data-frontmatter-field="source"] input[data-alias-input="true"]', "shared")
-
-    const frontmatterStatusText = await page.locator("#frontmatter-status").textContent()
-
-    if (!frontmatterStatusText?.includes('title와 source가 같은 alias "shared"')) {
-      throw new Error("frontmatter alias collision was not shown")
+    if (mockState.scanRequestCount !== 1) {
+      throw new Error(`expected first scan request count to be 1, got ${mockState.scanRequestCount}`)
     }
 
-    const exportDisabledWithCollision = await page.locator("#export-button").isDisabled()
+    await page.click('button:has-text("이전")')
+    await waitForStepView({
+      page,
+      step: "blog-input",
+    })
+    await page.click("#scan-button")
+    await waitForStepView({
+      page,
+      step: "category-selection",
+    })
 
-    if (!exportDisabledWithCollision) {
-      throw new Error("export button should be disabled when aliases collide")
+    if (mockState.scanRequestCount !== 1) {
+      throw new Error("scan should have been reused when the blog input did not change")
     }
 
-    await page.fill('[data-frontmatter-field="source"] input[data-alias-input="true"]', "")
-    await page.fill('[data-frontmatter-field="title"] input[data-alias-input="true"]', "postTitle")
-    await page.fill("#category-search", "NestJS")
-    await page.click("#clear-all-categories")
-    await page.waitForSelector(".category-item")
+    await page.click('button:has-text("이전")')
+    await waitForStepView({
+      page,
+      step: "blog-input",
+    })
+    await page.fill("#blogIdOrUrl", "another-blog")
+
+    const secondScanResponsePromise = page.waitForResponse(
+      (response) =>
+        response.url() === `${baseUrl}/api/scan` &&
+        response.request().method() === "POST",
+      { timeout: responseTimeoutMs },
+    )
+
+    await page.click("#scan-button")
+    await secondScanResponsePromise
+    await waitForStepView({
+      page,
+      step: "category-selection",
+    })
+
+    if (mockState.scanRequestCount !== 2) {
+      throw new Error(`expected changed blog input to trigger a second scan, got ${mockState.scanRequestCount}`)
+    }
+
     const categoryTableLayoutOk = await page.evaluate(() => {
       const categoryList = document.querySelector<HTMLElement>("#category-list")
       const table = categoryList?.querySelector("table")
@@ -1002,13 +980,134 @@ const run = async () => {
     if (!categoryTableLayoutOk) {
       throw new Error("category panel did not render as a fixed-height table")
     }
+
+    await page.selectOption("#scope-categoryMode", "exact-selected")
+    await page.fill("#scope-dateFrom", "2024-01-01")
+    await page.fill("#scope-dateTo", "2024-12-31")
+    await page.fill("#category-search", "NestJS")
+    await page.click("#clear-all-categories")
+    await page.waitForSelector(".category-item")
     await page.click('.category-item [data-slot="checkbox"]')
-    await assertNavActive({
+    await page.click('button:has-text("구조 설정")')
+    await waitForStepView({
       page,
-      sectionId: "export-panel",
+      step: "structure-options",
     })
+
+    const structureStepVisible = await page.evaluate(() => {
+      return (
+        document.querySelector('[data-step-view="structure-options"] #export-panel') instanceof HTMLElement &&
+        !document.querySelector("#category-panel")
+      )
+    })
+
+    if (!structureStepVisible) {
+      throw new Error("structure step did not replace the category step")
+    }
+
     await page.fill("#outputDir", outputDir)
-    await page.getByRole("tab", { name: "Assets" }).click()
+    await page.click("#structure-cleanOutputDir")
+    await page.click("#structure-groupByCategory")
+    await page.click('button:has-text("Frontmatter 설정")')
+    await waitForStepView({
+      page,
+      step: "frontmatter-options",
+    })
+
+    const frontmatterDescription = await page
+      .locator('[data-frontmatter-field="title"] .frontmatter-description')
+      .textContent()
+
+    if (!frontmatterDescription?.includes("글 제목")) {
+      throw new Error("frontmatter description missing")
+    }
+
+    const frontmatterLayoutOk = await page.evaluate(() => {
+      const frontmatterGrid = document.querySelector<HTMLElement>("#frontmatter-fields")
+
+      if (!frontmatterGrid) {
+        return false
+      }
+
+      const frontmatterColumns = window
+        .getComputedStyle(frontmatterGrid)
+        .gridTemplateColumns
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean).length
+
+      return frontmatterColumns >= 2
+    })
+
+    if (!frontmatterLayoutOk) {
+      throw new Error("frontmatter grid layout regressed")
+    }
+
+    await page.fill('[data-frontmatter-field="title"] input[data-alias-input="true"]', "shared")
+    await page.fill('[data-frontmatter-field="source"] input[data-alias-input="true"]', "shared")
+
+    const frontmatterStatusText = await page.locator("#frontmatter-status").textContent()
+
+    if (!frontmatterStatusText?.includes('title와 source가 같은 alias "shared"')) {
+      throw new Error("frontmatter alias collision was not shown")
+    }
+
+    if (await page.locator("#export-button").count()) {
+      throw new Error("export button should not appear before the assets step")
+    }
+
+    await page.click('button:has-text("Markdown 설정")')
+    await waitForStepView({
+      page,
+      step: "markdown-options",
+    })
+
+    if (await page.locator("#export-button").count()) {
+      throw new Error("export button should stay hidden until the assets step")
+    }
+
+    if (await page.locator("#markdown-linkCardStyle").count()) {
+      throw new Error("removed markdown link card controls reappeared")
+    }
+
+    await page.selectOption("#markdown-linkStyle", "referenced")
+    await page.fill("#markdown-formulaInlineWrapperOpen", "\\(")
+    await page.fill("#markdown-formulaInlineWrapperClose", "\\)")
+    await page.click('button:has-text("Assets 설정")')
+    await waitForStepView({
+      page,
+      step: "assets-options",
+    })
+
+    const exportDisabledWithCollision = await page.locator("#export-button").isDisabled()
+
+    if (!exportDisabledWithCollision) {
+      throw new Error("export button should be disabled when aliases collide")
+    }
+
+    await page.click('button:has-text("이전")')
+    await waitForStepView({
+      page,
+      step: "markdown-options",
+    })
+    await page.click('button:has-text("이전")')
+    await waitForStepView({
+      page,
+      step: "frontmatter-options",
+    })
+    await page.fill('[data-frontmatter-field="source"] input[data-alias-input="true"]', "")
+    await page.fill('[data-frontmatter-field="title"] input[data-alias-input="true"]', "postTitle")
+    await page.click('button:has-text("Markdown 설정")')
+    await waitForStepView({
+      page,
+      step: "markdown-options",
+    })
+    await page.click('button:has-text("Assets 설정")')
+    await waitForStepView({
+      page,
+      step: "assets-options",
+    })
+
     await page.waitForSelector("#assets-imageHandlingMode")
     await page.selectOption("#assets-imageHandlingMode", "remote")
 
@@ -1075,6 +1174,10 @@ const run = async () => {
       jobId: string
     }
 
+    await waitForStepView({
+      page,
+      step: "upload",
+    })
     await waitForJobStatus({
       page,
       timeoutMs: 90_000,
@@ -1082,10 +1185,13 @@ const run = async () => {
       timeoutLabel: "UI upload-ready state",
     })
 
-    await assertNavActive({
-      page,
-      sectionId: "status-panel",
+    const setupPanelsHidden = await page.evaluate(() => {
+      return !document.querySelector("#category-panel") && !document.querySelector("#export-panel")
     })
+
+    if (!setupPanelsHidden) {
+      throw new Error("post-submit flow reopened setup panels")
+    }
 
     await page.waitForSelector("#upload-targets-table")
     await page.waitForSelector("#upload-providerKey")
@@ -1162,6 +1268,33 @@ const run = async () => {
       throw new Error("upload-failed retry form did not preserve the previous provider values")
     }
 
+    await page.setViewportSize(mobileViewport)
+    await page.waitForTimeout(150)
+    await assertNoHorizontalOverflow({
+      page,
+      label: "mobile upload flow",
+    })
+
+    const mobileUploadTableOk = await page.evaluate(() => {
+      const section = document.querySelector<HTMLElement>("#status-panel")
+      const table = document.querySelector<HTMLElement>("#upload-targets-table")
+
+      if (!section || !table) {
+        return false
+      }
+
+      const sectionRect = section.getBoundingClientRect()
+      const tableRect = table.getBoundingClientRect()
+
+      return tableRect.width <= sectionRect.width + 1
+    })
+
+    if (!mobileUploadTableOk) {
+      throw new Error("mobile upload targets table overflowed its panel")
+    }
+
+    await page.setViewportSize(desktopViewport)
+    await page.waitForTimeout(150)
     await page.fill("#upload-providerField-token", "placeholder-fixed-token")
 
     const retryUploadResponsePromise = page.waitForResponse(
@@ -1182,6 +1315,10 @@ const run = async () => {
       throw new Error("upload retry did not submit the corrected placeholder provider payload")
     }
 
+    await waitForStepView({
+      page,
+      step: "result",
+    })
     await waitForJobStatus({
       page,
       timeoutMs: 90_000,
@@ -1233,6 +1370,10 @@ const run = async () => {
       throw new Error("upload placeholder config leaked into the visible UI")
     }
 
+    if (await page.locator("#upload-providerKey").count()) {
+      throw new Error("result step should not expose upload credentials")
+    }
+
     await page.waitForSelector("#job-file-tree [data-job-item-id]")
     await page.click('[data-job-filter="errors"]')
     await page.waitForTimeout(200)
@@ -1247,11 +1388,6 @@ const run = async () => {
 
     await assertStickyTop({
       page,
-      selector: ".app-sidebar",
-      label: "desktop sidebar",
-    })
-    await assertStickyTop({
-      page,
       selector: "#dashboard-backdrop",
       label: "background backdrop",
     })
@@ -1263,74 +1399,6 @@ const run = async () => {
       page,
       label: "desktop export flow",
     })
-
-    await page.setViewportSize(mobileViewport)
-    await page.waitForTimeout(150)
-    const mobileRailVisible = await page.locator(".mobile-command-bar").isVisible()
-
-    if (!mobileRailVisible) {
-      throw new Error("mobile sticky rail was not visible")
-    }
-
-    const desktopSidebarVisible = await page.locator(".app-sidebar").evaluate((element) => {
-      return window.getComputedStyle(element).display !== "none"
-    })
-
-    if (desktopSidebarVisible) {
-      throw new Error("desktop sidebar should be hidden on mobile")
-    }
-
-    await assertStickyTop({
-      page,
-      selector: ".mobile-command-bar",
-      label: "mobile rail",
-    })
-    await assertNoHorizontalOverflow({
-      page,
-      label: "mobile layout",
-    })
-    await assertFrameFlush({
-      page,
-      selector: ".mobile-command-bar",
-      label: "mobile command rail",
-    })
-    const mobileSetupPanelsHidden = await page.evaluate(() => {
-      return !document.querySelector("#category-panel") && !document.querySelector("#export-panel")
-    })
-
-    if (!mobileSetupPanelsHidden) {
-      throw new Error("upload-only mode reopened setup panels on mobile")
-    }
-
-    const mobileCommandBarHeight = await page.locator(".mobile-command-bar").evaluate((element) => element.getBoundingClientRect().height)
-
-    if (mobileCommandBarHeight > 360) {
-      throw new Error(`mobile command bar is too tall: ${mobileCommandBarHeight}`)
-    }
-
-    await page.locator("#status-panel").scrollIntoViewIfNeeded()
-    await page.waitForTimeout(150)
-
-    const mobileUploadTableOk = await page.evaluate(() => {
-      const section = document.querySelector<HTMLElement>("#status-panel")
-      const table = document.querySelector<HTMLElement>("#upload-targets-table")
-
-      if (!section || !table) {
-        return false
-      }
-
-      const sectionRect = section.getBoundingClientRect()
-      const tableRect = table.getBoundingClientRect()
-
-      return tableRect.width <= sectionRect.width + 1
-    })
-
-    if (!mobileUploadTableOk) {
-      throw new Error("mobile upload targets table overflowed its panel")
-    }
-
-    await page.setViewportSize(desktopViewport)
-    await page.waitForTimeout(150)
 
     if (captureDir) {
       await captureReviewScreens({

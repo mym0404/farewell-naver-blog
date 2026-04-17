@@ -284,7 +284,25 @@ beforeEach(() => {
 })
 
 describe("App", () => {
-  it("runs the main export flow without preview or modal", async () => {
+  const renderApp = () => {
+    const user = userEvent.setup()
+    render(<App />)
+    return user
+  }
+
+  const moveToAssetsStep = async (user: ReturnType<typeof userEvent.setup>) => {
+    await user.type(screen.getByLabelText("Blog ID 또는 URL"), "mym0404")
+    await user.click(screen.getByRole("button", { name: "카테고리 불러오기" }))
+    await waitFor(() => {
+      expect(document.querySelector('[data-step-view="category-selection"]')).not.toBeNull()
+    })
+    await user.click(screen.getByRole("button", { name: "구조 설정" }))
+    await user.click(screen.getByRole("button", { name: "Frontmatter 설정" }))
+    await user.click(screen.getByRole("button", { name: "Markdown 설정" }))
+    await user.click(screen.getByRole("button", { name: "Assets 설정" }))
+  }
+
+  it("runs the main export flow in the wizard without preview or modal", async () => {
     const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
       const url = typeof input === "string" ? input : input.toString()
 
@@ -315,43 +333,49 @@ describe("App", () => {
 
     vi.stubGlobal("fetch", fetchMock)
 
-    const user = userEvent.setup()
-    render(<App />)
+    const user = renderApp()
 
     await user.type(screen.getByLabelText("Blog ID 또는 URL"), "mym0404")
-    await user.click(screen.getByRole("button", { name: "카테고리 스캔" }))
+    await user.click(screen.getByRole("button", { name: "카테고리 불러오기" }))
+    await waitFor(() => {
+      expect(document.querySelector('[data-step-view="category-selection"]')).not.toBeNull()
+    })
 
-    await screen.findByText("mym0404 스캔 완료")
-    expect(document.querySelector("#scan-button")?.closest("#scan-workbench")).not.toBeNull()
-    expect(document.querySelector("#export-button")?.closest(".app-sidebar")).not.toBeNull()
-    await user.click(screen.getByRole("tab", { name: "Frontmatter" }))
-    expect(await screen.findByText("글 제목을 기록합니다.")).toBeInTheDocument()
-    const titleAliasInput = screen.getByPlaceholderText("title")
-    const sourceAliasInput = screen.getByPlaceholderText("source")
-    await user.type(titleAliasInput, "shared")
-    await user.type(sourceAliasInput, "shared")
-
-    expect(await screen.findByText(/title와 source가 같은 alias "shared"/)).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "내보내기" })).toBeDisabled()
-
-    await user.clear(titleAliasInput)
-    await user.type(titleAliasInput, "postTitle")
-    await user.clear(sourceAliasInput)
+    expect(document.querySelector('[data-step-view="category-selection"]')).not.toBeNull()
+    expect(document.querySelector("#export-button")).toBeNull()
 
     await user.click(screen.getByRole("button", { name: "전체 해제" }))
     fireEvent.click(screen.getByRole("checkbox", { name: /NestJS/ }))
     await waitFor(() => {
       expect(document.querySelector("#selected-post-count")?.textContent).toContain("대상 글 5개 / 전체 12개")
-      expect(document.querySelector("#summary")?.textContent).toContain("총 글5")
-      expect(document.querySelector("#summary")?.textContent).toContain("남음5")
+      expect(document.querySelector("#summary")?.textContent).toContain("대상 글")
+      expect(document.querySelector("#summary")?.textContent).toContain("5")
     })
 
+    await user.click(screen.getByRole("button", { name: "구조 설정" }))
+    expect(document.querySelector('[data-step-view="structure-options"]')).not.toBeNull()
+    await user.click(screen.getByRole("button", { name: "Frontmatter 설정" }))
+    expect(document.querySelector('[data-step-view="frontmatter-options"]')).not.toBeNull()
+    expect(await screen.findByText("글 제목을 기록합니다.")).toBeInTheDocument()
+
+    const titleAliasInput = screen.getByPlaceholderText("title")
+    await user.clear(titleAliasInput)
+    await user.type(titleAliasInput, "postTitle")
+
+    await user.click(screen.getByRole("button", { name: "Markdown 설정" }))
+    expect(document.querySelector('[data-step-view="markdown-options"]')).not.toBeNull()
+    await user.click(screen.getByRole("button", { name: "Assets 설정" }))
+    expect(document.querySelector('[data-step-view="assets-options"]')).not.toBeNull()
+
     await user.click(screen.getByRole("button", { name: "내보내기" }))
+
     await waitFor(() => {
       expect(document.querySelector("#status-text")?.textContent).toContain("completed")
+      expect(document.querySelector('[data-step-view="result"]')).not.toBeNull()
       expect(document.querySelector("#summary")?.textContent).toContain("1")
     })
 
+    expect(document.querySelector("#job-file-tree table")).not.toBeNull()
     expect(document.querySelector('[data-job-log-timestamp]')?.textContent).toBe("2026-04-11T04:00:00.000Z")
     expect(document.querySelector('[data-job-log-timestamp]')?.className).toContain("text-[11px]")
     expect(document.querySelector('[data-job-log-message]')?.textContent).toContain("작업을 큐에 등록했습니다.")
@@ -369,16 +393,7 @@ describe("App", () => {
     const item = document.querySelector('[data-job-item-id="posts/NestJS/test.md"]') as HTMLElement
     expect(item).not.toBeNull()
     expect(item.className).toContain("whitespace-normal")
-    expect(document.querySelector("#job-file-tree table")).not.toBeNull()
     expect(document.querySelector('[role="dialog"]')).toBeNull()
-
-    const reactCheckbox = document.querySelector('[data-category-id="202"] button[role="checkbox"]')
-    expect(reactCheckbox).not.toBeNull()
-    fireEvent.click(reactCheckbox as Element)
-    await waitFor(() => {
-      expect(document.querySelector("#summary")?.textContent).toContain("총 글12")
-      expect(document.querySelector("#summary")?.textContent).toContain("남음12")
-    })
   })
 
   it("hides setup panels while the export job is running", async () => {
@@ -412,28 +427,23 @@ describe("App", () => {
 
     vi.stubGlobal("fetch", fetchMock)
 
-    const user = userEvent.setup()
-    render(<App />)
+    const user = renderApp()
 
-    await user.type(screen.getByLabelText("Blog ID 또는 URL"), "mym0404")
-    await user.click(screen.getByRole("button", { name: "카테고리 스캔" }))
-    await screen.findByText("mym0404 스캔 완료")
-
+    await moveToAssetsStep(user)
     await user.click(screen.getByRole("button", { name: "내보내기" }))
 
     await waitFor(() => {
       expect(document.querySelector("#status-text")?.textContent).toContain("running")
-      expect(screen.getByLabelText("Blog ID 또는 URL")).toBeDisabled()
-      expect(screen.getByRole("button", { name: "카테고리 스캔" })).toBeDisabled()
-      expect(document.querySelector("#export-button")).toBeDisabled()
+      expect(document.querySelector('[data-step-view="running"]')).not.toBeNull()
+      expect(screen.queryByLabelText("Blog ID 또는 URL")).not.toBeInTheDocument()
+      expect(screen.queryByRole("button", { name: "카테고리 불러오기" })).not.toBeInTheDocument()
+      expect(document.querySelector("#export-button")).toBeNull()
       expect(document.querySelector("#category-panel")).toBeNull()
       expect(document.querySelector("#export-panel")).toBeNull()
-      expect(document.querySelector('[data-section-link="category-panel"]')).toBeNull()
-      expect(document.querySelector('[data-mobile-section-link="status-panel"]')).not.toBeNull()
     })
   })
 
-  it("submits structured provider fields from the results panel and keeps upload-only mode active", async () => {
+  it("submits structured provider fields from the upload step and returns to results", async () => {
     let uploadPollCount = 0
     const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
       const url = typeof input === "string" ? input : input.toString()
@@ -491,30 +501,19 @@ describe("App", () => {
 
     vi.stubGlobal("fetch", fetchMock)
 
-    const user = userEvent.setup()
-    render(<App />)
+    const user = renderApp()
 
-    await user.type(screen.getByLabelText("Blog ID 또는 URL"), "mym0404")
-    await user.click(screen.getByRole("button", { name: "카테고리 스캔" }))
-    await screen.findByText("mym0404 스캔 완료")
+    await moveToAssetsStep(user)
     await user.click(screen.getByRole("button", { name: "내보내기" }))
 
     await waitFor(() => {
+      expect(document.querySelector('[data-step-view="upload"]')).not.toBeNull()
       expect(document.querySelector("#upload-targets-table")).not.toBeNull()
       expect(screen.getByLabelText("Provider")).toBeInTheDocument()
       expect(screen.getByLabelText("Repository")).toBeInTheDocument()
       expect(screen.getByLabelText("Token")).toBeInTheDocument()
-      expect(screen.queryByText("uploaderConfigJson")).not.toBeInTheDocument()
-      expect(document.querySelector("#category-panel")).toBeNull()
-      expect(document.querySelector("#export-panel")).toBeNull()
-      expect(document.querySelector('[data-section-link="category-panel"]')).toBeNull()
-      expect(document.querySelector('[data-section-link="export-panel"]')).toBeNull()
-      expect(document.querySelector('[data-job-item-id="NestJS/2026-04-11-1/index.md"]')?.textContent).toContain("2026-04-11-1")
-      expect(document.querySelector('[data-job-item-id="NestJS/2026-04-11-1/index.md"]')?.textContent).not.toContain("index.md")
-      expect(document.querySelector("#job-file-tree")?.textContent).toContain("NestJS/2026-04-11-1/index.md")
+      expect(document.querySelector("#job-file-tree")).toBeNull()
     })
-
-    expect(document.querySelector("#upload-targets-table")?.className).not.toContain("min-w-[")
 
     fireEvent.change(screen.getByLabelText("Repository"), {
       target: { value: "owner/name" },
@@ -526,9 +525,10 @@ describe("App", () => {
 
     await waitFor(() => {
       expect(document.querySelector("#status-text")?.textContent).toContain("upload-completed")
-      expect(document.querySelector("#upload-targets-table")?.textContent).toContain("완료")
-      expect(document.querySelector("#category-panel")).toBeNull()
-      expect(document.querySelector("#export-panel")).toBeNull()
+      expect(document.querySelector('[data-step-view="result"]')).not.toBeNull()
+      expect(document.querySelector("#upload-targets-table")).toBeNull()
+      expect(document.querySelector('[data-job-item-id="NestJS/2026-04-11-1/index.md"]')?.textContent).toContain("2026-04-11-1")
+      expect(document.querySelector("#job-file-tree")?.textContent).toContain("NestJS/2026-04-11-1/index.md")
     }, { timeout: 4000 })
   })
 
@@ -619,15 +619,13 @@ describe("App", () => {
 
     vi.stubGlobal("fetch", fetchMock)
 
-    const user = userEvent.setup()
-    render(<App />)
+    const user = renderApp()
 
-    await user.type(screen.getByLabelText("Blog ID 또는 URL"), "mym0404")
-    await user.click(screen.getByRole("button", { name: "카테고리 스캔" }))
-    await screen.findByText("mym0404 스캔 완료")
+    await moveToAssetsStep(user)
     await user.click(screen.getByRole("button", { name: "내보내기" }))
 
     await waitFor(() => {
+      expect(document.querySelector('[data-step-view="upload"]')).not.toBeNull()
       expect(screen.getByLabelText("Repository")).toBeInTheDocument()
       expect(screen.getByLabelText("Token")).toBeInTheDocument()
     })
@@ -646,10 +644,6 @@ describe("App", () => {
       expect(screen.getByLabelText("Provider")).toBeInTheDocument()
       expect(screen.getByLabelText("Repository")).toHaveValue("owner/name")
       expect(screen.getByLabelText("Token")).toHaveValue("ghp_bad_secret")
-      expect(document.querySelector("#category-panel")).toBeNull()
-      expect(document.querySelector("#export-panel")).toBeNull()
-      expect(document.querySelector('[data-section-link="category-panel"]')).toBeNull()
-      expect(document.querySelector('[data-section-link="export-panel"]')).toBeNull()
     })
 
     await user.clear(screen.getByLabelText("Token"))
@@ -658,7 +652,8 @@ describe("App", () => {
 
     await waitFor(() => {
       expect(document.querySelector("#status-text")?.textContent).toContain("upload-completed")
-      expect(document.querySelector("#upload-targets-table")?.textContent).toContain("완료")
+      expect(document.querySelector('[data-step-view="result"]')).not.toBeNull()
+      expect(document.querySelector("#upload-targets-table")).toBeNull()
     }, { timeout: 4000 })
   })
 
@@ -693,15 +688,13 @@ describe("App", () => {
 
     vi.stubGlobal("fetch", fetchMock)
 
-    const user = userEvent.setup()
-    render(<App />)
+    const user = renderApp()
 
-    await user.type(screen.getByLabelText("Blog ID 또는 URL"), "mym0404")
-    await user.click(screen.getByRole("button", { name: "카테고리 스캔" }))
-    await screen.findByText("mym0404 스캔 완료")
+    await moveToAssetsStep(user)
     await user.click(screen.getByRole("button", { name: "내보내기" }))
 
     await waitFor(() => {
+      expect(document.querySelector('[data-step-view="result"]')).not.toBeNull()
       expect(screen.getByText("업로드할 로컬 이미지가 없어 export만 완료되었습니다.")).toBeInTheDocument()
     })
     expect(screen.queryByLabelText("Provider")).not.toBeInTheDocument()

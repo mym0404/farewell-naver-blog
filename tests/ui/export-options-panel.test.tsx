@@ -30,7 +30,7 @@ const query = <T extends HTMLElement>(selector: string) => {
 }
 
 describe("ExportOptionsPanel", () => {
-  it("wires option updaters across all groups", async () => {
+  it("wires option updaters across all option steps", async () => {
     const user = userEvent.setup()
     let latestOptions: ExportOptions = defaultExportOptions()
     let latestOutputDir = "./output"
@@ -43,6 +43,7 @@ describe("ExportOptionsPanel", () => {
 
     render(
       <ExportOptionsPanel
+        step="structure"
         outputDir="./output"
         options={latestOptions}
         optionDescriptions={optionDescriptions}
@@ -59,28 +60,28 @@ describe("ExportOptionsPanel", () => {
         value: "/tmp/export",
       },
     })
-
-    await user.click(screen.getByRole("tab", { name: "범위" }))
-    await user.selectOptions(query<HTMLSelectElement>("#scope-categoryMode"), "exact-selected")
-    fireEvent.change(query<HTMLInputElement>("#scope-dateFrom"), {
-      target: {
-        value: "2024-01-01",
-      },
-    })
-    fireEvent.change(query<HTMLInputElement>("#scope-dateTo"), {
-      target: {
-        value: "2024-12-31",
-      },
-    })
-
-    await user.click(screen.getByRole("tab", { name: "구조" }))
     await user.click(query<HTMLInputElement>("#structure-cleanOutputDir"))
     await user.click(query<HTMLInputElement>("#structure-groupByCategory"))
     await user.click(query<HTMLInputElement>("#structure-includeDateInPostFolderName"))
     await user.click(query<HTMLInputElement>("#structure-includeLogNoInPostFolderName"))
     await user.selectOptions(query<HTMLSelectElement>("#structure-slugStyle"), "keep-title")
 
-    await user.click(screen.getByRole("tab", { name: "Frontmatter" }))
+    cleanup()
+
+    render(
+      <ExportOptionsPanel
+        step="frontmatter"
+        outputDir={latestOutputDir}
+        options={latestOptions}
+        optionDescriptions={optionDescriptions}
+        frontmatterFieldOrder={frontmatterFieldOrder}
+        frontmatterFieldMeta={frontmatterFieldMeta}
+        frontmatterValidationErrors={['title와 source가 같은 alias "shared"를 사용할 수 없습니다.']}
+        onOutputDirChange={onOutputDirChange}
+        onOptionsChange={onOptionsChange}
+      />,
+    )
+
     await user.click(query<HTMLInputElement>("#frontmatter-enabled"))
     await user.click(query<HTMLInputElement>('[data-frontmatter-field="title"] input[type="checkbox"]'))
     fireEvent.change(query<HTMLInputElement>('[data-frontmatter-field="title"] [data-alias-input="true"]'), {
@@ -90,7 +91,22 @@ describe("ExportOptionsPanel", () => {
     })
     expect(query<HTMLElement>("#frontmatter-status").textContent).toMatch(/같은 alias "shared"/)
 
-    await user.click(screen.getByRole("tab", { name: "Markdown" }))
+    cleanup()
+
+    render(
+      <ExportOptionsPanel
+        step="markdown"
+        outputDir={latestOutputDir}
+        options={latestOptions}
+        optionDescriptions={optionDescriptions}
+        frontmatterFieldOrder={frontmatterFieldOrder}
+        frontmatterFieldMeta={frontmatterFieldMeta}
+        frontmatterValidationErrors={[]}
+        onOutputDirChange={onOutputDirChange}
+        onOptionsChange={onOptionsChange}
+      />,
+    )
+
     await user.selectOptions(query<HTMLSelectElement>("#markdown-linkStyle"), "referenced")
     fireEvent.change(query<HTMLInputElement>("#markdown-formulaInlineWrapperOpen"), {
       target: {
@@ -122,7 +138,22 @@ describe("ExportOptionsPanel", () => {
       },
     })
 
-    await user.click(screen.getByRole("tab", { name: "Assets" }))
+    cleanup()
+
+    render(
+      <ExportOptionsPanel
+        step="assets"
+        outputDir={latestOutputDir}
+        options={latestOptions}
+        optionDescriptions={optionDescriptions}
+        frontmatterFieldOrder={frontmatterFieldOrder}
+        frontmatterFieldMeta={frontmatterFieldMeta}
+        frontmatterValidationErrors={[]}
+        onOutputDirChange={onOutputDirChange}
+        onOptionsChange={onOptionsChange}
+      />,
+    )
+
     await user.selectOptions(query<HTMLSelectElement>("#assets-imageHandlingMode"), "download-and-upload")
     await user.click(query<HTMLInputElement>("#assets-compressionEnabled"))
     await user.selectOptions(query<HTMLSelectElement>("#assets-imageContentMode"), "base64")
@@ -135,9 +166,6 @@ describe("ExportOptionsPanel", () => {
     expect(latestOutputDir).toBe("/tmp/export")
     expect(onOptionsChange).toHaveBeenCalled()
 
-    expect(latestOptions.scope.categoryMode).toBe("exact-selected")
-    expect(latestOptions.scope.dateFrom).toBe("2024-01-01")
-    expect(latestOptions.scope.dateTo).toBe("2024-12-31")
     expect(latestOptions.structure.cleanOutputDir).toBe(false)
     expect(latestOptions.structure.groupByCategory).toBe(false)
     expect(latestOptions.structure.includeDateInPostFolderName).toBe(false)
@@ -166,11 +194,10 @@ describe("ExportOptionsPanel", () => {
     expect(latestOptions.assets.thumbnailSource).toBe("none")
   })
 
-  it("uses segmented tabs and a multi-column frontmatter grid", async () => {
-    const user = userEvent.setup()
-
+  it("keeps the multi-column frontmatter grid in the frontmatter step", () => {
     render(
       <ExportOptionsPanel
+        step="frontmatter"
         outputDir="./output"
         options={defaultExportOptions()}
         optionDescriptions={optionDescriptions}
@@ -182,17 +209,14 @@ describe("ExportOptionsPanel", () => {
       />,
     )
 
-    expect(query<HTMLElement>(".option-tabs-list").className).toContain("sm:grid-cols-5")
-    await user.click(screen.getByRole("tab", { name: "Frontmatter" }))
     expect(query<HTMLElement>("#frontmatter-fields").className).toContain("md:grid-cols-2")
     expect(query<HTMLElement>("#frontmatter-fields").className).toContain("2xl:grid-cols-3")
   })
 
-  it("does not render removed link card and video controls", async () => {
-    const user = userEvent.setup()
-
+  it("does not render removed link card and video controls", () => {
     render(
       <ExportOptionsPanel
+        step="markdown"
         outputDir="./output"
         options={defaultExportOptions()}
         optionDescriptions={optionDescriptions}
@@ -203,8 +227,6 @@ describe("ExportOptionsPanel", () => {
         onOptionsChange={vi.fn()}
       />,
     )
-
-    await user.click(screen.getByRole("tab", { name: "Markdown" }))
 
     expect(screen.queryByLabelText("Link Card Style")).not.toBeInTheDocument()
     expect(screen.queryByLabelText("Video Style")).not.toBeInTheDocument()
@@ -212,14 +234,14 @@ describe("ExportOptionsPanel", () => {
     expect(document.querySelector("#markdown-videoStyle")).toBeNull()
   })
 
-  it("keeps upload credentials out of the assets tab and disables local-only controls in base64 mode", async () => {
-    const user = userEvent.setup()
+  it("keeps upload credentials out of the assets step and disables local-only controls in base64 mode", () => {
     const options = defaultExportOptions()
 
     options.assets.imageContentMode = "base64"
 
     render(
       <ExportOptionsPanel
+        step="assets"
         outputDir="./output"
         options={options}
         optionDescriptions={optionDescriptions}
@@ -230,8 +252,6 @@ describe("ExportOptionsPanel", () => {
         onOptionsChange={vi.fn()}
       />,
     )
-
-    await user.click(screen.getByRole("tab", { name: "Assets" }))
 
     expect(query<HTMLInputElement>("#assets-compressionEnabled")).toBeDisabled()
     expect(query<HTMLInputElement>("#assets-downloadImages")).toBeDisabled()
