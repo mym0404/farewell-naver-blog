@@ -38,5 +38,6 @@
 - `structure.groupByCategory`, `includeDateInPostFolderName`, `includeLogNoInPostFolderName` 조합으로 글 폴더 경로가 결정되고, 기본값은 날짜 + slug다.
 - 이미지 처리 방식은 `download`, `remote`, `download-and-upload` 세 가지다.
 - `download-and-upload`는 export를 먼저 끝낸 뒤 같은 job을 `upload-ready -> uploading -> upload-completed | upload-failed`로 진행한다.
+- post-export 업로드 입력은 export 옵션에 저장하지 않고 결과 패널에서만 `providerKey + providerFields` 형태로 받는다.
 - 업로드 대상이 하나도 없으면 `download-and-upload`여도 upload 단계로 넘어가지 않고 `completed + skipped-no-candidates`로 닫힌다.
 - `imageContentMode === base64`는 업로드 모드와 양립하지 않으므로 로컬 다운로드 기반 경로만 허용한다.

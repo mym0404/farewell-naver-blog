@@ -469,6 +469,48 @@ describe("NaverBlogExporter", () => {
     }
   })
 
+  it("rejects secret-bearing upload URLs before rewrite and keeps originals untouched", async () => {
+    const outputDir = await mkdtemp(path.join(tmpdir(), "bulk-export-rewrite-"))
+    const fixture = createUploadReadyFixture({
+      outputDir,
+    })
+
+    try {
+      await fs.mkdir(path.dirname(fixture.markdownPath), { recursive: true })
+      await writeFile(fixture.markdownPath, fixture.markdown, "utf8")
+      await writeFile(
+        path.join(outputDir, "manifest.json"),
+        JSON.stringify(fixture.manifest, null, 2),
+        "utf8",
+      )
+
+      await expect(
+        rewriteUploadedAssets({
+          outputDir,
+          manifest: fixture.manifest,
+          items: [],
+          uploadResults: [
+            {
+              candidate: fixture.manifest.posts[0]!.upload.candidates[0]!,
+              uploadedUrl: "https://cdn.example.com/thumbnail-01.png?X-Amz-Signature=secret",
+            },
+            {
+              candidate: fixture.manifest.posts[0]!.upload.candidates[1]!,
+              uploadedUrl: "https://cdn.example.com/image-01.png",
+            },
+          ],
+        }),
+      ).rejects.toThrow("signed or secret-bearing query params")
+
+      expect(await readFile(fixture.markdownPath, "utf8")).toBe(fixture.markdown)
+      expect(
+        JSON.parse(await readFile(path.join(outputDir, "manifest.json"), "utf8")) as typeof fixture.manifest,
+      ).toEqual(fixture.manifest)
+    } finally {
+      await rm(outputDir, { recursive: true, force: true })
+    }
+  })
+
   it("rolls back staged temp swaps when a final rename fails", async () => {
     const outputDir = await mkdtemp(path.join(tmpdir(), "bulk-export-rewrite-"))
     const fixture = createUploadReadyFixture({

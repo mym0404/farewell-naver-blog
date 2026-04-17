@@ -106,6 +106,11 @@ const parseJsonBody = async <T>(request: IncomingMessage) => JSON.parse(await re
 const hasJsonContentType = (request: IncomingMessage) =>
   request.headers["content-type"]?.toLowerCase().startsWith("application/json") ?? false
 
+type ProviderFields = Record<string, string>
+
+const isPlainObject = (value: unknown): value is Record<string, unknown> =>
+  Boolean(value) && typeof value === "object" && !Array.isArray(value)
+
 const isSameOriginUploadRequest = (request: IncomingMessage) => {
   if (request.headers["x-requested-with"] !== "XMLHttpRequest") {
     return false
@@ -115,7 +120,7 @@ const isSameOriginUploadRequest = (request: IncomingMessage) => {
   const hostHeader = request.headers.host
 
   if (!originHeader || !hostHeader) {
-    return true
+    return false
   }
 
   try {
@@ -125,7 +130,49 @@ const isSameOriginUploadRequest = (request: IncomingMessage) => {
   }
 }
 
-const sanitizeUploadError = () => "PicGo upload failed."
+const normalizeProviderFields = (value: unknown): ProviderFields | null => {
+  if (!isPlainObject(value)) {
+    return null
+  }
+
+  const normalized = Object.entries(value).reduce<ProviderFields>((result, [key, fieldValue]) => {
+    if (typeof fieldValue !== "string") {
+      return result
+    }
+
+    const trimmed = fieldValue.trim()
+
+    if (!trimmed) {
+      return result
+    }
+
+    result[key] = trimmed
+    return result
+  }, {})
+
+  return Object.keys(normalized).length > 0 ? normalized : null
+}
+
+const sanitizeUploadError = ({
+  error,
+  providerFields,
+}: {
+  error: unknown
+  providerFields: ProviderFields
+}) => {
+  const rawMessage = toErrorMessage(error).replace(/\s+/g, " ").trim()
+
+  if (!rawMessage) {
+    return "PicGo upload failed."
+  }
+
+  const redacted = Object.values(providerFields)
+    .filter((value) => value.length >= 3)
+    .sort((left, right) => right.length - left.length)
+    .reduce((message, secret) => message.replaceAll(secret, "[redacted]"), rawMessage)
+
+  return redacted.slice(0, 240)
+}
 
 export const createHttpServer = ({
   jobStore = new JobStore(),
@@ -229,13 +276,6 @@ export const createHttpServer = ({
         uploaderConfig,
       })
 
-      jobStore.updateUpload(jobId, {
-        ...jobStore.get(jobId)!.upload,
-        status: "uploading",
-        uploadedCount: uploadResults.length,
-        failedCount: 0,
-      })
-
       const rewritten = await uploadRewriter({
         outputDir: job.request.outputDir,
         manifest: job.manifest,
@@ -245,8 +285,15 @@ export const createHttpServer = ({
 
       jobStore.completeUpload(jobId, rewritten)
       jobStore.appendLog(jobId, "PicGo 업로드와 결과 치환이 완료되었습니다.")
-    } catch {
-      const message = sanitizeUploadError()
+    } catch (error) {
+      const message = sanitizeUploadError({
+        error,
+        providerFields: Object.fromEntries(
+          Object.entries(uploaderConfig).flatMap(([key, value]) =>
+            typeof value === "string" ? [[key, value]] : [],
+          ),
+        ),
+      })
 
       jobStore.appendLog(jobId, message)
       jobStore.failUpload(jobId, message)
@@ -409,7 +456,7 @@ export const createHttpServer = ({
           return
         }
 
-        if (job.status !== "upload-ready") {
+        if (job.status !== "upload-ready" && job.status !== "upload-failed") {
           sendJson({
             response,
             statusCode: 409,
@@ -435,37 +482,19 @@ export const createHttpServer = ({
         }
 
         const payload = await parseJsonBody<{
-          uploaderKey?: string
-          uploaderConfigJson?: string
+          providerKey?: string
+          providerFields?: unknown
         }>(request)
 
-        if (!payload.uploaderKey?.trim() || !payload.uploaderConfigJson?.trim()) {
+        const providerKey = payload.providerKey?.trim()
+        const providerFields = normalizeProviderFields(payload.providerFields)
+
+        if (!providerKey || !providerFields) {
           sendJson({
             response,
             statusCode: 400,
             body: {
-              error: "uploaderKey와 uploaderConfigJson는 필수입니다.",
-            },
-          })
-          return
-        }
-
-        let uploaderConfig: Record<string, unknown>
-
-        try {
-          const parsed = JSON.parse(payload.uploaderConfigJson) as unknown
-
-          if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-            throw new Error("uploaderConfigJson must be a JSON object.")
-          }
-
-          uploaderConfig = parsed as Record<string, unknown>
-        } catch {
-          sendJson({
-            response,
-            statusCode: 400,
-            body: {
-              error: "uploaderConfigJson는 JSON object 문자열이어야 합니다.",
+              error: "providerKey와 providerFields는 필수입니다.",
             },
           })
           return
@@ -473,8 +502,8 @@ export const createHttpServer = ({
 
         void runUploadForJob({
           jobId: job.id,
-          uploaderKey: payload.uploaderKey.trim(),
-          uploaderConfig,
+          uploaderKey: providerKey,
+          uploaderConfig: providerFields,
         })
 
         sendJson({

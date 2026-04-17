@@ -137,6 +137,13 @@ const runningHiddenSectionIds = new Set<SectionId>([
   'export-panel',
 ]);
 
+const uploadPhaseStatuses = new Set([
+  'upload-ready',
+  'uploading',
+  'upload-failed',
+  'upload-completed',
+]);
+
 const statusPillClass = (status: string) =>
   cn(
     'rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]',
@@ -201,9 +208,11 @@ export const App = () => {
     job?.status === 'queued' ||
     job?.status === 'running' ||
     job?.status === 'uploading';
+  const isUploadPhaseMode = Boolean(job && uploadPhaseStatuses.has(job.status));
+  const setupPanelsHidden = isJobRunning || isUploadPhaseMode;
   const interactionsLocked = isJobRunning;
   const isCurrentJobRequest = useMemo(() => {
-    if (!job || isJobRunning) {
+    if (!job || setupPanelsHidden) {
       return Boolean(job);
     }
 
@@ -215,16 +224,16 @@ export const App = () => {
       job.request.outputDir === currentOutputDir &&
       JSON.stringify(job.request.options) === JSON.stringify(options)
     );
-  }, [blogIdOrUrl, isJobRunning, job, options, outputDir]);
+  }, [blogIdOrUrl, job, options, outputDir, setupPanelsHidden]);
   const railJob = isCurrentJobRequest ? job : null;
   const visibleNavigationItems = useMemo(
     () =>
-      isJobRunning
+      setupPanelsHidden
         ? navigationItems.filter(
             (item) => !runningHiddenSectionIds.has(item.id),
           )
         : navigationItems,
-    [isJobRunning],
+    [setupPanelsHidden],
   );
   const railStatus = getRailStatus({
     job: railJob,
@@ -542,16 +551,16 @@ export const App = () => {
   };
 
   const handleUpload = async ({
-    uploaderKey,
-    uploaderConfigJson,
+    providerKey,
+    providerFields,
   }: {
-    uploaderKey: string;
-    uploaderConfigJson: string;
+    providerKey: string;
+    providerFields: Record<string, string>;
   }) => {
     try {
       await startUpload({
-        uploaderKey,
-        uploaderConfigJson,
+        providerKey,
+        providerFields,
       });
       toast('이미지 업로드를 시작했습니다.', {
         description: '작업 상태 패널에서 진행률을 확인할 수 있습니다.',
@@ -966,7 +975,7 @@ export const App = () => {
         </section>
 
         <div className="content-grid grid min-w-0 gap-5 px-4 pb-5 xl:px-6 xl:pb-6">
-          {!isJobRunning ? (
+          {!setupPanelsHidden ? (
             <>
               <CategoryPanel
                 scanResult={scanResult}

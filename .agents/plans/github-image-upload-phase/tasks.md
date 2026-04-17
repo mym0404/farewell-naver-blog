@@ -5,10 +5,10 @@ This file is the only live progress record for this bundle.
 ## Status Board
 
 - `Doing`: None
-- `Ready Now`: T4 - Reopen PicGo upload action for structured provider payload and strict same-job guard
+- `Ready Now`: None
 - `Blocked`: None
-- `Todo`: T4 - Reopen PicGo upload action for structured provider payload and strict same-job guard; T5 - Reopen rewrite finalization and returned-URL sanitization; T6 - Reconfirm Assets tab stays free of provider secrets while upload mode enters a dedicated phase; T7 - Rework results-panel upload UX for structured provider fields, retry, and upload-only mode; CP2 - Re-check same-job lifecycle, provider-field secret boundary, and user-visible flow; T8 - Sync knowledge docs and smoke scenario with the reopened upload contract; T9 - Run the final verification wave again against the reopened surface
-- `Done`: T1 - Add dependency and shared contracts for image modes and upload lifecycle; T2 - Refactor output structure to per-post folders and align preview diagnostics; T3 - Add compression, image-mode execution rules, and upload-candidate manifest data; CP1 - Re-check shared and exporter contracts
+- `Todo`: None
+- `Done`: T1 - Add dependency and shared contracts for image modes and upload lifecycle; T2 - Refactor output structure to per-post folders and align preview diagnostics; T3 - Add compression, image-mode execution rules, and upload-candidate manifest data; CP1 - Re-check shared and exporter contracts; T4 - Reopen PicGo upload action for structured provider payload and strict same-job guard; T5 - Reopen rewrite finalization and returned-URL sanitization; T6 - Reconfirm Assets tab ownership and upload-phase entry rules; T7 - Rework status panel and polling flow for structured provider fields, retry, and upload-only mode; CP2 - Re-check same-job lifecycle, provider-field secret boundary, and user-visible flow; T8 - Sync knowledge docs and smoke scenario with the reopened upload contract; T9 - Run the final verification wave again against the reopened surface
 
 ## Tasks
 
@@ -98,7 +98,7 @@ This file is the only live progress record for this bundle.
 ### T4 - Reopen PicGo upload action for structured provider payload and strict same-job guard
 - `ID`: T4
 - `Slice`: Server Upload Lifecycle
-- `Status`: Todo
+- `Status`: Done
 - `Depends On`: CP1
 - `Start When`: CP1 is `Done` and the server still has no explicit upload action endpoint or ephemeral provider-config path.
 - `Files`: primary: `src/modules/exporter/picgo-upload-phase.ts`, `src/server/job-store.ts`, `src/server/http-server.ts`, `tests/http-server.test.ts`, `tests/naver-blog-exporter.test.ts`; generated/incidental: N/A
@@ -117,10 +117,10 @@ This file is the only live progress record for this bundle.
 ### T5 - Reopen rewrite finalization and returned-URL sanitization
 - `ID`: T5
 - `Slice`: Output Rewrite
-- `Status`: Todo
+- `Status`: Done
 - `Depends On`: T4
 - `Start When`: T4 is `Done` and the system can obtain PicGo upload results without yet rewriting all output surfaces.
-- `Files`: primary: `src/modules/exporter/picgo-upload-rewriter.ts`, `src/modules/exporter/picgo-upload-phase.ts`, `src/modules/exporter/naver-blog-exporter.ts`, `tests/naver-blog-exporter.test.ts`, `tests/markdown-renderer.test.ts`; generated/incidental: N/A
+- `Files`: primary: `src/modules/exporter/picgo-upload-rewriter.ts`, `src/modules/exporter/picgo-upload-phase.ts`, `src/modules/exporter/naver-blog-exporter.ts`, `src/server/http-server.ts`, `tests/naver-blog-exporter.test.ts`, `tests/markdown-renderer.test.ts`, `tests/http-server.test.ts`; generated/incidental: N/A
 - `Context`: Upload is not complete until every user-visible output surface reflects the final remote URLs, and the reopened review found that rewrite failure can currently leave success counts or secret-bearing URLs in a contradictory state.
 - `Produces`: Deterministic rewrite step that updates body image URLs, frontmatter `thumbnail`, manifest `assetPaths`, and job item `assetPaths` using PicGo upload results, plus a finalization rule that keeps success counts aligned with rewrite completion.
 - `Must Do`: Rewrite only assets that were uploaded successfully, keep local Markdown/frontmatter formatting stable except for URL replacement, and fail the upload phase clearly if a required replacement cannot be mapped back to its source local asset. Update both persisted manifest content and in-memory job items to the same final URLs. Reject or sanitize any PicGo result whose final URL has userinfo, secret-bearing query params, signed query params, or a non-`http(s)` scheme before rewrite starts. Do not let uploaded-count success summary become final before rewrite commit succeeds.
@@ -136,7 +136,7 @@ This file is the only live progress record for this bundle.
 ### T6 - Reconfirm Assets tab ownership and upload-phase entry rules
 - `ID`: T6
 - `Slice`: UI Options
-- `Status`: Todo
+- `Status`: Done
 - `Depends On`: T1, T4
 - `Start When`: T1 and T4 are `Done`, and the Assets tab still exposes the old option vocabulary or has no upload action input surface.
 - `Files`: primary: `src/ui/features/options/export-options-panel.tsx`, `src/ui/App.tsx`, `src/ui/lib/api.ts`, `tests/ui/export-options-panel.test.tsx`, `tests/ui/app.test.tsx`; generated/incidental: N/A
@@ -155,7 +155,7 @@ This file is the only live progress record for this bundle.
 ### T7 - Rework status panel and polling flow for structured provider fields, retry, and upload-only mode
 - `ID`: T7
 - `Slice`: UI Job Results
-- `Status`: Todo
+- `Status`: Done
 - `Depends On`: T5, T6
 - `Start When`: T5 and T6 are `Done`, and the UI still cannot show upload-ready targets, progress, or completion state from the same job payload.
 - `Files`: primary: `src/ui/hooks/use-export-job.ts`, `src/ui/features/job-results/job-results-panel.tsx`, `src/ui/App.tsx`, `tests/ui/use-export-job.test.tsx`, `tests/ui/app.test.tsx`; generated/incidental: N/A
@@ -174,7 +174,7 @@ This file is the only live progress record for this bundle.
 ### CP2 - Re-check same-job lifecycle, provider-field secret boundary, and user-visible flow
 - `ID`: CP2
 - `Slice`: Checkpoint
-- `Status`: Todo
+- `Status`: Done
 - `Depends On`: T5, T6, T7
 - `Start When`: T5, T6, and T7 are `Done`.
 - `Files`: primary: `src/modules/exporter/picgo-upload-phase.ts`, `src/modules/exporter/picgo-upload-rewriter.ts`, `src/modules/exporter/naver-blog-exporter.ts`, `src/server/job-store.ts`, `src/server/http-server.ts`, `src/ui/App.tsx`, `src/ui/lib/api.ts`, `src/ui/hooks/use-export-job.ts`, `src/ui/features/options/export-options-panel.tsx`, `src/ui/features/job-results/job-results-panel.tsx`, `tests/http-server.test.ts`, `tests/naver-blog-exporter.test.ts`, `tests/ui/export-options-panel.test.tsx`, `tests/ui/use-export-job.test.tsx`, `tests/ui/app.test.tsx`; generated/incidental: N/A
@@ -193,7 +193,7 @@ This file is the only live progress record for this bundle.
 ### T8 - Sync knowledge docs and smoke scenario with the reopened export/upload contract
 - `ID`: T8
 - `Slice`: Knowledge And Smoke
-- `Status`: Todo
+- `Status`: Done
 - `Depends On`: CP2
 - `Start When`: CP2 is `Done`, and the code-level contract is stable enough to document and smoke-test.
 - `Files`: primary: `.agents/knowledge/product/domain.md`, `.agents/knowledge/architecture/system-map.md`, `.agents/knowledge/product/ui-dashboard-design-system.md`, `scripts/harness/run-ui-smoke.ts`, `docs/runbooks/browser-verification.md`; generated/incidental: N/A
@@ -212,7 +212,7 @@ This file is the only live progress record for this bundle.
 ### T9 - Run the final verification wave again against the reopened surface
 - `ID`: T9
 - `Slice`: Final Verification
-- `Status`: Todo
+- `Status`: Done
 - `Depends On`: T8
 - `Start When`: T8 is `Done` and no unresolved blocker remains.
 - `Files`: primary: `package.json`, `pnpm-lock.yaml`, `src/shared/types.ts`, `src/shared/export-options.ts`, `src/modules/exporter/export-paths.ts`, `src/modules/exporter/asset-store.ts`, `src/modules/exporter/naver-blog-exporter.ts`, `src/modules/exporter/export-preview.ts`, `src/modules/exporter/single-post-export.ts`, `src/modules/exporter/picgo-upload-phase.ts`, `src/modules/exporter/picgo-upload-rewriter.ts`, `src/modules/converter/markdown-renderer.ts`, `src/server/job-store.ts`, `src/server/http-server.ts`, `src/ui/App.tsx`, `src/ui/lib/api.ts`, `src/ui/hooks/use-export-job.ts`, `src/ui/features/options/export-options-panel.tsx`, `src/ui/features/job-results/job-results-panel.tsx`, `.agents/knowledge/product/domain.md`, `.agents/knowledge/architecture/system-map.md`, `.agents/knowledge/product/ui-dashboard-design-system.md`, `scripts/harness/run-ui-smoke.ts`, `docs/runbooks/browser-verification.md`, `tests/export-options.test.ts`, `tests/export-preview.test.ts`, `tests/export-single-post.test.ts`, `tests/asset-store.test.ts`, `tests/naver-blog-exporter.test.ts`, `tests/markdown-renderer.test.ts`, `tests/http-server.test.ts`, `tests/ui/export-options-panel.test.tsx`, `tests/ui/use-export-job.test.tsx`, `tests/ui/app.test.tsx`, `scripts/lib/single-post-cli.ts`; generated/incidental: coverage artifacts, smoke screenshots/logs, `manifest.json` fixture outputs, any updated lockfile-integrity artifacts, regenerated quality/sample docs

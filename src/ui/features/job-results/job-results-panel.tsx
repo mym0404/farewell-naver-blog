@@ -25,8 +25,96 @@ import {
 import { cn } from '../../lib/cn.js';
 
 type JobFilter = 'all' | 'warnings' | 'errors';
+type ProviderFieldKey = 'repo' | 'branch' | 'path' | 'token' | 'clientId' | 'album';
+type ProviderKey = 'github' | 'imgur';
+type ProviderFormState = Partial<Record<ProviderFieldKey, string>>;
+
+type UploadProviderDefinition = {
+  label: string;
+  fields: Array<{
+    key: ProviderFieldKey;
+    label: string;
+    placeholder: string;
+    required?: boolean;
+    type?: 'password' | 'text';
+    autoComplete?: string;
+  }>;
+};
 
 const INDEX_MARKDOWN_FILE = 'index.md';
+const DEFAULT_PROVIDER_KEY: ProviderKey = 'github';
+const uploadProviderDefinitions: Record<ProviderKey, UploadProviderDefinition> = {
+  github: {
+    label: 'GitHub',
+    fields: [
+      {
+        key: 'repo',
+        label: 'Repository',
+        placeholder: 'owner/name',
+        required: true,
+      },
+      {
+        key: 'branch',
+        label: 'Branch',
+        placeholder: 'main',
+      },
+      {
+        key: 'path',
+        label: 'Path',
+        placeholder: 'blog-assets',
+      },
+      {
+        key: 'token',
+        label: 'Token',
+        placeholder: 'ghp_xxx',
+        required: true,
+        type: 'password',
+        autoComplete: 'current-password',
+      },
+    ],
+  },
+  imgur: {
+    label: 'Imgur',
+    fields: [
+      {
+        key: 'clientId',
+        label: 'Client ID',
+        placeholder: 'imgur-client-id',
+        required: true,
+      },
+      {
+        key: 'album',
+        label: 'Album ID',
+        placeholder: 'optional-album-id',
+      },
+    ],
+  },
+};
+
+const buildInitialProviderFields = (providerKey: ProviderKey): ProviderFormState =>
+  Object.fromEntries(
+    uploadProviderDefinitions[providerKey].fields.map((field) => [field.key, '']),
+  ) as ProviderFormState;
+
+const trimProviderFields = (
+  providerKey: ProviderKey,
+  providerFields: ProviderFormState,
+) =>
+  Object.fromEntries(
+    uploadProviderDefinitions[providerKey].fields.flatMap((field) => {
+      const value = providerFields[field.key]?.trim() ?? '';
+
+      return value ? [[field.key, value]] : [];
+    }),
+  );
+
+const hasMissingRequiredProviderField = (
+  providerKey: ProviderKey,
+  providerFields: ProviderFormState,
+) =>
+  uploadProviderDefinitions[providerKey].fields.some(
+    (field) => field.required && !(providerFields[field.key]?.trim()),
+  );
 
 const buildJobItemSeverity = (item: ExportJobState["items"][number]) => {
   if (item.status === 'failed' || item.error) {
@@ -131,13 +219,15 @@ export const JobResultsPanel = ({
   uploadSubmitting: boolean;
   onFilterChange: (filter: JobFilter) => void;
   onUploadStart: (input: {
-    uploaderKey: string;
-    uploaderConfigJson: string;
+    providerKey: string;
+    providerFields: Record<string, string>;
   }) => Promise<void> | void;
 }) => {
   const logsScrollAreaRef = useRef<HTMLDivElement | null>(null)
-  const [uploaderKey, setUploaderKey] = useState('')
-  const [uploaderConfigJson, setUploaderConfigJson] = useState('')
+  const [providerKey, setProviderKey] = useState<ProviderKey>(DEFAULT_PROVIDER_KEY)
+  const [providerFields, setProviderFields] = useState<ProviderFormState>(
+    buildInitialProviderFields(DEFAULT_PROVIDER_KEY),
+  )
   const jobItems = getJobItems(job).filter((item) => {
     const severity = buildJobItemSeverity(item);
 
@@ -155,6 +245,9 @@ export const JobResultsPanel = ({
   const showUploadSection = Boolean(
     job && (job.upload.candidateCount > 0 || job.upload.status === 'skipped'),
   );
+  const activeProviderDefinition = uploadProviderDefinitions[providerKey];
+  const showUploadForm =
+    job?.status === 'upload-ready' || job?.status === 'upload-failed';
   const latestLogSignature = (() => {
     const lastEntry = job?.logs.at(-1)
 
@@ -174,6 +267,15 @@ export const JobResultsPanel = ({
 
     viewport.scrollTop = viewport.scrollHeight
   }, [latestLogSignature])
+
+  useEffect(() => {
+    if (!job?.id) {
+      return;
+    }
+
+    setProviderKey(DEFAULT_PROVIDER_KEY);
+    setProviderFields(buildInitialProviderFields(DEFAULT_PROVIDER_KEY));
+  }, [job?.id]);
 
   return (
     <>
@@ -263,42 +365,65 @@ export const JobResultsPanel = ({
                 </Table>
               </div>
 
-              {job?.status === 'upload-ready' ? (
+              {showUploadForm ? (
                 <form
-                  className="grid gap-3 rounded-[1.5rem] border border-slate-200 bg-white p-4 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)_auto]"
+                  className="grid gap-3 rounded-[1.5rem] border border-slate-200 bg-white p-4 md:grid-cols-[minmax(0,0.7fr)_minmax(0,1fr)_auto]"
                   onSubmit={async (event) => {
                     event.preventDefault()
                     await onUploadStart({
-                      uploaderKey,
-                      uploaderConfigJson,
+                      providerKey,
+                      providerFields: trimProviderFields(providerKey, providerFields),
                     })
                   }}
                 >
                   <label className="grid gap-2">
-                    <span className="text-sm font-semibold text-slate-900">uploaderKey</span>
-                    <Input
-                      id="upload-uploaderKey"
-                      value={uploaderKey}
-                      onChange={(event) => setUploaderKey(event.target.value)}
-                      placeholder="github"
-                    />
+                    <span className="text-sm font-semibold text-slate-900">Provider</span>
+                    <select
+                      id="upload-providerKey"
+                      className="h-10 rounded-xl border border-slate-200 px-3 text-sm text-slate-900 outline-none focus:border-slate-400"
+                      value={providerKey}
+                      onChange={(event) => {
+                        const nextProviderKey = event.target.value as ProviderKey;
+                        setProviderKey(nextProviderKey);
+                        setProviderFields(buildInitialProviderFields(nextProviderKey));
+                      }}
+                    >
+                      {Object.entries(uploadProviderDefinitions).map(([key, definition]) => (
+                        <option key={key} value={key}>
+                          {definition.label}
+                        </option>
+                      ))}
+                    </select>
                   </label>
-                  <label className="grid gap-2">
-                    <span className="text-sm font-semibold text-slate-900">uploaderConfigJson</span>
-                    <textarea
-                      id="upload-uploaderConfigJson"
-                      className="min-h-24 rounded-2xl border border-slate-200 px-3 py-2 text-sm text-slate-900 outline-none ring-0 focus:border-slate-400"
-                      value={uploaderConfigJson}
-                      onChange={(event) => setUploaderConfigJson(event.target.value)}
-                      placeholder='{"repo":"owner/name"}'
-                    />
-                  </label>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {activeProviderDefinition.fields.map((field) => (
+                      <label key={`${providerKey}:${field.key}`} className="grid gap-2">
+                        <span className="text-sm font-semibold text-slate-900">{field.label}</span>
+                        <Input
+                          id={`upload-providerField-${field.key}`}
+                          type={field.type ?? 'text'}
+                          autoComplete={field.autoComplete}
+                          value={providerFields[field.key] ?? ''}
+                          onChange={(event) =>
+                            setProviderFields((current) => ({
+                              ...current,
+                              [field.key]: event.target.value,
+                            }))
+                          }
+                          placeholder={field.placeholder}
+                        />
+                      </label>
+                    ))}
+                  </div>
                   <div className="flex items-end">
                     <Button
                       id="upload-submit"
                       type="submit"
                       className="w-full rounded-xl md:w-auto"
-                      disabled={uploadSubmitting || !uploaderKey.trim() || !uploaderConfigJson.trim()}
+                      disabled={
+                        uploadSubmitting ||
+                        hasMissingRequiredProviderField(providerKey, providerFields)
+                      }
                     >
                       {uploadSubmitting ? '업로드 시작 중...' : '업로드 시작'}
                     </Button>

@@ -152,6 +152,7 @@ const runningJob: ExportJobState = {
 const uploadFlowOptions = (() => {
   const options = defaultExportOptions()
   options.scope.categoryIds = scanResult.categories.map((category) => category.id)
+  options.assets.imageHandlingMode = "download-and-upload"
   return options
 })()
 
@@ -432,7 +433,7 @@ describe("App", () => {
     })
   })
 
-  it("shows upload-ready targets, submits upload config from the results panel, and keeps polling until upload completes", async () => {
+  it("submits structured provider fields from the results panel and keeps upload-only mode active", async () => {
     let uploadPollCount = 0
     const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
       const url = typeof input === "string" ? input : input.toString()
@@ -459,6 +460,15 @@ describe("App", () => {
         expect(init?.headers).toMatchObject({
           "x-requested-with": "XMLHttpRequest",
         })
+        expect(init?.body).toBe(
+          JSON.stringify({
+            providerKey: "github",
+            providerFields: {
+              repo: "owner/name",
+              token: "ghp_upload_secret",
+            },
+          }),
+        )
         return buildJsonResponse({ jobId: "job-upload", status: "uploading" }, 202)
       }
 
@@ -491,8 +501,14 @@ describe("App", () => {
 
     await waitFor(() => {
       expect(document.querySelector("#upload-targets-table")).not.toBeNull()
-      expect(screen.getByLabelText("uploaderKey")).toBeInTheDocument()
-      expect(screen.getByLabelText("uploaderConfigJson")).toBeInTheDocument()
+      expect(screen.getByLabelText("Provider")).toBeInTheDocument()
+      expect(screen.getByLabelText("Repository")).toBeInTheDocument()
+      expect(screen.getByLabelText("Token")).toBeInTheDocument()
+      expect(screen.queryByText("uploaderConfigJson")).not.toBeInTheDocument()
+      expect(document.querySelector("#category-panel")).toBeNull()
+      expect(document.querySelector("#export-panel")).toBeNull()
+      expect(document.querySelector('[data-section-link="category-panel"]')).toBeNull()
+      expect(document.querySelector('[data-section-link="export-panel"]')).toBeNull()
       expect(document.querySelector('[data-job-item-id="NestJS/2026-04-11-1/index.md"]')?.textContent).toContain("2026-04-11-1")
       expect(document.querySelector('[data-job-item-id="NestJS/2026-04-11-1/index.md"]')?.textContent).not.toContain("index.md")
       expect(document.querySelector("#job-file-tree")?.textContent).toContain("NestJS/2026-04-11-1/index.md")
@@ -500,21 +516,41 @@ describe("App", () => {
 
     expect(document.querySelector("#upload-targets-table")?.className).not.toContain("min-w-[")
 
-    await user.type(screen.getByLabelText("uploaderKey"), "github")
-    fireEvent.change(screen.getByLabelText("uploaderConfigJson"), {
-      target: {
-        value: '{"repo":"owner/name"}',
-      },
+    fireEvent.change(screen.getByLabelText("Repository"), {
+      target: { value: "owner/name" },
+    })
+    fireEvent.change(screen.getByLabelText("Token"), {
+      target: { value: "ghp_upload_secret" },
     })
     await user.click(screen.getByRole("button", { name: "업로드 시작" }))
 
     await waitFor(() => {
       expect(document.querySelector("#status-text")?.textContent).toContain("upload-completed")
       expect(document.querySelector("#upload-targets-table")?.textContent).toContain("완료")
-    })
+      expect(document.querySelector("#category-panel")).toBeNull()
+      expect(document.querySelector("#export-panel")).toBeNull()
+    }, { timeout: 4000 })
   })
 
-  it("renders failed upload state in the results panel", async () => {
+  it("keeps the same job editable after upload failure and allows retry with corrected fields", async () => {
+    let uploadAttempt = 0
+    let jobFetchCount = 0
+    const retryReadyJob: ExportJobState = {
+      ...uploadReadyJob,
+      id: "job-failed",
+    }
+    const retryFailedJob: ExportJobState = {
+      ...uploadFailedJob,
+      id: "job-failed",
+    }
+    const retryUploadingJob: ExportJobState = {
+      ...uploadingJob,
+      id: "job-failed",
+    }
+    const retryCompletedJob: ExportJobState = {
+      ...uploadCompletedJob,
+      id: "job-failed",
+    }
     const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
       const url = typeof input === "string" ? input : input.toString()
 
@@ -536,8 +572,46 @@ describe("App", () => {
         return buildJsonResponse({ jobId: "job-failed" }, init?.method === "POST" ? 202 : 200)
       }
 
+      if (url.endsWith("/api/export/job-failed/upload")) {
+        uploadAttempt += 1
+        const body = JSON.parse(String(init?.body)) as {
+          providerKey: string
+          providerFields: Record<string, string>
+        }
+
+        expect(body.providerKey).toBe("github")
+
+        if (uploadAttempt === 1) {
+          expect(body.providerFields).toEqual({
+            repo: "owner/name",
+            token: "ghp_bad_secret",
+          })
+          return buildJsonResponse({ jobId: "job-failed", status: "uploading" }, 202)
+        }
+
+        expect(body.providerFields).toEqual({
+          repo: "owner/name",
+          token: "ghp_fixed_secret",
+        })
+        return buildJsonResponse({ jobId: "job-failed", status: "uploading" }, 202)
+      }
+
       if (url.endsWith("/api/export/job-failed")) {
-        return buildJsonResponse(uploadFailedJob)
+        jobFetchCount += 1
+
+        if (jobFetchCount === 1) {
+          return buildJsonResponse(retryReadyJob)
+        }
+
+        if (jobFetchCount === 2) {
+          return buildJsonResponse(retryFailedJob)
+        }
+
+        if (jobFetchCount === 3) {
+          return buildJsonResponse(retryUploadingJob)
+        }
+
+        return buildJsonResponse(retryCompletedJob)
       }
 
       throw new Error(`unexpected fetch: ${url}`)
@@ -554,9 +628,38 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "내보내기" }))
 
     await waitFor(() => {
+      expect(screen.getByLabelText("Repository")).toBeInTheDocument()
+      expect(screen.getByLabelText("Token")).toBeInTheDocument()
+    })
+
+    fireEvent.change(screen.getByLabelText("Repository"), {
+      target: { value: "owner/name" },
+    })
+    fireEvent.change(screen.getByLabelText("Token"), {
+      target: { value: "ghp_bad_secret" },
+    })
+    await user.click(screen.getByRole("button", { name: "업로드 시작" }))
+
+    await waitFor(() => {
       expect(document.querySelector("#status-text")?.textContent).toContain("upload-failed")
       expect(screen.getByText("PicGo upload failed.")).toBeInTheDocument()
+      expect(screen.getByLabelText("Provider")).toBeInTheDocument()
+      expect(screen.getByLabelText("Repository")).toHaveValue("owner/name")
+      expect(screen.getByLabelText("Token")).toHaveValue("ghp_bad_secret")
+      expect(document.querySelector("#category-panel")).toBeNull()
+      expect(document.querySelector("#export-panel")).toBeNull()
+      expect(document.querySelector('[data-section-link="category-panel"]')).toBeNull()
+      expect(document.querySelector('[data-section-link="export-panel"]')).toBeNull()
     })
+
+    await user.clear(screen.getByLabelText("Token"))
+    await user.type(screen.getByLabelText("Token"), "ghp_fixed_secret")
+    await user.click(screen.getByRole("button", { name: "업로드 시작" }))
+
+    await waitFor(() => {
+      expect(document.querySelector("#status-text")?.textContent).toContain("upload-completed")
+      expect(document.querySelector("#upload-targets-table")?.textContent).toContain("완료")
+    }, { timeout: 4000 })
   })
 
   it("hides the upload form when the export completed with skipped-no-candidates", async () => {
@@ -599,10 +702,10 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "내보내기" }))
 
     await waitFor(() => {
-      expect(document.querySelector("#status-text")?.textContent).toContain("completed")
       expect(screen.getByText("업로드할 로컬 이미지가 없어 export만 완료되었습니다.")).toBeInTheDocument()
     })
-    expect(screen.queryByLabelText("uploaderKey")).not.toBeInTheDocument()
-    expect(screen.queryByLabelText("uploaderConfigJson")).not.toBeInTheDocument()
+    expect(screen.queryByLabelText("Provider")).not.toBeInTheDocument()
+    expect(screen.queryByLabelText("Repository")).not.toBeInTheDocument()
+    expect(screen.queryByLabelText("Token")).not.toBeInTheDocument()
   })
 })

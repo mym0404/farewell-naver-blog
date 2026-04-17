@@ -24,6 +24,16 @@ const ensureHttpUrl = (value: string) => {
   if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
     throw new Error("PicGo upload result must be an absolute http(s) URL.")
   }
+
+  if (parsed.username || parsed.password) {
+    throw new Error("PicGo upload result must not include URL credentials.")
+  }
+
+  for (const [key] of parsed.searchParams.entries()) {
+    if (/(^x-amz-|token|sig|signature|credential|expires|policy|key-pair-id|googleaccessid)/i.test(key)) {
+      throw new Error("PicGo upload result must not include signed or secret-bearing query params.")
+    }
+  }
 }
 
 const replaceAll = ({

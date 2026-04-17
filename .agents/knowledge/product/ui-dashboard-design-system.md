@@ -33,7 +33,7 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 - options와 status는 각각 독립 board지만 spacing, border, shadow rhythm을 공유한다.
 - layout은 desktop에서 `sidebar + fluid main`, mobile에서는 single-column stack으로 접힌다.
 - 최상위 shell은 viewport에 바로 붙는다. 바깥 프레임용 여백이나 화면 바깥으로 밀리는 horizontal overflow를 두지 않는다.
-- export가 `queued` 또는 `running`이면 category, options board와 해당 navigation item을 숨기고 status board에 집중시킨다.
+- export가 `queued`, `running`, `upload-ready`, `uploading`, `upload-failed`, `upload-completed`이면 category, options board와 해당 navigation item을 숨기고 status board에 집중시킨다.
 
 ## Tokens
 - Background: `#F4F7FB`
@@ -74,8 +74,9 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 - `이미지 처리 방식`이 `remote`면 로컬 압축과 다운로드 토글은 모두 비활성화한다.
 - `이미지 처리 방식`이 `download-and-upload`면 결과 패널에서만 업로드 폼을 열고, 대상 자산 수와 상태를 함께 보여 준다.
 - status panel은 export 결과와 upload 진행을 한 화면에서 이어서 보여 준다.
-- upload 대상 표는 compact table을 유지하고, `upload-ready`일 때만 `uploaderKey`와 `uploaderConfigJson` 입력을 렌더링한다.
-- 업로드가 끝나면 같은 표에서 `대기 / 업로드 중 / 완료 / 실패` 상태가 바뀌고, zero-candidate 완료는 폼 대신 설명 문구만 남긴다.
+- upload 대상 표는 compact table을 유지하고, 업로드 입력은 raw JSON textarea 대신 provider 선택과 provider별 구조화 필드를 사용한다.
+- 업로드 폼은 `upload-ready`와 `upload-failed`에서만 보이고, `upload-failed`일 때는 같은 job에서 값 수정 후 바로 재시도할 수 있어야 한다.
+- 업로드가 진행되면 같은 표에서 `대기 / 업로드 중 / 완료 / 실패` 상태가 바뀌고, zero-candidate 완료는 폼 대신 설명 문구만 남긴다.
 - 결과 파일 표는 `index.md` 같은 저장용 파일명만 전면에 노출하지 않는다. per-post export일 때는 마지막 글 폴더명을 대표 이름으로 보여 주고, 전체 `outputPath`는 경로 열에서 줄바꿈 가능해야 한다.
 - 결과 파일 행은 버튼 기본 `nowrap`에 기대지 않는다. 긴 파일명과 제목은 셀 안에서 줄바꿈되어야 하고, 다른 열 위로 겹치면 안 된다.
 - 작업 로그는 각 항목을 `타임스탬프 meta + 메시지 본문` 2줄 구조로 렌더링하고, 긴 메시지와 경로는 horizontal scroll 없이 wrap되어야 한다. 새 로그가 들어오면 viewport는 항상 마지막 항목으로 내려가야 한다.
@@ -100,7 +101,7 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 - smoke screenshot capture는 `docs/generated/ui-review/round-01`부터 `round-05`까지 동일 시나리오로 누적한다.
 - smoke는 desktop/mobile 모두 viewport horizontal overflow와 flush shell 정렬도 같이 검사한다.
 - smoke는 desktop options 탭이 5열 grid인지, frontmatter 필드가 다열 grid로 접히는지도 같이 검사한다.
-- smoke는 mocked API payload로 `upload-ready -> uploading -> upload-completed`를 강제로 재현하고, 결과 패널의 업로드 폼 제출과 mobile upload table overflow까지 확인한다.
+- smoke는 mocked API payload로 `upload-ready -> uploading -> upload-failed -> retry -> upload-completed`를 강제로 재현하고, 결과 패널의 구조화 provider 폼 제출과 mobile upload table overflow까지 확인한다.
 - smoke screenshot과 로그에는 placeholder config만 쓰고, raw secret 값은 남기지 않는다.
 - contrast gate는 translucent sidebar card까지 ancestor background를 합성해서 계산한다.
 

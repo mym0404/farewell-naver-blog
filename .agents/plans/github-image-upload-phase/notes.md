@@ -32,6 +32,9 @@
 - [2026-04-17 04:45Z] Revision Note: Exec review reopened the bundle instead of replacing it. Surviving follow-ups center on failure/retry UX, rewrite-success accounting, returned-URL sanitization, strict origin policy, and upload-only UI mode.
 - [2026-04-17 04:58Z] Revision Note: A later user correction reopened the provider UX axis again. The plan no longer targets a GitHub-easy-path or raw JSON fallback; it now fixes the contract to “PicGo stays, provider inputs are structured fields, and the JSON textarea goes away.”
 - [2026-04-17 05:12Z] Revision Note: Planner validation and review reran after the provider-structured rewrite. The rerun found two stale planner-only contradictions: `plan.md` still described pre-change repo facts and the final smoke wave still read like completion-only. Both were reconciled inside the bundle without reopening scope again.
+- [2026-04-17 06:07Z] Revision Note: Execution hit one stale T5 file-scope gap. The reopened rewrite/finalization fix cannot close `uploadedCount` consistency without touching `src/server/http-server.ts`, so the same bundle was reconciled in place before T5 implementation continued.
+- [2026-04-17 06:24Z] Execution Note: T8 smoke caught a live T7 regression. After `upload-failed`, `useExportJob` cleared its polling interval and did not restart it for same-job retry, so `upload-completed` could stall outside the narrower UI tests. T7 was reopened in place and T8 was sent back to `Todo` before retrying smoke.
+- [2026-04-17 06:40Z] Execution Note: Final-wave `check:full` could not go green because it stops in `typecheck` on `src/modules/parser/se2-parser.ts` missing `domhandler` types, and the separately run `test:network` timed out on the live `mym0404` collection path. Both failures are outside the reopened upload bundle surface, so T9 closed with explicit adjudication in evidence instead of a green composite.
 
 ## Retrospective
 

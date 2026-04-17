@@ -251,6 +251,17 @@ const createUploadingJob = () => ({
   },
 })
 
+const createUploadFailedJob = () => ({
+  ...createUploadReadyJob(),
+  status: "upload-failed",
+  upload: {
+    ...createUploadReadyJob().upload,
+    status: "upload-failed",
+    failedCount: 2,
+  },
+  error: "PicGo upload failed.",
+})
+
 const createUploadCompletedJob = () => ({
   ...createUploadReadyJob(),
   status: "upload-completed",
@@ -743,14 +754,14 @@ const run = async () => {
   })
 
   const mockState: {
-    uploadRequested: boolean
+    uploadAttempt: 0 | 1 | 2
     uploadFetchCount: number
     uploadPayload: null | {
-      uploaderKey: string
-      uploaderConfigJson: string
+      providerKey: string
+      providerFields: Record<string, string>
     }
   } = {
-    uploadRequested: false,
+    uploadAttempt: 0,
     uploadFetchCount: 0,
     uploadPayload: null,
   }
@@ -779,7 +790,7 @@ const run = async () => {
     }
 
     if (pathname === "/api/export" && request.method() === "POST") {
-      mockState.uploadRequested = false
+      mockState.uploadAttempt = 0
       mockState.uploadFetchCount = 0
       mockState.uploadPayload = null
       await route.fulfill(
@@ -794,18 +805,26 @@ const run = async () => {
     }
 
     if (pathname === "/api/export/job-smoke" && request.method() === "GET") {
-      if (!mockState.uploadRequested) {
+      if (mockState.uploadAttempt === 0) {
         await route.fulfill(buildJsonResponse(applyCurrentOutputDir(createUploadReadyJob(), outputDir)))
         return
       }
 
       mockState.uploadFetchCount += 1
-      const nextJob = applyCurrentOutputDir(
-        mockState.uploadFetchCount === 1
-          ? createUploadingJob()
-          : createUploadCompletedJob(),
-        outputDir,
-      )
+      const nextJob =
+        mockState.uploadAttempt === 1
+          ? applyCurrentOutputDir(
+              mockState.uploadFetchCount === 1
+                ? createUploadingJob()
+                : createUploadFailedJob(),
+              outputDir,
+            )
+          : applyCurrentOutputDir(
+              mockState.uploadFetchCount === 1
+                ? createUploadingJob()
+                : createUploadCompletedJob(),
+              outputDir,
+            )
 
       await route.fulfill(buildJsonResponse(nextJob))
       return
@@ -813,15 +832,15 @@ const run = async () => {
 
     if (pathname === "/api/export/job-smoke/upload" && request.method() === "POST") {
       const body = request.postDataJSON() as {
-        uploaderKey?: string
-        uploaderConfigJson?: string
+        providerKey?: string
+        providerFields?: Record<string, string>
       }
 
-      if (!body.uploaderKey || !body.uploaderConfigJson) {
+      if (!body.providerKey || !body.providerFields) {
         await route.fulfill(
           buildJsonResponse(
             {
-              error: "uploaderKey와 uploaderConfigJson는 필수입니다.",
+              error: "providerKey와 providerFields는 필수입니다.",
             },
             400,
           ),
@@ -829,11 +848,11 @@ const run = async () => {
         return
       }
 
-      mockState.uploadRequested = true
+      mockState.uploadAttempt = mockState.uploadAttempt === 0 ? 1 : 2
       mockState.uploadFetchCount = 0
       mockState.uploadPayload = {
-        uploaderKey: body.uploaderKey,
-        uploaderConfigJson: body.uploaderConfigJson,
+        providerKey: body.providerKey,
+        providerFields: body.providerFields,
       }
 
       await route.fulfill(
@@ -849,9 +868,10 @@ const run = async () => {
     }
 
     if (pathname === "/api/export/job-smoke/manifest" && request.method() === "GET") {
-      const manifest = mockState.uploadRequested
-        ? applyCurrentOutputDir(createUploadCompletedJob(), outputDir).manifest
-        : applyCurrentOutputDir(createUploadReadyJob(), outputDir).manifest
+      const manifest =
+        mockState.uploadAttempt === 2
+          ? applyCurrentOutputDir(createUploadCompletedJob(), outputDir).manifest
+          : applyCurrentOutputDir(createUploadReadyJob(), outputDir).manifest
 
       await route.fulfill(buildJsonResponse(manifest))
       return
@@ -1037,7 +1057,7 @@ const run = async () => {
       throw new Error("download-and-upload mode did not lock local download coverage")
     }
 
-    if (await page.locator("#upload-uploaderKey").count()) {
+    if (await page.locator("#upload-providerKey").count()) {
       throw new Error("upload form should not appear inside the Assets tab")
     }
 
@@ -1068,8 +1088,9 @@ const run = async () => {
     })
 
     await page.waitForSelector("#upload-targets-table")
-    await page.waitForSelector("#upload-uploaderKey")
-    await page.waitForSelector("#upload-uploaderConfigJson")
+    await page.waitForSelector("#upload-providerKey")
+    await page.waitForSelector("#upload-providerField-repo")
+    await page.waitForSelector("#upload-providerField-token")
 
     const uploadSectionText = await page.locator("#status-panel").textContent()
 
@@ -1083,8 +1104,14 @@ const run = async () => {
       throw new Error("upload target table did not render the expected post")
     }
 
-    await page.fill("#upload-uploaderKey", "github")
-    await page.fill("#upload-uploaderConfigJson", '{"repo":"owner/name"}')
+    const providerValue = await page.locator("#upload-providerKey").inputValue()
+
+    if (providerValue !== "github") {
+      throw new Error("upload provider default did not stay on github")
+    }
+
+    await page.fill("#upload-providerField-repo", "owner/name")
+    await page.fill("#upload-providerField-token", "placeholder-invalid-token")
 
     const uploadResponsePromise = page.waitForResponse(
       (response) =>
@@ -1096,8 +1123,12 @@ const run = async () => {
     await page.click("#upload-submit")
     await uploadResponsePromise
 
-    if (mockState.uploadPayload?.uploaderConfigJson !== '{"repo":"owner/name"}') {
-      throw new Error("upload request did not submit the placeholder config payload")
+    if (
+      mockState.uploadPayload?.providerKey !== "github" ||
+      mockState.uploadPayload.providerFields.repo !== "owner/name" ||
+      mockState.uploadPayload.providerFields.token !== "placeholder-invalid-token"
+    ) {
+      throw new Error("upload request did not submit the structured placeholder provider payload")
     }
 
     await waitForJobStatus({
@@ -1106,6 +1137,50 @@ const run = async () => {
       accept: (status) => status === "uploading",
       timeoutLabel: "UI uploading state",
     })
+
+    await waitForJobStatus({
+      page,
+      timeoutMs: 90_000,
+      accept: (status) => status === "upload-failed",
+      timeoutLabel: "UI upload-failed state",
+    })
+
+    await page.waitForSelector("#upload-providerKey")
+    await page.waitForSelector("#upload-providerField-repo")
+    await page.waitForSelector("#upload-providerField-token")
+
+    const failedUploadMessage = await page.locator("#status-panel").textContent()
+
+    if (!failedUploadMessage?.includes("PicGo upload failed.")) {
+      throw new Error("upload-failed state did not keep the retry message visible")
+    }
+
+    const retainedRepo = await page.locator("#upload-providerField-repo").inputValue()
+    const retainedToken = await page.locator("#upload-providerField-token").inputValue()
+
+    if (retainedRepo !== "owner/name" || retainedToken !== "placeholder-invalid-token") {
+      throw new Error("upload-failed retry form did not preserve the previous provider values")
+    }
+
+    await page.fill("#upload-providerField-token", "placeholder-fixed-token")
+
+    const retryUploadResponsePromise = page.waitForResponse(
+      (response) =>
+        response.url() === `${baseUrl}/api/export/${jobId}/upload` &&
+        response.request().method() === "POST",
+      { timeout: responseTimeoutMs },
+    )
+
+    await page.click("#upload-submit")
+    await retryUploadResponsePromise
+
+    if (
+      mockState.uploadPayload?.providerKey !== "github" ||
+      mockState.uploadPayload.providerFields.repo !== "owner/name" ||
+      mockState.uploadPayload.providerFields.token !== "placeholder-fixed-token"
+    ) {
+      throw new Error("upload retry did not submit the corrected placeholder provider payload")
+    }
 
     await waitForJobStatus({
       page,
@@ -1219,8 +1294,13 @@ const run = async () => {
       selector: ".mobile-command-bar",
       label: "mobile command rail",
     })
-    await page.locator("#export-panel").scrollIntoViewIfNeeded()
-    await page.waitForTimeout(150)
+    const mobileSetupPanelsHidden = await page.evaluate(() => {
+      return !document.querySelector("#category-panel") && !document.querySelector("#export-panel")
+    })
+
+    if (!mobileSetupPanelsHidden) {
+      throw new Error("upload-only mode reopened setup panels on mobile")
+    }
 
     const mobileCommandBarHeight = await page.locator(".mobile-command-bar").evaluate((element) => element.getBoundingClientRect().height)
 

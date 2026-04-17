@@ -141,7 +141,7 @@ describe("ExportOptionsPanel", () => {
     expect(latestOptions.structure.cleanOutputDir).toBe(false)
     expect(latestOptions.structure.groupByCategory).toBe(false)
     expect(latestOptions.structure.includeDateInPostFolderName).toBe(false)
-    expect(latestOptions.structure.includeLogNoInPostFolderName).toBe(false)
+    expect(latestOptions.structure.includeLogNoInPostFolderName).toBe(true)
     expect(latestOptions.structure.slugStyle).toBe("keep-title")
     expect(latestOptions.frontmatter.enabled).toBe(false)
     expect(latestOptions.frontmatter.fields.title).toBe(false)

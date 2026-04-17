@@ -1,8 +1,13 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import type { ExportJobState, ExportOptions } from "../../shared/types.js"
 
 import { fetchJson, postJson, postUploadJson } from "../lib/api.js"
+
+type UploadProviderInput = {
+  providerKey: string
+  providerFields: Record<string, string>
+}
 
 const terminalStatuses = new Set([
   "completed",
@@ -16,6 +21,8 @@ export const useExportJob = () => {
   const [job, setJob] = useState<ExportJobState | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [uploadSubmitting, setUploadSubmitting] = useState(false)
+  const [pollVersion, setPollVersion] = useState(0)
+  const restartPollingRef = useRef(false)
 
   useEffect(() => {
     if (!jobId) {
@@ -24,6 +31,9 @@ export const useExportJob = () => {
 
     let cancelled = false
     let intervalId: number | null = null
+    const shouldLoadImmediately = !restartPollingRef.current
+
+    restartPollingRef.current = false
 
     const load = async () => {
       const nextJob = await fetchJson<ExportJobState>(`/api/export/${jobId}`)
@@ -39,7 +49,9 @@ export const useExportJob = () => {
       }
     }
 
-    void load()
+    if (shouldLoadImmediately) {
+      void load()
+    }
     intervalId = window.setInterval(() => {
       void load()
     }, 1000)
@@ -50,7 +62,7 @@ export const useExportJob = () => {
         window.clearInterval(intervalId)
       }
     }
-  }, [jobId])
+  }, [jobId, pollVersion])
 
   const startJob = async ({
     blogIdOrUrl,
@@ -79,16 +91,13 @@ export const useExportJob = () => {
     }
   }
 
-  const startUpload = async ({
-    uploaderKey,
-    uploaderConfigJson,
-  }: {
-    uploaderKey: string
-    uploaderConfigJson: string
-  }) => {
+  const startUpload = async ({ providerKey, providerFields }: UploadProviderInput) => {
     if (!jobId) {
       throw new Error("업로드할 작업이 없습니다.")
     }
+
+    const previousJob = job
+    let uploadAccepted = false
 
     setUploadSubmitting(true)
     setJob((current) =>
@@ -105,15 +114,26 @@ export const useExportJob = () => {
     )
 
     try {
-      const response = await postUploadJson<{ jobId: string; status: string }>(`/api/export/${jobId}/upload`, {
-        uploaderKey,
-        uploaderConfigJson,
-      })
-
+      const response = await postUploadJson<{ jobId: string; status: string }>(
+        `/api/export/${jobId}/upload`,
+        {
+          providerKey,
+          providerFields,
+        },
+      )
+      uploadAccepted = true
+      restartPollingRef.current = true
+      setPollVersion((current) => current + 1)
       const nextJob = await fetchJson<ExportJobState>(`/api/export/${jobId}`)
 
       setJob(nextJob)
+
       return response
+    } catch (error) {
+      if (!uploadAccepted) {
+        setJob(previousJob)
+      }
+      throw error
     } finally {
       setUploadSubmitting(false)
     }
