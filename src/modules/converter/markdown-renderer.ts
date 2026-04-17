@@ -14,7 +14,7 @@ import type {
   PostSummary,
 } from "../../shared/types.js"
 import { getFrontmatterExportKey } from "../../shared/export-options.js"
-import { compactText, unique } from "../../shared/utils.js"
+import { compactMarkdownText, compactText, unique } from "../../shared/utils.js"
 
 const escapeTableCell = (value: string) =>
   value.replace(/\|/g, "\\|").replace(/\n+/g, "<br>").trim() || " "
@@ -72,10 +72,11 @@ const createLinkFormatter = ({
 const isDegenerateMarkdownLine = (line: string) => /^[*_~`]+$/.test(line.trim())
 
 const normalizeMarkdownText = (text: string) =>
-  text
-    .replace(/([^\s*])\*{4,}([^\s*])/g, "$1**$2")
+  compactMarkdownText(
+    text
+      .replace(/([^\s*])\*{4,}([^\s*])/g, "$1**$2"),
+  )
     .split("\n")
-    .map((line) => line.trimEnd())
     .filter((line) => line.trim() && !isDegenerateMarkdownLine(line))
     .join("\n")
     .trim()

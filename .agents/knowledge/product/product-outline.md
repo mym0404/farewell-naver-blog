@@ -29,6 +29,7 @@
 - 파일 구조 기본값은 category path 기반 폴더다.
 - 기본 파일명은 `YYYY-MM-DD-logNo-slug.md`다.
 - 네이버 미리보기형 media/link card와 video는 일반 Markdown 링크로 export한다.
+- 본문 `<br>` 줄바꿈은 Markdown hard break로 유지해 미리보기와 실제 렌더에서 줄이 붙지 않게 한다.
 - table은 단순 표는 GFM, 복잡한 표는 HTML fallback을 사용한다.
 - raw HTML fallback은 경고 callout과 추출 텍스트를 함께 남기는 방향을 기본값으로 둔다.
 

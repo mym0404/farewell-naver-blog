@@ -34,6 +34,16 @@ describe("parseSe3Post", () => {
     expect(parsed.tags).toEqual(["daily", "legacy"])
   })
 
+  it("preserves hard breaks inside text components", () => {
+    const parsed = parseSe3Fixture(`
+      <div class="se_component se_text">
+        <div class="se_textarea">첫 줄<br>둘째 줄</div>
+      </div>
+    `)
+
+    expect(parsed.blocks).toEqual([{ type: "paragraph", text: "첫 줄  \n둘째 줄" }])
+  })
+
   it("parses quote components into quote blocks", () => {
     const parsed = parseSe3Fixture(`
       <div class="se_component se_quote">

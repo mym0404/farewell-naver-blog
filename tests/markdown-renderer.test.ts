@@ -201,6 +201,28 @@ describe("renderMarkdownPost", () => {
     expect(rendered.assetRecords.some((asset) => asset.storageMode === "base64")).toBe(true)
   })
 
+  it("preserves hard breaks inside paragraph markdown", async () => {
+    const rendered = await renderMarkdownPost({
+      post,
+      category,
+      parsedPost: {
+        ...parsedPost,
+        blocks: [{ type: "paragraph", text: "**파이썬 웹 프로그래밍**  \n작가  \n김석훈" }],
+      },
+      markdownFilePath: "/tmp/output/posts/Algorithm/test.md",
+      reviewedWarnings: [],
+      options: defaultExportOptions(),
+      resolveAsset: async ({ kind, sourceUrl }) =>
+        createAssetRecord({
+          kind,
+          sourceUrl,
+          relativePath: `../../assets/223034929697/${kind}-01.png`,
+        }),
+    })
+
+    expect(rendered.markdown).toContain("**파이썬 웹 프로그래밍**  \n작가  \n김석훈")
+  })
+
   it("ignores stickers by default and surfaces diagnostics in markdown", async () => {
     const rendered = await renderMarkdownPost({
       post,

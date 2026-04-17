@@ -2,7 +2,7 @@ import type { CheerioAPI } from "cheerio"
 
 import { convertHtmlToMarkdown, sanitizeHtmlFragment } from "../converter/html-fragment-converter.js"
 import type { AstBlock, ExportOptions, ImageData, ParsedPost } from "../../shared/types.js"
-import { compactText, normalizeAssetUrl, unique } from "../../shared/utils.js"
+import { compactMarkdownText, compactText, normalizeAssetUrl, unique } from "../../shared/utils.js"
 import { parseHtmlTable } from "./table-parser.js"
 
 const parseTextBlocks = ({
@@ -23,7 +23,7 @@ const parseTextBlocks = ({
         options,
       }),
     )
-    .map((text) => compactText(text))
+    .map((text) => compactMarkdownText(text))
     .filter(Boolean)
     .map(
       (text) =>

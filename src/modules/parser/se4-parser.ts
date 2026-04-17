@@ -9,7 +9,7 @@ import type {
   ParsedPost,
   VideoData,
 } from "../../shared/types.js"
-import { compactText, normalizeAssetUrl, unique } from "../../shared/utils.js"
+import { compactMarkdownText, compactText, normalizeAssetUrl, unique } from "../../shared/utils.js"
 import { parseHtmlTable } from "./table-parser.js"
 
 const parseJsonAttribute = (value: string | undefined) => {
@@ -210,7 +210,7 @@ const parseTextBlocks = ({
         options,
       }),
     )
-    .map((text) => compactText(text))
+    .map((text) => compactMarkdownText(text))
     .filter(Boolean)
 
   const recommendationBlocks = parseRecommendationTextBlocks(texts)

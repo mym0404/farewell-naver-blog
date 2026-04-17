@@ -41,6 +41,17 @@ describe("parseSe4Post", () => {
     expect(parsed.tags).toEqual(["algo", "math"])
   })
 
+  it("preserves hard breaks inside text paragraphs", () => {
+    const parsed = parseSe4Fixture(`
+      <div class="se-component se-text">
+        ${createModuleScript({ type: "v2_text" })}
+        <p class="se-text-paragraph">첫 줄<br>둘째 줄</p>
+      </div>
+    `)
+
+    expect(parsed.blocks).toEqual([{ type: "paragraph", text: "첫 줄  \n둘째 줄" }])
+  })
+
   it("groups recommendation panel text dumps into a compact markdown list", () => {
     const parsed = parseSe4Fixture(`
       <div class="se-component se-text">

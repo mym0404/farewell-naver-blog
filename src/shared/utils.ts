@@ -5,6 +5,7 @@ const invalidPathCharacterPattern = /[<>:"/\\|?*\u0000-\u001f]/g
 const leadingDashPattern = /^-\s*/
 const multipleDashPattern = /-+/g
 const multipleWhitespacePattern = /\s+/g
+const markdownLineWhitespacePattern = /[^\S\n]+/g
 
 export const ensureDir = async (targetPath: string) => {
   await mkdir(targetPath, { recursive: true })
@@ -93,6 +94,20 @@ export const relativePathFrom = ({
 
 export const compactText = (value: string) =>
   value.replace(/\u200b/g, "").replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim()
+
+export const compactMarkdownText = (value: string) =>
+  value
+    .replace(/\u200b/g, "")
+    .replace(/\u00a0/g, " ")
+    .split("\n")
+    .map((line) => {
+      const hasHardBreak = / {2}$/.test(line)
+      const normalizedLine = line.replace(markdownLineWhitespacePattern, " ").trimEnd()
+
+      return hasHardBreak && normalizedLine ? `${normalizedLine}  ` : normalizedLine
+    })
+    .join("\n")
+    .trim()
 
 export const normalizeAssetUrl = (value: string) => {
   const trimmed = value.trim()
