@@ -24,6 +24,7 @@ import { parsePostHtml } from "../parser/post-parser.js"
 import { reviewParsedPost } from "../reviewer/post-reviewer.js"
 import { AssetStore } from "./asset-store.js"
 import { buildMarkdownFilePath, getCategoryForPost } from "./export-paths.js"
+import { dedupeUploadCandidatesByLocalPath } from "./upload-candidate-utils.js"
 
 const emptyPostUploadSummary = () => ({
   eligible: false,
@@ -127,8 +128,8 @@ export class NaverBlogExporter {
     let completed = 0
     let failed = 0
     let warningCount = 0
-    let uploadCandidateCount = 0
     let uploadEligiblePostCount = 0
+    const uploadCandidateMap = new Map<string, true>()
 
     if (posts.length !== scan.totalPostCount) {
       this.onLog(
@@ -178,9 +179,11 @@ export class NaverBlogExporter {
           .map((asset) => asset.relativePath)
           .filter((assetPath): assetPath is string => Boolean(assetPath))
         const uploadCandidates = uploadEnabled
-          ? rendered.assetRecords
-              .map((asset) => asset.uploadCandidate)
-              .filter((candidate): candidate is NonNullable<typeof candidate> => Boolean(candidate))
+          ? dedupeUploadCandidatesByLocalPath(
+              rendered.assetRecords
+                .map((asset) => asset.uploadCandidate)
+                .filter((candidate): candidate is NonNullable<typeof candidate> => Boolean(candidate)),
+            )
           : []
         const upload = {
           eligible: uploadCandidates.length > 0,
@@ -191,7 +194,9 @@ export class NaverBlogExporter {
         }
         const warningCountForPost = rendered.warnings.length
 
-        uploadCandidateCount += upload.candidateCount
+        for (const candidate of uploadCandidates) {
+          uploadCandidateMap.set(candidate.localPath, true)
+        }
 
         if (upload.eligible) {
           uploadEligiblePostCount += 1
@@ -288,11 +293,11 @@ export class NaverBlogExporter {
     }
 
     manifest.upload = uploadEnabled
-      ? uploadCandidateCount > 0
+      ? uploadCandidateMap.size > 0
         ? {
             status: "upload-ready",
             eligiblePostCount: uploadEligiblePostCount,
-            candidateCount: uploadCandidateCount,
+            candidateCount: uploadCandidateMap.size,
             uploadedCount: 0,
             failedCount: 0,
             terminalReason: null,

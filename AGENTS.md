@@ -28,6 +28,3 @@
 - parser capability와 sample corpus의 코드 기준점은 `src/shared/parser-capabilities.ts`, `src/shared/sample-corpus.ts`다.
 - `docs/`는 runbook, 활성 계획, generated 산출물, 사용자용 참고 자료만 둔다.
 
-# ExecPlans
-
-When writing complex features or significant refactors, use an ExecPlan (as described in .agents/PLANS.md) from design to implementation.

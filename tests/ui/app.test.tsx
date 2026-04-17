@@ -156,28 +156,25 @@ const uploadFlowOptions = (() => {
   return options
 })()
 
+const sharedPublicPath = "../../public/hash-shared-image.png"
+const sharedLocalPath = "public/hash-shared-image.png"
+
 const uploadItem = {
   ...completedJob.items[0]!,
   id: "NestJS/2026-04-11-1/index.md",
   outputPath: "NestJS/2026-04-11-1/index.md",
-  assetPaths: ["thumbnail-01.png", "image-01.png"],
+  assetPaths: [sharedPublicPath],
   upload: {
     eligible: true,
-    candidateCount: 2,
+    candidateCount: 1,
     uploadedCount: 0,
     failedCount: 0,
     candidates: [
       {
         kind: "thumbnail" as const,
         sourceUrl: "https://example.com/thumb.png",
-        localPath: "NestJS/2026-04-11-1/thumbnail-01.png",
-        markdownReference: "thumbnail-01.png",
-      },
-      {
-        kind: "image" as const,
-        sourceUrl: "https://example.com/image.png",
-        localPath: "NestJS/2026-04-11-1/image-01.png",
-        markdownReference: "image-01.png",
+        localPath: sharedLocalPath,
+        markdownReference: sharedPublicPath,
       },
     ],
   },
@@ -195,7 +192,7 @@ const uploadReadyJob: ExportJobState = {
   upload: {
     status: "upload-ready",
     eligiblePostCount: 1,
-    candidateCount: 2,
+    candidateCount: 1,
     uploadedCount: 0,
     failedCount: 0,
     terminalReason: null,
@@ -220,18 +217,15 @@ const uploadCompletedJob: ExportJobState = {
   upload: {
     ...uploadReadyJob.upload,
     status: "upload-completed",
-    uploadedCount: 2,
+    uploadedCount: 1,
   },
   items: [
     {
       ...uploadItem,
-      assetPaths: [
-        "https://cdn.example.com/thumbnail-01.png",
-        "https://cdn.example.com/image-01.png",
-      ],
+      assetPaths: ["https://cdn.example.com/shared.png"],
       upload: {
         ...uploadItem.upload,
-        uploadedCount: 2,
+        uploadedCount: 1,
       },
     },
   ],
@@ -244,7 +238,7 @@ const uploadFailedJob: ExportJobState = {
   upload: {
     ...uploadReadyJob.upload,
     status: "upload-failed",
-    failedCount: 2,
+    failedCount: 1,
   },
 }
 

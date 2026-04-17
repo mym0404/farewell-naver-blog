@@ -38,6 +38,17 @@ jobs:
       - name: Run required checks
         run: pnpm check:full
 
+      - name: Write live upload .env
+        run: |
+          cat <<EOF > .env
+          FAREWELL_UPLOAD_E2E=1
+          FAREWELL_UPLOAD_E2E_GITHUB_TOKEN=${{ secrets.FAREWELL_UPLOAD_E2E_GITHUB_TOKEN }}
+          FAREWELL_UPLOAD_E2E_GITHUB_BRANCH=${{ vars.FAREWELL_UPLOAD_E2E_GITHUB_BRANCH }}
+          EOF
+
+      - name: Run live upload Playwright e2e
+        run: pnpm test:network:upload
+
       - name: Run coverage gate
         run: pnpm test:coverage
 

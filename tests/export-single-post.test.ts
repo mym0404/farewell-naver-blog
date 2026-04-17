@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto"
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { tmpdir } from "node:os"
@@ -69,6 +70,10 @@ const createFetcher = ({
     await mkdir(path.dirname(destinationPath), { recursive: true })
     await writeFile(destinationPath, "asset", "utf8")
   },
+  fetchBinary: async () => ({
+    bytes: Buffer.from("asset"),
+    contentType: "image/png",
+  }),
 })
 
 describe("exportSinglePost", () => {
@@ -103,6 +108,7 @@ describe("exportSinglePost", () => {
     `
 
     try {
+      const expectedHash = createHash("sha256").update("asset").digest("hex")
       const diagnostics = await exportSinglePost({
         blogId: inputBlogUrl,
         logNo,
@@ -152,7 +158,7 @@ describe("exportSinglePost", () => {
       expect(diagnostics.reviewerWarnings).toEqual([])
       expect(diagnostics.renderWarnings).toEqual([])
       expect(diagnostics.assetPaths).toHaveLength(1)
-      expect(diagnostics.assetPaths[0]).toBe("image-01.png")
+      expect(diagnostics.assetPaths[0]).toBe(`../../../public/${expectedHash}.png`)
       expect(diagnostics.markdown).toContain("title: Single post")
       expect(diagnostics.markdown).toContain("category: JavaScript")
       expect(diagnostics.markdown).toContain("Hello **world**")

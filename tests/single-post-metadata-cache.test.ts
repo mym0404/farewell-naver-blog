@@ -52,6 +52,10 @@ const createBaseFetcher = ({
   },
   fetchPostHtml: async () => "<div />",
   downloadBinary: async () => {},
+  fetchBinary: async () => ({
+    bytes: Buffer.from("asset"),
+    contentType: "image/png",
+  }),
 })
 
 describe("single post metadata cache", () => {

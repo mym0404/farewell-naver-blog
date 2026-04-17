@@ -36,8 +36,11 @@
 - frontmatter는 field on/off와 alias를 같이 조절할 수 있고, 활성 field끼리 alias 충돌이 나면 export를 막는다.
 - 출력 파일은 글마다 독립 폴더를 만들고 Markdown 본문은 항상 그 안의 `index.md`에 쓴다.
 - `structure.groupByCategory`, `includeDateInPostFolderName`, `includeLogNoInPostFolderName` 조합으로 글 폴더 경로가 결정되고, 기본값은 날짜 + slug다.
+- 다운로드 자산은 `output/public/<sha256>.<ext>` 단일 저장소에 쓴다.
+- 같은 자산 여부는 원본 응답 바이트의 SHA-256 해시로 판단한다. URL이 달라도 바이트가 같으면 같은 파일을 재사용한다.
 - 이미지 처리 방식은 `download`, `remote`, `download-and-upload` 세 가지다.
 - `download-and-upload`는 export를 먼저 끝낸 뒤 같은 job을 `upload-ready -> uploading -> upload-completed | upload-failed`로 진행한다.
 - post-export 업로드 입력은 export 옵션에 저장하지 않고 결과 패널에서만 `providerKey + providerFields` 형태로 받는다.
+- job 단위 업로드 대상 수는 글별 참조 수 합계가 아니라 고유 `localPath` 수를 뜻한다.
 - 업로드 대상이 하나도 없으면 `download-and-upload`여도 upload 단계로 넘어가지 않고 `completed + skipped-no-candidates`로 닫힌다.
 - `imageContentMode === base64`는 업로드 모드와 양립하지 않으므로 로컬 다운로드 기반 경로만 허용한다.

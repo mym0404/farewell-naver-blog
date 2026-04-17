@@ -185,12 +185,26 @@ describe("http server", () => {
   })
 
   it("accepts same-origin upload actions for upload-ready jobs without persisting provider fields", async () => {
-    const uploadPhaseRunner = vi.fn(async ({ candidates }: { candidates: UploadCandidate[] }) =>
-      candidates.map((candidate) => ({
+    const uploadPhaseRunner = vi.fn(async ({
+      candidates,
+      uploaderConfig,
+    }: {
+      candidates: UploadCandidate[]
+      uploaderConfig: Record<string, unknown>
+    }) => {
+      expect(candidates).toHaveLength(1)
+      expect(candidates[0]?.localPath).toMatch(/^public\/[a-f0-9]{64}\.png$/)
+      expect(uploaderConfig).toMatchObject({
+        repo: "owner/name",
+        token: "ghp_test_upload_token",
+      })
+      expect(uploaderConfig).not.toHaveProperty("path")
+
+      return candidates.map((candidate) => ({
         candidate,
         uploadedUrl: `https://cdn.example.com/${candidate.localPath}`,
-      })),
-    )
+      }))
+    })
 
     mockFetcher({
       html: uploadHtml,
@@ -226,7 +240,7 @@ describe("http server", () => {
     })
 
     expect(readyJob.upload.status).toBe("upload-ready")
-    expect(readyJob.upload.candidateCount).toBeGreaterThan(0)
+    expect(readyJob.upload.candidateCount).toBe(1)
 
     const uploadResponse = await fetch(`${baseUrl}/api/export/${exportBody.jobId}/upload`, {
       method: "POST",
@@ -238,6 +252,7 @@ describe("http server", () => {
       body: JSON.stringify(
         createUploadPayload({
           repo: "owner/name",
+          path: "/",
           token: "ghp_test_upload_token",
         }),
       ),

@@ -1,53 +1,60 @@
-# farewell-naver-blog
+# Goodbye Naver Blog
 
 [![codecov](https://codecov.io/gh/mym0404/farewell-naver-blog/graph/badge.svg)](https://codecov.io/gh/mym0404/farewell-naver-blog)
 
-네이버 블로그의 공개 글을 내 컴퓨터로 가져와, 오래 보관하고 다른 곳으로 옮기기 쉬운 Markdown 자산으로 정리해 주는 로컬 exporter.
+네이버 블로그의 공개 글을 로컬에서 스캔하고, 오래 보관하고 옮겨 쓰기 쉬운 Markdown 자산으로 정리하는 exporter입니다.
 
-공개 글 스캔 · 카테고리별 export · GFM + YAML frontmatter · 로컬 asset 저장 · `manifest.json` 기록
+`farewell-naver-blog`는 단순 HTML 덤프가 아니라, 공개 글을 읽어 공용 AST로 파싱한 뒤 Markdown 본문, YAML frontmatter, 로컬 자산, `manifest.json`까지 한 번에 만듭니다.
 
-## 이 프로젝트가 하는 일
+## 한눈에 보는 장점
 
-네이버 블로그에 쌓인 글을 플랫폼 안에만 남겨 두지 않고, 다시 활용할 수 있는 형태로 꺼내옵니다.
+- SE2, SE3, SE4 글을 공용 AST로 맞춰서 같은 파이프라인으로 export합니다.
+- GFM Markdown과 YAML frontmatter를 함께 만들어서 정적 사이트, CMS, 노트 시스템으로 옮기기 쉽습니다.
+- 이미지와 썸네일을 `output/public/<sha256>.<ext>` 형태로 저장하고, 같은 바이트의 파일은 재사용합니다.
+- 카테고리 범위, 날짜 범위, 폴더 구조, slug 규칙을 조절할 수 있어서 전체 이전과 부분 이전 모두 잘 맞습니다.
+- 결과 요약, 경고, 실패, 업로드 상태를 `manifest.json`에 남겨서 나중에 다시 추적하기 쉽습니다.
+- 필요하면 export 뒤에 PicGo로 이미지를 업로드하고 Markdown 경로를 업로드 URL로 치환할 수 있습니다.
+- 로컬 웹 UI가 있어서 복잡한 옵션도 단계별로 확인하면서 진행할 수 있습니다.
 
-이 도구는 공개 글을 읽어 와서 다음 결과물을 한 번에 만듭니다.
+## 이런 상황에 잘 맞습니다
+
+- 네이버 블로그 글을 내 자산으로 백업하고 싶을 때
+- 정적 블로그, CMS, 문서 저장소로 옮길 Markdown 결과물이 필요할 때
+- 카테고리 구조, 발행일, 원문 링크, 태그 같은 메타데이터도 같이 보존하고 싶을 때
+- 전체 글이 아니라 특정 카테고리나 특정 기간만 골라서 export하고 싶을 때
+- 이미지까지 정리된 형태로 가져오고 싶을 때
+
+## 이 도구가 만드는 결과물
 
 - Markdown 본문
 - YAML frontmatter
-- 이미지와 썸네일 같은 로컬 asset
-- export 결과와 경고를 담은 `manifest.json`
+- 이미지, 썸네일 같은 로컬 자산
+- export 결과와 경고, 업로드 요약을 담은 `manifest.json`
 
-즉, "네이버 블로그를 더 편하게 쓰는 도구"라기보다, "내 글을 다시 내 자산으로 되돌리는 도구"에 가깝습니다.
+기본 출력 구조 예시는 아래와 같습니다.
 
-## 왜 이 프로젝트가 태어났나
+```text
+output/
+  개발/
+    JavaScript/
+      2024-01-02-hello-world/
+        index.md
+  public/
+    2a4c...9f.png
+  manifest.json
+```
 
-글은 분명 내가 썼는데, 시간이 지나면 플랫폼 안에 갇혀 관리하기도, 검색되게 만들기도, 다른 곳으로 옮기기도 점점 어려워집니다.
+기본값은 카테고리 경로 유지, 글 폴더명 `YYYY-MM-DD-slug`, Markdown 파일명 `index.md`입니다.
 
-이 프로젝트는 그런 상황에서 시작했습니다.
+## 어떻게 동작하나
 
-- 내 글을 플랫폼 안에 가둔 채 두고 싶지 않을 때
-- SEO가 답답해서 검색 가능한 형태로 다시 정리하고 싶을 때
-- 광고와 스팸에 덮이기 전에 글을 내 자산으로 회수하고 싶을 때
-- 구시대적인 에디터 대신 더 오래 가는 포맷으로 옮기고 싶을 때
+1. 블로그 ID 또는 URL로 공개 글과 카테고리를 스캔합니다.
+2. 카테고리 범위와 날짜 범위를 고릅니다.
+3. exporter가 글을 순회하면서 본문을 파싱하고 Markdown으로 렌더링합니다.
+4. 로컬 자산을 저장하고 `manifest.json`에 성공, 실패, 경고를 기록합니다.
+5. 선택한 경우 같은 job에서 PicGo 업로드와 Markdown 경로 치환까지 이어집니다.
 
-`farewell-naver-blog`는 네이버 블로그의 공개 글을 읽어 와서, 카테고리 구조와 출력 규칙을 최대한 유지한 채 Markdown 아카이브로 export 합니다. 단순 복사 수준이 아니라, SE2, SE3, SE4 본문을 공용 AST로 파싱하고, GFM, frontmatter, 로컬 asset 구조, `manifest.json`까지 함께 남깁니다.
-
-## 이런 점이 편합니다
-
-- 블로그 ID 또는 URL만으로 공개 글과 카테고리를 스캔할 수 있습니다.
-- 카테고리 단위로 export하고 하위 카테고리 포함 여부를 고를 수 있습니다.
-- 날짜 범위, 폴더 구조, 파일명 규칙, frontmatter 필드, Markdown 렌더링 규칙을 조절할 수 있습니다.
-- 이미지와 썸네일을 내려받아 상대 경로 asset으로 정리할 수 있습니다.
-- 결과와 경고를 `manifest.json`과 UI 완료 리스트에 남겨서 어떤 글이 어떻게 export됐는지 추적할 수 있습니다.
-
-## 사용 대상
-
-아래 같은 경우에 특히 잘 맞습니다.
-
-- 네이버 블로그 글을 다른 정적 사이트, CMS, 문서 시스템으로 옮기려는 경우
-- 예전 글을 백업해 두고 싶지만 HTML 덤프보다 Markdown 자산이 필요한 경우
-- 카테고리 구조와 발행일, 원문 링크 같은 메타데이터를 함께 보존하고 싶은 경우
-- 전체 글이 아니라 특정 카테고리나 기간만 골라서 정리하고 싶은 경우
+지원 범위는 공개 글만입니다.
 
 ## 빠른 시작
 
@@ -56,190 +63,81 @@
 - Node.js 20+
 - pnpm
 
-### 설치
+### 설치와 실행
+
+저장소를 clone한 뒤 바로 웹사이트처럼 실행할 수 있습니다.
 
 ```bash
+git clone https://github.com/mym0404/farewell-naver-blog.git
+cd farewell-naver-blog
 pnpm install
-```
-
-### 실행
-
-```bash
-pnpm dev
-```
-
-개발 중에는 위 명령으로 HMR 개발 서버를 띄웁니다.
-
-```bash
 pnpm start
 ```
 
-빌드 결과를 기준으로 실행할 때는 `pnpm start`를 사용합니다.
+`pnpm start`는 UI를 빌드한 뒤 서버를 띄우는 실행 명령입니다. 브라우저에서 [http://localhost:4173](http://localhost:4173) 을 열면 바로 사용할 수 있습니다.
 
-브라우저에서 `http://localhost:4173`을 열면 로컬 UI가 뜹니다.
+처음 실행할 때 사용자는 보통 아래만 알면 충분합니다.
 
-## 사용 방법
+- 블로그 ID 또는 URL을 입력하고 공개 글을 스캔합니다.
+- 내보낼 범위를 고른 뒤 export를 실행합니다.
+- 결과는 `output/` 아래 Markdown, 자산 파일, `manifest.json`으로 저장됩니다.
 
-1. 블로그 ID 또는 네이버 블로그 URL을 입력합니다.
-2. `Scan Categories`를 눌러 공개 글 수와 카테고리 목록을 불러옵니다.
-3. 내보낼 카테고리와 날짜 범위를 고릅니다.
-4. 출력 경로와 Markdown, frontmatter, asset 옵션을 정합니다.
-5. export를 실행합니다.
-6. 진행 로그와 완료 목록을 확인합니다.
-7. 생성된 Markdown, asset, `manifest.json`을 검토합니다.
+## 업로드 모드
 
-## 처음 쓸 때 가장 쉬운 흐름
+`download-and-upload`를 선택하면 export가 끝난 뒤 같은 job에서 업로드 단계로 이어집니다.
 
-복잡한 옵션을 바로 만질 필요는 없습니다. 처음에는 아래 순서로 써도 충분합니다.
+- 현재 UI에서 지원하는 업로드 대상: GitHub, Imgur
+- 업로드 대상이 없으면 upload 단계로 넘어가지 않고 export만 완료됩니다.
+- 업로드 입력은 결과 패널에서 별도로 받기 때문에 export 옵션과 섞이지 않습니다.
+- 업로드가 끝나면 Markdown 안의 로컬 자산 경로를 업로드 URL로 치환합니다.
 
-1. 블로그를 스캔합니다.
-2. 필요한 카테고리만 선택합니다.
-3. 출력 경로를 기본값 `./output` 그대로 둡니다.
-4. 그대로 export 합니다.
-5. 생성된 `output/manifest.json`과 `output/posts/` 내용을 확인합니다.
+### 실업로드 e2e
 
-## 결과물은 이렇게 남습니다
+`pnpm test:network:upload`는 opt-in Playwright e2e입니다. 업로드 대상은 항상 GitHub `mym0404/image-archive`, path는 항상 `/`입니다. 루트 `.env`에서 `FAREWELL_UPLOAD_E2E=1`, `FAREWELL_UPLOAD_E2E_GITHUB_TOKEN`, 선택적으로 `FAREWELL_UPLOAD_E2E_GITHUB_BRANCH`를 읽고, 비어 있으면 기본 브랜치는 `master`입니다.
 
-- 출력 포맷: `GFM + YAML frontmatter + 로컬 이미지 자산`
-- 기본 폴더 전략: 카테고리 경로 유지
-- 기본 글 폴더명: `YYYY-MM-DD-slug` (`index.md` 저장)
-- 비디오는 기본적으로 썸네일과 원문 링크로 렌더링
-- 단순 표는 GFM, 복잡한 표는 HTML fallback 사용
-- raw HTML fallback은 기본적으로 경고와 함께 Markdown 텍스트로 최대한 복구
+`.env` 준비:
 
-```text
-output/
-  posts/
-    category-a/
-      2024-01-02-1234567890-post-title.md
-  assets/
-    1234567890/
-      image-1.jpg
-  manifest.json
+```bash
+cp .env.example .env
 ```
 
-## 결과물을 어디에 쓸 수 있나
+`.env` 예시:
 
-생성된 결과물은 다음 용도로 바로 활용할 수 있습니다.
+```bash
+FAREWELL_UPLOAD_E2E=1
+FAREWELL_UPLOAD_E2E_GITHUB_TOKEN=ghp_xxx
+FAREWELL_UPLOAD_E2E_GITHUB_BRANCH=master
+```
 
-- 정적 블로그 마이그레이션 준비
-- 개인 문서 저장소 백업
-- 다른 CMS나 노트 시스템으로 재정리
-- LLM, 검색, 인덱싱용 원문 자산 보관
+로컬 실행:
+
+```bash
+pnpm test:network:upload
+```
+
+이 명령은 브라우저에서 실제 UI로 scan, category/date scope 설정, export, upload를 수행하고, 업로드 뒤 공개 GitHub raw URL 이미지 렌더를 확인합니다. 같은 글을 같은 루트 경로로 다시 올리는 idempotent 재실행에서는 branch head가 안 바뀔 수 있고, 그 경우에는 기존 파일 존재 여부를 기준으로 검증합니다.
+
+GitHub Actions 준비:
+
+- Repository secret: `FAREWELL_UPLOAD_E2E_GITHUB_TOKEN`
+- Repository variable: `FAREWELL_UPLOAD_E2E_GITHUB_BRANCH` (`master`가 기본값이라 생략 가능)
+
+현재 [required-checks.yml](./.github/workflows/required-checks.yml)에서는 실행 전에 `.env`를 만들고 `pnpm test:network:upload` Playwright e2e를 항상 실행합니다.
 
 ## 핵심 특징
 
-### 1. 네이버 블로그 현실을 전제로 만든 exporter
+### 1. 네이버 블로그 현실을 전제로 한 parser
 
-공개 글을 스캔하고, 카테고리와 날짜 범위를 기준으로 export 대상을 좁힐 수 있습니다. "전체를 무작정 긁어 온다"가 아니라, 실제 이관 작업에 맞는 범위를 정하고 시작할 수 있습니다.
+SE2, SE3, SE4 본문을 공용 AST로 맞춘 뒤 렌더링합니다. 글이 어떤 시기의 에디터로 작성됐는지와 무관하게 같은 export 파이프라인으로 다룰 수 있습니다.
 
-### 2. editor 버전 차이를 한 번에 다룬다
+### 2. Markdown만이 아니라 자산 구조까지 정리
 
-SE2, SE3, SE4 본문을 공용 AST로 파싱한 뒤 렌더링합니다. 덕분에 글이 어떤 시기의 에디터로 작성됐든 같은 export 파이프라인으로 다룰 수 있습니다.
+본문 이미지와 썸네일을 로컬 자산으로 저장하고, frontmatter와 결과 manifest까지 함께 남깁니다. 같은 바이트의 이미지는 URL이 달라도 하나의 파일만 재사용합니다.
 
-### 3. Markdown만이 아니라 자산 구조까지 정리한다
+### 3. 결과를 다시 검토하기 쉬움
 
-본문 이미지를 내려받고 상대 경로 asset으로 정리하며, frontmatter와 썸네일 정보까지 함께 남길 수 있습니다. 나중에 다른 정적 사이트, 문서 시스템, CMS로 옮기기 쉬운 형태를 목표로 합니다.
+성공, 실패, 경고, 업로드 상태를 `manifest.json`에 남깁니다. 어떤 글이 어떻게 처리됐는지 나중에 다시 확인할 수 있습니다.
 
-### 4. 결과를 추적할 수 있다
+### 4. 단계형 로컬 웹 UI
 
-export 결과와 경고가 `manifest.json`에 기록됩니다. 어떤 글이 성공했고, 어떤 글이 실패했는지, 어떤 경고가 있었는지 나중에 다시 검토할 수 있습니다.
-
-## 주요 옵션
-
-### Scope
-
-- 카테고리 정확 매칭 또는 하위 카테고리 포함
-- 시작일과 종료일 필터
-
-### Structure
-
-- output 디렉터리 초기화 여부
-- 글/자산 디렉터리 이름
-- 카테고리 경로 유지 또는 flat 구조
-- 날짜, `logNo`, slug 규칙
-
-### Frontmatter
-
-- frontmatter 사용 여부
-- `title`, `source`, `publishedAt`, `categoryPath`, `warnings` 등 필드별 포함 여부
-
-### Markdown Rules
-
-- 링크 inline/reference
-- 링크 카드, 표, 비디오, 이미지, divider, code fence 스타일
-- LaTeX inline/block 렌더링 분리와 wrapper 문자열 설정
-- raw HTML fallback 경고와 추출 텍스트 보존
-- heading level offset
-
-### Assets
-
-- 상대 경로 또는 원격 URL 유지
-- 본문 이미지 base64 data URL 임베딩 여부
-- 네이버 스티커 무시 또는 원본 자산 다운로드
-- 본문 이미지 다운로드 여부
-- 썸네일 다운로드 여부
-- 이미지 캡션 포함 여부
-- 썸네일 우선순위 선택
-
-## 작업 상태 확인
-
-- 실행 중인 job은 진행 로그와 함께 완료된 파일 트리로 표시됩니다.
-- 경고만, 에러만 필터링해서 볼 수 있습니다.
-- 완료 항목을 누르면 Modal에서 Markdown 렌더링 결과를 바로 확인할 수 있습니다.
-
-## API
-
-- `GET /api/export-defaults`
-- `POST /api/scan`
-- `POST /api/export`
-- `GET /api/export/:jobId`
-- `GET /api/export/:jobId/manifest`
-
-## 검증
-
-문서만 변경했을 때:
-
-수정한 링크와 코드 기준점을 수동으로 점검한 뒤, generated 리포트 축을 건드렸다면 아래 명령을 실행합니다.
-
-```bash
-pnpm quality:report
-```
-
-빠른 확인:
-
-```bash
-pnpm check:quick
-```
-
-coverage 확인:
-
-```bash
-pnpm test:coverage
-```
-
-전체 검증:
-
-```bash
-pnpm check:full
-```
-
-## 프로젝트 구조
-
-- `src/modules/blog-fetcher`: 네이버 블로그 스캔과 글/자산 fetch
-- `src/modules/parser`: SE2, SE3, SE4 본문 파싱
-- `src/modules/reviewer`: 파싱 경고 정리
-- `src/modules/converter`: Markdown 및 frontmatter 렌더링
-- `src/modules/exporter`: export workflow orchestration
-- `src/server`: HTTP API와 job 상태 관리
-- `src/ui`: React 로컬 웹 UI
-- `src/shared`: 타입, 옵션, capability, 샘플 corpus
-
-## 문서
-
-- [docs/index.md](./docs/index.md)
-- [.agents/knowledge/architecture/index.md](./.agents/knowledge/architecture/index.md)
-- [.agents/knowledge/product/index.md](./.agents/knowledge/product/index.md)
-- [.agents/knowledge/engineering/validation.md](./.agents/knowledge/engineering/validation.md)
-- [.agents/knowledge/architecture/parser-block-catalog.md](./.agents/knowledge/architecture/parser-block-catalog.md)
-- [.agents/knowledge/product/sample-corpus.md](./.agents/knowledge/product/sample-corpus.md)
+clone 후 `pnpm start`만으로 브라우저에서 바로 쓸 수 있는 로컬 웹 UI를 제공합니다.

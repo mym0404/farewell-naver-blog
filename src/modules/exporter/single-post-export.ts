@@ -26,7 +26,7 @@ export type SinglePostFetcher = {
     sourceUrl: string
     destinationPath: string
   }) => Promise<void>
-  fetchBinary?: (input: {
+  fetchBinary: (input: {
     sourceUrl: string
   }) => Promise<{
     bytes: Buffer

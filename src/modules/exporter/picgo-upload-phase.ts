@@ -1,6 +1,7 @@
 import path from "node:path"
 
 import type { UploadCandidate } from "../../shared/types.js"
+import { dedupeUploadCandidatesByLocalPath } from "./upload-candidate-utils.js"
 
 type PicGoUploadResponse = {
   imgUrl?: string
@@ -36,6 +37,7 @@ export const runPicGoUploadPhase = async (
   input: RunPicGoUploadPhaseInput,
   createClient: () => Promise<PicGoLike> = createPicGoClient,
 ): Promise<PicGoUploadResult[]> => {
+  const dedupedCandidates = dedupeUploadCandidatesByLocalPath(input.candidates)
   const client = await createClient()
 
   client.setConfig({
@@ -45,14 +47,14 @@ export const runPicGoUploadPhase = async (
     },
   })
 
-  const filePaths = input.candidates.map((candidate) => path.join(input.outputDir, candidate.localPath))
+  const filePaths = dedupedCandidates.map((candidate) => path.join(input.outputDir, candidate.localPath))
   const uploaded = await client.upload(filePaths)
 
   if (uploaded instanceof Error) {
     throw new Error("PicGo upload failed.")
   }
 
-  if (uploaded.length !== input.candidates.length) {
+  if (uploaded.length !== dedupedCandidates.length) {
     throw new Error("PicGo upload result count mismatch.")
   }
 
@@ -64,7 +66,7 @@ export const runPicGoUploadPhase = async (
     }
 
     return {
-      candidate: input.candidates[index]!,
+      candidate: dedupedCandidates[index]!,
       uploadedUrl,
     }
   })

@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto"
+
 import { describe, expect, it, vi } from "vitest"
 
 import { AssetStore } from "../src/modules/exporter/asset-store.js"
@@ -31,11 +33,15 @@ describe("AssetStore", () => {
   })
 
   it("caches downloaded relative assets", async () => {
-    const downloadBinary = vi.fn(async () => {})
+    const fetchBinary = vi.fn(async () => ({
+      bytes: Buffer.from("image-bytes"),
+      contentType: "image/png",
+    }))
     const store = new AssetStore({
       outputDir: "/tmp/output",
       downloader: {
-        downloadBinary,
+        downloadBinary: vi.fn(),
+        fetchBinary,
       },
       options: defaultExportOptions(),
     })
@@ -53,16 +59,59 @@ describe("AssetStore", () => {
       markdownFilePath: "/tmp/output/posts/test/index.md",
     })
 
-    expect(downloadBinary).toHaveBeenCalledTimes(1)
+    const expectedHash = createHash("sha256").update("image-bytes").digest("hex")
+
+    expect(fetchBinary).toHaveBeenCalledTimes(1)
     expect(first.reference).toBe(second.reference)
-    expect(first.relativePath).toBe("image-01.png")
+    expect(first.relativePath).toBe(`../../public/${expectedHash}.png`)
     expect(first.storageMode).toBe("relative")
     expect(first.uploadCandidate).toEqual({
       kind: "image",
       sourceUrl: "https://example.com/image.png",
-      localPath: "posts/test/image-01.png",
-      markdownReference: "image-01.png",
+      localPath: `public/${expectedHash}.png`,
+      markdownReference: `../../public/${expectedHash}.png`,
     })
+  })
+
+  it("reuses one public asset for different posts when the binary bytes match", async () => {
+    const fetchBinary = vi
+      .fn()
+      .mockResolvedValueOnce({
+        bytes: Buffer.from("same-bytes"),
+        contentType: "image/png",
+      })
+      .mockResolvedValueOnce({
+        bytes: Buffer.from("same-bytes"),
+        contentType: "image/jpeg",
+      })
+    const store = new AssetStore({
+      outputDir: "/tmp/output",
+      downloader: {
+        downloadBinary: vi.fn(),
+        fetchBinary,
+      },
+      options: defaultExportOptions(),
+    })
+
+    const first = await store.saveAsset({
+      kind: "image",
+      postLogNo: "1",
+      sourceUrl: "https://example.com/image.png",
+      markdownFilePath: "/tmp/output/posts/first/index.md",
+    })
+    const second = await store.saveAsset({
+      kind: "thumbnail",
+      postLogNo: "2",
+      sourceUrl: "https://cdn.example.com/thumb.jpg",
+      markdownFilePath: "/tmp/output/posts/second/index.md",
+    })
+
+    const expectedHash = createHash("sha256").update("same-bytes").digest("hex")
+
+    expect(first.relativePath).toBe(`../../public/${expectedHash}.png`)
+    expect(second.relativePath).toBe(`../../public/${expectedHash}.png`)
+    expect(first.uploadCandidate?.localPath).toBe(`public/${expectedHash}.png`)
+    expect(second.uploadCandidate?.localPath).toBe(`public/${expectedHash}.png`)
   })
 
   it("embeds data urls when base64 mode is requested", async () => {
@@ -179,6 +228,6 @@ describe("AssetStore", () => {
     expect(fetchBinary).toHaveBeenCalledTimes(1)
     expect(downloadBinary).not.toHaveBeenCalled()
     expect(compressImage).toHaveBeenCalledTimes(1)
-    expect(asset.uploadCandidate?.localPath).toBe("posts/test/image-01.png")
+    expect(asset.uploadCandidate?.localPath).toMatch(/^public\/[a-f0-9]{64}\.png$/)
   })
 })

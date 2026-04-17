@@ -49,12 +49,12 @@ const replaceAll = ({
 const buildUpdatedPost = ({
   outputDir,
   post,
-  uploadResults,
+  uploadResultByLocalPath,
   fileOps,
 }: {
   outputDir: string
   post: PostManifestEntry
-  uploadResults: PicGoUploadResult[]
+  uploadResultByLocalPath: Map<string, PicGoUploadResult>
   fileOps: FileOps
 }) => {
   if (!post.outputPath) {
@@ -68,9 +68,7 @@ const buildUpdatedPost = ({
     const resultByReference = new Map<string, string>()
 
     for (const candidate of post.upload.candidates) {
-      const matchedResult = uploadResults.find(
-        (result) => result.candidate.localPath === candidate.localPath,
-      )
+      const matchedResult = uploadResultByLocalPath.get(candidate.localPath)
 
       if (!matchedResult) {
         throw new Error(`Missing upload result for ${candidate.localPath}.`)
@@ -119,6 +117,9 @@ export const rewriteUploadedAssets = async ({
   uploadResults: PicGoUploadResult[]
   fileOps?: FileOps
 }): Promise<RewriteResult> => {
+  const uploadResultByLocalPath = new Map(
+    uploadResults.map((result) => [result.candidate.localPath, result]),
+  )
   const rewrittenPosts = await Promise.all(
     manifest.posts.map(async (post) => {
       if (!post.outputPath || post.upload.candidateCount === 0) {
@@ -128,7 +129,7 @@ export const rewriteUploadedAssets = async ({
       return buildUpdatedPost({
         outputDir,
         post,
-        uploadResults,
+        uploadResultByLocalPath,
         fileOps,
       })
     }),

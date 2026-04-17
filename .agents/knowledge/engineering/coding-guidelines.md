@@ -32,3 +32,10 @@
 - evergreen 지식은 `.agents/knowledge/`가 기준이다.
 - `docs/`는 사용자 문서, 검증 문서, generated 보고서를 담는다.
 - 코드 동작이 바뀌면 knowledge와 관련 docs를 같이 갱신한다.
+
+## README Policy
+- `README.md`는 사용자용 첫 화면으로 유지한다.
+- README에는 도구 소개, 사용 대상, 결과물, 기본 실행 방법 같은 사용자 정보만 우선 둔다.
+- 이 저장소의 기본 실행 흐름은 `git clone -> pnpm install -> pnpm start`다.
+- 개발 서버, 검증 명령, API, 내부 구조, harness 같은 기여자 정보는 README가 아니라 `CONTRIBUTING.md`, `.agents/knowledge/`, `docs/`에 둔다.
+- README는 실제 코드와 UI에서 확인 가능한 사실만 적고, 추측성 설명이나 계획성 문구는 넣지 않는다.

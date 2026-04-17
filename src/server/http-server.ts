@@ -12,6 +12,7 @@ import { NaverBlogFetcher } from "../modules/blog-fetcher/naver-blog-fetcher.js"
 import { NaverBlogExporter } from "../modules/exporter/naver-blog-exporter.js"
 import { rewriteUploadedAssets } from "../modules/exporter/picgo-upload-rewriter.js"
 import { runPicGoUploadPhase } from "../modules/exporter/picgo-upload-phase.js"
+import { dedupeUploadCandidatesByLocalPath } from "../modules/exporter/upload-candidate-utils.js"
 import {
   cloneExportOptions,
   defaultExportOptions,
@@ -155,6 +156,29 @@ const normalizeProviderFields = (value: unknown): ProviderFields | null => {
 
   return Object.keys(normalized).length > 0 ? normalized : null
 }
+
+const normalizeUploaderConfig = ({
+  uploaderKey,
+  providerFields,
+}: {
+  uploaderKey: string
+  providerFields: ProviderFields
+}) =>
+  Object.fromEntries(
+    Object.entries(providerFields).flatMap(([key, value]) => {
+      if (uploaderKey === "github" && key === "path") {
+        const normalizedPath = value
+          .split("/")
+          .map((segment) => segment.trim())
+          .filter(Boolean)
+          .join("/")
+
+        return normalizedPath ? [[key, normalizedPath]] : []
+      }
+
+      return [[key, value]]
+    }),
+  )
 
 const sanitizeUploadError = ({
   error,
@@ -326,7 +350,9 @@ export const createHttpServer = ({
       return
     }
 
-    const candidates = job.items.flatMap((item) => item.upload.candidates)
+    const candidates = dedupeUploadCandidatesByLocalPath(
+      job.items.flatMap((item) => item.upload.candidates),
+    )
 
     jobStore.startUpload(jobId)
     jobStore.appendLog(jobId, "PicGo 업로드를 시작했습니다.")
@@ -564,10 +590,15 @@ export const createHttpServer = ({
           return
         }
 
+        const uploaderConfig = normalizeUploaderConfig({
+          uploaderKey: providerKey,
+          providerFields,
+        })
+
         void runUploadForJob({
           jobId: job.id,
           uploaderKey: providerKey,
-          uploaderConfig: providerFields,
+          uploaderConfig,
         })
 
         sendJson({

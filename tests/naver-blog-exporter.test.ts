@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto"
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
 import * as fs from "node:fs/promises"
 import path from "node:path"
@@ -57,6 +58,10 @@ const postHtml = `
   </div>
 `
 
+const sharedAssetHash = createHash("sha256").update("image").digest("hex")
+const sharedPublicPath = `../../public/${sharedAssetHash}.png`
+const sharedLocalPath = `public/${sharedAssetHash}.png`
+
 const createUploadReadyFixture = ({
   outputDir,
 }: {
@@ -65,13 +70,12 @@ const createUploadReadyFixture = ({
   const outputPath = "PS-알고리즘-팁/2023-03-04-테스트-글/index.md"
   const markdown = `---
 title: 테스트 글
-thumbnail: thumbnail-01.png
+thumbnail: ${sharedPublicPath}
 assetPaths:
-  - thumbnail-01.png
-  - image-01.png
+  - ${sharedPublicPath}
 ---
 
-![diagram](image-01.png)
+![diagram](${sharedPublicPath})
 `
 
   return {
@@ -91,7 +95,7 @@ assetPaths:
       upload: {
         status: "upload-ready" as const,
         eligiblePostCount: 1,
-        candidateCount: 2,
+        candidateCount: 1,
         uploadedCount: 0,
         failedCount: 0,
         terminalReason: null,
@@ -110,24 +114,18 @@ assetPaths:
           editorVersion: 4 as const,
           status: "success" as const,
           outputPath,
-          assetPaths: ["thumbnail-01.png", "image-01.png"],
+          assetPaths: [sharedPublicPath],
           upload: {
             eligible: true,
-            candidateCount: 2,
+            candidateCount: 1,
             uploadedCount: 0,
             failedCount: 0,
             candidates: [
               {
                 kind: "thumbnail" as const,
                 sourceUrl: "https://example.com/thumb.png",
-                localPath: "PS-알고리즘-팁/2023-03-04-테스트-글/thumbnail-01.png",
-                markdownReference: "thumbnail-01.png",
-              },
-              {
-                kind: "image" as const,
-                sourceUrl: "https://example.com/image.png",
-                localPath: "PS-알고리즘-팁/2023-03-04-테스트-글/image-01.png",
-                markdownReference: "image-01.png",
+                localPath: sharedLocalPath,
+                markdownReference: sharedPublicPath,
               },
             ],
           },
@@ -241,23 +239,23 @@ describe("NaverBlogExporter", () => {
 
     expect(manifest.upload.status).toBe("upload-ready")
     expect(manifest.upload.eligiblePostCount).toBe(1)
-    expect(manifest.upload.candidateCount).toBeGreaterThan(0)
+    expect(manifest.upload.candidateCount).toBe(1)
     expect(manifest.posts[0]?.upload).toMatchObject({
       eligible: true,
-      candidateCount: expect.any(Number),
+      candidateCount: 1,
       uploadedCount: 0,
       failedCount: 0,
     })
     expect(manifest.posts[0]?.upload.candidates[0]).toMatchObject({
       kind: expect.stringMatching(/image|thumbnail/),
       sourceUrl: expect.stringContaining("https://example.com/"),
-      localPath: expect.stringContaining("2023-03-04-테스트-글/"),
-      markdownReference: expect.stringMatching(/^(thumbnail|image)-\d{2}\.png$/),
+      localPath: sharedLocalPath,
+      markdownReference: sharedPublicPath,
     })
     expect(onItem.mock.calls[0]?.[0]).toMatchObject({
       upload: {
         eligible: true,
-        candidateCount: expect.any(Number),
+        candidateCount: 1,
         uploadedCount: 0,
         failedCount: 0,
         candidates: expect.any(Array),
@@ -397,11 +395,7 @@ describe("NaverBlogExporter", () => {
         uploadResults: [
           {
             candidate: fixture.manifest.posts[0]!.upload.candidates[0]!,
-            uploadedUrl: "https://cdn.example.com/thumbnail-01.png",
-          },
-          {
-            candidate: fixture.manifest.posts[0]!.upload.candidates[1]!,
-            uploadedUrl: "https://cdn.example.com/image-01.png",
+            uploadedUrl: "https://cdn.example.com/shared.png",
           },
         ],
       })
@@ -411,17 +405,11 @@ describe("NaverBlogExporter", () => {
         await readFile(path.join(outputDir, "manifest.json"), "utf8"),
       ) as typeof rewritten.manifest
 
-      expect(rewrittenMarkdown).toContain("thumbnail: https://cdn.example.com/thumbnail-01.png")
-      expect(rewrittenMarkdown).toContain("https://cdn.example.com/image-01.png")
+      expect(rewrittenMarkdown).toContain("thumbnail: https://cdn.example.com/shared.png")
+      expect(rewrittenMarkdown).toContain("https://cdn.example.com/shared.png")
       expect(writtenManifest.upload.status).toBe("upload-completed")
-      expect(writtenManifest.posts[0]?.assetPaths).toEqual([
-        "https://cdn.example.com/thumbnail-01.png",
-        "https://cdn.example.com/image-01.png",
-      ])
-      expect(rewritten.items[0]?.assetPaths).toEqual([
-        "https://cdn.example.com/thumbnail-01.png",
-        "https://cdn.example.com/image-01.png",
-      ])
+      expect(writtenManifest.posts[0]?.assetPaths).toEqual(["https://cdn.example.com/shared.png"])
+      expect(rewritten.items[0]?.assetPaths).toEqual(["https://cdn.example.com/shared.png"])
     } finally {
       await rm(outputDir, { recursive: true, force: true })
     }
@@ -450,11 +438,7 @@ describe("NaverBlogExporter", () => {
           uploadResults: [
             {
               candidate: fixture.manifest.posts[0]!.upload.candidates[0]!,
-              uploadedUrl: "ftp://cdn.example.com/thumbnail-01.png",
-            },
-            {
-              candidate: fixture.manifest.posts[0]!.upload.candidates[1]!,
-              uploadedUrl: "https://cdn.example.com/image-01.png",
+              uploadedUrl: "ftp://cdn.example.com/shared.png",
             },
           ],
         }),
@@ -492,11 +476,7 @@ describe("NaverBlogExporter", () => {
           uploadResults: [
             {
               candidate: fixture.manifest.posts[0]!.upload.candidates[0]!,
-              uploadedUrl: "https://cdn.example.com/thumbnail-01.png?X-Amz-Signature=secret",
-            },
-            {
-              candidate: fixture.manifest.posts[0]!.upload.candidates[1]!,
-              uploadedUrl: "https://cdn.example.com/image-01.png",
+              uploadedUrl: "https://cdn.example.com/shared.png?X-Amz-Signature=secret",
             },
           ],
         }),
@@ -535,11 +515,7 @@ describe("NaverBlogExporter", () => {
           uploadResults: [
             {
               candidate: fixture.manifest.posts[0]!.upload.candidates[0]!,
-              uploadedUrl: "https://cdn.example.com/thumbnail-01.png",
-            },
-            {
-              candidate: fixture.manifest.posts[0]!.upload.candidates[1]!,
-              uploadedUrl: "https://cdn.example.com/image-01.png",
+              uploadedUrl: "https://cdn.example.com/shared.png",
             },
           ],
           fileOps: {

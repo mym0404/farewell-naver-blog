@@ -15,6 +15,7 @@
     "test:coverage": "vitest run --silent --coverage",
     "test:offline": "vitest run --silent --exclude tests/naver.integration.test.ts --exclude tests/naver.single-post-export.integration.test.ts",
     "test:network": "pnpm exec vitest run tests/naver.integration.test.ts --silent && pnpm exec vitest run tests/naver.single-post-export.integration.test.ts --silent",
+    "test:network:upload": "pnpm build:ui && tsx scripts/harness/run-ui-live-upload.ts",
     "parser:check": "tsx scripts/harness/check-parser-capabilities.ts",
     "samples:verify": "tsx scripts/harness/verify-sample-exports.ts",
     "smoke:ui": "pnpm build:ui && tsx scripts/harness/run-ui-smoke.ts",

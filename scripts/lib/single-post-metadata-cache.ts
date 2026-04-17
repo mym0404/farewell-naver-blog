@@ -173,5 +173,6 @@ export const createSinglePostMetadataCachingFetcher = async ({
     },
     fetchPostHtml: async (requestedLogNo: string) => baseFetcher.fetchPostHtml(requestedLogNo),
     downloadBinary: async (input) => baseFetcher.downloadBinary(input),
+    fetchBinary: async (input) => baseFetcher.fetchBinary(input),
   }
 }

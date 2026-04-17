@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto"
 import path from "node:path"
 import { writeFile } from "node:fs/promises"
 
@@ -36,6 +37,32 @@ const extensionFromUrl = (value: string) => {
   }
 }
 
+const extensionFromContentType = (value: string | null) => {
+  const normalized = value?.split(";")[0]?.trim().toLowerCase() ?? ""
+
+  if (normalized === "image/png") {
+    return ".png"
+  }
+
+  if (normalized === "image/gif") {
+    return ".gif"
+  }
+
+  if (normalized === "image/webp") {
+    return ".webp"
+  }
+
+  if (normalized === "image/svg+xml") {
+    return ".svg"
+  }
+
+  if (normalized === "image/jpeg") {
+    return ".jpg"
+  }
+
+  return null
+}
+
 const inferMimeType = (value: string) => {
   const extension = extensionFromUrl(value).toLowerCase()
 
@@ -59,6 +86,7 @@ const inferMimeType = (value: string) => {
 }
 
 const normalizeOutputPath = (value: string) => value.split(path.sep).join("/")
+const buildAssetHash = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex")
 
 const isCompressionSafeMimeType = (contentType: string | null, sourceUrl: string) => {
   const resolvedContentType = (contentType || inferMimeType(sourceUrl)).toLowerCase()
@@ -94,8 +122,8 @@ export class AssetStore {
   readonly downloader: AssetDownloader
   readonly options: Pick<ExportOptions, "assets" | "structure">
   readonly cache = new Map<string, string>()
+  readonly sourceUrlCache = new Map<string, string>()
   readonly dataUrlCache = new Map<string, string>()
-  readonly counters = new Map<string, number>()
   readonly compressImage: AssetCompressor
 
   constructor({
@@ -117,7 +145,7 @@ export class AssetStore {
 
   async saveAsset({
     kind,
-    postLogNo,
+    postLogNo: _postLogNo,
     sourceUrl,
     markdownFilePath,
     embedAsDataUrl,
@@ -131,7 +159,7 @@ export class AssetStore {
     const normalizedSourceUrl = normalizeAssetUrl(sourceUrl)
 
     if (embedAsDataUrl) {
-      const cacheKey = `${postLogNo}:${kind}:base64:${normalizedSourceUrl}`
+      const cacheKey = `${_postLogNo}:${kind}:base64:${normalizedSourceUrl}`
       const cachedDataUrl = this.dataUrlCache.get(cacheKey)
 
       if (cachedDataUrl) {
@@ -183,10 +211,41 @@ export class AssetStore {
       } satisfies AssetRecord
     }
 
-    const cacheKey = `${postLogNo}:${kind}:${normalizedSourceUrl}`
-    const cachedAbsolutePath = this.cache.get(cacheKey)
+    if (!this.downloader.fetchBinary) {
+      throw new Error("로컬 자산 저장을 지원하는 fetchBinary downloader가 필요합니다.")
+    }
+
+    const cachedBySourceUrl = this.sourceUrlCache.get(normalizedSourceUrl)
+
+    if (cachedBySourceUrl) {
+      const relativePath = relativePathFrom({
+        from: markdownFilePath,
+        to: cachedBySourceUrl,
+      })
+
+      return {
+        kind,
+        sourceUrl: normalizedSourceUrl,
+        reference: relativePath,
+        relativePath,
+        storageMode: "relative",
+        uploadCandidate: {
+          kind,
+          sourceUrl: normalizedSourceUrl,
+          localPath: normalizeOutputPath(path.relative(this.outputDir, cachedBySourceUrl)),
+          markdownReference: relativePath,
+        },
+      } satisfies AssetRecord
+    }
+
+    const binary = await this.downloader.fetchBinary({
+      sourceUrl: normalizedSourceUrl,
+    })
+    const contentHash = buildAssetHash(binary.bytes)
+    const cachedAbsolutePath = this.cache.get(contentHash)
 
     if (cachedAbsolutePath) {
+      this.sourceUrlCache.set(normalizedSourceUrl, cachedAbsolutePath)
       const relativePath = relativePathFrom({
         from: markdownFilePath,
         to: cachedAbsolutePath,
@@ -207,20 +266,13 @@ export class AssetStore {
       } satisfies AssetRecord
     }
 
-    const counterKey = `${postLogNo}:${kind}`
-    const nextIndex = (this.counters.get(counterKey) ?? 0) + 1
-    const extension = extensionFromUrl(normalizedSourceUrl)
-    const fileName = `${kind}-${String(nextIndex).padStart(2, "0")}${extension}`
-    const absolutePath = path.join(path.dirname(markdownFilePath), fileName)
+    const extension =
+      extensionFromContentType(binary.contentType) ?? extensionFromUrl(normalizedSourceUrl)
+    const absolutePath = path.join(this.outputDir, "public", `${contentHash}${extension}`)
 
-    this.counters.set(counterKey, nextIndex)
     await ensureDir(path.dirname(absolutePath))
 
-    if (this.options.assets.compressionEnabled && this.downloader.fetchBinary) {
-      const binary = await this.downloader.fetchBinary({
-        sourceUrl: normalizedSourceUrl,
-      })
-
+    if (this.options.assets.compressionEnabled) {
       if (isCompressionSafeMimeType(binary.contentType, normalizedSourceUrl)) {
         try {
           const compressedBytes = await this.compressImage({
@@ -237,12 +289,10 @@ export class AssetStore {
         await writeFile(absolutePath, binary.bytes)
       }
     } else {
-      await this.downloader.downloadBinary({
-        sourceUrl: normalizedSourceUrl,
-        destinationPath: absolutePath,
-      })
+      await writeFile(absolutePath, binary.bytes)
     }
-    this.cache.set(cacheKey, absolutePath)
+    this.cache.set(contentHash, absolutePath)
+    this.sourceUrlCache.set(normalizedSourceUrl, absolutePath)
 
     const relativePath = relativePathFrom({
       from: markdownFilePath,

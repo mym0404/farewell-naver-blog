@@ -27,6 +27,10 @@ const post: PostSummary = {
   thumbnailUrl: "https://example.com/thumb.png",
 }
 
+const publicImagePath = "../../public/hash-image.png"
+const publicThumbnailPath = "../../public/hash-thumbnail.png"
+const publicVideoThumbnailPath = "../../public/hash-video-thumbnail.png"
+
 const createAssetRecord = ({
   kind,
   sourceUrl,
@@ -159,7 +163,11 @@ describe("renderMarkdownPost", () => {
         createAssetRecord({
           kind,
           sourceUrl,
-          relativePath: `../../assets/223034929697/${kind}-${sourceUrl.includes("video") ? "02" : "01"}.png`,
+          relativePath: sourceUrl.includes("video")
+            ? publicVideoThumbnailPath
+            : sourceUrl.includes("thumb")
+              ? publicThumbnailPath
+              : publicImagePath,
         }),
     })
 
@@ -167,7 +175,7 @@ describe("renderMarkdownPost", () => {
     expect(rendered.markdown).toContain("## 섹션")
     expect(rendered.markdown).toContain("$$\nf(n)=n+1\n$$")
     expect(rendered.markdown).toContain("$g(n)=n-1$")
-    expect(rendered.markdown).toContain("![one](../../assets/223034929697/image-01.png)")
+    expect(rendered.markdown).toContain(`![one](${publicImagePath})`)
     expect(rendered.markdown).toContain("| col |")
     expect(rendered.markdown).toContain("[External article](https://example.com/article)")
     expect(rendered.markdown).toContain("[Demo](https://blog.naver.com/mym0404/223034929697)")
@@ -196,10 +204,10 @@ describe("renderMarkdownPost", () => {
         createAssetRecord({
           kind,
           sourceUrl,
-          relativePath: embedAsDataUrl ? null : `../../assets/223034929697/${kind}-01.png`,
+          relativePath: embedAsDataUrl ? null : publicImagePath,
           reference: embedAsDataUrl
             ? `data:image/png;base64,${Buffer.from(`${kind}:${sourceUrl}`).toString("base64")}`
-            : `../../assets/223034929697/${kind}-01.png`,
+            : publicImagePath,
           storageMode: embedAsDataUrl ? "base64" : "relative",
         }),
     })
@@ -225,7 +233,7 @@ describe("renderMarkdownPost", () => {
         createAssetRecord({
           kind,
           sourceUrl,
-          relativePath: `../../assets/223034929697/${kind}-01.png`,
+          relativePath: publicImagePath,
         }),
     })
 
@@ -264,7 +272,7 @@ describe("renderMarkdownPost", () => {
         createAssetRecord({
           kind,
           sourceUrl,
-          relativePath: `../../assets/223034929697/${kind}-01.png`,
+          relativePath: publicImagePath,
         }),
     })
 
@@ -294,7 +302,7 @@ describe("renderMarkdownPost", () => {
         createAssetRecord({
           kind,
           sourceUrl,
-          relativePath: `../../assets/223034929697/${kind}-01.png`,
+          relativePath: publicImagePath,
         }),
     })
 
@@ -348,7 +356,7 @@ describe("renderMarkdownPost", () => {
         createAssetRecord({
           kind,
           sourceUrl,
-          relativePath: `../../assets/223034929697/${kind}-01.png`,
+          relativePath: publicImagePath,
         }),
     })
 
@@ -356,7 +364,7 @@ describe("renderMarkdownPost", () => {
     expect(rendered.markdown).toContain("> 둘째 줄")
     expect(rendered.markdown).toContain("[source only][ref-1]")
     expect(rendered.markdown).toContain("[Reference Demo][ref-2]")
-    expect(rendered.markdown).toContain("[ref-1]: ../../assets/223034929697/image-01.png")
+    expect(rendered.markdown).toContain(`[ref-1]: ${publicImagePath}`)
     expect(rendered.markdown).toContain("[ref-2]: https://example.com/watch")
     expect(rendered.markdown).not.toContain("---\n")
   })
@@ -422,7 +430,7 @@ describe("renderMarkdownPost", () => {
         createAssetRecord({
           kind,
           sourceUrl,
-          relativePath: `../../assets/223034929697/${kind}-01.png`,
+          relativePath: publicImagePath,
         }),
     })
 
@@ -462,7 +470,7 @@ describe("renderMarkdownPost", () => {
         createAssetRecord({
           kind,
           sourceUrl,
-          relativePath: `../../assets/223034929697/${kind}-01.png`,
+          relativePath: publicImagePath,
         }),
     })
 
