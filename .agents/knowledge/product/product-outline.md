@@ -24,7 +24,7 @@
 
 ## Output Rules
 - 기본 출력은 `GFM + YAML frontmatter + output/public 로컬 이미지 자산`이다.
-- 본문 이미지는 옵션에 따라 로컬 파일 경로 또는 base64 data URL로 렌더링할 수 있다.
+- 본문 이미지는 옵션에 따라 로컬 파일 경로 또는 원본 URL로 렌더링할 수 있다.
 - 네이버 스티커는 기본적으로 무시하고, 필요할 때만 원본 자산 URL로 내려받는다.
 - 파일 구조 기본값은 category path 기반 폴더다.
 - 기본 글 폴더명은 `YYYY-MM-DD-slug`이고 Markdown 본문 파일은 그 안의 `index.md`다.

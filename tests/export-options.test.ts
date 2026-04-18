@@ -24,7 +24,6 @@ describe("export options", () => {
     expect(options.assets.stickerAssetMode).toBe("ignore")
     expect(options.assets.imageHandlingMode).toBe("download")
     expect(options.assets.compressionEnabled).toBe(false)
-    expect(options.assets.imageContentMode).toBe("path")
     expect(options.markdown.formulaInlineWrapperOpen).toBe("$")
     expect(options.markdown.formulaBlockWrapperOpen).toBe("$$")
     expect(options.structure.groupByCategory).toBe(true)
@@ -32,6 +31,7 @@ describe("export options", () => {
     expect(options.structure.includeLogNoInPostFolderName).toBe(false)
     expect(Object.hasOwn(options.structure, "postDirectoryName")).toBe(false)
     expect(Object.hasOwn(options.assets, "assetPathMode")).toBe(false)
+    expect(Object.hasOwn(options.assets, "imageContentMode")).toBe(false)
   })
 
   it("drops removed legacy markdown options while keeping supported fields", () => {
@@ -75,18 +75,20 @@ describe("export options", () => {
     expect(options.assets.downloadThumbnails).toBe(true)
   })
 
-  it("coerces base64 image content away from upload mode", () => {
-    const options = cloneExportOptions({
-      assets: {
-        imageHandlingMode: "download-and-upload",
-        imageContentMode: "base64",
-        downloadImages: false,
-      },
-    })
+  it("drops removed legacy image content mode while keeping upload mode", () => {
+    const legacyOptions = JSON.parse(`{
+      "assets": {
+        "imageHandlingMode": "download-and-upload",
+        "downloadImages": false,
+        "imageContentMode": "base64"
+      }
+    }`) as Parameters<typeof cloneExportOptions>[0]
 
-    expect(options.assets.imageHandlingMode).toBe("download")
-    expect(options.assets.imageContentMode).toBe("base64")
+    const options = cloneExportOptions(legacyOptions)
+
+    expect(options.assets.imageHandlingMode).toBe("download-and-upload")
     expect(options.assets.downloadImages).toBe(true)
+    expect(Object.hasOwn(options.assets, "imageContentMode")).toBe(false)
   })
 
   it("detects invalid alias format and collisions only for enabled fields", () => {
@@ -147,7 +149,7 @@ describe("export options", () => {
     expect(optionDescriptions["assets-imageHandlingMode"]).toContain("업로드")
     expect(optionDescriptions["assets-compressionEnabled"]).toContain("압축")
     expect(optionDescriptions["assets-stickerAssetMode"]).toContain("네이버 스티커")
-    expect(optionDescriptions["assets-imageContentMode"]).toContain("base64")
+    expect(optionDescriptions["assets-imageContentMode"]).toBeUndefined()
     expect(optionDescriptions["markdown-formulaBlockWrapperOpen"]).toContain("$$")
     expect(optionDescriptions["assets-assetPathMode"]).toBeUndefined()
   })

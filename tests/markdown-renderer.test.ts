@@ -42,7 +42,7 @@ const createAssetRecord = ({
   sourceUrl: string
   relativePath: string | null
   reference?: string
-  storageMode?: "relative" | "remote" | "base64"
+  storageMode?: "relative" | "remote"
 }) =>
   ({
     kind,
@@ -184,14 +184,13 @@ describe("renderMarkdownPost", () => {
     expect(rendered.assetRecords).toHaveLength(2)
   })
 
-  it("renders base64 image references and custom formula wrappers", async () => {
+  it("renders custom formula wrappers and image asset references", async () => {
     const options = defaultExportOptions()
 
     options.markdown.formulaInlineWrapperOpen = "\\("
     options.markdown.formulaInlineWrapperClose = "\\)"
     options.markdown.formulaBlockWrapperOpen = "\\["
     options.markdown.formulaBlockWrapperClose = "\\]"
-    options.assets.imageContentMode = "base64"
 
     const rendered = await renderMarkdownPost({
       post,
@@ -200,22 +199,18 @@ describe("renderMarkdownPost", () => {
       markdownFilePath: "/tmp/output/posts/Algorithm/test.md",
       reviewedWarnings: [],
       options,
-      resolveAsset: async ({ kind, sourceUrl, embedAsDataUrl }) =>
+      resolveAsset: async ({ kind, sourceUrl }) =>
         createAssetRecord({
           kind,
           sourceUrl,
-          relativePath: embedAsDataUrl ? null : publicImagePath,
-          reference: embedAsDataUrl
-            ? `data:image/png;base64,${Buffer.from(`${kind}:${sourceUrl}`).toString("base64")}`
-            : publicImagePath,
-          storageMode: embedAsDataUrl ? "base64" : "relative",
+          relativePath: publicImagePath,
         }),
     })
 
     expect(rendered.markdown).toContain("\\[\nf(n)=n+1\n\\]")
     expect(rendered.markdown).toContain("\\(g(n)=n-1\\)")
-    expect(rendered.markdown).toContain("data:image/png;base64,")
-    expect(rendered.assetRecords.some((asset) => asset.storageMode === "base64")).toBe(true)
+    expect(rendered.markdown).toContain(`![one](${publicImagePath})`)
+    expect(rendered.assetRecords.every((asset) => asset.storageMode === "relative")).toBe(true)
   })
 
   it("preserves hard breaks inside paragraph markdown", async () => {

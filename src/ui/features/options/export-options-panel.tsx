@@ -152,7 +152,6 @@ export const ExportOptionsPanel = ({
   onOptionsChange: (updater: (current: ExportOptions) => ExportOptions) => void
 }) => {
   const description = (key: string) => optionDescriptions[key]
-  const isBase64Embedding = options.assets.imageContentMode === "base64"
 
   const structureSection = (
     <>
@@ -685,7 +684,7 @@ export const ExportOptionsPanel = ({
         label="로컬 이미지 압축"
         description={description("assets-compressionEnabled")}
         checked={options.assets.compressionEnabled}
-        disabled={isBase64Embedding || options.assets.imageHandlingMode === "remote"}
+        disabled={options.assets.imageHandlingMode === "remote"}
         onChange={(checked) =>
           onOptionsChange((current) => ({
             ...current,
@@ -696,35 +695,6 @@ export const ExportOptionsPanel = ({
           }))
         }
       />
-
-      <OptionField
-        optionKey="assets-imageContentMode"
-        label="이미지 본문 참조 방식"
-        description={description("assets-imageContentMode")}
-      >
-        <select
-          id="assets-imageContentMode"
-          value={options.assets.imageContentMode}
-          onChange={(event) =>
-            onOptionsChange((current) => ({
-              ...current,
-              assets: {
-                ...current.assets,
-                imageContentMode: event.target.value as ExportOptions["assets"]["imageContentMode"],
-                imageHandlingMode:
-                  event.target.value === "base64" ? "download" : current.assets.imageHandlingMode,
-                compressionEnabled:
-                  event.target.value === "base64" ? false : current.assets.compressionEnabled,
-                downloadImages:
-                  event.target.value === "base64" ? true : current.assets.downloadImages,
-              },
-            }))
-          }
-        >
-          <option value="path">파일 경로 참조</option>
-          <option value="base64">base64 data URL 임베딩</option>
-        </select>
-      </OptionField>
 
       <OptionField
         optionKey="assets-stickerAssetMode"
@@ -755,7 +725,7 @@ export const ExportOptionsPanel = ({
         label="본문 이미지 다운로드"
         description={description("assets-downloadImages")}
         checked={options.assets.downloadImages}
-        disabled={isBase64Embedding || options.assets.imageHandlingMode !== "download"}
+        disabled={options.assets.imageHandlingMode !== "download"}
         onChange={(checked) =>
           onOptionsChange((current) => ({
             ...current,
@@ -773,7 +743,7 @@ export const ExportOptionsPanel = ({
         label="썸네일 다운로드"
         description={description("assets-downloadThumbnails")}
         checked={options.assets.downloadThumbnails}
-        disabled={isBase64Embedding || options.assets.imageHandlingMode !== "download"}
+        disabled={options.assets.imageHandlingMode !== "download"}
         onChange={(checked) =>
           onOptionsChange((current) => ({
             ...current,

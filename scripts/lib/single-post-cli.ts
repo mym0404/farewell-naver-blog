@@ -55,7 +55,6 @@ const allowedAssetsKeys = [
   "imageHandlingMode",
   "compressionEnabled",
   "assetPathMode",
-  "imageContentMode",
   "stickerAssetMode",
   "downloadImages",
   "downloadThumbnails",
@@ -77,7 +76,6 @@ const dividerStyles = ["dash", "asterisk"] as const
 const codeFenceStyles = ["backtick", "tilde"] as const
 const assetPathModes = ["relative", "remote"] as const
 const imageHandlingModes = ["download", "remote", "download-and-upload"] as const
-const imageContentModes = ["path", "base64"] as const
 const stickerAssetModes = ["ignore", "download-original"] as const
 const thumbnailSources = ["post-list-first", "first-body-image", "none"] as const
 
@@ -452,12 +450,6 @@ const validateAssetsOptions = (value: unknown, optionsPath: string) => {
     const assetPathMode = value.assetPathMode
     assertEnum(assetPathMode, assetPathModes, "assets.assetPathMode", optionsPath)
     assets.imageHandlingMode = assetPathMode === "remote" ? "remote" : "download"
-  }
-
-  if ("imageContentMode" in value) {
-    const imageContentMode = value.imageContentMode
-    assertEnum(imageContentMode, imageContentModes, "assets.imageContentMode", optionsPath)
-    assets.imageContentMode = imageContentMode
   }
 
   if ("stickerAssetMode" in value) {

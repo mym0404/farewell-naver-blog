@@ -139,7 +139,6 @@ export const optionDescriptions: OptionDescriptionMap = {
   "markdown-headingLevelOffset": "제목 레벨을 전체적으로 올리거나 내려서 다른 문서 구조에 맞춥니다.",
   "assets-imageHandlingMode": "이미지를 로컬로 유지할지, 원본 URL을 유지할지, 내보낸 뒤 업로드까지 이어갈지 정합니다.",
   "assets-compressionEnabled": "다운로드한 로컬 이미지 파일에 안전한 압축을 적용할지 정합니다.",
-  "assets-imageContentMode": "본문에 들어가는 이미지를 파일 경로로 참조할지 base64 data URL로 직접 임베딩할지 정합니다.",
   "assets-stickerAssetMode": "네이버 스티커를 기본적으로 무시할지, 원본 자산 URL로 내려받아 본문에 포함할지 정합니다.",
   "assets-downloadImages": "본문 이미지 파일을 실제로 다운로드할지 정합니다.",
   "assets-downloadThumbnails": "썸네일과 비디오 썸네일 파일을 실제로 다운로드할지 정합니다.",
@@ -268,7 +267,6 @@ export const defaultExportOptions = (): ExportOptions => ({
   assets: {
     imageHandlingMode: "download",
     compressionEnabled: false,
-    imageContentMode: "path",
     stickerAssetMode: "ignore",
     downloadImages: true,
     downloadThumbnails: true,
@@ -278,14 +276,6 @@ export const defaultExportOptions = (): ExportOptions => ({
 })
 
 const coerceAssetOptions = (options: ExportOptions["assets"]) => {
-  if (options.imageContentMode === "base64") {
-    return {
-      ...options,
-      imageHandlingMode: "download",
-      downloadImages: true,
-    } satisfies ExportOptions["assets"]
-  }
-
   if (options.imageHandlingMode === "download-and-upload") {
     return {
       ...options,
@@ -347,7 +337,6 @@ export const cloneExportOptions = (options?: PartialExportOptions) => {
         options?.assets?.imageHandlingMode ?? defaults.assets.imageHandlingMode,
       compressionEnabled:
         options?.assets?.compressionEnabled ?? defaults.assets.compressionEnabled,
-      imageContentMode: options?.assets?.imageContentMode ?? defaults.assets.imageContentMode,
       stickerAssetMode: options?.assets?.stickerAssetMode ?? defaults.assets.stickerAssetMode,
       downloadImages: options?.assets?.downloadImages ?? defaults.assets.downloadImages,
       downloadThumbnails:

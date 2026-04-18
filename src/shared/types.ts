@@ -51,8 +51,6 @@ export type ImageHandlingMode = "download" | "remote" | "download-and-upload"
 
 export type ThumbnailSource = "post-list-first" | "first-body-image" | "none"
 
-export type ImageContentMode = "path" | "base64"
-
 export type StickerAssetMode = "ignore" | "download-original"
 
 export type OptionDescriptionMap = Record<string, string>
@@ -127,7 +125,6 @@ export type ExportOptions = {
   assets: {
     imageHandlingMode: ImageHandlingMode
     compressionEnabled: boolean
-    imageContentMode: ImageContentMode
     stickerAssetMode: StickerAssetMode
     downloadImages: boolean
     downloadThumbnails: boolean
@@ -271,7 +268,7 @@ export type AssetRecord = {
   sourceUrl: string
   reference: string
   relativePath: string | null
-  storageMode: "relative" | "remote" | "base64"
+  storageMode: "relative" | "remote"
   uploadCandidate: UploadCandidate | null
 }
 

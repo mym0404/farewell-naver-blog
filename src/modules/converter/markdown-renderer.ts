@@ -328,10 +328,8 @@ export const renderMarkdownPost = async ({
   options: ExportOptions
   resolveAsset: (input: {
     kind: "image" | "thumbnail"
-    postLogNo: string
     sourceUrl: string
     markdownFilePath: string
-    embedAsDataUrl?: boolean
   }) => Promise<AssetRecord>
 }) => {
   const initialWarnings = unique([...parsedPost.warnings, ...reviewedWarnings])
@@ -356,19 +354,15 @@ export const renderMarkdownPost = async ({
   const resolveAssetPath = async ({
     kind,
     sourceUrl,
-    embedAsDataUrl,
   }: {
     kind: "image" | "thumbnail"
     sourceUrl: string
-    embedAsDataUrl?: boolean
   }) => {
     try {
       const assetRecord = await resolveAsset({
         kind,
-        postLogNo: post.logNo,
         sourceUrl,
         markdownFilePath,
-        embedAsDataUrl,
       })
 
       if (
@@ -438,7 +432,6 @@ export const renderMarkdownPost = async ({
     const assetPath = await resolveAssetPath({
       kind: "image",
       sourceUrl: renderableSourceUrl,
-      embedAsDataUrl: options.assets.imageContentMode === "base64",
     })
 
     maybeRecordBodyThumbnail(assetPath)

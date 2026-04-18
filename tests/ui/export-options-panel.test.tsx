@@ -156,8 +156,6 @@ describe("ExportOptionsPanel", () => {
 
     await user.selectOptions(query<HTMLSelectElement>("#assets-imageHandlingMode"), "download-and-upload")
     await user.click(query<HTMLInputElement>("#assets-compressionEnabled"))
-    await user.selectOptions(query<HTMLSelectElement>("#assets-imageContentMode"), "base64")
-    await user.selectOptions(query<HTMLSelectElement>("#assets-imageContentMode"), "path")
     await user.selectOptions(query<HTMLSelectElement>("#assets-imageHandlingMode"), "remote")
     await user.selectOptions(query<HTMLSelectElement>("#assets-stickerAssetMode"), "download-original")
     await user.click(query<HTMLInputElement>("#assets-includeImageCaptions"))
@@ -186,12 +184,12 @@ describe("ExportOptionsPanel", () => {
     expect(latestOptions.markdown.headingLevelOffset).toBe(2)
     expect(latestOptions.assets.imageHandlingMode).toBe("remote")
     expect(latestOptions.assets.compressionEnabled).toBe(false)
-    expect(latestOptions.assets.imageContentMode).toBe("path")
     expect(latestOptions.assets.stickerAssetMode).toBe("download-original")
     expect(latestOptions.assets.downloadImages).toBe(false)
     expect(latestOptions.assets.downloadThumbnails).toBe(false)
     expect(latestOptions.assets.includeImageCaptions).toBe(false)
     expect(latestOptions.assets.thumbnailSource).toBe("none")
+    expect(Object.hasOwn(latestOptions.assets, "imageContentMode")).toBe(false)
   })
 
   it("keeps the multi-column frontmatter grid in the frontmatter step", () => {
@@ -234,10 +232,10 @@ describe("ExportOptionsPanel", () => {
     expect(document.querySelector("#markdown-videoStyle")).toBeNull()
   })
 
-  it("keeps upload credentials out of the assets step and disables local-only controls in base64 mode", () => {
+  it("keeps upload credentials out of the assets step and disables local-only controls in remote mode", () => {
     const options = defaultExportOptions()
 
-    options.assets.imageContentMode = "base64"
+    options.assets.imageHandlingMode = "remote"
 
     render(
       <ExportOptionsPanel
@@ -256,7 +254,8 @@ describe("ExportOptionsPanel", () => {
     expect(query<HTMLInputElement>("#assets-compressionEnabled")).toBeDisabled()
     expect(query<HTMLInputElement>("#assets-downloadImages")).toBeDisabled()
     expect(query<HTMLInputElement>("#assets-downloadThumbnails")).toBeDisabled()
-    expect(query<HTMLSelectElement>("#assets-imageHandlingMode").value).toBe("download")
+    expect(document.querySelector("#assets-imageContentMode")).toBeNull()
+    expect(query<HTMLSelectElement>("#assets-imageHandlingMode").value).toBe("remote")
     expect(query<HTMLSelectElement>("#assets-stickerAssetMode")).not.toBeDisabled()
     expect(query<HTMLInputElement>("#assets-includeImageCaptions")).not.toBeDisabled()
     expect(query<HTMLSelectElement>("#assets-thumbnailSource")).not.toBeDisabled()
