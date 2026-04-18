@@ -22,12 +22,13 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 ## 검증 방법
 - `pnpm typecheck`: UI 컴포넌트 조합, shared 타입, hook 시그니처가 깨지지 않았는지 빠르게 확인할 때 실행한다.
 - `pnpm test:coverage`: UI 회귀가 테스트 커버리지 게이트를 해치지 않았는지 확인할 때 실행한다.
-- `pnpm smoke:ui`: 실제 브라우저에서 레이아웃, contrast, export/upload 흐름을 다시 확인할 때 실행한다.
+- `agent-browser`: UI 변경 요청에서 레이아웃, 간격, 상호작용, 실제 화면 회귀를 먼저 확인할 때 사용한다.
+- `pnpm smoke:ui`: 반복 회귀를 Playwright로 고정한 레이아웃, contrast, export/upload 흐름을 다시 확인할 때 실행한다.
 
 ## Style Direction
 - 메인 캔버스는 밝은 blue-neutral surface를 사용하고, 핵심 단계 카드 하나에 시선을 모은다.
-- 상단은 현재 단계, 요약, 이전/다음 액션만 남기는 최소 헤더를 사용한다.
-- Blog ID 입력과 카테고리 스캔 액션은 첫 단계 카드에 둔다.
+- 상단은 현재 단계와 요약만 남기는 최소 헤더를 사용하고, 단계 액션 버튼은 현재 콘텐츠 아래에 둔다.
+- 블로그 ID 입력과 카테고리 스캔 액션은 첫 단계 카드에 둔다.
 - 카테고리 패널은 카드 나열 대신 고정 높이 scroll area 안의 표로 유지한다.
 - 앱의 관리용 표는 compact row density를 기본으로 하고, 파일/상태 확인도 카드 리스트보다 표를 우선한다.
 - 각 시점에는 현재 단계 UI 한 개만 렌더링하고, 이전/다음 단계 UI를 동시에 노출하지 않는다.
@@ -54,6 +55,7 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 ## Component Rules
 - `CardHeader/CardDescription/CardContent`를 기본 계층으로 사용한다. 큰 feature도 임의 wrapper 대신 card composition으로 쪼갠다.
 - 헤더 카피는 짧게 유지하고, `Stage`, `Command Rail` 같은 장식성 라벨은 두지 않는다.
+- form 성격의 단계는 입력/선택 UI를 먼저 읽고 마지막에 CTA를 누르는 흐름을 우선한다.
 - 텍스트 입력은 `Input`, 상태 pill과 count는 `Badge`, 오류/가이드 배너는 `Alert`를 우선한다.
 - 사용자 피드백 토스트는 `sonner` 기반 `Toaster`/`toast()`로 통일한다.
 - 앱 표는 `src/ui/components/ui/table.tsx` 공용 컴포넌트를 사용하고, header/cell padding은 compact 기본값을 유지한다.
@@ -65,13 +67,13 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 - scan 후 summary와 category panel의 count는 현재 선택 범위 기준 대상 글 수를 즉시 반영해야 한다.
 - category 선택은 tree semantics를 따른다. 부모 선택은 하위 전체를 함께 토글하고, 일부 자식만 선택되면 부모는 partial state로 보여야 한다.
 - category table은 parent-before-children 순서를 유지하고 depth 기반 indent로 위계를 바로 읽을 수 있어야 한다.
-- 카테고리 단계는 트리 선택과 함께 `Category Match Mode`, `Date From`, `Date To` 입력을 같이 보여 준다.
+- 카테고리 단계는 트리 선택과 함께 `카테고리 포함 범위`, `시작일`, `종료일` 입력을 같이 보여 준다.
 - option panel은 `구조 -> Frontmatter -> Markdown -> Assets`를 각각 독립 단계로 렌더링한다.
 - `범위` 탭은 두지 않고, 카테고리 단계가 범위 설정을 함께 맡는다.
 - frontmatter 필드 목록은 데스크톱에서 2~3열 grid로 보여 주고, 각 필드 안에서 토글/설명/alias 입력을 함께 묶는다.
-- `Assets`는 `이미지 처리 방식`, `로컬 이미지 압축`, `Image Content Mode`, 다운로드 토글을 관리하고, 업로더 설정 폼은 여기 두지 않는다.
+- `Assets`는 `이미지 처리 방식`, `로컬 이미지 압축`, `이미지 본문 참조 방식`, 다운로드 토글을 관리하고, 업로더 설정 폼은 여기 두지 않는다.
 - `Assets`에서 `이미지 처리 방식`은 `download / remote / download-and-upload` 세 모드를 제공한다.
-- `Assets`에서 `Image Content Mode`가 `base64`면 `이미지 처리 방식`은 업로드 모드로 갈 수 없고, 압축 토글은 비활성화한다.
+- `Assets`에서 `이미지 본문 참조 방식`이 `base64`면 `이미지 처리 방식`은 업로드 모드로 갈 수 없고, 압축 토글은 비활성화한다.
 - `이미지 처리 방식`이 `remote`면 로컬 압축과 다운로드 토글은 모두 비활성화한다.
 - `이미지 처리 방식`이 `download-and-upload`면 결과 패널에서만 업로드 폼을 열고, 대상 자산 수와 상태를 함께 보여 준다.
 - status panel은 mode 기반으로 `실행 중 / 업로드 / 결과` 중 하나만 보여 준다.
@@ -82,6 +84,13 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 - 결과 파일 행은 버튼 기본 `nowrap`에 기대지 않는다. 긴 파일명과 제목은 셀 안에서 줄바꿈되어야 하고, 다른 열 위로 겹치면 안 된다.
 - 결과 파일 표는 내용이 적을 때 불필요한 빈 높이를 만들지 않고, 길어질 때만 최대 높이 안에서 스크롤되어야 한다.
 - 작업 로그는 각 항목을 `타임스탬프 meta + 메시지 본문` 2줄 구조로 렌더링하고, 긴 메시지와 경로는 horizontal scroll 없이 wrap되어야 한다. 새 로그가 들어오면 viewport는 항상 마지막 항목으로 내려가야 한다.
+
+## Copy Rules
+- UI 문구는 자연스러운 한국어를 기본으로 하고, 같은 화면 안에서 영어 라벨과 한국어 설명을 섞어 쓰지 않는다.
+- 입력 안내는 사용자가 바로 해야 할 행동을 짧게 적는다. `만 입력`, `보여 줍니다`처럼 불필요하게 제한하거나 기계적인 표현은 피한다.
+- 단계 설명은 `무엇을 확인하는지`, `무엇을 정하는지`, `무엇을 불러오는지`처럼 현재 화면의 목적을 바로 드러내야 한다.
+- 상태 문구와 토스트는 내부 구현 용어보다 사용자 행동 기준으로 쓴다. `job`, `export visibility` 같은 내부 표현은 그대로 노출하지 않는다.
+- 같은 개념은 같은 이름으로 유지한다. `블로그 ID 또는 URL`, `내보내기`, `카테고리`, `업로드`처럼 핵심 용어를 화면마다 바꾸지 않는다.
 
 ## Icon Rules
 - 프로젝트 아이콘은 Remix icon만 사용한다.
@@ -96,8 +105,11 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 - `text-muted-foreground`와 커스텀 설명 텍스트는 모두 같은 contrast policy를 따라야 한다.
 - 버튼, filter chip, 상태 badge는 높이와 baseline이 흔들리지 않게 유지한다.
 - focus ring은 primary halo를 사용하고, 상태는 색뿐 아니라 텍스트와 border로도 구분한다.
+- step마다 가장 중요한 액션 버튼 하나만 `Primary`를 사용하고, 이전/보조 액션은 `secondary` 또는 `outline`으로 낮춘다.
 
 ## Validation Rules
+- UI 변경 요청 검증은 먼저 `agent-browser`로 수행한다.
+- 수동 검증이 반복되거나 CI 회귀로 남길 가치가 생기면 Playwright harness 케이스로 올린다.
 - `scripts/harness/run-ui-smoke.ts`의 contrast gate selector는 회귀 방지 대상이다.
 - 현재 contrast gate 대상에는 step label, header description, summary metric, category status, panel description, field help, frontmatter description, results description, job result text, scan status note, export action text가 포함된다.
 - smoke screenshot capture는 `docs/generated/ui-review/round-01`부터 `round-05`까지 동일 시나리오로 누적한다.

@@ -118,7 +118,7 @@ const stepMeta: Record<
   },
   frontmatter: {
     title: "Frontmatter 설정",
-    description: "메타데이터와 alias를 조정합니다.",
+    description: "메타데이터 필드와 alias를 정리합니다.",
   },
   markdown: {
     title: "Markdown 설정",
@@ -164,11 +164,11 @@ export const ExportOptionsPanel = ({
         </label>
       </div>
 
-      <OptionSection title="Structure" note="Output folders and file naming">
+      <OptionSection title="구조" note="출력 폴더와 파일 이름 규칙">
         <CheckField
           inputId="structure-cleanOutputDir"
           optionKey="structure-cleanOutputDir"
-          label="Export 전에 output 디렉터리 재생성"
+          label="내보내기 전에 output 디렉터리 비우기"
           description={description("structure-cleanOutputDir")}
           checked={options.structure.cleanOutputDir}
           onChange={(checked) =>
@@ -233,7 +233,7 @@ export const ExportOptionsPanel = ({
           }
         />
 
-        <OptionField optionKey="structure-slugStyle" label="Slug Style" description={description("structure-slugStyle")}>
+        <OptionField optionKey="structure-slugStyle" label="slug 방식" description={description("structure-slugStyle")}>
           <select
             id="structure-slugStyle"
             value={options.structure.slugStyle}
@@ -256,7 +256,7 @@ export const ExportOptionsPanel = ({
   )
 
   const frontmatterSection = (
-    <OptionSection title="Frontmatter" note="Metadata envelope">
+    <OptionSection title="Frontmatter" note="메타데이터 블록">
       <div className="frontmatter-toolbar grid gap-3 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
         <CheckField
           inputId="frontmatter-enabled"
@@ -283,7 +283,7 @@ export const ExportOptionsPanel = ({
             <span className="frontmatter-state-label text-sm font-semibold text-slate-900">Alias 상태</span>
             <p className="frontmatter-description text-sm leading-6 text-slate-500">
               {frontmatterValidationErrors.length > 0
-                ? "중복 또는 비어 있는 alias를 먼저 정리해야 export를 진행할 수 있습니다."
+                ? "중복되거나 비어 있는 alias를 먼저 정리해야 내보내기를 진행할 수 있습니다."
                 : "현재 frontmatter alias 구성이 유효합니다."}
             </p>
           </div>
@@ -302,11 +302,11 @@ export const ExportOptionsPanel = ({
         data-state={frontmatterValidationErrors.length > 0 ? "error" : "default"}
         variant={frontmatterValidationErrors.length > 0 ? "destructive" : "default"}
       >
-        <AlertTitle>Frontmatter key alias</AlertTitle>
+        <AlertTitle>Frontmatter alias</AlertTitle>
         <AlertDescription>
           {frontmatterValidationErrors.length > 0
             ? frontmatterValidationErrors.join(" ")
-            : "각 필드의 설명과 export key alias를 여기서 조정합니다."}
+            : "각 필드의 설명과 내보낼 key alias를 여기서 조정합니다."}
         </AlertDescription>
       </Alert>
 
@@ -355,7 +355,7 @@ export const ExportOptionsPanel = ({
                 <p className="frontmatter-description text-sm leading-6 text-slate-500">{fieldMeta.description}</p>
               </div>
               <label className="field frontmatter-alias-field grid min-h-0 gap-2 rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-4">
-                <span className="text-sm font-semibold text-slate-900">Export Key Alias</span>
+                <span className="text-sm font-semibold text-slate-900">내보낼 key alias</span>
                 <Input
                   data-alias-input="true"
                   data-field-name={fieldName}
@@ -384,8 +384,8 @@ export const ExportOptionsPanel = ({
   )
 
   const markdownSection = (
-    <OptionSection title="Markdown Rules" note="Links, media, code and tables">
-      <OptionField optionKey="markdown-linkStyle" label="Link Style" description={description("markdown-linkStyle")}>
+    <OptionSection title="Markdown 규칙" note="링크, 미디어, 코드, 표">
+      <OptionField optionKey="markdown-linkStyle" label="링크 형식" description={description("markdown-linkStyle")}>
         <select
           id="markdown-linkStyle"
           value={options.markdown.linkStyle}
@@ -406,7 +406,7 @@ export const ExportOptionsPanel = ({
 
       <OptionField
         optionKey="markdown-formulaInlineWrapperOpen"
-        label="Inline Formula Open"
+        label="인라인 수식 시작 문자열"
         description={description("markdown-formulaInlineWrapperOpen")}
       >
         <Input
@@ -426,7 +426,7 @@ export const ExportOptionsPanel = ({
 
       <OptionField
         optionKey="markdown-formulaInlineWrapperClose"
-        label="Inline Formula Close"
+        label="인라인 수식 끝 문자열"
         description={description("markdown-formulaInlineWrapperClose")}
       >
         <Input
@@ -446,7 +446,7 @@ export const ExportOptionsPanel = ({
 
       <OptionField
         optionKey="markdown-formulaBlockStyle"
-        label="Block Formula Style"
+        label="블록 수식 형식"
         description={description("markdown-formulaBlockStyle")}
       >
         <select
@@ -469,7 +469,7 @@ export const ExportOptionsPanel = ({
 
       <OptionField
         optionKey="markdown-formulaBlockWrapperOpen"
-        label="Block Formula Open"
+        label="블록 수식 시작 문자열"
         description={description("markdown-formulaBlockWrapperOpen")}
       >
         <Input
@@ -489,7 +489,7 @@ export const ExportOptionsPanel = ({
 
       <OptionField
         optionKey="markdown-formulaBlockWrapperClose"
-        label="Block Formula Close"
+        label="블록 수식 끝 문자열"
         description={description("markdown-formulaBlockWrapperClose")}
       >
         <Input
@@ -507,7 +507,7 @@ export const ExportOptionsPanel = ({
         />
       </OptionField>
 
-      <OptionField optionKey="markdown-tableStyle" label="Table Style" description={description("markdown-tableStyle")}>
+      <OptionField optionKey="markdown-tableStyle" label="표 형식" description={description("markdown-tableStyle")}>
         <select
           id="markdown-tableStyle"
           value={options.markdown.tableStyle}
@@ -525,7 +525,7 @@ export const ExportOptionsPanel = ({
         </select>
       </OptionField>
 
-      <OptionField optionKey="markdown-imageStyle" label="Image Style" description={description("markdown-imageStyle")}>
+      <OptionField optionKey="markdown-imageStyle" label="이미지 형식" description={description("markdown-imageStyle")}>
         <select
           id="markdown-imageStyle"
           value={options.markdown.imageStyle}
@@ -547,7 +547,7 @@ export const ExportOptionsPanel = ({
 
       <OptionField
         optionKey="markdown-imageGroupStyle"
-        label="Image Group Style"
+        label="이미지 묶음 형식"
         description={description("markdown-imageGroupStyle")}
       >
         <select
@@ -569,7 +569,7 @@ export const ExportOptionsPanel = ({
 
       <OptionField
         optionKey="markdown-dividerStyle"
-        label="Divider Style"
+        label="구분선 형식"
         description={description("markdown-dividerStyle")}
       >
         <select
@@ -592,7 +592,7 @@ export const ExportOptionsPanel = ({
 
       <OptionField
         optionKey="markdown-codeFenceStyle"
-        label="Code Fence Style"
+        label="코드 fence 형식"
         description={description("markdown-codeFenceStyle")}
       >
         <select
@@ -615,7 +615,7 @@ export const ExportOptionsPanel = ({
 
       <OptionField
         optionKey="markdown-headingLevelOffset"
-        label="Heading Level Offset"
+        label="제목 레벨 오프셋"
         description={description("markdown-headingLevelOffset")}
       >
         <Input
@@ -639,7 +639,7 @@ export const ExportOptionsPanel = ({
   )
 
   const assetsSection = (
-    <OptionSection title="Assets" note="Download and reference strategy">
+    <OptionSection title="Assets" note="다운로드와 참조 방식">
       <OptionField
         optionKey="assets-imageHandlingMode"
         label="이미지 처리 방식"
@@ -699,7 +699,7 @@ export const ExportOptionsPanel = ({
 
       <OptionField
         optionKey="assets-imageContentMode"
-        label="Image Content Mode"
+        label="이미지 본문 참조 방식"
         description={description("assets-imageContentMode")}
       >
         <select
@@ -728,7 +728,7 @@ export const ExportOptionsPanel = ({
 
       <OptionField
         optionKey="assets-stickerAssetMode"
-        label="Sticker Asset Mode"
+        label="스티커 자산 처리"
         description={description("assets-stickerAssetMode")}
       >
         <select
@@ -804,7 +804,7 @@ export const ExportOptionsPanel = ({
 
       <OptionField
         optionKey="assets-thumbnailSource"
-        label="Thumbnail Source"
+        label="썸네일 기준"
         description={description("assets-thumbnailSource")}
       >
         <select
@@ -822,7 +822,7 @@ export const ExportOptionsPanel = ({
         >
           <option value="post-list-first">post-list 썸네일 우선</option>
           <option value="first-body-image">본문 첫 미디어 우선</option>
-          <option value="none">thumbnail 제외</option>
+          <option value="none">썸네일 제외</option>
         </select>
       </OptionField>
     </OptionSection>

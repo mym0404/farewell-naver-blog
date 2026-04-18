@@ -73,7 +73,7 @@ const stepMeta: Record<
 > = {
   "blog-input": {
     title: "블로그 입력",
-    description: "블로그 ID 또는 URL만 입력하고 다음 단계로 이동합니다.",
+    description: "블로그 ID나 URL을 입력하고 카테고리를 불러옵니다.",
   },
   "category-selection": {
     title: "카테고리 선택",
@@ -97,15 +97,15 @@ const stepMeta: Record<
   },
   running: {
     title: "실행 중",
-    description: "현재 작업의 진행률과 로그만 보여 줍니다.",
+    description: "현재 작업의 진행률과 로그를 확인합니다.",
   },
   upload: {
     title: "이미지 업로드",
-    description: "업로드 대상과 재시도 입력만 보여 줍니다.",
+    description: "업로드할 이미지와 진행 상태를 확인합니다.",
   },
   result: {
     title: "결과",
-    description: "최종 요약과 결과 파일만 보여 줍니다.",
+    description: "최종 요약과 생성된 파일을 확인합니다.",
   },
 }
 
@@ -325,7 +325,7 @@ export const App = () => {
 
   const ensureScanResult = async () => {
     if (!currentScanTarget) {
-      setScanStatus("blog ID 또는 URL을 입력해야 합니다.")
+      setScanStatus("블로그 ID 또는 URL을 입력하세요.")
       return false
     }
 
@@ -388,10 +388,10 @@ export const App = () => {
 
     setScanStatus(
       value.trim()
-        ? "블로그가 변경되었습니다. 다음 단계로 가면 다시 스캔합니다."
+        ? "블로그가 바뀌었습니다. 다음 단계에서 다시 스캔합니다."
         : "블로그를 아직 스캔하지 않았습니다.",
     )
-    setCategoryStatus("스캔 후 카테고리를 선택할 수 있습니다.")
+    setCategoryStatus("스캔이 끝나면 카테고리를 선택할 수 있습니다.")
     setCategorySearch("")
     setOptions((current) => ({
       ...current,
@@ -475,7 +475,7 @@ export const App = () => {
         scanResult: activeScanResult,
       })
       toast.success("내보내기 작업을 등록했습니다.", {
-        description: `${scopedPostCount}개 글을 처리합니다. job ${jobId}`,
+        description: `${scopedPostCount}개 글을 처리합니다. 작업 ID ${jobId}`,
       })
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
@@ -640,17 +640,17 @@ export const App = () => {
           <CardHeader className="gap-4 border-b border-slate-200/70 bg-white/70 p-6">
             <div className="space-y-2">
               <CardTitle className="text-2xl font-semibold tracking-[-0.04em] text-slate-900">
-                Blog ID 또는 URL
+                블로그 ID 또는 URL
               </CardTitle>
               <CardDescription className="panel-description max-w-3xl text-sm leading-7 text-slate-600">
-                네이버 블로그 주소를 입력하면 다음 단계에서 카테고리를 불러옵니다.
+                네이버 블로그 ID나 주소를 입력하면 카테고리를 불러옵니다.
               </CardDescription>
             </div>
           </CardHeader>
           <CardContent className="grid gap-4 p-6">
             <label className="grid gap-2">
               <span className="text-sm font-semibold text-slate-900">
-                Blog ID 또는 URL
+                블로그 ID 또는 URL
               </span>
               <Input
                 id="blogIdOrUrl"
@@ -739,19 +739,19 @@ export const App = () => {
         aria-hidden="true"
       />
 
-      <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-6 px-4 py-6 xl:px-6 xl:py-8">
+      <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-5 px-4 py-5 xl:px-6 xl:py-6">
         <Card className="overflow-hidden border-white/80 bg-white/92 shadow-[0_24px_60px_rgba(22,33,50,0.08)] backdrop-blur">
-          <CardContent className="grid gap-5 p-6">
-            <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
-              <div className="wizard-heading grid gap-2">
+          <CardContent className="grid gap-4 p-5">
+            <div className="grid gap-2.5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+              <div className="wizard-heading grid gap-1.5">
                 <span className="wizard-step-label text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                  {isSetupStep ? `Step ${setupStepIndex + 1} / ${setupSteps.length}` : "Current Stage"}
+                  {isSetupStep ? `단계 ${setupStepIndex + 1} / ${setupSteps.length}` : "현재 단계"}
                 </span>
-                <div className="grid gap-2">
-                  <h1 className="text-[clamp(2rem,3vw,3rem)] font-semibold leading-[1.02] tracking-[-0.06em] text-slate-900">
+                <div className="grid gap-1.5">
+                  <h1 className="text-[clamp(1.7rem,2.5vw,2.4rem)] font-semibold leading-[1.04] tracking-[-0.05em] text-slate-900">
                     {stepMeta[currentStep].title}
                   </h1>
-                  <p className="panel-description max-w-3xl text-sm leading-7 text-slate-600">
+                  <p className="panel-description max-w-3xl text-sm leading-6 text-slate-600">
                     {stepMeta[currentStep].description}
                   </p>
                 </div>
@@ -770,7 +770,7 @@ export const App = () => {
 
             <div
               id="summary"
-              className="wizard-summary-stats flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-slate-200/70 pt-3"
+              className="wizard-summary-stats flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-slate-200/70 pt-2.5"
               aria-live="polite"
             >
               {summaryCards.map((card) => (
@@ -781,66 +781,65 @@ export const App = () => {
                   <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-slate-400">
                     {card.label}
                   </span>
-                  <strong className="min-w-0 break-all text-sm font-semibold tracking-[-0.02em] text-slate-700">
+                  <strong className="min-w-0 break-all text-[0.8125rem] font-semibold tracking-[-0.02em] text-slate-700">
                     {card.value}
                   </strong>
                 </div>
               ))}
             </div>
 
-            {isSetupStep ? (
-              <div className="flex flex-wrap items-center gap-3">
-                {setupStepIndex > 0 ? (
-                  <Button
-                    type="button"
-                    className="rounded-xl px-5"
-                    onClick={goToPreviousStep}
-                  >
-                    이전
-                  </Button>
-                ) : null}
-
-                <Button
-                  type="button"
-                  id={setupStep === "blog-input" ? "scan-button" : setupStep === "assets-options" ? "export-button" : undefined}
-                  className="rounded-xl px-5"
-                  disabled={
-                    setupStep === "blog-input"
-                      ? scanPending
-                      : setupStep === "assets-options"
-                        ? exportDisabled || submitting
-                        : false
-                  }
-                  onClick={() => {
-                    void goToNextStep()
-                  }}
-                >
-                  <i
-                    className={cn(
-                      setupStep === "blog-input"
-                        ? scanPending
-                          ? "ri-loader-4-line motion-safe:animate-spin"
-                          : "ri-radar-line"
-                        : setupStep === "assets-options"
-                          ? submitting
-                            ? "ri-loader-4-line motion-safe:animate-spin"
-                            : "ri-download-2-line"
-                          : "ri-arrow-right-line",
-                    )}
-                    aria-hidden="true"
-                  />
-                  <span>{nextButtonLabel}</span>
-                </Button>
-              </div>
-            ) : null}
           </CardContent>
         </Card>
 
-        <section
-          className="grid gap-5"
-          data-step-view={currentStep}
-        >
+        <section className="grid gap-4" data-step-view={currentStep}>
           {renderCurrentStep()}
+
+          {isSetupStep ? (
+            <div className="flex flex-wrap items-center justify-end gap-2.5">
+              {setupStepIndex > 0 ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="h-9 rounded-xl px-4"
+                  onClick={goToPreviousStep}
+                >
+                  이전
+                </Button>
+              ) : null}
+
+              <Button
+                type="button"
+                id={setupStep === "blog-input" ? "scan-button" : setupStep === "assets-options" ? "export-button" : undefined}
+                className="h-9 rounded-xl px-4"
+                disabled={
+                  setupStep === "blog-input"
+                    ? scanPending
+                    : setupStep === "assets-options"
+                      ? exportDisabled || submitting
+                      : false
+                }
+                onClick={() => {
+                  void goToNextStep()
+                }}
+              >
+                <i
+                  className={cn(
+                    setupStep === "blog-input"
+                      ? scanPending
+                        ? "ri-loader-4-line motion-safe:animate-spin"
+                        : "ri-radar-line"
+                      : setupStep === "assets-options"
+                        ? submitting
+                          ? "ri-loader-4-line motion-safe:animate-spin"
+                          : "ri-download-2-line"
+                        : "ri-arrow-right-line",
+                  )}
+                  aria-hidden="true"
+                />
+                <span>{nextButtonLabel}</span>
+              </Button>
+            </div>
+          ) : null}
         </section>
       </div>
     </main>

@@ -211,11 +211,11 @@ const jobStatusClass = (status: string | undefined) =>
 const panelCopy: Record<JobResultsMode, { title: string; description: string }> = {
   running: {
     title: "실행 중",
-    description: "진행 상황과 작업 로그를 확인합니다.",
+    description: "진행률과 작업 로그를 확인합니다.",
   },
   upload: {
     title: "이미지 업로드",
-    description: "업로드 대상과 재시도 상태를 확인합니다.",
+    description: "업로드할 이미지와 재시도 상태를 확인합니다.",
   },
   result: {
     title: "결과",
@@ -468,7 +468,7 @@ export const JobResultsPanel = ({
 
             {job?.upload.status === "skipped" ? (
               <p className="text-sm leading-7 text-slate-600">
-                업로드할 로컬 이미지가 없어 export만 완료되었습니다.
+                업로드할 로컬 이미지가 없어 내보내기만 완료되었습니다.
               </p>
             ) : null}
 
@@ -509,7 +509,7 @@ export const JobResultsPanel = ({
 
             {job?.upload.status === "skipped" ? (
               <p className="text-sm leading-7 text-slate-600">
-                업로드할 로컬 이미지가 없어 export만 완료되었습니다.
+                업로드할 로컬 이미지가 없어 내보내기만 완료되었습니다.
               </p>
             ) : null}
           </section>

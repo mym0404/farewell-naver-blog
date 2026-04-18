@@ -7,6 +7,7 @@
 - evergreen 프로젝트 지식은 `docs/`가 아니라 `.agents/knowledge/`를 먼저 읽는다.
 - 코드, 설정, 스크립트, 테스트 동작이 바뀌면 관련 `.agents/knowledge/` 문서도 같이 갱신한다.
 - parser, renderer, exporter, UI/API를 바꾸면 문서와 harness를 함께 확인한다.
+- UI 변경 요청 검증은 기본적으로 `agent-browser`를 먼저 쓰고, 반복 회귀를 고정해야 하면 Playwright harness로 올린다.
 - generated 문서는 수동 편집하지 않고 스크립트로 갱신한다.
 - repo 밖의 추측보다 저장소 안의 코드, 설정, 테스트를 우선한다.
 - commit, push, PR 생성은 사용자가 명시적으로 요청한 경우에만 수행한다.
@@ -18,7 +19,7 @@
 - `pnpm quality:report`: parser coverage나 sample 품질 지표가 달라질 수 있는 변경 후 generated 품질 문서를 다시 만들 때 실행한다.
 - `pnpm parser:check`: parser block 지원 범위나 capability 선언을 건드린 뒤 계약이 sample corpus와 여전히 맞는지 확인할 때 실행한다.
 - `pnpm samples:verify`: renderer나 exporter 결과가 실제 sample export 산출물에 영향을 주는 변경 뒤 실행한다.
-- `pnpm smoke:ui`: 대시보드 상호작용, export job 화면, 브라우저 흐름이 바뀐 뒤 실제 UI 스모크를 다시 확인할 때 실행한다.
+- `pnpm smoke:ui`: Playwright로 고정한 UI 회귀를 다시 확인하거나, 대시보드 상호작용과 export job 화면이 바뀐 뒤 브라우저 흐름을 재검증할 때 실행한다.
 
 ## Knowledge Home
 - evergreen 프로젝트 지식은 [.agents/knowledge/index.md](.agents/knowledge/index.md)에서 시작한다.
@@ -27,4 +28,3 @@
 - 도메인, 사용자 흐름, sample corpus, UI 규약은 [.agents/knowledge/product/index.md](.agents/knowledge/product/index.md)로 간다.
 - parser capability와 sample corpus의 코드 기준점은 `src/shared/parser-capabilities.ts`, `src/shared/sample-corpus.ts`다.
 - `docs/`는 runbook, 활성 계획, generated 산출물, 사용자용 참고 자료만 둔다.
-

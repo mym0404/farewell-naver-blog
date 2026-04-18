@@ -90,7 +90,7 @@ export const CategoryPanel = ({
       <CardContent className="panel-body grid gap-5 p-6">
         <div className="grid gap-4 xl:grid-cols-3">
           <label className="field grid min-h-0 gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(22,33,50,0.04)]">
-            <span className="text-sm font-semibold text-slate-900">Category Match Mode</span>
+            <span className="text-sm font-semibold text-slate-900">카테고리 포함 범위</span>
             <select
               id="scope-categoryMode"
               value={categoryMode}
@@ -105,7 +105,7 @@ export const CategoryPanel = ({
           </label>
 
           <label className="field grid min-h-0 gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(22,33,50,0.04)]">
-            <span className="text-sm font-semibold text-slate-900">Date From</span>
+            <span className="text-sm font-semibold text-slate-900">시작일</span>
             <Input
               id="scope-dateFrom"
               type="date"
@@ -116,7 +116,7 @@ export const CategoryPanel = ({
           </label>
 
           <label className="field grid min-h-0 gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(22,33,50,0.04)]">
-            <span className="text-sm font-semibold text-slate-900">Date To</span>
+            <span className="text-sm font-semibold text-slate-900">종료일</span>
             <Input
               id="scope-dateTo"
               type="date"
@@ -132,7 +132,7 @@ export const CategoryPanel = ({
             <span className="toolbar-label text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">검색</span>
             <Input
               id="category-search"
-              placeholder="카테고리 검색"
+              placeholder="카테고리 이름 또는 경로 검색"
               disabled={!scanResult}
               value={categorySearch}
               onChange={(event) => onCategorySearchChange(event.target.value)}
@@ -168,7 +168,7 @@ export const CategoryPanel = ({
         <div className="selection-summary flex flex-col gap-3 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
           <div className="grid gap-1">
             <span id="selected-category-count">
-              선택된 카테고리 {selectedCount}개 / {categories.length}개
+              선택한 카테고리 {selectedCount}개 / {categories.length}개
             </span>
             <span id="selected-post-count">
               대상 글 {selectedPostCount}개 / 전체 {totalPostCount}개
@@ -187,7 +187,7 @@ export const CategoryPanel = ({
             id="category-list"
             className="category-list empty grid min-h-24 place-items-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/80 px-4 py-6 text-center text-sm text-slate-500"
           >
-            카테고리를 불러오면 여기에 표시됩니다.
+            스캔을 진행하면 카테고리가 여기에 표시됩니다.
           </div>
         ) : filteredCategories.length === 0 ? (
           <div

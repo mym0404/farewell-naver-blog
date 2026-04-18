@@ -285,7 +285,7 @@ describe("App", () => {
   }
 
   const moveToAssetsStep = async (user: ReturnType<typeof userEvent.setup>) => {
-    await user.type(screen.getByLabelText("Blog ID 또는 URL"), "mym0404")
+    await user.type(screen.getByLabelText("블로그 ID 또는 URL"), "mym0404")
     await user.click(screen.getByRole("button", { name: "카테고리 불러오기" }))
     await waitFor(() => {
       expect(document.querySelector('[data-step-view="category-selection"]')).not.toBeNull()
@@ -337,7 +337,7 @@ describe("App", () => {
 
     const user = renderApp()
 
-    await user.type(screen.getByLabelText("Blog ID 또는 URL"), "mym0404")
+    await user.type(screen.getByLabelText("블로그 ID 또는 URL"), "mym0404")
     await user.click(screen.getByRole("button", { name: "카테고리 불러오기" }))
     await waitFor(() => {
       expect(document.querySelector('[data-step-view="category-selection"]')).not.toBeNull()
@@ -437,7 +437,7 @@ describe("App", () => {
     await waitFor(() => {
       expect(document.querySelector("#status-text")?.textContent).toContain("running")
       expect(document.querySelector('[data-step-view="running"]')).not.toBeNull()
-      expect(screen.queryByLabelText("Blog ID 또는 URL")).not.toBeInTheDocument()
+      expect(screen.queryByLabelText("블로그 ID 또는 URL")).not.toBeInTheDocument()
       expect(screen.queryByRole("button", { name: "카테고리 불러오기" })).not.toBeInTheDocument()
       expect(document.querySelector("#export-button")).toBeNull()
       expect(document.querySelector("#category-panel")).toBeNull()
@@ -697,7 +697,7 @@ describe("App", () => {
 
     await waitFor(() => {
       expect(document.querySelector('[data-step-view="result"]')).not.toBeNull()
-      expect(screen.getByText("업로드할 로컬 이미지가 없어 export만 완료되었습니다.")).toBeInTheDocument()
+      expect(screen.getByText("업로드할 로컬 이미지가 없어 내보내기만 완료되었습니다.")).toBeInTheDocument()
     })
     expect(screen.queryByLabelText("Provider")).not.toBeInTheDocument()
     expect(screen.queryByLabelText("Repository")).not.toBeInTheDocument()

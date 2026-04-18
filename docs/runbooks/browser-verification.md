@@ -9,6 +9,10 @@
 ## Source Of Truth
 기본 자동 검증은 `scripts/harness/run-ui-smoke.ts` 이고, 이 문서는 수동 재현 절차를 보완한다.
 
+## Browser Tool
+- UI 변경 요청의 수동 브라우저 검증은 `agent-browser`를 기본 도구로 사용한다.
+- 같은 시나리오를 반복 회귀나 CI로 고정해야 하면 Playwright harness에 추가하고, 이 문서는 보조 수동 절차로만 유지한다.
+
 ## 관련 코드
 - [../../index.html](../../index.html)
 - [../../src/ui/App.tsx](../../src/ui/App.tsx)
@@ -20,6 +24,7 @@
 - [../../scripts/harness/run-ui-smoke.ts](../../scripts/harness/run-ui-smoke.ts)
 
 ## 검증 방법
+- `agent-browser`
 - `pnpm smoke:ui`
 - `pnpm smoke:ui -- --capture-dir docs/generated/ui-review/round-01`
 

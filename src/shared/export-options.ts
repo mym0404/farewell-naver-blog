@@ -78,7 +78,7 @@ export const frontmatterFieldMeta: Record<FrontmatterFieldName, FrontmatterField
   },
   visibility: {
     label: "visibility",
-    description: "현재 export visibility를 기록합니다.",
+    description: "현재 공개 범위를 기록합니다.",
     defaultAlias: "visibility",
   },
   tags: {
@@ -103,7 +103,7 @@ export const frontmatterFieldMeta: Record<FrontmatterFieldName, FrontmatterField
   },
   exportedAt: {
     label: "exportedAt",
-    description: "export 시각을 ISO 문자열로 기록합니다.",
+    description: "내보낸 시각을 ISO 문자열로 기록합니다.",
     defaultAlias: "exportedAt",
   },
   assetPaths: {
@@ -119,7 +119,7 @@ export const optionDescriptions: OptionDescriptionMap = {
   "scope-categoryMode": "선택한 카테고리만 내보낼지, 하위 카테고리까지 함께 포함할지 정합니다.",
   "scope-dateFrom": "이 날짜 이후에 발행한 글만 범위에 포함합니다.",
   "scope-dateTo": "이 날짜 이전에 발행한 글까지만 범위에 포함합니다.",
-  "structure-cleanOutputDir": "export 전에 출력 폴더를 비우고 이번 결과만 다시 생성합니다.",
+  "structure-cleanOutputDir": "내보내기 전에 출력 폴더를 비우고 이번 결과만 다시 생성합니다.",
   "structure-groupByCategory": "카테고리 경로를 출력 폴더 구조에 유지할지 정합니다.",
   "structure-includeDateInPostFolderName": "글 폴더 이름 앞부분에 발행 날짜를 붙입니다.",
   "structure-includeLogNoInPostFolderName": "글 폴더 이름에 네이버 logNo를 함께 넣습니다.",
@@ -137,7 +137,7 @@ export const optionDescriptions: OptionDescriptionMap = {
   "markdown-dividerStyle": "구분선을 `---` 또는 `***` 중 어떤 문자로 출력할지 정합니다.",
   "markdown-codeFenceStyle": "코드 블록 fence 문자를 backtick 또는 tilde로 정합니다.",
   "markdown-headingLevelOffset": "제목 레벨을 전체적으로 올리거나 내려서 다른 문서 구조에 맞춥니다.",
-  "assets-imageHandlingMode": "이미지를 로컬로 유지할지, 원본 URL을 유지할지, export 뒤 업로드까지 이어갈지 정합니다.",
+  "assets-imageHandlingMode": "이미지를 로컬로 유지할지, 원본 URL을 유지할지, 내보낸 뒤 업로드까지 이어갈지 정합니다.",
   "assets-compressionEnabled": "다운로드한 로컬 이미지 파일에 안전한 압축을 적용할지 정합니다.",
   "assets-imageContentMode": "본문에 들어가는 이미지를 파일 경로로 참조할지 base64 data URL로 직접 임베딩할지 정합니다.",
   "assets-stickerAssetMode": "네이버 스티커를 기본적으로 무시할지, 원본 자산 URL로 내려받아 본문에 포함할지 정합니다.",
