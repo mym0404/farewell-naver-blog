@@ -555,7 +555,7 @@ export const JobResultsPanel = ({
             ) : (
               <ScrollArea
                 id="job-file-tree"
-                className="job-file-tree job-file-tree-scroll h-[min(32rem,62vh)] overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white"
+                className="job-file-tree job-file-tree-scroll max-h-[min(32rem,62vh)] overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white"
               >
                 <Table className="w-full table-fixed">
                   <TableHeader className="sticky top-0 z-10">

@@ -14,7 +14,26 @@ const uploadRepo = "mym0404/image-archive"
 const uploadPath = "/"
 const responseTimeoutMs = 240_000
 const githubApiBaseUrl = "https://api.github.com"
-const headed = process.argv.includes("--headed")
+const resolveBrowserMode = () => {
+  if (process.argv.includes("--headed")) {
+    return {
+      headless: false,
+      slowMo: 200,
+    }
+  }
+
+  if (process.argv.includes("--headless")) {
+    return {
+      headless: true,
+      slowMo: 0,
+    }
+  }
+
+  return {
+    headless: Boolean(process.env.CI),
+    slowMo: process.env.CI ? 0 : 200,
+  }
+}
 
 type LiveUploadConfig = {
   token: string
@@ -302,10 +321,8 @@ const assertImageVisible = async ({
 const run = async () => {
   const config = resolveLiveUploadConfig()
   const server = createHttpServer()
-  const browser = await chromium.launch({
-    headless: !headed,
-    slowMo: headed ? 200 : 0,
-  })
+  const browserMode = resolveBrowserMode()
+  const browser = await chromium.launch(browserMode)
   const context = await browser.newContext({
     viewport: {
       width: 1440,

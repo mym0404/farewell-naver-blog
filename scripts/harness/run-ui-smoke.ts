@@ -14,6 +14,26 @@ import {
 } from "../../src/shared/export-options.js"
 
 const responseTimeoutMs = 90_000
+const resolveBrowserMode = () => {
+  if (process.argv.includes("--headed")) {
+    return {
+      headless: false,
+      slowMo: 200,
+    }
+  }
+
+  if (process.argv.includes("--headless")) {
+    return {
+      headless: true,
+      slowMo: 0,
+    }
+  }
+
+  return {
+    headless: Boolean(process.env.CI),
+    slowMo: process.env.CI ? 0 : 200,
+  }
+}
 const desktopViewport = {
   width: 1440,
   height: 1200,
@@ -733,7 +753,8 @@ const run = async () => {
   }
 
   const baseUrl = `http://127.0.0.1:${address.port}`
-  const browser = await chromium.launch()
+  const browserMode = resolveBrowserMode()
+  const browser = await chromium.launch(browserMode)
   const context = await browser.newContext({
     viewport: desktopViewport,
   })

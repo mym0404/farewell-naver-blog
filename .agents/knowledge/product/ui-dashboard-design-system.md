@@ -80,6 +80,7 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 - 업로드가 진행되면 같은 표에서 `대기 / 업로드 중 / 완료 / 실패` 상태가 바뀌고, zero-candidate 완료는 폼 대신 설명 문구만 남긴다.
 - 결과 파일 표는 `index.md` 같은 저장용 파일명만 전면에 노출하지 않는다. per-post export일 때는 마지막 글 폴더명을 대표 이름으로 보여 주고, 전체 `outputPath`는 경로 열에서 줄바꿈 가능해야 한다.
 - 결과 파일 행은 버튼 기본 `nowrap`에 기대지 않는다. 긴 파일명과 제목은 셀 안에서 줄바꿈되어야 하고, 다른 열 위로 겹치면 안 된다.
+- 결과 파일 표는 내용이 적을 때 불필요한 빈 높이를 만들지 않고, 길어질 때만 최대 높이 안에서 스크롤되어야 한다.
 - 작업 로그는 각 항목을 `타임스탬프 meta + 메시지 본문` 2줄 구조로 렌더링하고, 긴 메시지와 경로는 horizontal scroll 없이 wrap되어야 한다. 새 로그가 들어오면 viewport는 항상 마지막 항목으로 내려가야 한다.
 
 ## Icon Rules
