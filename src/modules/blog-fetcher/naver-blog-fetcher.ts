@@ -44,6 +44,21 @@ const pageSize = 30;
 const postListConcurrency = 3;
 const defaultRetryDelays = [0, 1_000, 2_000, 4_000];
 const defaultRequestTimeoutMs = 5_000;
+const htmlHeaders = ({
+  blogId,
+}: {
+  blogId: string;
+}) => ({
+  accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  referer: `https://m.blog.naver.com/PostList.naver?blogId=${blogId}&categoryNo=0&listStyle=style1`,
+  'user-agent':
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36',
+});
+const binaryHeaders = {
+  referer: 'https://blog.naver.com/',
+  'user-agent':
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36',
+};
 
 const browserHeaders = ({
   blogId,
@@ -229,24 +244,13 @@ export class NaverBlogFetcher {
   }
 
   async fetchPostHtml(logNo: string) {
-    const response = await fetch(
-      `https://m.blog.naver.com/PostView.naver?blogId=${this.blogId}&logNo=${logNo}`,
-      {
-        headers: {
-          accept:
-            'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          referer: `https://m.blog.naver.com/PostList.naver?blogId=${this.blogId}&categoryNo=0&listStyle=style1`,
-          'user-agent':
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36',
-        },
-      },
-    );
-
-    if (!response.ok) {
-      throw new Error(
-        `글 HTML 요청 실패: ${response.status} ${response.statusText}`,
-      );
-    }
+    const response = await this.fetchResponse({
+      url: `https://m.blog.naver.com/PostView.naver?blogId=${this.blogId}&logNo=${logNo}`,
+      headers: htmlHeaders({
+        blogId: this.blogId,
+      }),
+      failureLabel: '글 HTML 요청 실패',
+    });
 
     return response.text();
   }
@@ -267,19 +271,11 @@ export class NaverBlogFetcher {
 
   async fetchBinary({ sourceUrl }: { sourceUrl: string }) {
     const normalizedSourceUrl = normalizeAssetUrl(sourceUrl);
-    const response = await fetch(normalizedSourceUrl, {
-      headers: {
-        referer: 'https://blog.naver.com/',
-        'user-agent':
-          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36',
-      },
+    const response = await this.fetchResponse({
+      url: normalizedSourceUrl,
+      headers: binaryHeaders,
+      failureLabel: '자산 다운로드 실패',
     });
-
-    if (!response.ok) {
-      throw new Error(
-        `자산 다운로드 실패: ${response.status} ${response.statusText}`,
-      );
-    }
 
     const arrayBuffer = await response.arrayBuffer();
 
@@ -342,6 +338,57 @@ export class NaverBlogFetcher {
     throw lastError ?? new Error('API 요청에 실패했습니다.');
   }
 
+  private async fetchResponse({
+    url,
+    headers,
+    failureLabel,
+  }: {
+    url: string;
+    headers: Record<string, string>;
+    failureLabel: string;
+  }) {
+    let lastError: Error | null = null;
+
+    for (const retryDelay of this.retryDelays) {
+      if (retryDelay > 0) {
+        await delay(retryDelay);
+      }
+
+      let response: Response;
+
+      try {
+        response = await this.fetchWithTimeout({
+          url,
+          headers,
+        });
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+
+        if (this.shouldRetryRequestError(error)) {
+          continue;
+        }
+
+        throw lastError;
+      }
+
+      if (!response.ok) {
+        lastError = new Error(
+          `${failureLabel}: ${response.status} ${response.statusText}`,
+        );
+
+        if (this.shouldRetryStatus(response.status)) {
+          continue;
+        }
+
+        throw lastError;
+      }
+
+      return response;
+    }
+
+    throw lastError ?? new Error(`${failureLabel}: 알 수 없는 오류`);
+  }
+
   private async fetchWithTimeout({
     url,
     headers,
@@ -370,6 +417,10 @@ export class NaverBlogFetcher {
     }
 
     return error instanceof TypeError;
+  }
+
+  private shouldRetryStatus(status: number) {
+    return status === 429 || status >= 500;
   }
 
   private log(message: string) {

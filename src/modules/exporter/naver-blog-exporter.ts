@@ -4,18 +4,16 @@ import { writeFile } from "node:fs/promises"
 import { cloneExportOptions } from "../../shared/export-options.js"
 import { filterPostsByScope } from "../../shared/export-scope.js"
 import type {
-  CategoryInfo,
   ExportManifest,
   ExportJobItem,
-  ExportOptions,
   ExportRequest,
   PostManifestEntry,
-  PostSummary,
   ScanResult,
 } from "../../shared/types.js"
 import {
   ensureDir,
   extractBlogId,
+  mapConcurrent,
   recreateDir,
   toErrorMessage,
 } from "../../shared/utils.js"
@@ -34,6 +32,16 @@ const emptyPostUploadSummary = () => ({
   failedCount: 0,
   candidates: [],
 })
+
+const postExportConcurrency = 3
+
+type ProcessedPostResult = {
+  manifestEntry: PostManifestEntry
+  jobItem: ExportJobItem
+  warningCount: number
+  uploadCandidateLocalPaths: string[]
+  uploadEligible: boolean
+}
 
 export class NaverBlogExporter {
   readonly request: ExportRequest
@@ -85,9 +93,7 @@ export class NaverBlogExporter {
       downloader: fetcher,
       options,
     })
-    const uploadEnabled =
-      options.assets.imageHandlingMode === "download-and-upload" &&
-      options.assets.imageContentMode !== "base64"
+    const uploadEnabled = options.assets.imageHandlingMode === "download-and-upload"
 
     const reusablePosts =
       this.cachedScanResult?.blogId === blogId && this.cachedScanResult.posts
@@ -150,6 +156,8 @@ export class NaverBlogExporter {
     let warningCount = 0
     let uploadEligiblePostCount = 0
     const uploadCandidateMap = new Map<string, true>()
+    const pendingResults = new Map<number, ProcessedPostResult>()
+    let nextResultIndex = 0
 
     if (posts.length !== scan.totalPostCount) {
       this.onLog(
@@ -159,150 +167,37 @@ export class NaverBlogExporter {
 
     this.onLog(`필터 적용 후 export 대상 글 수: ${filteredPosts.length}`)
 
-    for (const post of filteredPosts) {
-      const category = getCategoryForPost({
-        categories: categoryMap,
-        categoryId: post.categoryId,
-        categoryName: post.categoryName,
-      })
+    const flushCompletedResults = () => {
+      while (pendingResults.has(nextResultIndex)) {
+        const result = pendingResults.get(nextResultIndex)
 
-      try {
-        this.onLog(`글 수집 시작: ${post.logNo} ${post.title}`)
-        const html = await fetcher.fetchPostHtml(post.logNo)
-        const parsedPost = parsePostHtml({
-          html,
-          sourceUrl: post.source,
-          options,
-        })
-        const review = reviewParsedPost(parsedPost)
-        const markdownFilePath = buildMarkdownFilePath({
-          outputDir,
-          post,
-          category,
-          options,
-        })
-        const rendered = await renderMarkdownPost({
-          post,
-          category,
-          parsedPost,
-          markdownFilePath,
-          reviewedWarnings: review.warnings,
-          options,
-          resolveAsset: async (input) => assetStore.saveAsset(input),
-        })
+        pendingResults.delete(nextResultIndex)
+        nextResultIndex += 1
 
-        await ensureDir(path.dirname(markdownFilePath))
-        await writeFile(markdownFilePath, rendered.markdown, "utf8")
-        completed += 1
-        warningCount += rendered.warnings.length
-        const assetPaths = rendered.assetRecords
-          .map((asset) => asset.relativePath)
-          .filter((assetPath): assetPath is string => Boolean(assetPath))
-        const uploadCandidates = uploadEnabled
-          ? dedupeUploadCandidatesByLocalPath(
-              rendered.assetRecords
-                .map((asset) => asset.uploadCandidate)
-                .filter((candidate): candidate is NonNullable<typeof candidate> => Boolean(candidate)),
-            )
-          : []
-        const upload = {
-          eligible: uploadCandidates.length > 0,
-          candidateCount: uploadCandidates.length,
-          uploadedCount: 0,
-          failedCount: 0,
-          candidates: uploadCandidates,
-        }
-        const warningCountForPost = rendered.warnings.length
-
-        for (const candidate of uploadCandidates) {
-          uploadCandidateMap.set(candidate.localPath, true)
+        if (!result) {
+          continue
         }
 
-        if (upload.eligible) {
-          uploadEligiblePostCount += 1
+        if (result.manifestEntry.status === "success") {
+          completed += 1
+          warningCount += result.warningCount
+          manifest.successCount = completed
+          manifest.warningCount = warningCount
+
+          for (const candidateLocalPath of result.uploadCandidateLocalPaths) {
+            uploadCandidateMap.set(candidateLocalPath, true)
+          }
+
+          if (result.uploadEligible) {
+            uploadEligiblePostCount += 1
+          }
+        } else {
+          failed += 1
+          manifest.failureCount = failed
         }
 
-        manifest.successCount = completed
-        manifest.warningCount = warningCount
-        const manifestEntry = {
-          logNo: post.logNo,
-          title: post.title,
-          source: post.source,
-          category: {
-            id: category.id,
-            name: category.name,
-            path: category.path,
-          },
-          editorVersion: parsedPost.editorVersion,
-          status: "success",
-          outputPath: path.relative(outputDir, markdownFilePath).split(path.sep).join("/"),
-          assetPaths,
-          upload,
-          warnings: rendered.warnings,
-          warningCount: warningCountForPost,
-          error: null,
-        } satisfies PostManifestEntry
-
-        manifest.posts.push(manifestEntry)
-        this.onItem?.({
-          id: manifestEntry.outputPath ?? `failed:${post.logNo}`,
-          logNo: post.logNo,
-          title: post.title,
-          source: post.source,
-          category: manifestEntry.category,
-          status: "success",
-          outputPath: manifestEntry.outputPath,
-          assetPaths,
-          upload,
-          warnings: rendered.warnings,
-          warningCount: warningCountForPost,
-          error: null,
-          updatedAt: new Date().toISOString(),
-        })
-        this.onProgress({
-          total: filteredPosts.length,
-          completed,
-          failed,
-          warnings: warningCount,
-        })
-      } catch (error) {
-        failed += 1
-        manifest.failureCount = failed
-        const manifestEntry = {
-          logNo: post.logNo,
-          title: post.title,
-          source: post.source,
-          category: {
-            id: category.id,
-            name: category.name,
-            path: category.path,
-          },
-          editorVersion: post.editorVersion,
-          status: "failed",
-          outputPath: null,
-          assetPaths: [],
-          upload: emptyPostUploadSummary(),
-          warnings: [],
-          warningCount: 0,
-          error: toErrorMessage(error),
-        } satisfies PostManifestEntry
-        manifest.posts.push(manifestEntry)
-        this.onItem?.({
-          id: `failed:${post.logNo}`,
-          logNo: post.logNo,
-          title: post.title,
-          source: post.source,
-          category: manifestEntry.category,
-          status: "failed",
-          outputPath: null,
-          assetPaths: [],
-          upload: emptyPostUploadSummary(),
-          warnings: [],
-          warningCount: 0,
-          error: manifestEntry.error,
-          updatedAt: new Date().toISOString(),
-        })
-        this.onLog(`글 export 실패: ${post.logNo} (${toErrorMessage(error)})`)
+        manifest.posts.push(result.manifestEntry)
+        this.onItem?.(result.jobItem)
         this.onProgress({
           total: filteredPosts.length,
           completed,
@@ -311,6 +206,157 @@ export class NaverBlogExporter {
         })
       }
     }
+
+    await mapConcurrent({
+      items: filteredPosts,
+      concurrency: postExportConcurrency,
+      mapper: async (post, index) => {
+        const category = getCategoryForPost({
+          categories: categoryMap,
+          categoryId: post.categoryId,
+          categoryName: post.categoryName,
+        })
+
+        try {
+          this.onLog(`글 수집 시작: ${post.logNo} ${post.title}`)
+          const html = await fetcher.fetchPostHtml(post.logNo)
+          const parsedPost = parsePostHtml({
+            html,
+            sourceUrl: post.source,
+            options,
+          })
+          const review = reviewParsedPost(parsedPost)
+          const markdownFilePath = buildMarkdownFilePath({
+            outputDir,
+            post,
+            category,
+            options,
+          })
+          const rendered = await renderMarkdownPost({
+            post,
+            category,
+            parsedPost,
+            markdownFilePath,
+            reviewedWarnings: review.warnings,
+            options,
+            resolveAsset: async (input) => assetStore.saveAsset(input),
+          })
+
+          await ensureDir(path.dirname(markdownFilePath))
+          await writeFile(markdownFilePath, rendered.markdown, "utf8")
+          const assetPaths = rendered.assetRecords
+            .map((asset) => asset.relativePath)
+            .filter((assetPath): assetPath is string => Boolean(assetPath))
+          const uploadCandidates = uploadEnabled
+            ? dedupeUploadCandidatesByLocalPath(
+                rendered.assetRecords
+                  .map((asset) => asset.uploadCandidate)
+                  .filter(
+                    (candidate): candidate is NonNullable<typeof candidate> => Boolean(candidate),
+                  ),
+              )
+            : []
+          const upload = {
+            eligible: uploadCandidates.length > 0,
+            candidateCount: uploadCandidates.length,
+            uploadedCount: 0,
+            failedCount: 0,
+            candidates: uploadCandidates,
+          }
+          const warningCountForPost = rendered.warnings.length
+
+          const manifestEntry = {
+            logNo: post.logNo,
+            title: post.title,
+            source: post.source,
+            category: {
+              id: category.id,
+              name: category.name,
+              path: category.path,
+            },
+            editorVersion: parsedPost.editorVersion,
+            status: "success",
+            outputPath: path.relative(outputDir, markdownFilePath).split(path.sep).join("/"),
+            assetPaths,
+            upload,
+            warnings: rendered.warnings,
+            warningCount: warningCountForPost,
+            error: null,
+          } satisfies PostManifestEntry
+
+          pendingResults.set(index, {
+            manifestEntry,
+            jobItem: {
+              id: manifestEntry.outputPath ?? `failed:${post.logNo}`,
+              logNo: post.logNo,
+              title: post.title,
+              source: post.source,
+              category: manifestEntry.category,
+              status: "success",
+              outputPath: manifestEntry.outputPath,
+              assetPaths,
+              upload,
+              warnings: rendered.warnings,
+              warningCount: warningCountForPost,
+              error: null,
+              updatedAt: new Date().toISOString(),
+            },
+            warningCount: warningCountForPost,
+            uploadCandidateLocalPaths: uploadCandidates.map((candidate) => candidate.localPath),
+            uploadEligible: upload.eligible,
+          })
+        } catch (error) {
+          const manifestEntry = {
+            logNo: post.logNo,
+            title: post.title,
+            source: post.source,
+            category: {
+              id: category.id,
+              name: category.name,
+              path: category.path,
+            },
+            editorVersion: post.editorVersion,
+            status: "failed",
+            outputPath: null,
+            assetPaths: [],
+            upload: emptyPostUploadSummary(),
+            warnings: [],
+            warningCount: 0,
+            error: toErrorMessage(error),
+          } satisfies PostManifestEntry
+
+          pendingResults.set(index, {
+            manifestEntry,
+            jobItem: {
+              id: `failed:${post.logNo}`,
+              logNo: post.logNo,
+              title: post.title,
+              source: post.source,
+              category: manifestEntry.category,
+              status: "failed",
+              outputPath: null,
+              assetPaths: [],
+              upload: emptyPostUploadSummary(),
+              warnings: [],
+              warningCount: 0,
+              error: manifestEntry.error,
+              updatedAt: new Date().toISOString(),
+            },
+            warningCount: 0,
+            uploadCandidateLocalPaths: [],
+            uploadEligible: false,
+          })
+          this.onLog(`글 export 실패: ${post.logNo} (${toErrorMessage(error)})`)
+        }
+
+        flushCompletedResults()
+      },
+    })
+
+    flushCompletedResults()
+    manifest.successCount = completed
+    manifest.failureCount = failed
+    manifest.warningCount = warningCount
 
     manifest.upload = uploadEnabled
       ? uploadCandidateMap.size > 0

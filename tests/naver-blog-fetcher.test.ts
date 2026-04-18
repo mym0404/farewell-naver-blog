@@ -166,4 +166,50 @@ describe("NaverBlogFetcher", () => {
     expect(binary.contentType).toBe("image/gif")
     expect(binary.bytes.toString()).toBe("image-binary")
   })
+
+  it("retries html fetches after a transient server error", async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response("temporary", { status: 503, statusText: "Unavailable" }))
+      .mockResolvedValueOnce(new Response("<div>ok</div>", { status: 200 }))
+
+    vi.stubGlobal("fetch", fetchMock)
+
+    const fetcher = new NaverBlogFetcher({
+      blogId: "mym0404",
+      retryDelays: [0, 0],
+    })
+
+    await expect(fetcher.fetchPostHtml("223034929697")).resolves.toBe("<div>ok</div>")
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+  })
+
+  it("retries binary fetches after a transient server error", async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response("temporary", { status: 503, statusText: "Unavailable" }))
+      .mockResolvedValueOnce(
+        new Response(Buffer.from("recovered-image"), {
+          status: 200,
+          headers: {
+            "content-type": "image/png",
+          },
+        }),
+      )
+
+    vi.stubGlobal("fetch", fetchMock)
+
+    const fetcher = new NaverBlogFetcher({
+      blogId: "mym0404",
+      retryDelays: [0, 0],
+    })
+
+    const binary = await fetcher.fetchBinary({
+      sourceUrl: "https://example.com/image.png",
+    })
+
+    expect(binary.contentType).toBe("image/png")
+    expect(binary.bytes.toString()).toBe("recovered-image")
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+  })
 })

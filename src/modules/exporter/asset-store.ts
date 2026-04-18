@@ -123,7 +123,7 @@ export class AssetStore {
   readonly options: Pick<ExportOptions, "assets" | "structure">
   readonly cache = new Map<string, string>()
   readonly sourceUrlCache = new Map<string, string>()
-  readonly dataUrlCache = new Map<string, string>()
+  readonly inFlightSourceUrlCache = new Map<string, Promise<string>>()
   readonly compressImage: AssetCompressor
 
   constructor({
@@ -145,55 +145,14 @@ export class AssetStore {
 
   async saveAsset({
     kind,
-    postLogNo: _postLogNo,
     sourceUrl,
     markdownFilePath,
-    embedAsDataUrl,
   }: {
     kind: "image" | "thumbnail"
-    postLogNo: string
     sourceUrl: string
     markdownFilePath: string
-    embedAsDataUrl?: boolean
   }) {
     const normalizedSourceUrl = normalizeAssetUrl(sourceUrl)
-
-    if (embedAsDataUrl) {
-      const cacheKey = `${_postLogNo}:${kind}:base64:${normalizedSourceUrl}`
-      const cachedDataUrl = this.dataUrlCache.get(cacheKey)
-
-      if (cachedDataUrl) {
-        return {
-          kind,
-          sourceUrl: normalizedSourceUrl,
-          reference: cachedDataUrl,
-          relativePath: null,
-          storageMode: "base64",
-          uploadCandidate: null,
-        } satisfies AssetRecord
-      }
-
-      if (!this.downloader.fetchBinary) {
-        throw new Error("base64 임베딩을 지원하는 fetchBinary downloader가 필요합니다.")
-      }
-
-      const binary = await this.downloader.fetchBinary({
-        sourceUrl: normalizedSourceUrl,
-      })
-      const mimeType = binary.contentType || inferMimeType(normalizedSourceUrl)
-      const dataUrl = `data:${mimeType};base64,${binary.bytes.toString("base64")}`
-
-      this.dataUrlCache.set(cacheKey, dataUrl)
-
-      return {
-        kind,
-        sourceUrl: normalizedSourceUrl,
-        reference: dataUrl,
-        relativePath: null,
-        storageMode: "base64",
-        uploadCandidate: null,
-      } satisfies AssetRecord
-    }
 
     const shouldDownload =
       this.options.assets.imageHandlingMode !== "remote" &&
@@ -238,61 +197,7 @@ export class AssetStore {
       } satisfies AssetRecord
     }
 
-    const binary = await this.downloader.fetchBinary({
-      sourceUrl: normalizedSourceUrl,
-    })
-    const contentHash = buildAssetHash(binary.bytes)
-    const cachedAbsolutePath = this.cache.get(contentHash)
-
-    if (cachedAbsolutePath) {
-      this.sourceUrlCache.set(normalizedSourceUrl, cachedAbsolutePath)
-      const relativePath = relativePathFrom({
-        from: markdownFilePath,
-        to: cachedAbsolutePath,
-      })
-
-      return {
-        kind,
-        sourceUrl: normalizedSourceUrl,
-        reference: relativePath,
-        relativePath,
-        storageMode: "relative",
-        uploadCandidate: {
-          kind,
-          sourceUrl: normalizedSourceUrl,
-          localPath: normalizeOutputPath(path.relative(this.outputDir, cachedAbsolutePath)),
-          markdownReference: relativePath,
-        },
-      } satisfies AssetRecord
-    }
-
-    const extension =
-      extensionFromContentType(binary.contentType) ?? extensionFromUrl(normalizedSourceUrl)
-    const absolutePath = path.join(this.outputDir, "public", `${contentHash}${extension}`)
-
-    await ensureDir(path.dirname(absolutePath))
-
-    if (this.options.assets.compressionEnabled) {
-      if (isCompressionSafeMimeType(binary.contentType, normalizedSourceUrl)) {
-        try {
-          const compressedBytes = await this.compressImage({
-            bytes: binary.bytes,
-            contentType: binary.contentType,
-            sourceUrl: normalizedSourceUrl,
-          })
-
-          await writeFile(absolutePath, compressedBytes)
-        } catch {
-          await writeFile(absolutePath, binary.bytes)
-        }
-      } else {
-        await writeFile(absolutePath, binary.bytes)
-      }
-    } else {
-      await writeFile(absolutePath, binary.bytes)
-    }
-    this.cache.set(contentHash, absolutePath)
-    this.sourceUrlCache.set(normalizedSourceUrl, absolutePath)
+    const absolutePath = await this.getOrCreateLocalAssetPath(normalizedSourceUrl)
 
     const relativePath = relativePathFrom({
       from: markdownFilePath,
@@ -312,5 +217,71 @@ export class AssetStore {
         markdownReference: relativePath,
       },
     } satisfies AssetRecord
+  }
+
+  private async getOrCreateLocalAssetPath(normalizedSourceUrl: string) {
+    const cachedAbsolutePath = this.sourceUrlCache.get(normalizedSourceUrl)
+
+    if (cachedAbsolutePath) {
+      return cachedAbsolutePath
+    }
+
+    const inFlightAbsolutePath = this.inFlightSourceUrlCache.get(normalizedSourceUrl)
+
+    if (inFlightAbsolutePath) {
+      return inFlightAbsolutePath
+    }
+
+    const absolutePathPromise = (async () => {
+      const binary = await this.downloader.fetchBinary!({
+        sourceUrl: normalizedSourceUrl,
+      })
+      const contentHash = buildAssetHash(binary.bytes)
+      const cachedByHash = this.cache.get(contentHash)
+
+      if (cachedByHash) {
+        this.sourceUrlCache.set(normalizedSourceUrl, cachedByHash)
+        return cachedByHash
+      }
+
+      const extension =
+        extensionFromContentType(binary.contentType) ?? extensionFromUrl(normalizedSourceUrl)
+      const absolutePath = path.join(this.outputDir, "public", `${contentHash}${extension}`)
+
+      await ensureDir(path.dirname(absolutePath))
+
+      if (this.options.assets.compressionEnabled) {
+        if (isCompressionSafeMimeType(binary.contentType, normalizedSourceUrl)) {
+          try {
+            const compressedBytes = await this.compressImage({
+              bytes: binary.bytes,
+              contentType: binary.contentType,
+              sourceUrl: normalizedSourceUrl,
+            })
+
+            await writeFile(absolutePath, compressedBytes)
+          } catch {
+            await writeFile(absolutePath, binary.bytes)
+          }
+        } else {
+          await writeFile(absolutePath, binary.bytes)
+        }
+      } else {
+        await writeFile(absolutePath, binary.bytes)
+      }
+
+      this.cache.set(contentHash, absolutePath)
+      this.sourceUrlCache.set(normalizedSourceUrl, absolutePath)
+
+      return absolutePath
+    })()
+
+    this.inFlightSourceUrlCache.set(normalizedSourceUrl, absolutePathPromise)
+
+    try {
+      return await absolutePathPromise
+    } finally {
+      this.inFlightSourceUrlCache.delete(normalizedSourceUrl)
+    }
   }
 }

@@ -42,6 +42,16 @@ const posts = [
   },
 ]
 
+const parallelPosts = [
+  posts[0],
+  {
+    ...posts[0],
+    logNo: "223034929698",
+    title: "두번째 글",
+    source: "https://blog.naver.com/mym0404/223034929698",
+  },
+]
+
 const postHtml = `
   <script>var data = { smartEditorVersion: 4 }</script>
   <div id="viewTypeSelector">
@@ -242,6 +252,166 @@ describe("NaverBlogExporter", () => {
     expect(fetchPostHtmlSpy).toHaveBeenCalledTimes(1)
     expect(downloadBinarySpy).not.toHaveBeenCalled()
     expect(fetchBinarySpy).toHaveBeenCalled()
+
+    await rm(outputDir, { recursive: true, force: true })
+  })
+
+  it("keeps manifest and job item order stable while exporting posts in parallel", async () => {
+    const outputDir = await mkdtemp(path.join(tmpdir(), "bulk-export-"))
+    const onProgress = vi.fn()
+    const onItem = vi.fn()
+    let releaseFirstPost!: () => void
+    const firstPostGate = new Promise<void>((resolve) => {
+      releaseFirstPost = resolve
+    })
+    const fetchPostHtml = vi.fn(async (requestedLogNo: string) => {
+      if (requestedLogNo === parallelPosts[0]!.logNo) {
+        await firstPostGate
+      }
+
+      return postHtml
+    })
+    const fetchBinary = vi.fn(async () => ({
+      bytes: Buffer.from("image"),
+      contentType: "image/png",
+    }))
+
+    vi.spyOn(NaverBlogFetcher.prototype, "fetchPostHtml").mockImplementation(fetchPostHtml)
+    vi.spyOn(NaverBlogFetcher.prototype, "downloadBinary").mockResolvedValue()
+    vi.spyOn(NaverBlogFetcher.prototype, "fetchBinary").mockImplementation(fetchBinary)
+
+    const exporter = new NaverBlogExporter({
+      request: {
+        blogIdOrUrl: "https://blog.naver.com/mym0404",
+        outputDir,
+        profile: "gfm",
+        options: defaultExportOptions(),
+      },
+      cachedScanResult: {
+        ...scanResult,
+        totalPostCount: parallelPosts.length,
+        posts: parallelPosts,
+      },
+      onLog: () => {},
+      onProgress,
+      onItem,
+    })
+
+    const manifestPromise = exporter.run()
+
+    for (let attempt = 0; attempt < 20; attempt += 1) {
+      if (fetchPostHtml.mock.calls.length === 2) {
+        break
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    }
+
+    expect(fetchPostHtml).toHaveBeenCalledTimes(2)
+
+    releaseFirstPost()
+
+    const manifest = await manifestPromise
+
+    expect(fetchBinary).toHaveBeenCalledTimes(2)
+    expect(manifest.posts.map((post) => post.logNo)).toEqual(parallelPosts.map((post) => post.logNo))
+    expect(onItem.mock.calls.map((call) => call[0].logNo)).toEqual(
+      parallelPosts.map((post) => post.logNo),
+    )
+    expect(onProgress.mock.calls.map((call) => call[0])).toEqual([
+      {
+        total: 2,
+        completed: 1,
+        failed: 0,
+        warnings: manifest.posts[0]!.warningCount,
+      },
+      {
+        total: 2,
+        completed: 2,
+        failed: 0,
+        warnings: manifest.warningCount,
+      },
+    ])
+
+    await rm(outputDir, { recursive: true, force: true })
+  })
+
+  it("keeps failure and success order stable in mixed parallel exports", async () => {
+    const outputDir = await mkdtemp(path.join(tmpdir(), "bulk-export-"))
+    const onProgress = vi.fn()
+    const onItem = vi.fn()
+    let releaseFirstPost!: () => void
+    const firstPostGate = new Promise<void>((resolve) => {
+      releaseFirstPost = resolve
+    })
+    const fetchPostHtml = vi.fn(async (requestedLogNo: string) => {
+      if (requestedLogNo === parallelPosts[0]!.logNo) {
+        await firstPostGate
+        throw new Error("first post failed")
+      }
+
+      return postHtml
+    })
+
+    vi.spyOn(NaverBlogFetcher.prototype, "fetchPostHtml").mockImplementation(fetchPostHtml)
+    vi.spyOn(NaverBlogFetcher.prototype, "downloadBinary").mockResolvedValue()
+    vi.spyOn(NaverBlogFetcher.prototype, "fetchBinary").mockResolvedValue({
+      bytes: Buffer.from("image"),
+      contentType: "image/png",
+    })
+
+    const exporter = new NaverBlogExporter({
+      request: {
+        blogIdOrUrl: "https://blog.naver.com/mym0404",
+        outputDir,
+        profile: "gfm",
+        options: defaultExportOptions(),
+      },
+      cachedScanResult: {
+        ...scanResult,
+        totalPostCount: parallelPosts.length,
+        posts: parallelPosts,
+      },
+      onLog: () => {},
+      onProgress,
+      onItem,
+    })
+
+    const manifestPromise = exporter.run()
+
+    for (let attempt = 0; attempt < 20; attempt += 1) {
+      if (fetchPostHtml.mock.calls.length === 2) {
+        break
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    }
+
+    expect(fetchPostHtml).toHaveBeenCalledTimes(2)
+
+    releaseFirstPost()
+
+    const manifest = await manifestPromise
+
+    expect(manifest.failureCount).toBe(1)
+    expect(manifest.successCount).toBe(1)
+    expect(manifest.posts.map((entry) => entry.status)).toEqual(["failed", "success"])
+    expect(manifest.posts.map((entry) => entry.logNo)).toEqual(parallelPosts.map((post) => post.logNo))
+    expect(onItem.mock.calls.map((call) => call[0].status)).toEqual(["failed", "success"])
+    expect(onProgress.mock.calls.map((call) => call[0])).toEqual([
+      {
+        total: 2,
+        completed: 0,
+        failed: 1,
+        warnings: 0,
+      },
+      {
+        total: 2,
+        completed: 1,
+        failed: 1,
+        warnings: manifest.warningCount,
+      },
+    ])
 
     await rm(outputDir, { recursive: true, force: true })
   })

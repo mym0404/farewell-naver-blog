@@ -21,7 +21,6 @@ describe("AssetStore", () => {
 
     const asset = await store.saveAsset({
       kind: "image",
-      postLogNo: "1",
       sourceUrl: "https://example.com/image.png",
       markdownFilePath: "/tmp/output/posts/test/index.md",
     })
@@ -48,13 +47,11 @@ describe("AssetStore", () => {
 
     const first = await store.saveAsset({
       kind: "image",
-      postLogNo: "1",
       sourceUrl: "https://example.com/image.png",
       markdownFilePath: "/tmp/output/posts/test/index.md",
     })
     const second = await store.saveAsset({
       kind: "image",
-      postLogNo: "1",
       sourceUrl: "https://example.com/image.png",
       markdownFilePath: "/tmp/output/posts/test/index.md",
     })
@@ -95,13 +92,11 @@ describe("AssetStore", () => {
 
     const first = await store.saveAsset({
       kind: "image",
-      postLogNo: "1",
       sourceUrl: "https://example.com/image.png",
       markdownFilePath: "/tmp/output/posts/first/index.md",
     })
     const second = await store.saveAsset({
       kind: "thumbnail",
-      postLogNo: "2",
       sourceUrl: "https://cdn.example.com/thumb.jpg",
       markdownFilePath: "/tmp/output/posts/second/index.md",
     })
@@ -114,11 +109,19 @@ describe("AssetStore", () => {
     expect(second.uploadCandidate?.localPath).toBe(`public/${expectedHash}.png`)
   })
 
-  it("embeds data urls when base64 mode is requested", async () => {
-    const fetchBinary = vi.fn(async () => ({
-      bytes: Buffer.from("binary-image"),
-      contentType: "image/png",
-    }))
+  it("dedupes in-flight local downloads for the same source url", async () => {
+    let releaseFetch!: () => void
+    const fetchGate = new Promise<void>((resolve) => {
+      releaseFetch = resolve
+    })
+    const fetchBinary = vi.fn(async () => {
+      await fetchGate
+
+      return {
+        bytes: Buffer.from("shared-image"),
+        contentType: "image/png",
+      }
+    })
     const store = new AssetStore({
       outputDir: "/tmp/output",
       downloader: {
@@ -128,26 +131,46 @@ describe("AssetStore", () => {
       options: defaultExportOptions(),
     })
 
-    const asset = await store.saveAsset({
+    const firstPromise = store.saveAsset({
       kind: "image",
-      postLogNo: "1",
       sourceUrl: "https://example.com/image.png",
-      markdownFilePath: "/tmp/output/posts/test/index.md",
-      embedAsDataUrl: true,
+      markdownFilePath: "/tmp/output/posts/first/index.md",
+    })
+    const secondPromise = store.saveAsset({
+      kind: "image",
+      sourceUrl: "https://example.com/image.png",
+      markdownFilePath: "/tmp/output/posts/second/index.md",
     })
 
+    await Promise.resolve()
     expect(fetchBinary).toHaveBeenCalledTimes(1)
-    expect(asset.reference).toContain("data:image/png;base64,")
-    expect(asset.relativePath).toBeNull()
-    expect(asset.storageMode).toBe("base64")
-    expect(asset.uploadCandidate).toBeNull()
+
+    releaseFetch()
+
+    const [first, second] = await Promise.all([firstPromise, secondPromise])
+    const expectedHash = createHash("sha256").update("shared-image").digest("hex")
+
+    expect(first.relativePath).toBe(`../../public/${expectedHash}.png`)
+    expect(second.relativePath).toBe(`../../public/${expectedHash}.png`)
+    expect(first.uploadCandidate?.localPath).toBe(`public/${expectedHash}.png`)
+    expect(second.uploadCandidate?.localPath).toBe(`public/${expectedHash}.png`)
   })
 
-  it("reuses cached data urls and infers mime type from the source url", async () => {
-    const fetchBinary = vi.fn(async () => ({
-      bytes: Buffer.from("gif-image"),
-      contentType: null,
-    }))
+  it("clears in-flight cache after a failed shared download and allows retry", async () => {
+    let releaseFetch!: () => void
+    const fetchGate = new Promise<void>((resolve) => {
+      releaseFetch = resolve
+    })
+    const fetchBinary = vi
+      .fn<() => Promise<{ bytes: Buffer; contentType: string | null }>>()
+      .mockImplementationOnce(async () => {
+        await fetchGate
+        throw new Error("temporary failure")
+      })
+      .mockResolvedValueOnce({
+        bytes: Buffer.from("recovered-image"),
+        contentType: "image/png",
+      })
     const store = new AssetStore({
       outputDir: "/tmp/output",
       downloader: {
@@ -157,44 +180,34 @@ describe("AssetStore", () => {
       options: defaultExportOptions(),
     })
 
-    const first = await store.saveAsset({
+    const firstPromise = store.saveAsset({
       kind: "image",
-      postLogNo: "1",
-      sourceUrl: "https://example.com/sticker.gif",
-      markdownFilePath: "/tmp/output/posts/test/index.md",
-      embedAsDataUrl: true,
+      sourceUrl: "https://example.com/image.png",
+      markdownFilePath: "/tmp/output/posts/first/index.md",
     })
-    const second = await store.saveAsset({
+    const secondPromise = store.saveAsset({
       kind: "image",
-      postLogNo: "1",
-      sourceUrl: "https://example.com/sticker.gif",
-      markdownFilePath: "/tmp/output/posts/test/index.md",
-      embedAsDataUrl: true,
+      sourceUrl: "https://example.com/image.png",
+      markdownFilePath: "/tmp/output/posts/second/index.md",
     })
 
+    await Promise.resolve()
     expect(fetchBinary).toHaveBeenCalledTimes(1)
-    expect(first.reference).toContain("data:image/gif;base64,")
-    expect(second.reference).toBe(first.reference)
-  })
 
-  it("throws when base64 embedding is requested without fetchBinary support", async () => {
-    const store = new AssetStore({
-      outputDir: "/tmp/output",
-      downloader: {
-        downloadBinary: vi.fn(),
-      },
-      options: defaultExportOptions(),
+    releaseFetch()
+
+    await expect(firstPromise).rejects.toThrow("temporary failure")
+    await expect(secondPromise).rejects.toThrow("temporary failure")
+
+    const recovered = await store.saveAsset({
+      kind: "image",
+      sourceUrl: "https://example.com/image.png",
+      markdownFilePath: "/tmp/output/posts/recovered/index.md",
     })
+    const expectedHash = createHash("sha256").update("recovered-image").digest("hex")
 
-    await expect(
-      store.saveAsset({
-        kind: "image",
-        postLogNo: "1",
-        sourceUrl: "not-a-url",
-        markdownFilePath: "/tmp/output/posts/test/index.md",
-        embedAsDataUrl: true,
-      }),
-    ).rejects.toThrow("base64 임베딩을 지원하는 fetchBinary downloader가 필요합니다.")
+    expect(fetchBinary).toHaveBeenCalledTimes(2)
+    expect(recovered.relativePath).toBe(`../../public/${expectedHash}.png`)
   })
 
   it("uses fetchBinary plus compression for safe local image formats", async () => {
@@ -220,7 +233,6 @@ describe("AssetStore", () => {
 
     const asset = await store.saveAsset({
       kind: "image",
-      postLogNo: "1",
       sourceUrl: "https://example.com/image.png",
       markdownFilePath: "/tmp/output/posts/test/index.md",
     })
