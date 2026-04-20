@@ -13,7 +13,7 @@
 
 ## 검증 방법
 - `pnpm smoke:ui`: scan, export, upload 결과 패널까지 사용자 흐름을 다시 확인할 때 실행한다.
-- `pnpm samples:verify`: renderer나 exporter 출력 규약이 실제 샘플 export에 반영되는지 확인할 때 실행한다.
+- `pnpm samples:verify`: renderer나 exporter 출력 규약이 저장된 sample fixture 회귀와 계속 맞는지 확인할 때 실행한다.
 
 ## User Flow
 1. 사용자가 블로그 ID 또는 URL을 입력한다.
@@ -45,5 +45,5 @@
 ## Verification Hooks
 - 단건 구조 확인은 `scripts/export-single-post.ts`
 - 사용자 흐름 확인은 `pnpm smoke:ui`
-- parser 현실 확인은 `pnpm samples:verify`
+- parser/sample fixture 현실 확인은 `pnpm samples:verify`
 - coverage gate 확인은 `pnpm test:coverage`

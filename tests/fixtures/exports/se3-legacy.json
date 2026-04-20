@@ -1,8 +1,0 @@
-{
-  "requiredSnippets": [
-    "editorVersion: 3"
-  ],
-  "forbiddenSnippets": [
-    "공유하기"
-  ]
-}

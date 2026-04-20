@@ -238,10 +238,16 @@ export type ParserFallbackPolicy =
   | "raw-html"
   | "skip"
 
+export type ParserCapabilityId = `se${EditorVersion}-${BlockType}`
+
+export type ParserCapabilityVerificationMode = "sample-fixture" | "parser-fixture"
+
 export type ParserCapability = {
+  id: ParserCapabilityId
+  editorVersion: EditorVersion
   blockType: BlockType
-  supportedEditors: EditorVersion[]
   fallbackPolicy: ParserFallbackPolicy
+  verificationMode: ParserCapabilityVerificationMode
   sampleIds: string[]
 }
 
@@ -250,7 +256,16 @@ export type SampleCorpusEntry = {
   blogId: string
   logNo: string
   editorVersion: EditorVersion
-  expectedBlockTypes: BlockType[]
+  expectedCapabilityIds: ParserCapabilityId[]
+  post: {
+    title: string
+    publishedAt: string
+    categoryId: number
+    categoryName: string
+    categoryPath: string[]
+    thumbnailUrl: string | null
+    source: string
+  }
   description: string
   notes: string[]
 }

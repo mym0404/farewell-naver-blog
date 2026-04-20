@@ -5,23 +5,27 @@ import { collectParserStatus } from "./lib/parser-status.js"
 const run = async () => {
   const parserStatus = await collectParserStatus()
   const failures = [
-    ...parserStatus.missingFixtureBlockTypes.map(
+    ...parserStatus.missingParserFixtureBlockTypes.map(
       (blockType) => `missing parser fixture: ${blockType}`,
     ),
     ...parserStatus.missingTestBlockTypes.map(
       (blockType) => `missing test coverage hint: ${blockType}`,
     ),
     ...parserStatus.invalidSampleLinks,
-    ...parserStatus.missingExportFixtures.map(
-      (sampleId) => `missing export fixture: ${sampleId}`,
+    ...parserStatus.invalidExpectedCapabilityIds,
+    ...parserStatus.missingSampleSourceFixtures.map(
+      (sampleId) => `missing sample source fixture: ${sampleId}`,
+    ),
+    ...parserStatus.missingSampleExpectedFixtures.map(
+      (sampleId) => `missing sample expected fixture: ${sampleId}`,
     ),
     ...parserStatus.missingEditorCoverage.map(
       (editorVersion) => `missing sample corpus editor coverage: ${editorVersion}`,
     ),
   ]
 
-  if (parserCapabilities.length !== new Set(parserCapabilities.map((item) => item.blockType)).size) {
-    failures.push("parser capability blockType must be unique")
+  if (parserCapabilities.length !== new Set(parserCapabilities.map((item) => item.id)).size) {
+    failures.push("parser capability id must be unique")
   }
 
   if (sampleCorpus.length !== new Set(sampleCorpus.map((item) => item.id)).size) {
@@ -33,7 +37,7 @@ const run = async () => {
   }
 
   console.log(
-    `parser:check passed (${parserCapabilities.length} block types, ${sampleCorpus.length} samples, ${parserStatus.sampleGapBlockTypes.length} sample gaps)`,
+    `parser:check passed (${parserCapabilities.length} capabilities, ${sampleCorpus.length} samples, ${parserStatus.sampleGapCapabilityIds.length} sample gaps, ${parserStatus.parserFixtureOnlyCapabilityIds.length} parser-fixture only capabilities)`,
   )
 }
 

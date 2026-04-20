@@ -12,23 +12,28 @@ const ratio = ({
 
 export const buildGeneratedDocs = async () => {
   const parserStatus = await collectParserStatus()
-  const parserTotal = parserCapabilities.length
-  const parserFixtureCovered = parserStatus.parserFixtureCoverageCount
-  const parserTestCovered = parserStatus.parserTestCoverageCount
-  const parserSampleCovered = parserTotal - parserStatus.sampleGapBlockTypes.length
+  const parserTotal = parserStatus.parserCapabilitySampleTotal
+  const parserBlockTotal = parserStatus.parserBlockTotal
+  const parserFixtureCovered = parserStatus.parserBlockFixtureCoverageCount
+  const parserTestCovered = parserStatus.parserBlockTestCoverageCount
+  const parserSampleCovered = parserStatus.parserCapabilitySampleCoverageCount
   const openRisks = [
-    ...parserStatus.missingFixtureBlockTypes.map(
+    ...parserStatus.missingParserFixtureBlockTypes.map(
       (blockType) => `parser fixture missing for blockType: ${blockType}`,
     ),
     ...parserStatus.missingTestBlockTypes.map(
       (blockType) => `parser test reference missing for blockType: ${blockType}`,
     ),
-    ...parserStatus.sampleGapBlockTypes.map(
-      (blockType) => `실샘플이 없는 blockType: ${blockType}`,
+    ...parserStatus.sampleGapCapabilityIds.map(
+      (capabilityId) => `실샘플이 없는 capability: ${capabilityId}`,
     ),
     ...parserStatus.invalidSampleLinks,
-    ...parserStatus.missingExportFixtures.map(
-      (sampleId) => `export fixture missing for sample: ${sampleId}`,
+    ...parserStatus.invalidExpectedCapabilityIds,
+    ...parserStatus.missingSampleSourceFixtures.map(
+      (sampleId) => `sample source fixture missing for sample: ${sampleId}`,
+    ),
+    ...parserStatus.missingSampleExpectedFixtures.map(
+      (sampleId) => `sample expected fixture missing for sample: ${sampleId}`,
     ),
     ...parserStatus.missingEditorCoverage.map(
       (editorVersion) => `실샘플이 없는 editorVersion: ${editorVersion}`,
@@ -38,7 +43,7 @@ export const buildGeneratedDocs = async () => {
   const qualityScore = `# Quality Score
 
 ## 목적
-이 문서는 parser fixture, parser test, 실샘플 coverage를 요약하는 generated 품질 리포트다.
+이 문서는 parser fixture, parser test hint, 실샘플 coverage를 요약하는 generated 품질 리포트다.
 
 ## Source Of Truth
 이 문서는 \`src/shared/parser-capabilities.ts\`, \`src/shared/sample-corpus.ts\`, \`tests/fixtures/\`, \`tests/*.test.ts\`를 바탕으로 자동 생성된다.
@@ -56,20 +61,24 @@ export const buildGeneratedDocs = async () => {
 ## Coverage Summary
 | metric | coverage |
 | --- | --- |
-| parser fixture coverage | ${ratio({ total: parserTotal, covered: parserFixtureCovered })} |
-| parser test coverage | ${ratio({ total: parserTotal, covered: parserTestCovered })} |
-| parser sample coverage | ${ratio({ total: parserTotal, covered: parserSampleCovered })} |
+| parser block fixture coverage | ${ratio({ total: parserBlockTotal, covered: parserFixtureCovered })} |
+| parser block test hint coverage | ${ratio({ total: parserBlockTotal, covered: parserTestCovered })} |
+| sample-fixture capability coverage | ${ratio({ total: parserTotal, covered: parserSampleCovered })} |
+| parser-fixture only capabilities | ${parserStatus.parserFixtureOnlyCapabilityIds.length} |
 | sample corpus size | ${sampleCorpus.length} |
 | covered editor versions | ${ratio({ total: 3, covered: 3 - parserStatus.missingEditorCoverage.length })} |
 
 ## Open Risks
 ${openRisks.length > 0 ? openRisks.map((risk) => `- ${risk}`).join("\n") : "- 현재 열린 리스크 없음"}
+
+## Parser-fixture Only Capabilities
+${parserStatus.parserFixtureOnlyCapabilityIds.length > 0 ? parserStatus.parserFixtureOnlyCapabilityIds.map((capabilityId) => `- \`${capabilityId}\``).join("\n") : "- 현재 parser-fixture only capability 없음"}
 `
 
   const sampleCoverage = `# Sample Coverage
 
 ## 목적
-이 문서는 blockType별 대표 샘플 매핑과 sample coverage gap을 보여주는 generated 리포트다.
+이 문서는 capability별 대표 샘플 매핑과 sample fixture coverage gap을 보여주는 generated 리포트다.
 
 ## Source Of Truth
 이 문서는 \`src/shared/parser-capabilities.ts\` 와 \`src/shared/sample-corpus.ts\` 를 바탕으로 자동 생성된다.
@@ -85,28 +94,31 @@ ${openRisks.length > 0 ? openRisks.map((risk) => `- ${risk}`).join("\n") : "- �
 - \`pnpm parser:check\`
 - \`pnpm samples:verify\`
 
-## Block To Sample Map
-| blockType | sampleIds |
-| --- | --- |
+## Capability To Sample Map
+| capabilityId | blockType | verificationMode | sampleIds |
+| --- | --- | --- | --- |
 ${parserCapabilities
   .map(
     (capability) =>
-      `| \`${capability.blockType}\` | ${capability.sampleIds.length > 0 ? capability.sampleIds.map((sampleId) => `\`${sampleId}\``).join(", ") : "-"} |`,
+      `| \`${capability.id}\` | \`${capability.blockType}\` | \`${capability.verificationMode}\` | ${capability.sampleIds.length > 0 ? capability.sampleIds.map((sampleId) => `\`${sampleId}\``).join(", ") : "-"} |`,
   )
   .join("\n")}
 
 ## Sample Catalog
-| id | editorVersion | expectedBlockTypes |
+| id | editorVersion | expectedCapabilityIds |
 | --- | --- | --- |
 ${sampleCorpus
   .map(
     (sample) =>
-      `| \`${sample.id}\` | \`${sample.editorVersion}\` | ${sample.expectedBlockTypes.map((blockType) => `\`${blockType}\``).join(", ")} |`,
+      `| \`${sample.id}\` | \`${sample.editorVersion}\` | ${sample.expectedCapabilityIds.map((capabilityId) => `\`${capabilityId}\``).join(", ")} |`,
   )
   .join("\n")}
 
 ## Sample Gaps
-${parserStatus.sampleGapBlockTypes.length > 0 ? parserStatus.sampleGapBlockTypes.map((blockType) => `- \`${blockType}\``).join("\n") : "- 현재 sample gap 없음"}
+${parserStatus.sampleGapCapabilityIds.length > 0 ? parserStatus.sampleGapCapabilityIds.map((capabilityId) => `- \`${capabilityId}\``).join("\n") : "- 현재 sample gap 없음"}
+
+## Parser-fixture Only Capabilities
+${parserStatus.parserFixtureOnlyCapabilityIds.length > 0 ? parserStatus.parserFixtureOnlyCapabilityIds.map((capabilityId) => `- \`${capabilityId}\``).join("\n") : "- 현재 parser-fixture only capability 없음"}
 `
 
   return {

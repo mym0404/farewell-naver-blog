@@ -2,96 +2,119 @@ import path from "node:path"
 
 import { parserCapabilities } from "../../../src/shared/parser-capabilities.js"
 import { sampleCorpus } from "../../../src/shared/sample-corpus.js"
-import type { BlockType, EditorVersion } from "../../../src/shared/types.js"
+import type { BlockType, EditorVersion, ParserCapabilityId } from "../../../src/shared/types.js"
 import { pathExists, readUtf8, repoPath, walkFiles } from "./paths.js"
 
 const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 
 export const collectParserStatus = async () => {
   const parserFixtureDir = repoPath("tests", "fixtures", "parser")
-  const exportFixtureDir = repoPath("tests", "fixtures", "exports")
+  const sampleFixtureDir = repoPath("tests", "fixtures", "samples")
   const parserFixtureFiles = (await pathExists(parserFixtureDir))
     ? (await walkFiles(parserFixtureDir)).filter((filePath) => filePath.endsWith(".html"))
-    : []
-  const exportFixtureFiles = (await pathExists(exportFixtureDir))
-    ? (await walkFiles(exportFixtureDir)).filter((filePath) => filePath.endsWith(".json"))
     : []
   const parserFixtureBlockTypes = new Set(
     parserFixtureFiles.map((filePath) => path.basename(filePath, ".html")),
   )
-  const exportFixtureIds = new Set(
-    exportFixtureFiles.map((filePath) => path.basename(filePath, ".json")),
-  )
   const testFiles = (await walkFiles(repoPath("tests")))
     .filter((filePath) => filePath.endsWith(".test.ts"))
     .sort()
-  const testContent = (
-    await Promise.all(testFiles.map((filePath) => readUtf8(filePath)))
-  ).join("\n")
+  const testContent = (await Promise.all(testFiles.map((filePath) => readUtf8(filePath)))).join("\n")
   const sampleById = new Map(sampleCorpus.map((sample) => [sample.id, sample]))
-  const missingFixtureBlockTypes: BlockType[] = []
+  const capabilityIdSet = new Set(parserCapabilities.map((capability) => capability.id))
+  const sampleFixtureCapabilities = parserCapabilities.filter(
+    (capability) => capability.verificationMode === "sample-fixture",
+  )
+  const parserFixtureOnlyCapabilityIds = parserCapabilities
+    .filter((capability) => capability.verificationMode === "parser-fixture")
+    .map((capability) => capability.id)
+  const blockTypes = Array.from(
+    new Set(parserCapabilities.map((capability) => capability.blockType)),
+  ) as BlockType[]
+  const missingParserFixtureBlockTypes: BlockType[] = []
   const missingTestBlockTypes: BlockType[] = []
-  const sampleGapBlockTypes: BlockType[] = []
+  const sampleGapCapabilityIds: ParserCapabilityId[] = []
   const invalidSampleLinks: string[] = []
-  const missingExportFixtures: string[] = []
+  const invalidExpectedCapabilityIds: string[] = []
+  const missingSampleSourceFixtures: string[] = []
+  const missingSampleExpectedFixtures: string[] = []
 
-  for (const capability of parserCapabilities) {
-    if (!parserFixtureBlockTypes.has(capability.blockType)) {
-      missingFixtureBlockTypes.push(capability.blockType)
+  for (const blockType of blockTypes) {
+    if (!parserFixtureBlockTypes.has(blockType)) {
+      missingParserFixtureBlockTypes.push(blockType)
     }
 
-    const testPattern = new RegExp(`type:\\s*"${escapeRegex(capability.blockType)}"`)
+    const testPattern = new RegExp(`type:\\s*"${escapeRegex(blockType)}"`)
 
     if (!testPattern.test(testContent)) {
-      missingTestBlockTypes.push(capability.blockType)
+      missingTestBlockTypes.push(blockType)
     }
+  }
 
-    if (capability.sampleIds.length === 0) {
-      sampleGapBlockTypes.push(capability.blockType)
+  for (const capability of parserCapabilities) {
+    if (capability.verificationMode === "sample-fixture" && capability.sampleIds.length === 0) {
+      sampleGapCapabilityIds.push(capability.id)
     }
 
     for (const sampleId of capability.sampleIds) {
       const sample = sampleById.get(sampleId)
 
       if (!sample) {
-        invalidSampleLinks.push(`${capability.blockType}: missing sample ${sampleId}`)
+        invalidSampleLinks.push(`${capability.id}: missing sample ${sampleId}`)
         continue
       }
 
-      if (!sample.expectedBlockTypes.includes(capability.blockType)) {
+      if (!sample.expectedCapabilityIds.includes(capability.id)) {
         invalidSampleLinks.push(
-          `${capability.blockType}: sample ${sampleId} does not declare the block in expectedBlockTypes`,
+          `${capability.id}: sample ${sampleId} does not declare the capability in expectedCapabilityIds`,
         )
       }
     }
   }
 
   for (const sample of sampleCorpus) {
-    if (!exportFixtureIds.has(sample.id)) {
-      missingExportFixtures.push(sample.id)
+    for (const capabilityId of sample.expectedCapabilityIds) {
+      if (!capabilityIdSet.has(capabilityId)) {
+        invalidExpectedCapabilityIds.push(
+          `${sample.id}: expected capability ${capabilityId} is not declared in parserCapabilities`,
+        )
+      }
+    }
+
+    const sourcePath = path.join(sampleFixtureDir, sample.id, "source.html")
+    const expectedPath = path.join(sampleFixtureDir, sample.id, "expected.md")
+
+    if (!(await pathExists(sourcePath))) {
+      missingSampleSourceFixtures.push(sample.id)
+    }
+
+    if (!(await pathExists(expectedPath))) {
+      missingSampleExpectedFixtures.push(sample.id)
     }
   }
 
   const editorCoverage = ([2, 3, 4] as EditorVersion[]).filter(
-    (editorVersion) =>
-      !sampleCorpus.some((sample) => sample.editorVersion === editorVersion),
+    (editorVersion) => !sampleCorpus.some((sample) => sample.editorVersion === editorVersion),
   )
-  const blockCoverageBySample = Object.fromEntries(
-    parserCapabilities.map((capability) => [capability.blockType, capability.sampleIds]),
-  ) satisfies Record<BlockType, string[]>
+  const capabilityCoverageBySample = Object.fromEntries(
+    parserCapabilities.map((capability) => [capability.id, capability.sampleIds]),
+  ) satisfies Record<ParserCapabilityId, string[]>
 
   return {
-    missingFixtureBlockTypes,
+    missingParserFixtureBlockTypes,
     missingTestBlockTypes,
-    sampleGapBlockTypes,
+    sampleGapCapabilityIds,
     invalidSampleLinks,
-    missingExportFixtures,
+    invalidExpectedCapabilityIds,
+    missingSampleSourceFixtures,
+    missingSampleExpectedFixtures,
     missingEditorCoverage: editorCoverage,
-    blockCoverageBySample,
-    parserFixtureCoverageCount:
-      parserCapabilities.length - missingFixtureBlockTypes.length,
-    parserTestCoverageCount: parserCapabilities.length - missingTestBlockTypes.length,
-    parserSampleCoverageCount:
-      parserCapabilities.length - sampleGapBlockTypes.length,
+    capabilityCoverageBySample,
+    parserFixtureOnlyCapabilityIds,
+    parserBlockFixtureCoverageCount: blockTypes.length - missingParserFixtureBlockTypes.length,
+    parserBlockTestCoverageCount: blockTypes.length - missingTestBlockTypes.length,
+    parserBlockTotal: blockTypes.length,
+    parserCapabilitySampleCoverageCount: sampleFixtureCapabilities.length - sampleGapCapabilityIds.length,
+    parserCapabilitySampleTotal: sampleFixtureCapabilities.length,
   }
 }

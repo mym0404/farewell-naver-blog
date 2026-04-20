@@ -1,0 +1,1018 @@
+
+
+
+
+
+<!doctype html>
+<html lang="ko">
+<head prefix="og: http://ogp.me/ns# article: http://ogp.me/ns/article#">
+
+
+
+
+
+<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+
+<meta name="robots" content="index,follow"/>
+
+
+
+<link rel="icon" type="image/png" href="https://ssl.pstatic.net/static/blog/icon/blog_Icon_192x192.png">
+
+<link rel="apple-touch-icon-precomposed" href="https://ssl.pstatic.net/static/blog/icon/blog_Icon_96x96.png" />
+
+<link rel="stylesheet" type="text/css" href="https://ssl.pstatic.net/t.static.blog/nmobile/versioning/lego_w-109950230_https.css" charset="UTF-8" />
+<link rel="stylesheet" type="text/css" href="https://ssl.pstatic.net/t.static.blog/nmobile/versioning/lego_view-105869195_https.css" charset="UTF-8" />
+<style>
+	div.spi_unity {
+		width:291px;
+	}
+</style>
+
+
+
+
+
+ 
+
+	
+		<meta property="og:title" content="[Outsourcing] 외주2"/>
+
+		
+			
+			
+			<meta property="og:image" content="https://blogthumb.pstatic.net/MjAxOTA3MTlfMjkw/MDAxNTYzNTA1NzczODcw.uIJdF_uU_aV1Sm444n7B-cRewu97e3AGlD6V9qVEcMAg.wNNXNaRurOPPCL_uDYWxT3KEc2KxcyYmlS4nVMjcaUcg.PNG.mym0404/1.png?type=w2"/>
+			
+		
+        <meta property="og:description" content="재밌었다 UI구성이나 아키텍처 구조를 짜는 것 보다 수학적인 부분이나 숫자를 처리하는 부분이 까다로웠..."/>
+
+		
+			<meta property="og:url" content="https://blog.naver.com/mym0404/221589718939"/>
+		
+	
+	
+
+<meta property="me:feed:serviceId" content="blog" />
+
+
+<link rel="stylesheet" type="text/css" href="https://ssl.pstatic.net/t.static.blog/nmobile/versioning//lib/prismplayer/prismplayer-mobile-se-1.10.1-24d7e47_https.css">
+
+
+
+
+	
+
+
+
+    
+
+
+
+<meta name="referrer" content="always">
+<meta property="og:type" content="article" />
+<meta property="og:article:author"
+      content="와 이게 에.. | 블로그"/>
+<meta class="_og_tag _author" property="og:site_name"
+	content="네이버 블로그 | 와 이게 에러가 뜨네" />
+<meta property="naverblog:nickname" content="MJ Studio" />
+<meta property="naverblog:profile_image" content="https://blogpfthumb-phinf.pstatic.net/MjAyMjEwMTRfMTAz/MDAxNjY1NzQ5MjY1MDM0.AVvG19JUgaGUkHSYQzfloXRqtUgysk1dCEUvSZWR-lwg.PSKWVVZo45dNRAAS1mSVJf1vxG0B7u8oRdwxRdnUQW8g.JPEG.mym0404/%EB%91%90%EB%9A%B1.jpeg/%25E1%2584%2583%25E1%2585%25AE%25E1%2584%2584%25E1%2585%25AE%25E1%2586%25BC.jpeg?type=s1" />
+
+<meta property="me:feed:serviceId" content="blog" />
+<meta name="format-detection" content="telephone=no" />
+
+
+<meta name="napp-site-analysis" content="gdid=90000003_000000000000003397C6C79B,service=blog,collection=blog" />
+
+
+
+	<link rel="stylesheet" type="text/css" href="https://ssl.pstatic.net/static/blog/se/css/se_viewer_blog_mobile_v1.43.1.css">
+
+
+    <link href="https://editor-static.pstatic.net/v/basic/1.75.0/css/se.viewer.css?v=1.75.0-20260313164205" rel="stylesheet">
+    <link rel="preload" href="https://editor-static.pstatic.net/c/resources/common/fonts/se-nanumgothic-regular.woff2" as="font" crossorigin type="font/woff2">
+
+    <link rel="stylesheet" href="/css/lego/photoviewer/image-viewer.css" /> 
+    <title>[Outsourcing] 외주2 : 네이버 블로그</title>
+    <script type="text/javascript">
+        var gbTrackingCode = 'blog_bloghome';
+        var gbTrackingCodeReferer = 'https://m.blog.naver.com/PostList.naver?blogId=mym0404&categoryNo=0&listStyle=style1';
+        var gbIsOnNotAdPostAd = false;
+        var rssUrlPageSpeedOff = 'true' === 'true';
+    </script>
+</head>
+<body id="body" class="tablet_end" >
+
+    
+    
+        
+    
+
+<div class="_ngApp">
+  <bg-drawer-menu bg-drawer-pc-url="https://blog.naver.com/mym0404/221589718939?viewType=pc" bg-drawer-menu-btn="._openDrawer" bg-drawer-app-link-type="postViewDirect" bg-drawer-app-params-json="{&quot;logNo&quot;:221589718939,&quot;blogId&quot;:&quot;mym0404&quot;}"></bg-drawer-menu>
+</div>
+
+<div class="u_skip"><a href="#ct">본문 바로가기</a></div>
+
+<div class="Ngnb gnb_bg_white" style="will-change: contents;">
+	<div class="Ngnb_service logo_blog_green">
+		<h1 class="Nservice_item">
+			
+				
+				
+					<a href="/Recommendation.naver"><span class="Nicon_service">블로그</span></a>
+				
+			
+		</h1>
+		<h2 class="gnb_title">
+            <div class="center">
+ 				<span class="td">
+ 					<a href="#" id="_categoryName" class="_cur_category _returnFalse" onclick="sendClickNlog('pgn.blogname', '');">
+ 						<span class="sp ico">카테고리 이동</span>
+ 					</a>
+ 				</span>
+                <span class="td">
+ 					<a href="/PostList.naver?blogId=mym0404" onclick="sendClickNlog('pgn.eachhome', '');">
+ 						<span class="ell">와 이게 에러가 뜨네</span>
+ 					</a>
+ 				</span>
+            </div>
+		</h2>
+	</div>
+	<div class="Ngnb_tool">
+		
+		<a href="/PostSearchList.naver?blogId=mym0404" class="Ntool_button"><span class="Nicon_search">검색</span></a>
+		<button type="button" class="Ntool_button _openDrawer _returnFalse" onclick="sendClickNlog('pgn.qmenu', '');"><span class="Nicon_drawer">MY메뉴 열기</span></button>
+	</div>
+</div>
+
+<div id="post_share" style="position:absolute;top:50px;display:none;z-index:2000;right:15px">
+	<div id="spiLayer"></div>
+</div>
+
+<div id="_post_area" class="ct_wrap">
+	<div id="ct" class="end" role="main" style="overflow:hidden;">
+        
+		    
+
+
+
+
+
+
+<div id="_post_property" style="display:none"
+commentCount="1"
+blockType="0"		
+isBlacklistUser="false"	
+blogName="와 이게 에러가 뜨네"
+commentEnable="true"
+categoryNo="66"
+logType="0"
+addDate="1563505917690"
+hasNaverMap="false"
+gdid="90000003_000000000000003397C6C79B"
+browserTitle="[Outsourcing] 외주2 : 네이버 블로그"
+isRecommendableBlog="true"
+attachFilePunishInfo='{}'
+attachVideoInfo = '[ ]'
+editorversion='4'
+supportSE3='true'
+relationTypeWithBlog='4'
+uri="http://blog.naver.com/mym0404/221589718939"
+directoryName=""
+blogUserStatAllow = "false"
+></div>
+<div id="_photo_view_property" style="display: none"
+	 attachImagePathAndIdInfo = '[{&#034;path&#034;:&#034;/MjAxOTA3MTlfMjkw/MDAxNTYzNTA1NzczODcw.uIJdF_uU_aV1Sm444n7B-cRewu97e3AGlD6V9qVEcMAg.wNNXNaRurOPPCL_uDYWxT3KEc2KxcyYmlS4nVMjcaUcg.PNG.mym0404/1.png&#034;,&#034;id&#034;:1}]'
+	 blogId = 'mym0404'
+	 logNo = '221589718939'
+	 title = '[Outsourcing] 외주2'
+	 editorversion='4'
+></div>
+
+   
+	
+		 
+		 
+		
+			
+			
+			
+		
+	
+
+
+<div class="_postView">
+	<!-- 폰트 사이즈 셋팅 -->
+	
+	
+		
+		
+		
+		
+		
+		
+	
+
+	
+	
+	
+
+	
+
+	
+	
+	<div class="post_ct   wrap_rabbit " id="viewTypeSelector">
+		
+		
+
+		
+
+		
+		<div style="font-size:12pt; font-family:'994265_12';" class="view"><!-- Rabbit HTML --><div class="se-viewer se-theme-default" lang="ko-KR">
+    <!-- SE_DOC_HEADER_START -->
+
+    <div class="se-component se-documentTitle se-l-default " id="SE-b112c8e2-c99d-4b98-a735-b2271df99f94">
+        <div class="se-component-content">
+            <div class="se-section se-section-documentTitle se-l-default se-section-align-left">
+                <!-- --> 
+<div class="blog_category"><a href="/PostList.naver?blogId=mym0404&categoryNo=66&logCode=0&categoryName=-+Outsourcing#postlist_block" onclick="sendClickNlog('pst.board', '');">- Outsourcing</a></div>
+<!--
+ -->
+                <div class="se-module se-module-text se-title-text">
+                    <p class="se-text-paragraph se-text-paragraph-align-" style="" id="SE-8c981a1e-5c18-4ae4-ab74-56576b143fed"><span style="" class="se-fs-fs32 se-ff-nanumgothic" id="SE-2f6ea153-dd86-43ed-bc81-7e82a49e97bd"><!-- -->[Outsourcing] 외주2<!-- --></span></p>                </div>
+                <!-- -->
+<div class="blog_authorArea">
+
+	<a href="/PostList.naver?blogId=mym0404" class="blog_thumbnail" onclick="sendClickNlog('pst.writer', '');">
+
+		<span class="img"><img src="https://blogpfthumb-phinf.pstatic.net/MjAyMjEwMTRfMTAz/MDAxNjY1NzQ5MjY1MDM0.AVvG19JUgaGUkHSYQzfloXRqtUgysk1dCEUvSZWR-lwg.PSKWVVZo45dNRAAS1mSVJf1vxG0B7u8oRdwxRdnUQW8g.JPEG.mym0404/%EB%91%90%EB%9A%B1.jpeg/%25E1%2584%2583%25E1%2585%25AE%25E1%2584%2584%25E1%2585%25AE%25E1%2586%25BC.jpeg?type=s1" width="36" height="36" alt="프로필"></span>
+	</a>
+
+	<div class="text_area">
+	    <div class="blog_author">
+            <a href="/PostList.naver?blogId=mym0404" onclick="sendClickNlog('pst.writer', '');"><strong class="ell">MJ Studio</strong></a>
+        </div>
+        <p class="blog_date">
+            2019. 7. 19. 12:11
+        </p>
+	</div>
+</div>
+
+<div class="blog_btnArea">
+		<a href="#" class="btn_buddyadd _buddyadd_default _add_buddy _param(mym0404|false||/BuddyAddForm.naver) _returnFalse" isBlackUser="false" onclick="sendClickNlog('pst.add', ''); nmobileBaEventSender.buddyButtonClick('https://scv-blog.io.naver.com/jackpotlog/v1/logs', '__UNKNOWN__', 17961010, 221589718939, 'X');"><span class="sp"></span> 이웃추가</a>
+
+<!-- 본문 기타 기능 -->
+<div class="post_function_t1">
+<button type="button" class="btn_function _btn_tools" onclick="sendClickNlog('pst.func', '');"><span class="sim">본문 기타 기능</span></button>
+	<div class="lyr_post_function" id="_tools_layer" style="display:none">
+		<ul>
+			<li class="font_size">
+				<strong class="blind">본문 폰트 크기 조정</strong>
+				<button type="button" class="btn_font_s _smallFont  " id="moreSmall" onclick="sendClickNlog('pst.ftxts', '');"><span class="sim">본문 폰트 크기 작게 보기</span></button>
+				<button type="button" class="btn_font_b _bigFont  " id="moreBig" onclick="sendClickNlog('pst.ftxtl', '');"><span class="sim">본문 폰트 크기 크게 보기</span></button>
+				<span class="size  " id="font_size">가</span>
+			</li>
+				<li><a href="#" class="naver-splugin _returnFalse" onclick="sendClickNlog('pst.fshare', 'Mblog.post'); window.nsc='Mblog.post';"
+					data-style="standard"
+					data-url="https://m.blog.naver.com/mym0404/221589718939"
+					data-title="[Outsourcing] 외주2"
+                    data-likeServiceId="BLOG"
+                    data-likeContentsId="mym0404_221589718939"
+                    data-spic-cid="221589718939"
+					data-logDomain="https://proxy.blog.naver.com/spi/v1/api/shareLog"
+                    data-canonical-url="https://m.blog.naver.com/mym0404/221589718939"
+					data-oninitialize="splugin_oninitialize();"
+					data-friend-display="on"
+					data-kakaostory-display="off"
+					data-prevent-short-url="on">공유하기 <span class="share sim naver-splugin-c"></span>
+					</a>
+				</li>
+				<li><a href="#" class="_copy_url _returnFalse" onclick="sendClickNlog('pst.furl', '');">URL복사 <span class="copy sim"></span></a></li>
+				<li><a href="#" class="_report _param(https://srp2.naver.com/report?svc=BLG&exit=close&ctype=AA01&cwriterenc=B82pMqtJEige%2BeWWND4hiC%2Flo9H0l8ky2C5i5Ja2Uew%3D&ctitle=%5BOutsourcing%5D%20%EC%99%B8%EC%A3%BC2&cwriter=mym0***&dark=disable&memtype=Y&env=mobile&cnickname=mym0***&vsvc=BLG&cid=mym0404%40%4017961010%40%40mylog%40%40221589718939&returl=) _returnFalse" onclick="sendClickNlog('pst.report', '');">신고하기 <span class="report sim"></span></a></li>
+			</ul>
+		</div>
+	</div>
+</div>
+<!-- //본문 기타 기능 -->
+
+<!--
+ -->
+            </div>
+        </div>
+    </div>
+    <!-- B2C 상품 -->
+
+<!-- _BLOG_CONTENTS_HEADER_TAIL -->
+    <!-- SE_DOC_HEADER_END -->
+    <div class="se-main-container">
+                <div class="se-component se-image se-l-default" id="SE-0c822ed0-3140-4c4d-b4e5-515c1e9b2b1b">
+                    <div class="se-component-content se-component-content-fit">
+                        <div class="se-section se-section-image se-l-default se-section-align-" >
+
+                                <a href="#" class="se-module se-module-image __se_image_link __se_link" style=" " onclick="return false;" data-linktype="img" data-linkdata='{"id" : "SE-0c822ed0-3140-4c4d-b4e5-515c1e9b2b1b", "src" : "https://mblogthumb-phinf.pstatic.net/MjAxOTA3MTlfMjkw/MDAxNTYzNTA1NzczODcw.uIJdF_uU_aV1Sm444n7B-cRewu97e3AGlD6V9qVEcMAg.wNNXNaRurOPPCL_uDYWxT3KEc2KxcyYmlS4nVMjcaUcg.PNG.mym0404/1.png", "linkUse" : "false", "link" : ""}'>
+                                    <img src="https://mblogthumb-phinf.pstatic.net/MjAxOTA3MTlfMjkw/MDAxNTYzNTA1NzczODcw.uIJdF_uU_aV1Sm444n7B-cRewu97e3AGlD6V9qVEcMAg.wNNXNaRurOPPCL_uDYWxT3KEc2KxcyYmlS4nVMjcaUcg.PNG.mym0404/1.png?type=w80_blur" data-lazy-src="https://mblogthumb-phinf.pstatic.net/MjAxOTA3MTlfMjkw/MDAxNTYzNTA1NzczODcw.uIJdF_uU_aV1Sm444n7B-cRewu97e3AGlD6V9qVEcMAg.wNNXNaRurOPPCL_uDYWxT3KEc2KxcyYmlS4nVMjcaUcg.PNG.mym0404/1.png?type=w800" data-width="693" data-height="366" alt="" class="se-image-resource" />
+                                </a>                        </div>
+                    </div>
+                </div>                <div class="se-component se-text se-l-default" id="SE-0983f485-4645-4685-b627-70447ca06ded">
+                    <div class="se-component-content">
+                        <div class="se-section se-section-text se-l-default">
+                            <div class="se-module se-module-text"><!-- SE-TEXT { --><p class="se-text-paragraph se-text-paragraph-align- " style="" id="SE-df02dd92-9e4e-4184-88d3-02ea9ecf2b9c"><span style="" class="se-fs- se-ff-   " id="SE-b9295882-227d-42ce-8b03-f8684b5d5717">재밌었다</span></p><!-- } SE-TEXT --><!-- SE-TEXT { --><p class="se-text-paragraph se-text-paragraph-align- " style="" id="SE-a1862b2d-44de-448f-8ad4-4055425ee941"><span style="" class="se-fs- se-ff-   " id="SE-b578b61f-6b61-47ff-adc3-b26509462ad3">​</span></p><!-- } SE-TEXT --><!-- SE-TEXT { --><p class="se-text-paragraph se-text-paragraph-align- " style="" id="SE-e5562fbf-5e60-45e2-9bf2-03b02381d97c"><span style="" class="se-fs- se-ff-   " id="SE-b44ba0d2-dc47-4d78-9fdd-e89adc0cff64">UI구성이나 아키텍처 구조를 짜는 것 보다 수학적인 부분이나 숫자를 처리하는 부분이 까다로웠다</span></p><!-- } SE-TEXT --><!-- SE-TEXT { --><p class="se-text-paragraph se-text-paragraph-align- " style="" id="SE-8ee97478-b31a-4261-aaf1-e346fcf9a132"><span style="" class="se-fs- se-ff-   " id="SE-c324b49a-277a-4bdc-bf9c-81ab1cb94daa">​</span></p><!-- } SE-TEXT --><!-- SE-TEXT { --><p class="se-text-paragraph se-text-paragraph-align- " style="" id="SE-83a64bdd-fb3a-47f2-a376-c19aa80e7ecb"><span style="" class="se-fs- se-ff-   " id="SE-e5d86bf3-b7e3-4dd1-aab8-4bfc0c6e95c6">다변수 해석학 F맞아서 그렇다 </span></p><!-- } SE-TEXT --><!-- SE-TEXT { --><p class="se-text-paragraph se-text-paragraph-align- " style="" id="SE-d574f04d-5c35-4bb8-bc7a-6587da66ff3e"><span style="" class="se-fs- se-ff-   " id="SE-86e7b7b5-80e2-400c-8727-d62156c27932">​</span></p><!-- } SE-TEXT --><!-- SE-TEXT { --><p class="se-text-paragraph se-text-paragraph-align- " style="" id="SE-881f337a-4d9a-4446-9560-c09b55643f93"><span style="" class="se-fs- se-ff-   " id="SE-6765835e-e128-4ba7-9cb7-ce58a3e938d3">요즘따라 몸이 말을 잘 안듣는다</span></p><!-- } SE-TEXT --></div>
+                        </div>
+                    </div>
+                </div>    </div>
+</div></div>
+		
+
+		
+		
+	</div>
+
+	<div class="_checkVisible"></div>
+	
+	
+
+	
+	<div id="blog_fe_feed"></div>
+</div>
+
+
+<div class="social_plugin_property" style="display:none">{&#034;title&#034;:&#034;[Outsourcing] 외주2&#034;,&#034;source&#034;:&#034;https://blog.naver.com/mym0404/221589718939&#034;,&#034;blogName&#034;:&#034;와 이게 에..&#034;,&#034;domainIdOrBlogId&#034;:&#034;mym0404&#034;,&#034;nicknameOrBlogId&#034;:&#034;MJ Studio&#034;,&#034;logNo&#034;:221589718939,&#034;smartEditorVersion&#034;:4,&#034;lineDisplay&#034;:true,&#034;blogDisplay&#034;:true,&#034;meDisplay&#034;:true,&#034;cafeDisplay&#034;:true,&#034;outsideDisplay&#034;:true}</div>
+
+	</div>
+	<div id="_loading2" class="rego_loading loading_end" style="display:none">
+        <div class="align"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+    </div>
+
+  <div id="_div_categorylist" class="lyr_category_lst1" style="display:none;">
+    <div class="head">
+      <a href="#" class="btn_close _closeCategoryList"><span class="sp">닫기</span></a>
+      <div class="table">
+        <div class="td">
+          <h2 class="title" style="margin-left:50px;"><span class="ell">카테고리</span></h2>
+        </div>
+        <div class="td btn_area">
+          <a href="/mym0404" class="btn_bloghome"><span class="sp"></span> 이 블로그 홈</a>
+        </div>
+      </div>
+    </div>
+    <ul id="_ul_categorylist" class="lst_t4"></ul>
+  </div>
+</div>
+
+<div id="floating_inf"></div>
+
+
+
+	
+	
+	
+	
+	
+	
+	
+	
+
+
+
+
+<div class="lyr_add_buddy _buddyRecommendationLayer">
+    <div class="box">
+        <div class="writer_area">
+            <span class="dsc">
+                <strong class="nick"><span class="ell">MJ Studio(mym0404)</span></strong>
+                <span class="txt">님을 이웃추가하고 새글을 받아보세요</span>
+            </span>
+        </div>
+
+        <div class="btn_area">
+            <span class="btn"><a href="#"  class="_cancelBuddyRecommendation _returnFalse">취소</a></span>
+            <span class="btn add_buddy"><a href="#" class="_add_buddy_by_recommendation"><span class="sp"></span>이웃추가</a></span>
+        </div>
+    </div>
+</div>
+
+
+
+<div id="blogTeamBuddyRecommendationLayer" class="pop_lyr2 _blogTeamBuddyRecommendationLayer" style="display:none;">
+</div>
+<div id="mobileHappyBeanPopUpLayer" style="display:none;"></div>
+
+<script type="text/template" id="recommend_blogteam">
+<div class="dimmed">
+</div>
+<div class="lyr_cont">
+	<div class="lyr_add_buddy">
+		<div class="writer_area">
+			<span class="dsc">
+				<span class="thumb">
+               		<img src="{=profileImageUrl}" width="50" height="50" alt="섬네일">
+				</span>
+				<strong class="nick">첫 글 작성을 축하드려요!<br>블로그팀과 이웃도 맺어보실래요?</strong>
+			</span>
+		</div>
+		<a href="#" class="btn add_buddy _add_buddy _add_blogteam_buddy _param(blogpeople|true||/BuddyAddForm.naver) _returnFalse" onclick="sendClickNlog('bap.add', '');">이웃추가</a>
+		<a href="#" class="btn cancel _cancle_blogteam_buddy" onclick="sendClickNlog('bap.can', '');">취소</a>
+	</div>
+</div>
+</script>
+
+
+<script type="text/template" id="mobileHappyBeanPopUpTpl">
+    <div class="g_dimmed _g_dimmed" style="display: block;"></div>
+    <div class="lyr_popup">
+        <div class="lyr_content">
+            <div class="lyr_service_guide">
+                <div class="happybean">
+                    <div class="title"><strong class="blind">매일 기록하는 습관, 나눔의 시작이 됩니다.</strong></div>
+                    <p class="text">글이 발행되어, 해피빈 기부콩 1개를 받았습니다.</p>
+                    <div class="img"><img src="{=imageUrl}" width="240" height="133" alt="숲을 만드는 반려나무 한 그루 입양하세요."></div>
+                </div>
+                <a href="{=linkUrl}" class="btn_detail" target="_blank" onclick="MobileHappyBeanPopUpHelper.onClickMoreKong('221589718939')">클릭하고 콩 1개 더 받기</a>
+                <div class="btn_area">
+                    <span class="td"><button class="btn_w100" onclick="MobileHappyBeanPopUpHelper.onClickCloseBtn('221589718939')">닫기</button></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+
+
+
+
+
+
+
+<script type="text/javascript" src="https://ssl.pstatic.net/t.static.blog/nmobile/versioning/LegoCommonJS1-48436828_https.js" charset="UTF-8"></script>
+
+
+    
+        <script type="text/javascript" src="https://ssl.pstatic.net/t.static.blog/nmobile/versioning/LegoCommonMinifiedJS2-1552728373_https.js" charset="UTF-8"></script>
+    
+    
+
+
+<script type="text/javascript">
+jindo.m.patch("1.12.0").add({
+    "useTimingFunction" : function() {
+        var htOsInfo = jindo.m.getOsInfo();
+        if (htOsInfo.ios && parseInt(htOsInfo.version, 10) >= 6) {
+            return -1;
+        }
+    }
+});
+
+$Event.prototype.getEventElement = function(sTargetTagName, sTargetClassName, nMaxDepth) {
+	var el = this.element;
+	var wel = $Element(this.element);
+
+	var sTagName = 'a|button';
+	var sClassName = null;
+
+	var nDepth = typeof nMaxDepth == 'undefined' ? 5 : nMaxDepth;
+
+	if (typeof el.tagName == "undefined") return wel;
+	if (typeof sTargetTagName != "undefined") sTagName = sTargetTagName;
+	if (typeof sTargetClassName != "undefined") sClassName = sTargetClassName;
+
+	var oTagNameRegex = new RegExp("^(" + sTagName + ")$", "i");
+	if (oTagNameRegex.test(el.tagName) && (sClassName == null || wel.hasClass(sClassName))) {
+		return wel;
+	} else {
+		var welParents = wel.parent(function(v) {
+			if (v.$value().nodeType != 1) {
+				return false;
+			}
+
+			if (sTargetClassName) {
+				return oTagNameRegex.test(v.$value().tagName) && v.hasClass(sClassName);
+			}
+
+			return oTagNameRegex.test(v.$value().tagName);
+		}, nDepth);
+
+		return welParents != null && welParents.length > 0 ? welParents[0] : wel;
+	}
+}
+
+
+var doc = document.documentElement;
+doc.setAttribute('data-useragent',navigator.userAgent);
+
+var blogOwner = false;
+var rightClickOpenYn = false;
+var isJeagleDebug = false;
+
+</script>
+
+
+
+<script type="text/javascript">
+    function ImageLazyLoader(selectors) {
+        this.selectors = selectors;
+        var info = $Element("_post_property");
+        this.editorVersion = info.attr("editorversion");
+    }
+
+    ImageLazyLoader.prototype.loadImages = function () {
+        if (this.editorVersion != "3" && this.editorVersion != "4") {
+            return;
+        }
+
+        var containers = jindo.$$(this.selectors);
+        $A(containers).forEach($Fn(function (element) {
+            this.loadImagesForEachContainer($Element(element));
+        }, this).bind())
+    }
+
+    var imageLazyLoadVisible;
+
+    ImageLazyLoader.prototype.loadImagesForEachContainer = function (postContentArea) {
+        $A(postContentArea.queryAll("img")).forEach($Fn(function (img) {
+            img.addClass("_lazy-loading-target-image");
+        }, this).bind())
+
+        $A(postContentArea.queryAll("video._gifmp4")).forEach($Fn(function (img) {
+            img.addClass("_lazy-loading-target-image");
+        }, this).bind())
+
+        imageLazyLoadVisible = new jindo.m.Visible(document, {
+            sClassName : "_lazy-loading-target-image",
+            nExpandSize : 1000
+        });
+
+        jindo.$Fn(function() {
+            imageLazyLoadVisible.check(30);
+        }).attach(window, 'scroll').attach(window, 'resize').attach(window, 'touchend').attach(window, 'touchmove').attach(window, 'touchstart');
+
+
+
+        imageLazyLoadVisible.attach({
+            'visible' : function(oCustomEvent) {
+                var welTarget = $Element(oCustomEvent.elTarget);
+
+                // mp4 gif가 로드되지 않았을경우 gif로 로드 시킨다
+                var mp4LoadFallback = function() {
+                    var gifUrl = welTarget.attr("data-gif-url");
+                    if (!gifUrl || welTarget.attr("poster") === gifUrl) {
+                        return;
+                    }
+                    welTarget.attr("poster", gifUrl);
+                }
+
+                // gifmp4인 경우 재생처리
+                if (welTarget.hasClass("_gifmp4") && welTarget._element.tagName === "VIDEO") {
+                    welTarget._element.play()
+                        .then(function() {
+                            // Android 최대 16개 동시 재생되고, 그 외엔 error 객체에 초기화 에러 처리됨
+                            // 에러코드 설명 https://udn.realityripple.com/docs/Web/API/MediaError
+                            if (!!welTarget._element.error && welTarget._element.error.code === 3) {
+                                mp4LoadFallback();
+                            }
+                        })
+                        .catch(mp4LoadFallback);
+                    return;
+                }
+
+                if(!welTarget.attr("data-lazy-src")){
+                    return;
+                }
+                welTarget.attr("src", welTarget.attr("data-lazy-src"));
+                welTarget.attr("data-lazy-src", '');
+            },
+            'invisible' : function(oCustomEvent) {
+                var welTarget = $Element(oCustomEvent.elTarget);
+
+                // 화면에서 벗어나면 정지 처리
+                if (welTarget.hasClass("_gifmp4") && welTarget._element.tagName === "VIDEO") {
+                    welTarget._element.pause();
+                    return;
+                }
+            }
+        });
+        imageLazyLoadVisible.check();
+    }
+
+    $Fn(function() {
+        var imageLazyLoader = new ImageLazyLoader(".se-main-container,.__se_component_area");
+        imageLazyLoader.loadImages();
+    }).attach(window, "DOMContentLoaded");
+</script>
+
+
+
+
+<script type="text/javascript">window.feCdnPublicPath='https://feblog.pstatic.net/module/real/';</script>
+
+    
+        
+        <script type="text/javascript" charset="utf-8" defer="defer" src="https://feblog.pstatic.net/module/real/postView/postView_2.23.0/js/postView.js"></script>
+    
+    
+
+<script src="https://ssl.pstatic.net/t.static.blog/nmobile/versioning//common/lib/jquery/1.12.4/jquery-1.12.4.min-049104e_https.js"></script>
+
+<script type="text/javascript">
+// document.domain = 'naver.com';
+var gbIsInf = "" == "true" ? true : false;
+var nilOptions = {
+    devMode: "true"=="false"
+};
+
+
+$Element(window).attach("error", function() {
+    var oImgAndVideoHandler;
+    if (document.readyState == "complete") {
+        
+        oImgAndVideoHandler = new ImgAndVideoHandler(function(){}, isInApp);
+        oImgAndVideoHandler.loadOnError();
+    } else {
+        window.onload = function() {
+            oImgAndVideoHandler = new ImgAndVideoHandler(function(){}, isInApp);
+            oImgAndVideoHandler.loadOnError();
+        }
+    }
+});
+
+var gUrlMap = {
+    'PostCategoryListAsync' : '/rego/PostCategoryListAsyncTpl.naver',
+    'PostView' : '/PostView.naver',
+    'CommentList' : '/CommentList.naver', // AngularJS
+    'ScrapToBlog' : '/ScrapToBlog.naver',
+    'ScrapToCafe' : '/ScrapToCafe.naver',
+    'PostUpdateSetInfoForm' : '/PostUpdateSetInfoForm.naver',
+
+    'Login' : '/Login.naver',
+    'Logout' : '/Logout.naver',
+    'PostDelete' : '/PostDelete.naver',
+    'FirstWriterRecommendBuddyCheckAsync' : '/rego/FirstWriterRecommendBuddyCheckAsync.naver',
+    'PhotoViewer' : 'm.photoviewer.naver.com',
+
+    'PhotoOriginal' : 'https://blogfiles.pstatic.net',
+    'PhotoThumbnail' : 'https://mblogthumb-phinf.pstatic.net',
+    'CheckIn' : '/CheckIn.naver',
+    'OtherCheckIn' : '/OtherCheckIn.naver'
+};
+var gLoginUrl = 'https://nid.naver.com/nidlogin.login?svctype=262144';
+var gMobileUrl = 'https://m.blog.naver.com';
+var gBlogCommandUrl = 'https://command.blog.naver.com';
+var blogCommandReadApiOn = 'true' === 'true';
+
+
+var showCoupon = 'false' === 'true';
+
+var naverId = "mym0404";
+var blogId = "mym0404";
+var bLoginUser = false;
+var userNaverId = "";
+var blogNicknameOrBlogId = "MJ Studio";
+var gMCA = JSON.parse('{"mobileInAppType":"NOTINAPP","mobileBrowser":{"type":"UNDEFINED","version":0.0,"android":false,"androidGingerbread":false,"isDolfin":false,"isOpera":false,"isAndroid":false,"safari":false,"opera":false,"dolfin":false},"inAppVersion":"2.0.0","isNaverInApp":false,"isBlogInApp":false,"blogAppInstallUrl":"http://m.naver.com/services.html","supportToolButton":false,"supportHappybeanWrite":false,"supportPostAlbumApp":false,"supportDaliyWrite":false,"supportVideoViewer":false,"stampEnabledAppVersion":false,"lazyLoadableBrowser":false,"iOSMenuNavigationV2":false,"iOSMenuNavigationV1":false,"supportNaverExtension":true,"inAppYn":false,"isAndroidApp":false,"isIOSApp":false,"iOS7":false,"marketPostUpdatableAppVersion":false,"notInAppSafariOrAndroidBrowser":false,"naverServiceAppInstallUrl":"/services.html","androidNewStyleAppVersion":false,"supportBuddyAppPushAndBuddyInvitation":false,"stampEnabledInBuddyListAppVersion":false,"supportReportInAndroid":false,"notDASupportCustomSchemeInAndroid":false}');
+var gsPostTitle = "[Outsourcing] 외주2 : 네이버 블로그";
+var gnCategoryNo = 66;
+
+var gsLocationOrigin = "https://m.blog.naver.com";
+var sStartLogNo = '221589718939';
+var sNavType = '';
+var sDirectorySeq = '';
+var sBuddyGroupId = '';
+
+var gLogNo = '221589718939';
+var isScrapPost = false;
+
+
+var readOnlyStatus = false;
+var readOnlyStatusAll = false;
+var readOnlyLinkErrorMsgMobile = '블로그 점검 중으로 기존 글 삭제 댓글 답글 공감 이웃추가 구독하기 새글OFF 그룹이동 기능이 제한됩니다.';
+
+
+
+
+var gBrowserType = "UNDEFINED";
+var inAppVersion = "2.0.0";
+var isInApp = false;
+var noSendToStat = false;
+var isSupportVideoViewer = false;
+
+var gbIsAfterWrite = false;
+
+var userId = "";
+var scrapedInfo = {
+		bMemo : false,
+		logNo : 0,
+		nOpenType : 2
+	};
+
+
+var gBannerListMapJson = '';
+
+
+var gdid = "90000003_000000000000003397C6C79B";
+var postTitle = '[Outsourcing] \uC678\uC8FC2';
+var lcsUrl = "https://m.blog.naver.com/PostView.naver?blogId=mym0404&logNo=221589718939";
+var lcsUrlBase = "https://m.blog.naver.com/PostView.naver?blogId=mym0404&logNo=221589718939";
+var buddyController = null;
+var gfMarketUrl = "http://m.gfmarket.naver.com";
+var gnMaxNoticePostCount = 5;
+
+var isWritedByApp = false;
+
+var isWritedByMobileWeb = false;
+
+var isNilAnalystLeaveEvent = "true";
+
+var angularConfig = {"isDev":false,"staticResourceUrl":"https://ssl.pstatic.net/t.static.blog","lcsUrl":"lcs.naver.com","revision":"3b90be3","jeagleEyeDebug":false,"deployPhase":"release","countryCode":"NONE","isInApp":false,"isAndroidApp":false,"isIOSApp":false,"inAppScheme":"naverblog://blogapp","inAppVersion":"2.0.0","isSupportMarketNotification":false};
+var ngReadOnlyStatus = {"isReadOnly":false,"startTime":null,"endTime":null,"reason":null,"usageTip":null,"maintenanceType":null};
+var urlMap = {"commonStat":"https://blog.stat.naver.com","likeit":"https://blog.like.naver.com","ugcmarketthumb":"https://ugcmk-phinf.pstatic.net","section":"https://section.blog.naver.com","dthumb":"https://dthumb-phinf.pstatic.net/?src=","gfmarket_mobile":"http://m.gfmarket.naver.com","blog":"https://blog.naver.com","naver_openmain":"https://openmain.pstatic.net","guestbook":"https://guestbook.blog.naver.com","gfmarket_thumb":"https://storep-phinf.pstatic.net","beyond_analytics":"https://scv-blog.io.naver.com/jackpotlog/v1/logs","sellerBlog":"https://seller.blog.naver.com","module_moment":"https://api-moment.blog.naver.com","likeitcdn":"https://static-like.pstatic.net","nmobile":"https://m.blog.naver.com","module_guestbook":"https://api-guestbook.blog.naver.com","naverCommentApiProxyUrl":"https://apis.naver.com/commentBox/blogid","pay":"https://new-m.pay.naver.com","naverCommentApiUrl":"https://apis.naver.com/commentBox/cbox9","spi":"https://ssl.pstatic.net/spi","blogprofilethumb":"https://blogpfthumb-phinf.pstatic.net","mobileNaver":"http://m.naver.com","mobilemovieplayer":"https://sstatic-rmcnmv.pstatic.net","https_nmobile":"https://m.blog.naver.com","naverCommentStaticUrl":"https://ssl.pstatic.net/static.cbox"};
+var zookeeper = {"value":{"feed.thumbnail.display.percent":"on","anigif.display.percent":"on"},"onoff":{"guestbook.module.dummy.type":"on","mobile.home.video.view":"on"},"option":{"istestid":"false"}};
+
+var gsCategoryName = "- Outsourcing";
+var gsBlogOwnerYn = blogOwner ? "Y" : "N";
+var gsTagName = "";
+var gsSessionId = "";
+var editorViewerUrl = "https://editor-static.pstatic.net/v/basic/1.75.0/se.viewer.js?v=1.75.0-20260313164205";
+var blogPipUrl = "https://ssl.pstatic.net/t.static.blog/nmobile/versioning//js/lego/pip/blog-pip-ca0ceab_https.js";
+var imageViewerUrl = "https://ssl.pstatic.net/t.static.blog/nmobile/versioning//js/lego/photoviewer/image-viewer.min-d0f14a8_https.js";
+var thumbnailPercent = "100";
+var searchVid = "";
+var videoAutoPlay = true;
+var rproductId = '';
+var gSeVersion = 4;
+var gsAdvertiseKeyword = "";
+var gsSaInfo = "";
+var videoInfraSid = 2;
+var isDevPhase = "false";
+var isStagePhase = "false";
+var postAdvertiseEnableYN = true;
+var openType = 2;
+var sellerNo = '0';
+var hasProduct = 'false' === 'true';
+var temporaryStopSeller = 'false' === 'true';
+var leaveRequestSeller = 'false' === 'true';
+var tradeInterruptionSeller = 'false' === 'true';
+var feEnv = 'real';
+var infEnv = 'real';
+var productList = JSON.parse('[]');
+var feMobileUrl= "https://fe-m.blog.naver.com";
+var blogModuleJs= "https://feblog.pstatic.net/module/real/market/market_1.0.3/js/market.js";
+var firstThumbnailUrlPath = '';
+var productCount = '0';
+var nilNtmLibUrl = "https://ssl.pstatic.net/t.static.blog/nmobile/versioning//common/js/nilForNtm-89afd2f_https.js";
+var gbIsNotOpenBlogUser = "false" === "true";
+var itemFactoryDomainDisabled = 'true' === 'true';
+
+var isBuyWithMyOwnMoneyPost = 'false' === 'true';
+var isBuyWithMyOwnMoneyEnableApp = 'true' === 'true';
+var isEndReadCompleteBAMetricON = 'true' === 'true';
+var gladAdvertiseUrl = 'https://api.tv.naver.com'
+var blogNo = '17961010';
+
+
+var beyondAnalyticsUrl = 'https://scv-blog.io.naver.com/jackpotlog/v1/logs';
+var baUserKey = '__UNKNOWN__';
+var userIdNo = "";
+var fromRecommendationType = '';
+
+
+var newRecommendationBlockView = JSON.parse('{\"env\":\"real\",\"logNo\":221589718939,\"title\":\"[Outsourcing] \uC678\uC8FC2\",\"blogNo\":17961010,\"blogId\":\"mym0404\",\"categoryNo\":66,\"isForeignLocation\":false,\"feedStartBannerEnabled\":false,\"directorySeq\":0,\"logCode\":0,\"writingMaterialType\":0,\"blocks\":[{\"type\":\"AIRS_MIXED\",\"enabled\":true,\"searchKeyword\":\"\",\"contentLineage\":{\"contentType\":\"\",\"contentSource\":\"\",\"contentTag\":\"\",\"recommendBlockCode\":\"\",\"initialTrackingCode\":\"others\"}},{\"type\":\"AIRS_ONE_COL_1\",\"enabled\":true,\"searchKeyword\":\"\",\"contentLineage\":{\"contentType\":\"\",\"contentSource\":\"\",\"contentTag\":\"\",\"recommendBlockCode\":\"\",\"initialTrackingCode\":\"others\"}},{\"type\":\"AIRS_ONE_COL_2\",\"enabled\":true,\"searchKeyword\":\"\",\"contentLineage\":{\"contentType\":\"\",\"contentSource\":\"\",\"contentTag\":\"\",\"recommendBlockCode\":\"\",\"initialTrackingCode\":\"others\"}},{\"type\":\"AIRS_ONE_COL_3\",\"enabled\":true,\"searchKeyword\":\"\",\"contentLineage\":{\"contentType\":\"\",\"contentSource\":\"\",\"contentTag\":\"\",\"recommendBlockCode\":\"\",\"initialTrackingCode\":\"others\"}}],\"categoryBlockEnabled\":true,\"recommendationCategory\":\"ETC\",\"nudgeCategory\":\"BLOG\",\"userInfo\":{\"loginUserId\":\"\",\"relationType\":4,\"nickname\":null,\"profileThumbnailUrl\":null,\"notOpenBlogUser\":false},\"baLogData\":{\"trackingCode\":\"blog_bloghome\",\"userKey\":\"__UNKNOWN__\",\"categoryRelatedContentLineage\":{\"contentType\":\"blog_post\",\"contentSource\":\"blog-rcmd\",\"contentTag\":\"\",\"recommendBlockCode\":\"blog_fd_cate\",\"initialTrackingCode\":\"others\"}},\"initialTrackingCode\":\"others\",\"gdid\":\"90000003_000000000000003397C6C79B\",\"sessionId\":null,\"tagNames\":\"\",\"smartEditorType\":4,\"scrapYn\":false,\"searchKeyword\":\"\",\"advertise\":{\"adPostYn\":false,\"adContentYn\":false,\"adContentLocation\":-1},\"saInfo\":null,\"inactiveAdPostBottomAdvertiseEnabled\":false,\"lineBannerList\":[{\"id\":101531,\"type\":\"l2\",\"imageUrl\":\"https:\/\/blogfiles.pstatic.net\/MjAyNjAzMjdfMTg4\/MDAxNzc0NTkyMzY2OTc1.FqGBcHnZXRBovoLi8fmsHxWW_zIvNHPnzZvqJ0wrHDsg.4Dq4sIw-2V4yPuACEVmn4BuwwS9LNbqq-YI15TXSt6sg.PNG\/MW%ED%95%98%EB%8B%A8_6_.png\/MW%ED%95%98%EB%8B%A8_6_.png\",\"linkUrl\":\"https:\/\/m.blog.naver.com\/MarketPlace.naver?homeCategoryId=promotion\",\"subText\":\"blog market\",\"mainText\":\"\uCCAD\uB7C9\uBBF8 \uB118\uCE58\uB294\\\\n\uCE58\uD2B8\uD0A4 \uCF54\uB514 #\uB370\uB2D8\uD32C\uCE20\",\"bgColor\":\"#3056BD\",\"textColor\":\"#FFFFFF\",\"isEvent\":false}],\"profileInfo\":{\"profileImageUrl\":\"https:\/\/blogpfthumb-phinf.pstatic.net\/MjAyMjEwMTRfMTAz\/MDAxNjY1NzQ5MjY1MDM0.AVvG19JUgaGUkHSYQzfloXRqtUgysk1dCEUvSZWR-lwg.PSKWVVZo45dNRAAS1mSVJf1vxG0B7u8oRdwxRdnUQW8g.JPEG.mym0404\/%EB%91%90%EB%9A%B1.jpeg\/%25E1%2584%2583%25E1%2585%25AE%25E1%2584%2584%25E1%2585%25AE%25E1%2586%25BC.jpeg\",\"nickName\":\"MJ Studio\",\"directoryName\":\"IT\u00B7\uCEF4\uD4E8\uD130\",\"subscriberCount\":348,\"introduction\":\"\uC704\uB300\uD55C \uC0DD\uAC01\uC740 \uB179\uC2AC\uC9C0 \uC54A\uB294\uB2E4   \\n\\nhttps:\/\/www.mjstudio.net\/\",\"yearOfBlogBadgeDisplay\":false,\"suggestionBlogBadgeDisplay\":false,\"powerBlogBadgeDisplay\":false,\"officialBlogBadgeDisplay\":false,\"talkTalkUrl\":\"\",\"externalChannelViewList\":[],\"lastYearOfBlog\":0,\"isAiPickBlog\":false,\"postFadeOut\":true,\"blackedByUser\":false,\"blackUser\":false},\"endPageRecommendRenderMargin\":0,\"readOnlyStatus\":false,\"lazyTest\":false,\"searchABTestInfo\":{\"abTestNo\":289,\"experimentNo\":572,\"variation\":\"B\",\"finished\":true},\"etcABTestInfo\":null,\"feedContainerId\":\"blog_fe_feed\",\"isTagHidden\":false,\"airsTag\":\"\",\"postTopic\":\"\",\"modal\":null,\"isReactionEnable\":true,\"isCommentEnable\":true,\"commentCount\":1,\"commentNoPosition\":null,\"thumbnailUrl\":\"https:\/\/blogthumb.pstatic.net\/MjAxOTA3MTlfMjkw\/MDAxNTYzNTA1NzczODcw.uIJdF_uU_aV1Sm444n7B-cRewu97e3AGlD6V9qVEcMAg.wNNXNaRurOPPCL_uDYWxT3KEc2KxcyYmlS4nVMjcaUcg.PNG.mym0404\/1.png\",\"blogName\":\"\uC640 \uC774\uAC8C \uC5D0\uB7EC\uAC00 \uB728\uB124\",\"scrap\":{\"isScrapEnable\":false,\"isOutSideAllow\":true,\"scrapType\":2,\"shareCount\":0,\"isMemolog\":false,\"allOpenPost\":true},\"isShoppingApp\":false,\"influencerLevel\":0,\"adBucket\":null,\"adCustomParameterAbt\":\"A\",\"isChangeLineBannerPosition\":true,\"postTopicInfo\":null,\"marketPost\":false,\"fromSearchAddView\":false,\"inApp\":false}');
+var newRecommendationSentryView = JSON.parse('{"env":"real","platform":"postView","sampleRate":0.1}');
+var endPageRecommendRenderMargin = 0;
+var isLikeCommentCountPlatformApiOn = 'false' === 'true';
+var powerLinkABATestJson = JSON.parse('{}');
+
+var scrappedPostLogNoOrLogNo = 221589718939;
+var scrappedPostDomainIdOrBlogIdOrBlogId = 'mym0404';
+
+var isPhotoViewerW966On = 'true' === 'true';
+
+var se3Fadeout = 'true' === 'true';
+
+var isEnableMaterialFeedLink = 'true' === 'true';
+
+var blogNewsProxyUrl = "https://m.blog.naver.com/api/news/article";
+
+var isShoppingApp = 'false' === 'true';
+
+$Element(window).attach("load", function (event) {
+       setTimeout(
+        function() {
+            
+            productController = new ProductController(blogId, userId, gLogNo, sellerNo, hasProduct, productList, feEnv, firstThumbnailUrlPath, productCount, showCoupon);
+
+            var vodCloudPluginUrl = isDevPhase === 'true' ? "https://ssl.pstatic.net/t.static.blog/nmobile/versioning//lib/prismplayer/vodcloud-plugin/vodcloud-config.dev-d5a61c0_https.js" :
+                (isStagePhase === 'true' ? "https://ssl.pstatic.net/t.static.blog/nmobile/versioning//lib/prismplayer/vodcloud-plugin/vodcloud-config.stage-22e3471_https.js"
+                : "https://ssl.pstatic.net/t.static.blog/nmobile/versioning//lib/prismplayer/vodcloud-plugin/vodcloud-config.real-5601565_https.js");
+
+            postViewController = new PostViewController(blogId, sStartLogNo, sNavType, "false", ""
+                , "https://ssl.pstatic.net/spi/js/release/ko_KR/splugin.m.js?"
+                , "https://ssl.pstatic.net/t.static.blog/nmobile/versioning//lib/prismplayer/prismplayer-mobile-1.10.1.min-0ebd352_https.js"
+                , vodCloudPluginUrl
+                , "false", "66", "", 0, isNilAnalystLeaveEvent
+				, "https://mybox.naver.com", editorViewerUrl, blogPipUrl, imageViewerUrl
+                , "https://apis.naver.com/", true, '{}', '[]',
+                videoInfraSid, isDevPhase, isStagePhase, rproductId, hasProduct, temporaryStopSeller, leaveRequestSeller, "naver", tradeInterruptionSeller, nilNtmLibUrl,
+                gladAdvertiseUrl, scrappedPostLogNoOrLogNo, scrappedPostDomainIdOrBlogIdOrBlogId, isPhotoViewerW966On, isShoppingApp);
+            
+            postViewController.setFocusVideoId(searchVid);
+            postViewController.start();
+            
+
+            
+            buyWithMyOwnMoneyController = new BuyWithMyOwnMoneyController();
+
+            try {
+                lazyVersioningLoader.loadJs("https://ssl.pstatic.net/adimg3.search/adpost/js/ad.js");
+            } catch (e) {
+                console.log(e);
+            }
+        }, 0);
+
+
+        new BannerController(new BannerView(), new BannerModel(), isAndroidBrowser, false, "2.0.0").start();
+        new BlogAppAdController().start();
+
+        buddyController = new BuddyController("mym0404");
+        buddyController.start();
+
+        
+
+        new RclickUtility().checkRClickYN(rightClickOpenYn, blogOwner);
+
+        lazyVersioningLoader.lazyJsLoader({
+            _ngbundle : function() {
+                angular.bootstrap($$.getSingle('._ngApp'), ['bgPostViewApp'], {
+                    strictDi: true
+                });
+            }
+        });
+});
+
+function lazyViewLoadForCallback(){
+    postViewController.lazyViewLoad();
+}
+
+function timerStop(){
+	postViewController.timerStop();
+}
+
+function _goToCheckInByPlaceId(placeId) {
+    postViewController._goToCheckInByPlaceId(placeId);
+}
+
+function _goToCheckInByBlogId(checkInDomainIdOrBlogId) {
+    postViewController._goToCheckInByBlogId(checkInDomainIdOrBlogId);
+}
+
+function _goToCheckInForeignPage(lon, lat) {
+    postViewController._goToCheckInForeignPage(lon, lat);
+}
+</script>
+
+<div class="_lazyLoadingList" _groupname="_ngbundle" _order="0" style="display:none"><!--/**https://ssl.pstatic.net/t.static.blog/nmobile/versioning/NgPostViewBundle-859448438_https.js**/--></div>
+<div class="_lazyLoadingList" _groupname="_ngbundle" _order="1" style="display:none"><!--/**https://ssl.pstatic.net/t.static.blog/nmobile/versioning/NgPostViewTemplate-22486902_https.js**/--></div>
+<script type="text/javascript" src="https://ssl.pstatic.net/t.static.blog/nmobile/versioning/LegoPostView-1255012477_https.js" charset="UTF-8"></script>
+<script src="https://ssl.pstatic.net/tveta/libs/ssp-video/prod/ssp.web.sdk.js"></script>
+
+
+
+
+
+<script type="text/javascript">
+
+var safariBrowser = "SAFARI";
+var safariIpadBrowser = "SAFARI_IPAD";
+var androidBrowser = "ANDROID";
+var androidGalTabBrowser = "ANDROID_GALTAB";
+var androidHoneyCombBrowser = "ANDROID_HONEYCOMB";
+var dolfinBrowser = "DOLFIN";
+var operaBrowser = "OPERA";
+
+
+var gBrowserType = "UNDEFINED";
+var gBrowserVersion = "0.0";
+var isSafariBrowser = (gBrowserType == safariBrowser || gBrowserType == safariIpadBrowser);
+var isIos4xSafariBrowser = isSafariBrowser && (navigator.userAgent.match(/OS 4_3/i)) ? true : false;
+var isIos5xSafariBrowser = isSafariBrowser && (navigator.userAgent.match(/OS 5/i)) ? true : false;
+var isAndroidBrowser = (gBrowserType == androidBrowser) || (gBrowserType == androidGalTabBrowser) || (gBrowserType == androidHoneyCombBrowser);
+var isAndroid4xBrowser = isAndroidBrowser && (navigator.userAgent.match(/Android 4./i)) ? true : false;
+var isAndroid5xBrowser = isAndroidBrowser && (navigator.userAgent.match(/Android 5./i)) ? true : false;
+var isBelowAndroid5xBrowser = isAndroid4xBrowser || isAndroid5xBrowser;
+var isAndroidGingerbread = false;
+var isDefaultTextSupportingBrowserType = false;
+var gIsNotInAppSafariOrAndroidBrowser = false;
+var isSBrowser = (navigator.userAgent.match(/SamsungBrowser/i)) ? true : false;
+
+
+
+var gDeployPhase = ""; 
+
+var ReloadFile=(function(){var d=2500;var b={};var h={};var c=5;function k(o){var n=o.split(/\/+/g);var p=n[n.length-1].split("?")[0].split(".")[0];return p}function a(){var n=document.getElementsByTagName("script");for(var p=0;p<n.length;p++){var q=n[p].src;if(q!=""&&q.toLowerCase().indexOf("lazyloading")<0&&(q.toLowerCase().indexOf("blog.naver.com")>-1||q.toLowerCase().indexOf("blog.naver.net")>-1)){var o=k(q);var r=o+"_js";n[p].id=r;f(r,c);l(r,q)}}}function g(){var n=document.getElementsByTagName("link");for(var p=0;p<n.length;p++){var r=n[p].href;var q=n[p].type;if("text/css"==q.toLowerCase()&&r!=""&&r.toLowerCase().indexOf("lazyloading")<0&&(r.toLowerCase().indexOf("blog.naver.com")>-1||r.toLowerCase().indexOf("blog.naver.net")>-1)){var o=k(r);var s=o+"_css";n[p].id=s;f(s,c);e(s,r)}}}function l(q,o){i(q);if((typeof window.defineNHNJS=="undefined"||typeof window.defineNHNJS[q]=="undefined")&&b[q].retry++<b[q].maxRetry){var n=document.getElementById(q);var p=document.createElement("script");p.type="text/javascript";p.id=n.id;p.charset=n.charset;p.src=o+"?"+new Date().getTime()+"_"+Math.floor(Math.random()*100)+1;n.parentNode.removeChild(n);document.getElementsByTagName("body")[0].appendChild(p);m(q,function(){l(q,o)})}}function m(o,n){if(b[o].maxRetry>1){h[o]=setTimeout(n,d)}}function f(o,n){b[o]={retry:0,maxRetry:n||1}}function i(n){if(typeof h[n]!="undefined"){clearTimeout(h[n]);h[n]=null}}function e(o,n){document.addEventListener("DOMContentLoaded",function(){j(o,n)},false)}function j(u,q){i(u);if(b[u].retry++<b[u].maxRetry){var t="defineNHNCSS_"+u;var s=document.getElementById(t);if(!s){var n=document.createElement("div");n.id=t;n.style.display="none";document.body.appendChild(n);s=document.getElementById(t)}var o=document.defaultView.getComputedStyle(s,"").getPropertyValue("color");if(o=="rgb(0, 0, 0)"){var p=document.getElementById(u);var r=document.createElement("link");r.rel="stylesheet";r.type="text/css";r.id=p.id;r.charset=p.charset;r.href=q+"?"+new Date().getTime()+"_"+Math.floor(Math.random()*100)+1;p.parentNode.removeChild(p);document.getElementsByTagName("body")[0].appendChild(r);m(u,function(){j(u,q)})}}}return{js:function(n){try{if(n==null||n=="local"){return}a()}catch(o){}},css:function(n){try{if(n==null||n=="local"){return}g()}catch(o){}}}})();if((isSafariBrowser||isAndroidBrowser)&&typeof gDeployPhase!="undefined"&&gDeployPhase!=""){if(window.attachEvent){window.attachEvent("onload",function(){ReloadFile.js(gDeployPhase)})}else{window.addEventListener("load",ReloadFile.js(gDeployPhase),false)}ReloadFile.css(gDeployPhase)};
+</script>
+
+
+</body>
+
+<script>
+    
+    var currentToken;
+    function callbackFromFESignUp(event) {
+        var data = event.data;
+
+        if(event.origin != window.location.origin){
+            return;
+        }
+
+        if(data.token != currentToken){
+            return;
+        }
+
+        data.refresh && location.reload();
+    }
+
+    window.addEventListener('message', callbackFromFESignUp, false);
+</script>
+
+
+
+
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function() {
+            document.addEventListener("click", function(e) {
+                var materialLink = e.target.closest("a[data-linktype='material']");
+                if (materialLink) {
+                    e.preventDefault();
+                    var linkData = materialLink.getAttribute("data-linkdata");
+                    if (linkData) {
+                        try {
+                            var parsedData = JSON.parse(linkData);
+                            if (typeof materialResolver === "function") {
+                                materialResolver(parsedData);
+                            }
+                        } catch (err) {
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <script src="https://ssl.pstatic.net/t.static.blog/nmobile/versioning//common/lib/ntm-noparam/ntm-blog-web-c326aba_https.js"></script>
+
+
+<script type="text/javascript" src="https://ssl.pstatic.net/t.static.blog/nmobile/versioning/NtmBaLog-1049520935_https.js" charset="UTF-8"></script>
+
+
+<script>
+    var baParams = {};
+    // [BA] 공통
+    baParams.baUrl = "https://scv-blog.io.naver.com/jackpotlog/v1/logs";
+    baParams.baSceneId = 'post_end';
+    
+    baParams.baUserKey = '__UNKNOWN__';
+    
+    // [BA] post_end
+    
+    baParams.blogNo = '17961010';
+    
+    // [BA] post_end
+    
+    baParams.logNo = '221589718939';
+    // [BA] p_add_date
+    baParams.postWriteDate = '1563505917690';
+    
+    // [BA] blog_end
+    
+    baParams.ownerRelationType = '4';
+    
+    // [BA] post_end
+    
+    baParams.userRelationType = '4';
+    
+    // [BA] post_end
+    baParams.isInApp = false;
+
+    baParams.initialTrackingCode = "others";
+    baParams.postendTemplateType = "feed_card_others_type";
+    baParams.attachmentSetCount = {"korea_map":0,"foreign_map":0,"writing_material_info":0,"buy_with_my_own_money_shopping":0,"buy_with_my_own_money_visit_order":0,"buy_with_my_own_money_visit_reservation":0,"buy_with_my_own_money_visit_receipt":0,"image":1,"book_count":0,"movie_count":0,"tv_count":0,"music_count":0,"shopping_count":0,"show_count":0,"news_count":0,"sports_count":0,"stock_count":0,"realestate_count":0};
+    baParams.postTopics = {"short_ai_directory_name":"분류되지않음","directory_name":"","full_ai_directory_name":"분류되지않음"};
+
+    NmobilePageViewSender.init(baParams);
+</script>
+
+
+</html>

@@ -56,6 +56,24 @@ output/
 
 지원 범위는 공개 글만입니다.
 
+## 지원 블록 요약
+
+사용자 관점 표기는 `SE2 / SE3 / ONE(SE4)`를 쓰고, 내부 카탈로그는 `se{editorVersion}-{blockType}` capability id를 기준으로 관리합니다.
+
+| 에디터 | 지원 블록 |
+| --- | --- |
+| `SE2` | `paragraph`, `code`, `image`, `imageGroup`, `table`, `rawHtml`, `heading*`, `quote*`, `divider*` |
+| `SE3` | `paragraph`, `quote`, `image`, `imageGroup`, `table`, `code*` |
+| `ONE(SE4)` | `paragraph`, `heading`, `quote`, `divider`, `code`, `formula`, `image`, `imageGroup`, `video`, `linkCard`, `table`, `rawHtml*` |
+
+`*` 표시는 parser fixture/unit test로는 검증되지만, 현재 공개 실샘플 fixture는 없는 capability입니다. 이 목록은 [src/shared/parser-capabilities.ts](/Users/mj/projects/farewell-naver-blog/src/shared/parser-capabilities.ts:13) 과 [src/shared/sample-corpus.ts](/Users/mj/projects/farewell-naver-blog/src/shared/sample-corpus.ts:4) 를 source of truth로 삼습니다.
+
+### 검증 기준
+
+- `pnpm samples:verify`: 저장된 공개 글 `source.html -> expected.md`를 오프라인으로 다시 돌려 fixture-first 회귀를 확인합니다.
+- `pnpm smoke:ui`: Playwright로 mock 기반 UI 흐름을 확인합니다. parser/export 실샘플 회귀와는 역할이 다릅니다.
+- `pnpm parser:check`: capability catalog, sample corpus, parser fixture, blockType별 test hint 연결이 계속 맞는지 확인합니다.
+
 ## 빠른 시작
 
 ### 요구 사항
