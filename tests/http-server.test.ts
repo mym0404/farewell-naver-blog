@@ -197,6 +197,7 @@ describe("http server", () => {
       expect(uploaderConfig).toMatchObject({
         repo: "owner/name",
         token: "ghp_test_upload_token",
+        customUrl: "https://cdn.jsdelivr.net/gh/mym0404/ia2",
       })
       expect(uploaderConfig).not.toHaveProperty("path")
 
@@ -218,6 +219,7 @@ describe("http server", () => {
     const options = defaultExportOptions()
 
     options.assets.imageHandlingMode = "download-and-upload"
+    options.assets.githubCustomUrl = "https://cdn.jsdelivr.net/gh/mym0404/ia2"
 
     const exportResponse = await fetch(`${baseUrl}/api/export`, {
       method: "POST",

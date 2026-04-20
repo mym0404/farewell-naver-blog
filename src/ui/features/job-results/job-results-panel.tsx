@@ -332,6 +332,7 @@ export const JobResultsPanel = ({
   const showUploadForm =
     mode === "upload" &&
     (job?.status === "upload-ready" || job?.status === "upload-failed")
+  const showExportResults = mode === "upload" || mode === "result"
   const latestLogSignature = (() => {
     const lastEntry = job?.logs.at(-1)
 
@@ -517,7 +518,7 @@ export const JobResultsPanel = ({
             {showUploadForm ? (
               <form
                 id="upload-form"
-                className="grid gap-3 rounded-[1.5rem] border border-slate-200 bg-white p-4 md:grid-cols-[minmax(0,0.7fr)_minmax(0,1fr)_auto]"
+                className="grid gap-4 rounded-[1.5rem] border border-slate-200 bg-white p-4"
                 onSubmit={async (event) => {
                   event.preventDefault()
                   await onUploadStart({
@@ -526,50 +527,52 @@ export const JobResultsPanel = ({
                   })
                 }}
               >
-                <label className="grid gap-2">
-                  <span className="text-sm font-semibold text-slate-900">Provider</span>
-                  <select
-                    id="upload-providerKey"
-                    className="h-10 rounded-xl border border-slate-200 px-3 text-sm text-slate-900 outline-none focus:border-slate-400"
-                    value={providerKey}
-                    onChange={(event) => {
-                      const nextProviderKey = event.target.value as ProviderKey
-                      setProviderKey(nextProviderKey)
-                      setProviderFields(buildInitialProviderFields(nextProviderKey))
-                    }}
-                  >
-                    {Object.entries(uploadProviderDefinitions).map(([key, definition]) => (
-                      <option key={key} value={key}>
-                        {definition.label}
-                      </option>
+                <div className="grid gap-4 xl:grid-cols-[minmax(16rem,0.8fr)_minmax(0,1.2fr)] xl:items-start">
+                  <label className="grid gap-2">
+                    <span className="text-sm font-semibold text-slate-900">Provider</span>
+                    <select
+                      id="upload-providerKey"
+                      className="h-10 rounded-xl border border-slate-200 px-3 text-sm text-slate-900 outline-none focus:border-slate-400"
+                      value={providerKey}
+                      onChange={(event) => {
+                        const nextProviderKey = event.target.value as ProviderKey
+                        setProviderKey(nextProviderKey)
+                        setProviderFields(buildInitialProviderFields(nextProviderKey))
+                      }}
+                    >
+                      {Object.entries(uploadProviderDefinitions).map(([key, definition]) => (
+                        <option key={key} value={key}>
+                          {definition.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {activeProviderDefinition.fields.map((field) => (
+                      <label key={`${providerKey}:${field.key}`} className="grid gap-2">
+                        <span className="text-sm font-semibold text-slate-900">{field.label}</span>
+                        <Input
+                          id={`upload-providerField-${field.key}`}
+                          type={field.type ?? "text"}
+                          autoComplete={field.autoComplete}
+                          value={providerFields[field.key] ?? ""}
+                          onChange={(event) =>
+                            setProviderFields((current) => ({
+                              ...current,
+                              [field.key]: event.target.value,
+                            }))
+                          }
+                          placeholder={field.placeholder}
+                        />
+                      </label>
                     ))}
-                  </select>
-                </label>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {activeProviderDefinition.fields.map((field) => (
-                    <label key={`${providerKey}:${field.key}`} className="grid gap-2">
-                      <span className="text-sm font-semibold text-slate-900">{field.label}</span>
-                      <Input
-                        id={`upload-providerField-${field.key}`}
-                        type={field.type ?? "text"}
-                        autoComplete={field.autoComplete}
-                        value={providerFields[field.key] ?? ""}
-                        onChange={(event) =>
-                          setProviderFields((current) => ({
-                            ...current,
-                            [field.key]: event.target.value,
-                          }))
-                        }
-                        placeholder={field.placeholder}
-                      />
-                    </label>
-                  ))}
+                  </div>
                 </div>
-                <div className="flex items-end">
+                <div className="flex justify-end">
                   <Button
                     id="upload-submit"
                     type="submit"
-                    className="w-full rounded-xl md:w-auto"
+                    className="w-full rounded-xl sm:w-auto"
                     disabled={
                       uploadSubmitting ||
                       hasMissingRequiredProviderField(providerKey, providerFields)
@@ -593,7 +596,7 @@ export const JobResultsPanel = ({
           </section>
         ) : null}
 
-        {mode === "result" ? (
+        {showExportResults ? (
           <section className="grid gap-4 rounded-[1.5rem] border border-slate-200 bg-slate-50/80 p-4">
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
               <article className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
@@ -630,12 +633,14 @@ export const JobResultsPanel = ({
           </section>
         ) : null}
 
-        {mode === "result" ? (
+        {showExportResults ? (
           <section className="job-results-panel grid gap-4 rounded-[1.5rem] border border-slate-200 bg-slate-50/80 p-4">
             <div className="job-results-header grid gap-4 lg:flex lg:items-start lg:justify-between">
               <div>
                 <CardDescription className="results-description text-sm leading-7 text-slate-600">
-                  생성된 파일과 상태를 확인합니다.
+                  {mode === "upload"
+                    ? "내보내기 결과를 먼저 확인한 뒤 업로드를 이어서 진행할 수 있습니다."
+                    : "생성된 파일과 상태를 확인합니다."}
                 </CardDescription>
               </div>
               <div

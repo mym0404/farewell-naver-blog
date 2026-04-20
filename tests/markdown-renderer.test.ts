@@ -473,4 +473,42 @@ describe("renderMarkdownPost", () => {
     expect(rendered.markdown).toContain("Useful reference")
     expect(rendered.markdown).not.toContain("\nhttps://example.com/docs\n")
   })
+
+  it("omits images when asset download fails and the asset option requests omission", async () => {
+    const options = defaultExportOptions()
+
+    options.assets.downloadFailureMode = "warn-and-omit"
+
+    const rendered = await renderMarkdownPost({
+      post,
+      category,
+      parsedPost: {
+        ...parsedPost,
+        blocks: [
+          {
+            type: "image",
+            image: {
+              sourceUrl: "https://example.com/failing-image.png",
+              originalSourceUrl: null,
+              alt: "broken",
+              caption: "caption",
+              mediaKind: "image",
+            },
+          },
+        ],
+      },
+      markdownFilePath: "/tmp/output/posts/Algorithm/test.md",
+      reviewedWarnings: [],
+      options,
+      resolveAsset: async () => {
+        throw new Error("network timeout")
+      },
+    })
+
+    expect(rendered.markdown).not.toContain("![broken](")
+    expect(rendered.markdown).not.toContain("_caption_")
+    expect(rendered.warnings).toContain(
+      "자산 다운로드 실패: https://example.com/failing-image.png (network timeout)",
+    )
+  })
 })

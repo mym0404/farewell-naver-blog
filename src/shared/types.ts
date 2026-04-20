@@ -49,6 +49,8 @@ export type CodeFenceStyle = "backtick" | "tilde"
 
 export type ImageHandlingMode = "download" | "remote" | "download-and-upload"
 
+export type AssetDownloadFailureMode = "warn-and-use-source" | "warn-and-omit"
+
 export type ThumbnailSource = "post-list-first" | "first-body-image" | "none"
 
 export type StickerAssetMode = "ignore" | "download-original"
@@ -125,6 +127,8 @@ export type ExportOptions = {
   assets: {
     imageHandlingMode: ImageHandlingMode
     compressionEnabled: boolean
+    downloadFailureMode: AssetDownloadFailureMode
+    githubCustomUrl: string
     stickerAssetMode: StickerAssetMode
     downloadImages: boolean
     downloadThumbnails: boolean

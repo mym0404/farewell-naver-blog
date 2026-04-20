@@ -52,6 +52,7 @@ const setupSteps = [
   "frontmatter-options",
   "markdown-options",
   "assets-options",
+  "diagnostics-options",
 ] as const
 
 type SetupStep = (typeof setupSteps)[number]
@@ -62,6 +63,7 @@ const optionStepMap: Record<Extract<SetupStep, `${string}-options`>, ExportOptio
   "frontmatter-options": "frontmatter",
   "markdown-options": "markdown",
   "assets-options": "assets",
+  "diagnostics-options": "diagnostics",
 }
 
 const stepMeta: Record<
@@ -94,6 +96,10 @@ const stepMeta: Record<
   "assets-options": {
     title: "Assets 설정",
     description: "이미지 다운로드와 업로드 전략을 정합니다.",
+  },
+  "diagnostics-options": {
+    title: "진단 설정",
+    description: "경고와 실패 처리 방식을 정합니다.",
   },
   running: {
     title: "실행 중",
@@ -182,6 +188,8 @@ export const App = () => {
   >("all")
   const { job, submitting, uploadSubmitting, setJob, startJob, startUpload } = useExportJob()
   const lastNotifiedJobKeyRef = useRef<string | null>(null)
+  const stepViewRef = useRef<HTMLElement | null>(null)
+  const previousStepRef = useRef<WizardStep | null>(null)
 
   const frontmatterValidationErrors = useMemo(
     () => validateFrontmatterAliases(options.frontmatter),
@@ -236,6 +244,21 @@ export const App = () => {
   }, [job?.status, setupStep, submitting, uploadSubmitting])
 
   const isSetupStep = currentStep === setupStep
+
+  useEffect(() => {
+    const previousStep = previousStepRef.current
+    previousStepRef.current = currentStep
+
+    if (!isSetupStep || previousStep === null || previousStep === currentStep) {
+      return
+    }
+
+    window.scrollTo({ top: 0, left: 0, behavior: "smooth" })
+    stepViewRef.current?.scrollIntoView({
+      block: "start",
+      behavior: "smooth",
+    })
+  }, [currentStep, isSetupStep])
 
   useEffect(() => {
     let cancelled = false
@@ -533,7 +556,7 @@ export const App = () => {
       return
     }
 
-    if (setupStep === "assets-options") {
+    if (setupStep === "diagnostics-options") {
       await handleSubmit()
       return
     }
@@ -590,6 +613,8 @@ export const App = () => {
       case "markdown-options":
         return "Assets 설정"
       case "assets-options":
+        return "진단 설정"
+      case "diagnostics-options":
         return submitting ? "작업 등록 중" : "내보내기"
     }
   })()
@@ -792,6 +817,7 @@ export const App = () => {
         </Card>
 
         <section
+          ref={stepViewRef}
           className={cn(
             "grid gap-4",
             isSetupStep ? "pb-28 sm:pb-32" : "",
@@ -819,12 +845,18 @@ export const App = () => {
 
               <Button
                 type="button"
-                id={setupStep === "blog-input" ? "scan-button" : setupStep === "assets-options" ? "export-button" : undefined}
+                id={
+                  setupStep === "blog-input"
+                    ? "scan-button"
+                    : setupStep === "diagnostics-options"
+                      ? "export-button"
+                      : undefined
+                }
                 className="h-10 rounded-xl px-4 shadow-[0_10px_24px_rgba(51,102,255,0.24)]"
                 disabled={
                   setupStep === "blog-input"
                     ? scanPending
-                    : setupStep === "assets-options"
+                    : setupStep === "diagnostics-options"
                       ? exportDisabled || submitting
                       : false
                 }
@@ -838,7 +870,7 @@ export const App = () => {
                       ? scanPending
                         ? "ri-loader-4-line motion-safe:animate-spin"
                         : "ri-radar-line"
-                      : setupStep === "assets-options"
+                      : setupStep === "diagnostics-options"
                         ? submitting
                           ? "ri-loader-4-line motion-safe:animate-spin"
                           : "ri-download-2-line"

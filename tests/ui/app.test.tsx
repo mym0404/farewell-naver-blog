@@ -363,6 +363,11 @@ beforeEach(() => {
     },
   )
   vi.spyOn(HTMLElement.prototype, "scrollHeight", "get").mockReturnValue(240)
+  vi.stubGlobal("scrollTo", vi.fn())
+  Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+    configurable: true,
+    value: vi.fn(),
+  })
 })
 
 describe("App", () => {
@@ -372,7 +377,7 @@ describe("App", () => {
     return user
   }
 
-  const moveToAssetsStep = async (user: ReturnType<typeof userEvent.setup>) => {
+  const moveToDiagnosticsStep = async (user: ReturnType<typeof userEvent.setup>) => {
     await user.type(screen.getByLabelText("블로그 ID 또는 URL"), "mym0404")
     await user.click(screen.getByRole("button", { name: "카테고리 불러오기" }))
     await waitFor(() => {
@@ -382,6 +387,7 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "Frontmatter 설정" }))
     await user.click(screen.getByRole("button", { name: "Markdown 설정" }))
     await user.click(screen.getByRole("button", { name: "Assets 설정" }))
+    await user.click(screen.getByRole("button", { name: "진단 설정" }))
   }
 
   it("runs the main export flow in the wizard without preview or modal", async () => {
@@ -456,6 +462,8 @@ describe("App", () => {
     expect(document.querySelector('[data-step-view="markdown-options"]')).not.toBeNull()
     await user.click(screen.getByRole("button", { name: "Assets 설정" }))
     expect(document.querySelector('[data-step-view="assets-options"]')).not.toBeNull()
+    await user.click(screen.getByRole("button", { name: "진단 설정" }))
+    expect(document.querySelector('[data-step-view="diagnostics-options"]')).not.toBeNull()
 
     await user.click(screen.getByRole("button", { name: "내보내기" }))
 
@@ -481,9 +489,60 @@ describe("App", () => {
     expect(allFilterButton).not.toBeNull()
     await user.click(allFilterButton)
     const item = document.querySelector('[data-job-item-id="posts/NestJS/test.md"]') as HTMLElement
-    expect(item).not.toBeNull()
-    expect(item.className).toContain("whitespace-normal")
-    expect(document.querySelector('[role="dialog"]')).toBeNull()
+  expect(item).not.toBeNull()
+  expect(item.className).toContain("whitespace-normal")
+  expect(document.querySelector('[role="dialog"]')).toBeNull()
+  })
+
+  it("scrolls to the top when moving to the next setup step", async () => {
+    const fetchMock = vi.fn<typeof fetch>(async (input) => {
+      const url = typeof input === "string" ? input : input.toString()
+
+      if (url.endsWith("/api/export-defaults")) {
+        return buildJsonResponse({
+          profile: "gfm",
+          options: defaultExportOptions(),
+          frontmatterFieldOrder,
+          frontmatterFieldMeta,
+          optionDescriptions,
+        })
+      }
+
+      if (url.endsWith("/api/scan")) {
+        return buildJsonResponse(scanResult)
+      }
+
+      throw new Error(`unexpected fetch: ${url}`)
+    })
+
+    vi.stubGlobal("fetch", fetchMock)
+
+    const user = renderApp()
+
+    await user.type(screen.getByLabelText("블로그 ID 또는 URL"), "mym0404")
+    await user.click(screen.getByRole("button", { name: "카테고리 불러오기" }))
+    await waitFor(() => {
+      expect(document.querySelector('[data-step-view="category-selection"]')).not.toBeNull()
+    })
+
+    const scrollToSpy = vi.mocked(window.scrollTo)
+    const scrollIntoViewSpy = vi.mocked(HTMLElement.prototype.scrollIntoView)
+
+    scrollToSpy.mockClear()
+    scrollIntoViewSpy.mockClear()
+
+    await user.click(screen.getByRole("button", { name: "구조 설정" }))
+
+    await waitFor(() => {
+      expect(document.querySelector('[data-step-view="structure-options"]')).not.toBeNull()
+    })
+
+    expect(scrollToSpy).toHaveBeenCalledWith({
+      top: 0,
+      left: 0,
+      behavior: "smooth",
+    })
+    expect(scrollIntoViewSpy).toHaveBeenCalled()
   })
 
   it("hides setup panels while the export job is running", async () => {
@@ -519,7 +578,7 @@ describe("App", () => {
 
     const user = renderApp()
 
-    await moveToAssetsStep(user)
+    await moveToDiagnosticsStep(user)
     await user.click(screen.getByRole("button", { name: "내보내기" }))
 
     await waitFor(() => {
@@ -595,7 +654,7 @@ describe("App", () => {
 
     const user = renderApp()
 
-    await moveToAssetsStep(user)
+    await moveToDiagnosticsStep(user)
     await user.click(screen.getByRole("button", { name: "내보내기" }))
 
     await waitFor(() => {
@@ -610,7 +669,11 @@ describe("App", () => {
       expect(screen.getByLabelText("Provider")).toBeInTheDocument()
       expect(screen.getByLabelText("Repository")).toBeInTheDocument()
       expect(screen.getByLabelText("Token")).toBeInTheDocument()
-      expect(document.querySelector("#job-file-tree")).toBeNull()
+      expect(document.querySelector("#job-file-tree")).not.toBeNull()
+      expect(document.querySelector("#job-file-tree")?.textContent).toContain("NestJS/2026-04-11-1/index.md")
+      expect(document.querySelector("#status-panel")?.textContent).toContain(
+        "내보내기 결과를 먼저 확인한 뒤 업로드를 이어서 진행할 수 있습니다.",
+      )
     })
 
     fireEvent.change(screen.getByLabelText("Repository"), {
@@ -735,7 +798,7 @@ describe("App", () => {
 
     const user = renderApp()
 
-    await moveToAssetsStep(user)
+    await moveToDiagnosticsStep(user)
     await user.click(screen.getByRole("button", { name: "내보내기" }))
 
     await waitFor(() => {
@@ -824,7 +887,7 @@ describe("App", () => {
 
     const user = renderApp()
 
-    await moveToAssetsStep(user)
+    await moveToDiagnosticsStep(user)
     await user.click(screen.getByRole("button", { name: "내보내기" }))
 
     await waitFor(() => {
@@ -883,7 +946,7 @@ describe("App", () => {
 
     const user = renderApp()
 
-    await moveToAssetsStep(user)
+    await moveToDiagnosticsStep(user)
     await user.click(screen.getByRole("button", { name: "내보내기" }))
 
     await waitFor(() => {

@@ -1281,7 +1281,7 @@ const run = async () => {
     })
 
     if (await page.locator("#export-button").count()) {
-      throw new Error("export button should stay hidden until the assets step")
+      throw new Error("export button should stay hidden until the diagnostics step")
     }
 
     if (await page.locator("#markdown-linkCardStyle").count()) {
@@ -1297,12 +1297,27 @@ const run = async () => {
       step: "assets-options",
     })
 
+    if (await page.locator("#export-button").count()) {
+      throw new Error("export button should stay hidden inside the Assets tab")
+    }
+
+    await page.click('button:has-text("진단 설정")')
+    await waitForStepView({
+      page,
+      step: "diagnostics-options",
+    })
+
     const exportDisabledWithCollision = await page.locator("#export-button").isDisabled()
 
     if (!exportDisabledWithCollision) {
       throw new Error("export button should be disabled when aliases collide")
     }
 
+    await page.click('button:has-text("이전")')
+    await waitForStepView({
+      page,
+      step: "assets-options",
+    })
     await page.click('button:has-text("이전")')
     await waitForStepView({
       page,
@@ -1377,6 +1392,12 @@ const run = async () => {
     if (await page.locator("#upload-providerKey").count()) {
       throw new Error("upload form should not appear inside the Assets tab")
     }
+
+    await page.click('button:has-text("진단 설정")')
+    await waitForStepView({
+      page,
+      step: "diagnostics-options",
+    })
 
     const exportResponsePromise = page.waitForResponse(
       (response) =>

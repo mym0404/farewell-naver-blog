@@ -357,7 +357,7 @@ export const renderMarkdownPost = async ({
   }: {
     kind: "image" | "thumbnail"
     sourceUrl: string
-  }) => {
+  }): Promise<string | null> => {
     try {
       const assetRecord = await resolveAsset({
         kind,
@@ -385,7 +385,8 @@ export const renderMarkdownPost = async ({
         level: "warning",
         message: warning,
       })
-      return sourceUrl
+
+      return options.assets.downloadFailureMode === "warn-and-omit" ? null : sourceUrl
     }
   }
 
@@ -433,6 +434,10 @@ export const renderMarkdownPost = async ({
       kind: "image",
       sourceUrl: renderableSourceUrl,
     })
+
+    if (!assetPath) {
+      return ""
+    }
 
     maybeRecordBodyThumbnail(assetPath)
 

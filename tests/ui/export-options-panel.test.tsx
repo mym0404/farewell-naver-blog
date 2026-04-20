@@ -156,6 +156,11 @@ describe("ExportOptionsPanel", () => {
 
     await user.selectOptions(query<HTMLSelectElement>("#assets-imageHandlingMode"), "download-and-upload")
     await user.click(query<HTMLInputElement>("#assets-compressionEnabled"))
+    fireEvent.change(query<HTMLInputElement>("#assets-githubCustomUrl"), {
+      target: {
+        value: "https://cdn.jsdelivr.net/gh/mym0404/ia2",
+      },
+    })
     await user.selectOptions(query<HTMLSelectElement>("#assets-imageHandlingMode"), "remote")
     await user.selectOptions(query<HTMLSelectElement>("#assets-stickerAssetMode"), "download-original")
     await user.click(query<HTMLInputElement>("#assets-includeImageCaptions"))
@@ -184,6 +189,7 @@ describe("ExportOptionsPanel", () => {
     expect(latestOptions.markdown.headingLevelOffset).toBe(2)
     expect(latestOptions.assets.imageHandlingMode).toBe("remote")
     expect(latestOptions.assets.compressionEnabled).toBe(false)
+    expect(latestOptions.assets.githubCustomUrl).toBe("https://cdn.jsdelivr.net/gh/mym0404/ia2")
     expect(latestOptions.assets.stickerAssetMode).toBe("download-original")
     expect(latestOptions.assets.downloadImages).toBe(false)
     expect(latestOptions.assets.downloadThumbnails).toBe(false)
@@ -252,6 +258,7 @@ describe("ExportOptionsPanel", () => {
     )
 
     expect(query<HTMLInputElement>("#assets-compressionEnabled")).toBeDisabled()
+    expect(query<HTMLInputElement>("#assets-githubCustomUrl")).toBeDisabled()
     expect(query<HTMLInputElement>("#assets-downloadImages")).toBeDisabled()
     expect(query<HTMLInputElement>("#assets-downloadThumbnails")).toBeDisabled()
     expect(document.querySelector("#assets-imageContentMode")).toBeNull()
@@ -261,5 +268,31 @@ describe("ExportOptionsPanel", () => {
     expect(query<HTMLSelectElement>("#assets-thumbnailSource")).not.toBeDisabled()
     expect(screen.queryByLabelText("uploaderKey")).not.toBeInTheDocument()
     expect(screen.queryByLabelText("uploaderConfigJson")).not.toBeInTheDocument()
+  })
+
+  it("renders download failure handling in the diagnostics step", async () => {
+    const user = userEvent.setup()
+    let latestOptions = defaultExportOptions()
+
+    render(
+      <ExportOptionsPanel
+        step="diagnostics"
+        outputDir="./output"
+        options={latestOptions}
+        optionDescriptions={optionDescriptions}
+        frontmatterFieldOrder={frontmatterFieldOrder}
+        frontmatterFieldMeta={frontmatterFieldMeta}
+        frontmatterValidationErrors={[]}
+        onOutputDirChange={vi.fn()}
+        onOptionsChange={(updater) => {
+          latestOptions = updater(latestOptions)
+        }}
+      />,
+    )
+
+    await user.selectOptions(query<HTMLSelectElement>("#assets-downloadFailureMode"), "warn-and-omit")
+
+    expect(latestOptions.assets.downloadFailureMode).toBe("warn-and-omit")
+    expect(document.querySelector("#assets-githubCustomUrl")).toBeNull()
   })
 })

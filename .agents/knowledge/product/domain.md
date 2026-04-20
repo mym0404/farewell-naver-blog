@@ -38,7 +38,11 @@
 - `structure.groupByCategory`, `includeDateInPostFolderName`, `includeLogNoInPostFolderName` 조합으로 글 폴더 경로가 결정되고, 기본값은 날짜 + slug다.
 - 다운로드 자산은 `output/public/<sha256>.<ext>` 단일 저장소에 쓴다.
 - 같은 자산 여부는 원본 응답 바이트의 SHA-256 해시로 판단한다. URL이 달라도 바이트가 같으면 같은 파일을 재사용한다.
+- 기본 이미지 처리 방식은 `download-and-upload`이고, 기본 로컬 압축은 켜져 있다.
 - 이미지 처리 방식은 `download`, `remote`, `download-and-upload` 세 가지다.
+- 다운로드 실패 처리는 `warn-and-use-source`, `warn-and-omit` 두 가지다.
+- GitHub 업로드 경로는 asset 옵션의 `githubCustomUrl`로 CDN base URL을 덮어쓸 수 있다.
+- 경고/실패 처리 옵션은 asset 전략과 분리된 마지막 `진단 설정` 단계에서 조정한다.
 - `download-and-upload`는 export를 먼저 끝낸 뒤 같은 job을 `upload-ready -> uploading -> upload-completed | upload-failed`로 진행한다.
 - post-export 업로드 입력은 export 옵션에 저장하지 않고 결과 패널에서만 `providerKey + providerFields` 형태로 받는다.
 - job 단위 업로드 대상 수는 글별 참조 수 합계가 아니라 고유 `localPath` 수를 뜻한다.

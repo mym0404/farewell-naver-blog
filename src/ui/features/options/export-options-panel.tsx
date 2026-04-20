@@ -18,7 +18,7 @@ import {
 } from "../../components/ui/card.js"
 import { Input } from "../../components/ui/input.js"
 
-export type ExportOptionsStep = "structure" | "frontmatter" | "markdown" | "assets"
+export type ExportOptionsStep = "structure" | "frontmatter" | "markdown" | "assets" | "diagnostics"
 
 const OptionField = ({
   optionKey,
@@ -127,6 +127,10 @@ const stepMeta: Record<
   assets: {
     title: "Assets 설정",
     description: "이미지 다운로드와 업로드 전략을 정합니다.",
+  },
+  diagnostics: {
+    title: "진단 설정",
+    description: "경고와 실패 처리 방식을 정합니다.",
   },
 }
 
@@ -697,6 +701,29 @@ export const ExportOptionsPanel = ({
       />
 
       <OptionField
+        optionKey="assets-githubCustomUrl"
+        label="GitHub custom URL"
+        description={description("assets-githubCustomUrl")}
+        disabled={options.assets.imageHandlingMode !== "download-and-upload"}
+      >
+        <Input
+          id="assets-githubCustomUrl"
+          value={options.assets.githubCustomUrl}
+          disabled={options.assets.imageHandlingMode !== "download-and-upload"}
+          placeholder="https://cdn.jsdelivr.net/gh/mym0404/ia2"
+          onChange={(event) =>
+            onOptionsChange((current) => ({
+              ...current,
+              assets: {
+                ...current.assets,
+                githubCustomUrl: event.target.value,
+              },
+            }))
+          }
+        />
+      </OptionField>
+
+      <OptionField
         optionKey="assets-stickerAssetMode"
         label="스티커 자산 처리"
         description={description("assets-stickerAssetMode")}
@@ -798,11 +825,42 @@ export const ExportOptionsPanel = ({
     </OptionSection>
   )
 
+  const diagnosticsSection = (
+    <OptionSection title="진단" note="경고와 실패 처리 기준">
+      <OptionField
+        optionKey="assets-downloadFailureMode"
+        label="이미지 다운로드 실패 처리"
+        description={description("assets-downloadFailureMode")}
+        disabled={options.assets.imageHandlingMode === "remote"}
+      >
+        <select
+          id="assets-downloadFailureMode"
+          value={options.assets.downloadFailureMode}
+          disabled={options.assets.imageHandlingMode === "remote"}
+          onChange={(event) =>
+            onOptionsChange((current) => ({
+              ...current,
+              assets: {
+                ...current.assets,
+                downloadFailureMode:
+                  event.target.value as ExportOptions["assets"]["downloadFailureMode"],
+              },
+            }))
+          }
+        >
+          <option value="warn-and-use-source">경고 후 원본 URL 유지</option>
+          <option value="warn-and-omit">경고 후 이미지 생략</option>
+        </select>
+      </OptionField>
+    </OptionSection>
+  )
+
   const contentByStep: Record<ExportOptionsStep, ReactNode> = {
     structure: structureSection,
     frontmatter: frontmatterSection,
     markdown: markdownSection,
     assets: assetsSection,
+    diagnostics: diagnosticsSection,
   }
 
   return (
