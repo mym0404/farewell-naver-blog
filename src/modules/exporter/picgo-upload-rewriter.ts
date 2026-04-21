@@ -3,6 +3,7 @@ import * as fs from "node:fs/promises"
 import path from "node:path"
 
 import type { ExportJobItem, ExportManifest, PostManifestEntry } from "../../shared/types.js"
+import { buildMarkdownViewerShareUrl } from "./markdown-viewer-share-url.js"
 import type { PicGoUploadResult } from "./picgo-upload-phase.js"
 
 type RewriteResult = {
@@ -66,6 +67,7 @@ const buildUpdatedPost = ({
   return fileOps.readFile(markdownPath, "utf8").then((markdown) => {
     let rewrittenMarkdown = markdown
     const resultByReference = new Map<string, string>()
+    const uploadedUrls: string[] = []
 
     for (const candidate of post.upload.candidates) {
       const matchedResult = uploadResultByLocalPath.get(candidate.localPath)
@@ -86,11 +88,13 @@ const buildUpdatedPost = ({
         replacement: matchedResult.uploadedUrl,
       })
       resultByReference.set(candidate.markdownReference, matchedResult.uploadedUrl)
+      uploadedUrls.push(matchedResult.uploadedUrl)
     }
 
     return {
       markdownPath,
       rewrittenMarkdown,
+      externalPreviewUrl: buildMarkdownViewerShareUrl(rewrittenMarkdown),
       post: {
         ...post,
         assetPaths: post.assetPaths.map((assetPath) => resultByReference.get(assetPath) ?? assetPath),
@@ -98,6 +102,7 @@ const buildUpdatedPost = ({
           ...post.upload,
           uploadedCount: post.upload.candidateCount,
           failedCount: 0,
+          uploadedUrls,
         },
       } satisfies PostManifestEntry,
     }
@@ -163,6 +168,7 @@ export const rewriteUploadedAssets = async ({
       ...item,
       assetPaths: rewritten.post.assetPaths,
       upload: rewritten.post.upload,
+      externalPreviewUrl: rewritten.externalPreviewUrl,
       updatedAt: new Date().toISOString(),
     } satisfies ExportJobItem
   })

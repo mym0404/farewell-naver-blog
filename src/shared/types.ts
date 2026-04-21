@@ -73,6 +73,7 @@ export type UploadProviderFieldOption = {
 export type UploadProviderFieldDefinition = {
   key: string
   label: string
+  description: string
   inputType: UploadProviderInputType
   required: boolean
   defaultValue: UploadProviderValue | null
@@ -83,6 +84,7 @@ export type UploadProviderFieldDefinition = {
 export type UploadProviderDefinition = {
   key: string
   label: string
+  description: string
   fields: UploadProviderFieldDefinition[]
 }
 
@@ -121,6 +123,7 @@ export type PostUploadSummary = {
   uploadedCount: number
   failedCount: number
   candidates: UploadCandidate[]
+  uploadedUrls: string[]
 }
 
 export type ExportOptions = {
@@ -364,6 +367,7 @@ export type ExportJobItem = {
   warnings: string[]
   warningCount: number
   error: string | null
+  externalPreviewUrl?: string | null
   updatedAt: string
 }
 

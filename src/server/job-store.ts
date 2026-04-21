@@ -111,6 +111,7 @@ export class JobStore {
       warnings: post.warnings,
       warningCount: post.warningCount,
       error: post.error,
+      externalPreviewUrl: null,
       updatedAt: new Date().toISOString(),
     }))
 

@@ -23,6 +23,7 @@ import { parsePostHtml } from "../parser/post-parser.js"
 import { reviewParsedPost } from "../reviewer/post-reviewer.js"
 import { AssetStore } from "./asset-store.js"
 import { buildMarkdownFilePath, getCategoryForPost } from "./export-paths.js"
+import { buildMarkdownViewerShareUrl } from "./markdown-viewer-share-url.js"
 import { buildPostLinkTargets, createSameBlogPostLinkResolver } from "./post-link-rewriter.js"
 import { dedupeUploadCandidatesByLocalPath } from "./upload-candidate-utils.js"
 
@@ -32,6 +33,7 @@ const emptyPostUploadSummary = () => ({
   uploadedCount: 0,
   failedCount: 0,
   candidates: [],
+  uploadedUrls: [],
 })
 
 const postExportConcurrency = 3
@@ -279,6 +281,7 @@ export class NaverBlogExporter {
             uploadedCount: 0,
             failedCount: 0,
             candidates: uploadCandidates,
+            uploadedUrls: [],
           }
           const warningCountForPost = rendered.warnings.length
 
@@ -301,26 +304,27 @@ export class NaverBlogExporter {
             error: null,
           } satisfies PostManifestEntry
 
-          pendingResults.set(index, {
-            manifestEntry,
-            jobItem: {
-              id: manifestEntry.outputPath ?? `failed:${post.logNo}`,
-              logNo: post.logNo,
-              title: post.title,
-              source: post.source,
-              category: manifestEntry.category,
-              status: "success",
-              outputPath: manifestEntry.outputPath,
-              assetPaths,
-              upload,
-              warnings: rendered.warnings,
-              warningCount: warningCountForPost,
-              error: null,
-              updatedAt: new Date().toISOString(),
-            },
-            warningCount: warningCountForPost,
-            uploadCandidateLocalPaths: uploadCandidates.map((candidate) => candidate.localPath),
-            uploadEligible: upload.eligible,
+	          pendingResults.set(index, {
+	            manifestEntry,
+	            jobItem: {
+	              id: manifestEntry.outputPath ?? `failed:${post.logNo}`,
+	              logNo: post.logNo,
+	              title: post.title,
+	              source: post.source,
+	              category: manifestEntry.category,
+	              status: "success",
+	              outputPath: manifestEntry.outputPath,
+	              assetPaths,
+	              upload,
+	              warnings: rendered.warnings,
+	              warningCount: warningCountForPost,
+	              error: null,
+	              externalPreviewUrl: buildMarkdownViewerShareUrl(rendered.markdown),
+	              updatedAt: new Date().toISOString(),
+	            },
+	            warningCount: warningCountForPost,
+	            uploadCandidateLocalPaths: uploadCandidates.map((candidate) => candidate.localPath),
+	            uploadEligible: upload.eligible,
           })
         } catch (error) {
           const manifestEntry = {
@@ -342,26 +346,27 @@ export class NaverBlogExporter {
             error: toErrorMessage(error),
           } satisfies PostManifestEntry
 
-          pendingResults.set(index, {
-            manifestEntry,
-            jobItem: {
-              id: `failed:${post.logNo}`,
-              logNo: post.logNo,
-              title: post.title,
-              source: post.source,
-              category: manifestEntry.category,
-              status: "failed",
-              outputPath: null,
-              assetPaths: [],
-              upload: emptyPostUploadSummary(),
-              warnings: [],
-              warningCount: 0,
-              error: manifestEntry.error,
-              updatedAt: new Date().toISOString(),
-            },
-            warningCount: 0,
-            uploadCandidateLocalPaths: [],
-            uploadEligible: false,
+	          pendingResults.set(index, {
+	            manifestEntry,
+	            jobItem: {
+	              id: `failed:${post.logNo}`,
+	              logNo: post.logNo,
+	              title: post.title,
+	              source: post.source,
+	              category: manifestEntry.category,
+	              status: "failed",
+	              outputPath: null,
+	              assetPaths: [],
+	              upload: emptyPostUploadSummary(),
+	              warnings: [],
+	              warningCount: 0,
+	              error: manifestEntry.error,
+	              externalPreviewUrl: null,
+	              updatedAt: new Date().toISOString(),
+	            },
+	            warningCount: 0,
+	            uploadCandidateLocalPaths: [],
+	            uploadEligible: false,
           })
           this.onLog(`글 export 실패: ${post.logNo} (${toErrorMessage(error)})`)
         }

@@ -132,10 +132,12 @@ const uploadProviderCatalog: UploadProviderCatalogResponse = {
     {
       key: "github",
       label: "GitHub",
+      description: "리포지토리에 이미지를 커밋하고 URL로 사용합니다.",
       fields: [
         {
           key: "repo",
           label: "Repository",
+          description: "업로드할 GitHub 저장소 경로입니다.",
           inputType: "text",
           required: true,
           defaultValue: null,
@@ -144,6 +146,7 @@ const uploadProviderCatalog: UploadProviderCatalogResponse = {
         {
           key: "branch",
           label: "Branch",
+          description: "업로드를 커밋할 브랜치 이름입니다.",
           inputType: "text",
           required: false,
           defaultValue: "main",
@@ -152,6 +155,7 @@ const uploadProviderCatalog: UploadProviderCatalogResponse = {
         {
           key: "path",
           label: "Path",
+          description: "원격 저장소 안에서 파일을 둘 하위 경로입니다.",
           inputType: "text",
           required: false,
           defaultValue: null,
@@ -160,6 +164,7 @@ const uploadProviderCatalog: UploadProviderCatalogResponse = {
         {
           key: "token",
           label: "Token",
+          description: "서비스 API 접근용 토큰을 입력합니다.",
           inputType: "password",
           required: true,
           defaultValue: null,
@@ -168,6 +173,7 @@ const uploadProviderCatalog: UploadProviderCatalogResponse = {
         {
           key: "customUrl",
           label: "Custom URL",
+          description: "최종 파일 URL을 직접 덮어쓸 때 사용합니다.",
           inputType: "text",
           required: false,
           defaultValue: null,
@@ -178,10 +184,12 @@ const uploadProviderCatalog: UploadProviderCatalogResponse = {
     {
       key: "tcyun",
       label: "Tencent COS",
+      description: "Tencent COS 버킷에 이미지를 업로드합니다.",
       fields: [
         {
           key: "secretId",
           label: "Secret ID",
+          description: "서비스에서 발급한 secret ID를 입력합니다.",
           inputType: "text",
           required: true,
           defaultValue: null,
@@ -190,6 +198,7 @@ const uploadProviderCatalog: UploadProviderCatalogResponse = {
         {
           key: "port",
           label: "Port",
+          description: "기본 포트 대신 사용할 포트 번호입니다.",
           inputType: "number",
           required: false,
           defaultValue: 0,
@@ -198,6 +207,7 @@ const uploadProviderCatalog: UploadProviderCatalogResponse = {
         {
           key: "permission",
           label: "Permission",
+          description: "이미지 공개 범위 또는 접근 권한을 선택합니다.",
           inputType: "select",
           required: true,
           defaultValue: 0,
@@ -210,6 +220,7 @@ const uploadProviderCatalog: UploadProviderCatalogResponse = {
         {
           key: "slim",
           label: "Slim",
+          description: "COS 이미지 처리 압축 옵션을 함께 사용합니다.",
           inputType: "checkbox",
           required: false,
           defaultValue: false,

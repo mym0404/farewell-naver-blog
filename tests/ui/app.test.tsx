@@ -72,10 +72,12 @@ const uploadProviderCatalog: UploadProviderCatalogResponse = {
     {
       key: "github",
       label: "GitHub",
+      description: "리포지토리에 이미지를 커밋하고 URL로 사용합니다.",
       fields: [
         {
           key: "repo",
           label: "Repository",
+          description: "업로드할 GitHub 저장소 경로입니다.",
           inputType: "text",
           required: true,
           defaultValue: null,
@@ -84,6 +86,7 @@ const uploadProviderCatalog: UploadProviderCatalogResponse = {
         {
           key: "branch",
           label: "Branch",
+          description: "업로드를 커밋할 브랜치 이름입니다.",
           inputType: "text",
           required: false,
           defaultValue: "main",
@@ -92,6 +95,7 @@ const uploadProviderCatalog: UploadProviderCatalogResponse = {
         {
           key: "path",
           label: "Path",
+          description: "원격 저장소 안에서 파일을 둘 하위 경로입니다.",
           inputType: "text",
           required: false,
           defaultValue: null,
@@ -100,6 +104,7 @@ const uploadProviderCatalog: UploadProviderCatalogResponse = {
         {
           key: "token",
           label: "Token",
+          description: "서비스 API 접근용 토큰을 입력합니다.",
           inputType: "password",
           required: true,
           defaultValue: null,
@@ -108,6 +113,7 @@ const uploadProviderCatalog: UploadProviderCatalogResponse = {
         {
           key: "customUrl",
           label: "Custom URL",
+          description: "최종 파일 URL을 직접 덮어쓸 때 사용합니다.",
           inputType: "text",
           required: false,
           defaultValue: null,
@@ -118,10 +124,12 @@ const uploadProviderCatalog: UploadProviderCatalogResponse = {
     {
       key: "tcyun",
       label: "Tencent COS",
+      description: "Tencent COS 버킷에 이미지를 업로드합니다.",
       fields: [
         {
           key: "appId",
           label: "App ID",
+          description: "스토리지 서비스의 앱 ID를 입력합니다.",
           inputType: "text",
           required: true,
           defaultValue: null,
@@ -130,6 +138,7 @@ const uploadProviderCatalog: UploadProviderCatalogResponse = {
         {
           key: "permission",
           label: "Permission",
+          description: "이미지 공개 범위 또는 접근 권한을 선택합니다.",
           inputType: "select",
           required: true,
           defaultValue: null,
@@ -142,6 +151,7 @@ const uploadProviderCatalog: UploadProviderCatalogResponse = {
         {
           key: "port",
           label: "Port",
+          description: "기본 포트 대신 사용할 포트 번호입니다.",
           inputType: "number",
           required: false,
           defaultValue: 36677,
@@ -150,6 +160,7 @@ const uploadProviderCatalog: UploadProviderCatalogResponse = {
         {
           key: "slim",
           label: "Slim",
+          description: "COS 이미지 처리 압축 옵션을 함께 사용합니다.",
           inputType: "checkbox",
           required: false,
           defaultValue: false,
@@ -219,6 +230,7 @@ const completedJob: ExportJobState = {
         uploadedCount: 0,
         failedCount: 0,
         candidates: [],
+        uploadedUrls: [],
       },
       warnings: ["parser note"],
       warningCount: 1,
@@ -240,7 +252,23 @@ const runningJob: ExportJobState = {
     failed: 0,
     warnings: 0,
   },
-  items: [],
+  items: [
+    completedJob.items[0]!,
+    {
+      ...completedJob.items[0]!,
+      id: "posts/React/test-2.md",
+      logNo: "2",
+      title: "진행 중에 먼저 끝난 글",
+      source: "https://blog.naver.com/mym0404/2",
+      category: {
+        id: 102,
+        name: "React",
+        path: ["React"],
+      },
+      outputPath: "posts/React/test-2.md",
+      updatedAt: "2026-04-11T04:00:02.000Z",
+    },
+  ],
 }
 
 const uploadFlowOptions = (() => {
@@ -279,6 +307,7 @@ const uploadItem = {
         markdownReference: detailPublicPath,
       },
     ],
+    uploadedUrls: [],
   },
 }
 
@@ -380,6 +409,10 @@ const uploadCompletedJob: ExportJobState = {
       upload: {
         ...uploadItem.upload,
         uploadedCount: 2,
+        uploadedUrls: [
+          "https://cdn.example.com/shared.png",
+          "https://cdn.example.com/detail.png",
+        ],
       },
     },
     {
@@ -391,6 +424,10 @@ const uploadCompletedJob: ExportJobState = {
       upload: {
         ...uploadPendingItem.upload,
         uploadedCount: 2,
+        uploadedUrls: [
+          "https://cdn.example.com/shared.png",
+          "https://cdn.example.com/detail.png",
+        ],
       },
     },
   ],
@@ -740,6 +777,9 @@ describe("App", () => {
       expect(document.querySelector('[data-step-view="running"]')).not.toBeNull()
       expect(document.querySelector("#running-progress")).not.toBeNull()
       expect(document.querySelector("#running-progress")?.getAttribute("aria-valuenow")).toBe("40")
+      expect(document.querySelector("#job-file-tree table")).not.toBeNull()
+      expect(document.querySelector("#job-file-tree")?.textContent).toContain("posts/NestJS/test.md")
+      expect(document.querySelector("#job-file-tree")?.textContent).toContain("업로드 상태")
       expect(screen.queryByLabelText("블로그 ID 또는 URL")).not.toBeInTheDocument()
       expect(screen.queryByRole("button", { name: "카테고리 불러오기" })).not.toBeInTheDocument()
       expect(document.querySelector("#export-button")).toBeNull()
@@ -809,34 +849,37 @@ describe("App", () => {
 
     await waitFor(() => {
       expect(document.querySelector('[data-step-view="upload"]')).not.toBeNull()
-      expect(document.querySelector("#upload-targets-table")).not.toBeNull()
-      expect(document.querySelector("#upload-targets-scroll")).not.toBeNull()
-      expect(document.querySelector("#upload-targets-scroll")?.className).toContain("max-h-[28rem]")
+      expect(document.querySelector("#upload-targets-table")).toBeNull()
       expect(document.querySelector("#upload-progress")?.getAttribute("aria-valuenow")).toBe("0")
-      expect(document.querySelector('#upload-targets-table [data-upload-row-id="NestJS/2026-04-11-1/index.md"]')?.getAttribute("data-upload-row-status")).toBe("pending")
-      expect(document.querySelector('#upload-targets-table [data-upload-row-id="React/2026-04-12-2/index.md"]')?.getAttribute("data-upload-row-status")).toBe("pending")
+      expect(document.querySelector("#job-file-tree")?.className).toContain("max-h-[min(32rem,62vh)]")
+      expect(document.querySelector('#job-file-tree [data-upload-row-id="NestJS/2026-04-11-1/index.md"]')?.getAttribute("data-upload-row-status")).toBe("pending")
+      expect(document.querySelector('#job-file-tree [data-upload-row-id="React/2026-04-12-2/index.md"]')?.getAttribute("data-upload-row-status")).toBe("pending")
       expect(document.querySelector("#upload-form")).not.toBeNull()
-      expect(screen.getByLabelText("Provider")).toBeInTheDocument()
-      expect(screen.getByLabelText("Repository")).toBeInTheDocument()
-      expect(screen.getByLabelText("Branch")).toBeInTheDocument()
-      expect(screen.getByLabelText("Token")).toBeInTheDocument()
+      expect(document.querySelector("#upload-providerKey")).not.toBeNull()
+      expect(screen.getByLabelText(/^Repository\b/)).toBeInTheDocument()
+      expect(screen.getByLabelText(/^Branch\b/)).toBeInTheDocument()
+      expect(screen.getByLabelText(/^Token\b/)).toBeInTheDocument()
       jsDelivrToggle = screen.getByRole("checkbox", { name: /jsDelivr CDN 사용/i })
       expect(jsDelivrToggle).not.toBeChecked()
       expect(document.querySelector("#job-file-tree")).not.toBeNull()
       expect(document.querySelector("#job-file-tree")?.textContent).toContain("NestJS/2026-04-11-1/index.md")
+      expect(document.querySelector("#job-file-tree")?.textContent).toContain("업로드 상태")
       expect(document.querySelector("#status-panel")?.textContent).toContain(
-        "내보내기 결과를 먼저 확인한 뒤 업로드를 이어서 진행할 수 있습니다.",
+        "내보내기 결과와 업로드 상태를 같은 표에서 확인한 뒤 업로드를 이어서 진행합니다.",
       )
     })
 
-    fireEvent.change(screen.getByLabelText("Repository"), {
+    fireEvent.change(screen.getByLabelText(/^Repository\b/), {
       target: { value: "owner/name" },
     })
-    fireEvent.change(screen.getByLabelText("Branch"), {
+    fireEvent.change(screen.getByLabelText(/^Branch\b/), {
       target: { value: "main" },
     })
-    fireEvent.change(screen.getByLabelText("Token"), {
+    fireEvent.change(screen.getByLabelText(/^Token\b/), {
       target: { value: "ghp_upload_secret" },
+    })
+    fireEvent.change(screen.getByLabelText(/^Custom URL\b/), {
+      target: { value: "https://raw.example.com" },
     })
     expect(jsDelivrToggle).not.toBeNull()
 
@@ -845,6 +888,11 @@ describe("App", () => {
     }
 
     await user.click(jsDelivrToggle)
+    expect(screen.getByLabelText(/^Custom URL\b/)).toBeDisabled()
+    expect(screen.getByLabelText(/^Custom URL\b/)).toHaveValue("https://raw.example.com")
+    expect((document.querySelector("#upload-github-jsdelivr-preview") as HTMLInputElement | null)?.value).toBe(
+      "https://cdn.jsdelivr.net/gh/owner/name@main",
+    )
     await user.click(screen.getByRole("button", { name: "업로드 시작" }))
 
     await waitFor(() => {
@@ -853,17 +901,30 @@ describe("App", () => {
       expect(document.querySelector("#upload-progress")?.getAttribute("aria-valuenow")).toBe("75")
       expect(document.querySelector("#status-panel")?.textContent).toContain("업로드한 자산 수를 같은 작업에서 실시간으로 확인합니다.")
       expect(document.querySelector("#upload-form")).toBeNull()
-      expect(document.querySelector('#upload-targets-table [data-upload-row-id="NestJS/2026-04-11-1/index.md"]')?.getAttribute("data-upload-row-status")).toBe("complete")
-      expect(document.querySelector('#upload-targets-table [data-upload-row-id="React/2026-04-12-2/index.md"]')?.getAttribute("data-upload-row-status")).toBe("partial")
+      expect(document.querySelector('#job-file-tree [data-upload-row-id="NestJS/2026-04-11-1/index.md"]')?.getAttribute("data-upload-row-status")).toBe("complete")
+      expect(document.querySelector('#job-file-tree [data-upload-row-id="React/2026-04-12-2/index.md"]')?.getAttribute("data-upload-row-status")).toBe("partial")
     }, { timeout: 7000 })
 
     await waitFor(() => {
+      const firstUploadRow = document.querySelector(
+        '#job-file-tree [data-upload-row-id="NestJS/2026-04-11-1/index.md"]',
+      )
+      const secondUploadRow = document.querySelector(
+        '#job-file-tree [data-upload-row-id="React/2026-04-12-2/index.md"]',
+      )
+
       expect(document.querySelector("#status-text")?.textContent).toContain("upload-completed")
       expect(document.querySelector('[data-step-view="result"]')).not.toBeNull()
-      expect(document.querySelector("#upload-targets-table")).not.toBeNull()
+      expect(document.querySelector("#upload-targets-table")).toBeNull()
       expect(document.querySelector("#upload-progress")?.getAttribute("aria-valuenow")).toBe("100")
-      expect(document.querySelector('#upload-targets-table [data-upload-row-id="NestJS/2026-04-11-1/index.md"]')?.getAttribute("data-upload-row-status")).toBe("complete")
-      expect(document.querySelector('#upload-targets-table [data-upload-row-id="React/2026-04-12-2/index.md"]')?.getAttribute("data-upload-row-status")).toBe("complete")
+      expect(firstUploadRow?.getAttribute("data-upload-row-status")).toBe("complete")
+      expect(secondUploadRow?.getAttribute("data-upload-row-status")).toBe("complete")
+      expect(firstUploadRow?.textContent).toContain("#1")
+      expect(firstUploadRow?.textContent).toContain("#2")
+      expect(secondUploadRow?.textContent).toContain("#1")
+      expect(secondUploadRow?.textContent).toContain("#2")
+      expect(firstUploadRow?.querySelectorAll("a")).toHaveLength(2)
+      expect(secondUploadRow?.querySelectorAll("a")).toHaveLength(2)
       expect(document.querySelector('[data-job-item-id="NestJS/2026-04-11-1/index.md"]')?.textContent).toContain("2026-04-11-1")
       expect(document.querySelector("#job-file-tree")?.textContent).toContain("NestJS/2026-04-11-1/index.md")
       expect(document.querySelector("#status-panel")?.textContent).toContain(
@@ -930,36 +991,36 @@ describe("App", () => {
 
     await waitFor(() => {
       expect(document.querySelector('[data-step-view="upload"]')).not.toBeNull()
-      expect(screen.getByLabelText("Repository")).toBeInTheDocument()
+      expect(screen.getByLabelText(/^Repository\b/)).toBeInTheDocument()
     })
 
-    await user.type(screen.getByLabelText("Repository"), "owner/name")
+    await user.type(screen.getByLabelText(/^Repository\b/), "owner/name")
     await user.click(screen.getByRole("checkbox", { name: /jsDelivr CDN 사용/i }))
-    await user.selectOptions(screen.getByLabelText("Provider"), "tcyun")
+    await user.selectOptions(document.querySelector("#upload-providerKey") as HTMLSelectElement, "tcyun")
 
     await waitFor(() => {
-      expect(screen.queryByLabelText("Repository")).toBeNull()
-      expect(screen.getByLabelText("App ID")).toBeInTheDocument()
-      expect(screen.getByLabelText("Permission")).toBeInTheDocument()
-      expect(screen.getByLabelText("Port")).toBeInTheDocument()
+      expect(screen.queryByLabelText(/^Repository\b/)).toBeNull()
+      expect(screen.getByLabelText(/^App ID\b/)).toBeInTheDocument()
+      expect(screen.getByLabelText(/^Permission\b/)).toBeInTheDocument()
+      expect(screen.getByLabelText(/^Port\b/)).toBeInTheDocument()
       expect(screen.getByRole("checkbox", { name: /Slim/i })).toBeInTheDocument()
     })
 
-    expect(screen.getByLabelText("Permission")).toHaveValue("0")
-    await user.type(screen.getByLabelText("App ID"), "app-123")
-    await user.selectOptions(screen.getByLabelText("Permission"), "1")
-    await user.clear(screen.getByLabelText("Port"))
-    await user.type(screen.getByLabelText("Port"), "2443")
+    expect(screen.getByLabelText(/^Permission\b/)).toHaveValue("0")
+    await user.type(screen.getByLabelText(/^App ID\b/), "app-123")
+    await user.selectOptions(screen.getByLabelText(/^Permission\b/), "1")
+    await user.clear(screen.getByLabelText(/^Port\b/))
+    await user.type(screen.getByLabelText(/^Port\b/), "2443")
     await user.click(screen.getByRole("checkbox", { name: /Slim/i }))
 
-    await user.selectOptions(screen.getByLabelText("Provider"), "github")
-    expect(screen.getByLabelText("Repository")).toHaveValue("owner/name")
+    await user.selectOptions(document.querySelector("#upload-providerKey") as HTMLSelectElement, "github")
+    expect(screen.getByLabelText(/^Repository\b/)).toHaveValue("owner/name")
     expect(screen.getByRole("checkbox", { name: /jsDelivr CDN 사용/i })).toBeChecked()
 
-    await user.selectOptions(screen.getByLabelText("Provider"), "tcyun")
-    expect(screen.getByLabelText("App ID")).toHaveValue("app-123")
-    expect(screen.getByLabelText("Permission")).toHaveValue("1")
-    expect(screen.getByLabelText("Port")).toHaveValue(2443)
+    await user.selectOptions(document.querySelector("#upload-providerKey") as HTMLSelectElement, "tcyun")
+    expect(screen.getByLabelText(/^App ID\b/)).toHaveValue("app-123")
+    expect(screen.getByLabelText(/^Permission\b/)).toHaveValue("1")
+    expect(screen.getByLabelText(/^Port\b/)).toHaveValue(2443)
     expect(screen.getByRole("checkbox", { name: /Slim/i })).toBeChecked()
 
     await user.click(screen.getByRole("button", { name: "업로드 시작" }))
@@ -1117,14 +1178,14 @@ describe("App", () => {
 
     await waitFor(() => {
       expect(document.querySelector('[data-step-view="upload"]')).not.toBeNull()
-      expect(screen.getByLabelText("Repository")).toBeInTheDocument()
-      expect(screen.getByLabelText("Token")).toBeInTheDocument()
+      expect(screen.getByLabelText(/^Repository\b/)).toBeInTheDocument()
+      expect(screen.getByLabelText(/^Token\b/)).toBeInTheDocument()
     })
 
-    fireEvent.change(screen.getByLabelText("Repository"), {
+    fireEvent.change(screen.getByLabelText(/^Repository\b/), {
       target: { value: "owner/name" },
     })
-    fireEvent.change(screen.getByLabelText("Token"), {
+    fireEvent.change(screen.getByLabelText(/^Token\b/), {
       target: { value: "ghp_bad_secret" },
     })
     await user.click(screen.getByRole("button", { name: "업로드 시작" }))
@@ -1134,15 +1195,15 @@ describe("App", () => {
       expect(screen.getByText("PicGo upload failed.")).toBeInTheDocument()
       expect(document.querySelector("#upload-form")).not.toBeNull()
       expect(document.querySelector("#upload-progress")?.getAttribute("aria-valuenow")).toBe("75")
-      expect(document.querySelector('#upload-targets-table [data-upload-row-id="NestJS/2026-04-11-1/index.md"]')?.getAttribute("data-upload-row-status")).toBe("failed")
-      expect(document.querySelector('#upload-targets-table [data-upload-row-id="React/2026-04-12-2/index.md"]')?.getAttribute("data-upload-row-status")).toBe("failed")
-      expect(screen.getByLabelText("Provider")).toBeInTheDocument()
-      expect(screen.getByLabelText("Repository")).toHaveValue("owner/name")
-      expect(screen.getByLabelText("Token")).toHaveValue("ghp_bad_secret")
+      expect(document.querySelector('#job-file-tree [data-upload-row-id="NestJS/2026-04-11-1/index.md"]')?.getAttribute("data-upload-row-status")).toBe("failed")
+      expect(document.querySelector('#job-file-tree [data-upload-row-id="React/2026-04-12-2/index.md"]')?.getAttribute("data-upload-row-status")).toBe("failed")
+      expect(document.querySelector("#upload-providerKey")).not.toBeNull()
+      expect(screen.getByLabelText(/^Repository\b/)).toHaveValue("owner/name")
+      expect(screen.getByLabelText(/^Token\b/)).toHaveValue("ghp_bad_secret")
     })
 
-    await user.clear(screen.getByLabelText("Token"))
-    await user.type(screen.getByLabelText("Token"), "ghp_fixed_secret")
+    await user.clear(screen.getByLabelText(/^Token\b/))
+    await user.type(screen.getByLabelText(/^Token\b/), "ghp_fixed_secret")
     await user.click(screen.getByRole("button", { name: "업로드 시작" }))
 
     await waitFor(() => {
@@ -1201,10 +1262,10 @@ describe("App", () => {
       expect(document.querySelector("#upload-form")).not.toBeNull()
     })
 
-    fireEvent.change(screen.getByLabelText("Repository"), {
+    fireEvent.change(screen.getByLabelText(/^Repository\b/), {
       target: { value: "owner/name" },
     })
-    fireEvent.change(screen.getByLabelText("Token"), {
+    fireEvent.change(screen.getByLabelText(/^Token\b/), {
       target: { value: "ghp_upload_secret" },
     })
     await user.click(screen.getByRole("button", { name: "업로드 시작" }))
@@ -1254,8 +1315,8 @@ describe("App", () => {
       expect(document.querySelector('[data-step-view="result"]')).not.toBeNull()
       expect(screen.getByText("업로드할 로컬 이미지가 없어 내보내기만 완료되었습니다.")).toBeInTheDocument()
     })
-    expect(screen.queryByLabelText("Provider")).not.toBeInTheDocument()
-    expect(screen.queryByLabelText("Repository")).not.toBeInTheDocument()
-    expect(screen.queryByLabelText("Token")).not.toBeInTheDocument()
+    expect(document.querySelector("#upload-providerKey")).toBeNull()
+    expect(screen.queryByLabelText(/^Repository\b/)).not.toBeInTheDocument()
+    expect(screen.queryByLabelText(/^Token\b/)).not.toBeInTheDocument()
   })
 })

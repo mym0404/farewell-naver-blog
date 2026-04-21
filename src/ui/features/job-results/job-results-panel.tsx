@@ -29,10 +29,17 @@ import {
   TableRow,
 } from "../../components/ui/table.js"
 import { cn } from "../../lib/cn.js"
+import {
+  buildInitialProviderUiState,
+  getUploadProviderFieldRule,
+  hasMissingRequiredUploadProviderField,
+  trimProviderFieldsForSubmit,
+  type ProviderFormState,
+  type ProviderUiState,
+} from "./upload-provider-form-rules.js"
 
 type JobFilter = "all" | "warnings" | "errors"
 type JobResultsMode = "running" | "upload" | "result"
-type ProviderFormState = Record<string, string | boolean>
 
 const INDEX_MARKDOWN_FILE = "index.md"
 
@@ -70,66 +77,10 @@ const buildInitialProviderFieldMap = (catalog: UploadProviderCatalogResponse) =>
     catalog.providers.map((provider) => [provider.key, buildInitialProviderFields(provider)]),
   ) as Record<string, ProviderFormState>
 
-const trimProviderFields = (
-  provider: UploadProviderDefinition | null,
-  providerFields: ProviderFormState,
-) =>
+const buildInitialProviderUiStateMap = (catalog: UploadProviderCatalogResponse) =>
   Object.fromEntries(
-    (provider?.fields ?? []).reduce<Array<readonly [string, UploadProviderValue]>>((entries, field) => {
-      const rawValue = providerFields[field.key]
-
-      if (field.inputType === "checkbox") {
-        if (typeof rawValue === "boolean") {
-          entries.push([field.key, rawValue] as const)
-        }
-
-        return entries
-      }
-
-      const value =
-        typeof rawValue === "string"
-          ? rawValue.trim()
-          : rawValue === undefined || rawValue === null
-            ? ""
-            : String(rawValue).trim()
-
-      if (!value) {
-        return entries
-      }
-
-      if (field.inputType === "number") {
-        const parsed = Number(value)
-
-        if (Number.isFinite(parsed)) {
-          entries.push([field.key, parsed] as const)
-        }
-
-        return entries
-      }
-
-      if (field.inputType === "select") {
-        const selectedOption = field.options?.find((option) => String(option.value) === value)
-
-        entries.push([field.key, selectedOption?.value ?? value] as const)
-        return entries
-      }
-
-      entries.push([field.key, value] as const)
-      return entries
-    }, []),
-  )
-
-const hasMissingRequiredProviderField = (
-  provider: UploadProviderDefinition | null,
-  providerFields: ProviderFormState,
-) =>
-  (provider?.fields ?? []).some(
-    (field) =>
-      field.required &&
-      (field.inputType === "checkbox"
-        ? typeof providerFields[field.key] !== "boolean"
-        : !String(providerFields[field.key] ?? "").trim()),
-  )
+    catalog.providers.map((provider) => [provider.key, buildInitialProviderUiState()]),
+  ) as Record<string, ProviderUiState>
 
 const buildGitHubJsDelivrCustomUrl = ({
   repo,
@@ -168,14 +119,6 @@ const getJobItems = (job: ExportJobState | null) => {
   }
 
   return job.items
-}
-
-const getUploadTargetItems = (job: ExportJobState | null) => {
-  if (!job) {
-    return []
-  }
-
-  return job.items.filter((item) => item.upload.candidateCount > 0)
 }
 
 const splitOutputPath = (outputPath: string | null) => {
@@ -292,6 +235,46 @@ const buildUploadRowStatus = ({
   } as const
 }
 
+const uploadRowBadgeClass = (status: "pending" | "partial" | "complete" | "failed") =>
+  cn(
+    "rounded-full border px-2.5 py-0.5",
+    status === "pending"
+      ? "border-slate-300 bg-slate-100 text-slate-700"
+      : status === "partial"
+        ? "border-amber-200 bg-amber-50 text-amber-800"
+        : status === "complete"
+          ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+          : "border-rose-200 bg-rose-50 text-rose-800",
+  )
+
+const shouldShowUploadColumns = (job: ExportJobState | null) =>
+  job?.request.options.assets.imageHandlingMode === "download-and-upload" ||
+  job?.upload.status !== "not-requested"
+
+const buildResultsPanelDescription = ({
+  mode,
+  showUploadColumns,
+}: {
+  mode: JobResultsMode
+  showUploadColumns: boolean
+}) => {
+  if (mode === "running") {
+    return showUploadColumns
+      ? "완료된 결과를 먼저 확인하면서 업로드 대상 상태도 같은 표에서 이어서 봅니다."
+      : "완료된 결과가 생기는 대로 같은 표에서 바로 확인합니다."
+  }
+
+  if (mode === "upload") {
+    return showUploadColumns
+      ? "내보내기 결과와 업로드 상태를 같은 표에서 확인한 뒤 업로드를 이어서 진행합니다."
+      : "내보내기 결과를 먼저 확인한 뒤 업로드를 이어서 진행할 수 있습니다."
+  }
+
+  return showUploadColumns
+    ? "생성된 파일과 업로드 상태를 같은 표에서 확인합니다."
+    : "생성된 파일과 상태를 확인합니다."
+}
+
 const buildUploadPanelCopy = (job: ExportJobState | null) => {
   if (!job) {
     return "업로드 대상과 진행 상태를 같은 작업에서 이어서 확인합니다."
@@ -320,6 +303,27 @@ const buildUploadPanelCopy = (job: ExportJobState | null) => {
   return "업로드 대상과 진행 상태를 같은 작업에서 이어서 확인합니다."
 }
 
+const buildUploadedLinkMeta = (item: ExportJobState["items"][number]) =>
+  (Array.isArray(item.upload.uploadedUrls) ? item.upload.uploadedUrls : []).reduce<
+    Array<{ label: string; url: string }>
+  >((entries, url, index) => {
+    try {
+      const parsed = new URL(url)
+
+      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+        return entries
+      }
+    } catch {
+      return entries
+    }
+
+    entries.push({
+      label: `#${index + 1}`,
+      url,
+    })
+    return entries
+  }, [])
+
 export const JobResultsPanel = ({
   mode,
   job,
@@ -347,7 +351,9 @@ export const JobResultsPanel = ({
   const [providerFieldMap, setProviderFieldMap] = useState<Record<string, ProviderFormState>>(() =>
     buildInitialProviderFieldMap(uploadProviders),
   )
-  const [githubUseJsDelivr, setGithubUseJsDelivr] = useState(false)
+  const [providerUiStateMap, setProviderUiStateMap] = useState<Record<string, ProviderUiState>>(() =>
+    buildInitialProviderUiStateMap(uploadProviders),
+  )
   const jobItems = getJobItems(job).filter((item) => {
     const severity = buildJobItemSeverity(item)
 
@@ -361,17 +367,25 @@ export const JobResultsPanel = ({
 
     return true
   })
-  const uploadTargetItems = getUploadTargetItems(job)
   const activeProviderDefinition =
     uploadProviders.providers.find((provider) => provider.key === providerKey) ?? null
   const activeProviderFields =
     providerFieldMap[providerKey] ?? buildInitialProviderFields(activeProviderDefinition)
+  const activeProviderUiState =
+    providerUiStateMap[providerKey] ?? buildInitialProviderUiState()
+  const githubUseJsDelivr = activeProviderUiState.githubUseJsDelivr
+  const githubJsDelivrUrl = buildGitHubJsDelivrCustomUrl({
+    repo: String(activeProviderFields.repo ?? ""),
+    branch: String(activeProviderFields.branch ?? ""),
+  })
+  const showUploadColumns = shouldShowUploadColumns(job)
   const showUploadPanel =
     (mode === "upload" || mode === "result") && (job?.upload.candidateCount ?? 0) > 0
   const showUploadForm =
     mode === "upload" &&
     (job?.status === "upload-ready" || job?.status === "upload-failed")
-  const showExportResults = mode === "upload" || mode === "result"
+  const showExportSummary = mode === "upload" || mode === "result"
+  const showExportResults = mode === "running" || mode === "upload" || mode === "result"
   const latestLogSignature = (() => {
     const lastEntry = job?.logs.at(-1)
 
@@ -404,7 +418,7 @@ export const JobResultsPanel = ({
 
     setProviderKey(getPreferredDefaultProviderKey(uploadProviders))
     setProviderFieldMap(buildInitialProviderFieldMap(uploadProviders))
-    setGithubUseJsDelivr(false)
+    setProviderUiStateMap(buildInitialProviderUiStateMap(uploadProviders))
   }, [job?.id, uploadProviders])
 
   return (
@@ -505,56 +519,6 @@ export const JobResultsPanel = ({
               />
             </div>
 
-            <ScrollArea
-              id="upload-targets-scroll"
-              className="max-h-[28rem] rounded-[1.5rem] border border-slate-200 bg-white"
-            >
-              <Table id="upload-targets-table" className="w-full table-fixed">
-                <TableHeader>
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead className="w-[52%]">글</TableHead>
-                    <TableHead className="w-[24%]">자산</TableHead>
-                    <TableHead className="w-[24%]">상태</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {uploadTargetItems.map((item) => {
-                    const rowStatus = buildUploadRowStatus({
-                      jobStatus: job?.status,
-                      item,
-                    })
-
-                    return (
-                      <TableRow
-                        key={`upload:${item.id}`}
-                        data-upload-row-id={item.id}
-                        data-upload-row-status={rowStatus.key}
-                      >
-                        <TableCell className="min-w-0">
-                          <div className="grid gap-0.5">
-                            <strong className="truncate text-sm font-semibold text-slate-900">{item.title}</strong>
-                            <span className="truncate text-xs text-slate-500">{item.outputPath ?? item.logNo}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-sm text-slate-700">
-                          {item.upload.uploadedCount} / {item.upload.candidateCount}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant="outline"
-                            className="rounded-full px-2.5 py-0.5"
-                            data-upload-row-status-badge={rowStatus.key}
-                          >
-                            {rowStatus.label}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
-            </ScrollArea>
-
             {showUploadForm ? (
               uploadProviderError ? (
                 <p className="text-sm leading-7 text-rose-600">{uploadProviderError}</p>
@@ -566,10 +530,11 @@ export const JobResultsPanel = ({
                   className="grid gap-4 rounded-[1.5rem] border border-slate-200 bg-white p-4"
                   onSubmit={async (event) => {
                     event.preventDefault()
-                    const normalizedProviderFields = trimProviderFields(
-                      activeProviderDefinition,
-                      activeProviderFields,
-                    )
+                    const normalizedProviderFields = trimProviderFieldsForSubmit({
+                      provider: activeProviderDefinition,
+                      providerFields: activeProviderFields,
+                      providerUiState: activeProviderUiState,
+                    })
 
                     await onUploadStart({
                       providerKey,
@@ -577,10 +542,7 @@ export const JobResultsPanel = ({
                         ...normalizedProviderFields,
                         ...(providerKey === "github" && githubUseJsDelivr
                           ? {
-                              customUrl: buildGitHubJsDelivrCustomUrl({
-                                repo: String(activeProviderFields.repo ?? ""),
-                                branch: String(activeProviderFields.branch ?? ""),
-                              }),
+                              customUrl: githubJsDelivrUrl,
                             }
                           : {}),
                       },
@@ -588,11 +550,17 @@ export const JobResultsPanel = ({
                   }}
                 >
                   <div className="grid gap-4 xl:grid-cols-[minmax(16rem,0.8fr)_minmax(0,1.2fr)] xl:items-start">
-                    <label className="grid gap-2">
-                      <span className="text-sm font-semibold text-slate-900">Provider</span>
+                    <div className="grid gap-2">
+                      <label
+                        htmlFor="upload-providerKey"
+                        className="text-sm font-semibold text-slate-900"
+                      >
+                        Provider
+                      </label>
                       <select
                         id="upload-providerKey"
                         className="h-10 rounded-xl border border-slate-200 px-3 text-sm text-slate-900 outline-none focus:border-slate-400"
+                        aria-describedby="upload-providerKey-description"
                         value={providerKey}
                         onChange={(event) => {
                           const nextProviderKey = event.target.value
@@ -609,6 +577,14 @@ export const JobResultsPanel = ({
                                   ),
                                 },
                           )
+                          setProviderUiStateMap((current) =>
+                            current[nextProviderKey]
+                              ? current
+                              : {
+                                  ...current,
+                                  [nextProviderKey]: buildInitialProviderUiState(),
+                                },
+                          )
                         }}
                       >
                         {uploadProviders.providers.map((provider) => (
@@ -617,21 +593,85 @@ export const JobResultsPanel = ({
                           </option>
                         ))}
                       </select>
-                    </label>
+                      <p
+                        id="upload-providerKey-description"
+                        className="text-sm leading-6 text-slate-500"
+                      >
+                        {activeProviderDefinition.description}
+                      </p>
+                    </div>
                     <div className="grid gap-3 sm:grid-cols-2">
+                      {providerKey === "alistplist" ? (
+                        <div className="grid gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 sm:col-span-2">
+                          <span className="text-sm font-semibold text-slate-900">Authentication</span>
+                          <span className="text-sm leading-6 text-slate-500">
+                            AList는 Token 또는 계정 인증 중 하나만 사용합니다.
+                          </span>
+                          <div className="flex flex-wrap gap-3">
+                            <label className="flex items-center gap-2 text-sm text-slate-700">
+                              <input
+                                type="radio"
+                                name="upload-alist-auth-mode"
+                                checked={activeProviderUiState.alistAuthMode === "token"}
+                                onChange={() =>
+                                  setProviderUiStateMap((current) => ({
+                                    ...current,
+                                    [providerKey]: {
+                                      ...activeProviderUiState,
+                                      alistAuthMode: "token",
+                                    },
+                                  }))
+                                }
+                              />
+                              Token
+                            </label>
+                            <label className="flex items-center gap-2 text-sm text-slate-700">
+                              <input
+                                type="radio"
+                                name="upload-alist-auth-mode"
+                                checked={activeProviderUiState.alistAuthMode === "account"}
+                                onChange={() =>
+                                  setProviderUiStateMap((current) => ({
+                                    ...current,
+                                    [providerKey]: {
+                                      ...activeProviderUiState,
+                                      alistAuthMode: "account",
+                                    },
+                                  }))
+                                }
+                              />
+                              Username + Password
+                            </label>
+                          </div>
+                        </div>
+                      ) : null}
                       {activeProviderDefinition.fields.map((field) => {
+                        const fieldInputId = `upload-providerField-${field.key}`
+                        const fieldDescriptionId = `${fieldInputId}-description`
+                        const fieldDisabledReasonId = `${fieldInputId}-disabled-reason`
+                        const rule = getUploadProviderFieldRule({
+                          providerKey,
+                          field,
+                          providerFields: activeProviderFields,
+                          providerUiState: activeProviderUiState,
+                        })
+                        const fieldDescribedBy = rule.disabledReason
+                          ? `${fieldDescriptionId} ${fieldDisabledReasonId}`
+                          : fieldDescriptionId
+
                         if (field.inputType === "checkbox") {
                           return (
-                            <label
+                            <div
                               key={`${providerKey}:${field.key}`}
-                              htmlFor={`upload-providerField-${field.key}`}
-                              className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 sm:col-span-2"
+                              className={`flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 sm:col-span-2 ${rule.disabled ? "opacity-70" : ""}`}
                             >
                               <input
-                                id={`upload-providerField-${field.key}`}
+                                id={fieldInputId}
                                 className="size-[1.1rem] shrink-0 accent-primary"
                                 type="checkbox"
                                 checked={activeProviderFields[field.key] === true}
+                                disabled={rule.disabled}
+                                aria-describedby={fieldDescribedBy}
                                 onChange={(event) =>
                                   setProviderFieldMap((current) => ({
                                     ...current,
@@ -644,29 +684,50 @@ export const JobResultsPanel = ({
                                 }
                               />
                               <span className="grid gap-1">
-                                <span className="text-sm font-semibold text-slate-900">
+                                <label
+                                  htmlFor={fieldInputId}
+                                  className="text-sm font-semibold text-slate-900"
+                                >
                                   {field.label}
+                                </label>
+                                <span
+                                  id={fieldDescriptionId}
+                                  className="text-sm leading-6 text-slate-500"
+                                >
+                                  {rule.description}
                                 </span>
-                                {field.placeholder ? (
+                                {rule.disabledReason ? (
+                                  <span
+                                    id={fieldDisabledReasonId}
+                                    className="text-sm leading-6 text-amber-700"
+                                  >
+                                    {rule.disabledReason}
+                                  </span>
+                                ) : field.placeholder ? (
                                   <span className="text-sm leading-6 text-slate-500">
                                     {field.placeholder}
                                   </span>
                                 ) : null}
                               </span>
-                            </label>
+                            </div>
                           )
                         }
 
                         if (field.inputType === "select") {
                           return (
-                            <label key={`${providerKey}:${field.key}`} className="grid gap-2">
-                              <span className="text-sm font-semibold text-slate-900">
+                            <div key={`${providerKey}:${field.key}`} className="grid gap-2">
+                              <label htmlFor={fieldInputId} className="text-sm font-semibold text-slate-900">
                                 {field.label}
+                              </label>
+                              <span id={fieldDescriptionId} className="text-sm leading-6 text-slate-500">
+                                {rule.description}
                               </span>
                               <select
-                                id={`upload-providerField-${field.key}`}
+                                id={fieldInputId}
                                 className="h-10 rounded-xl border border-slate-200 px-3 text-sm text-slate-900 outline-none focus:border-slate-400"
                                 value={String(activeProviderFields[field.key] ?? "")}
+                                disabled={rule.disabled}
+                                aria-describedby={fieldDescribedBy}
                                 onChange={(event) =>
                                   setProviderFieldMap((current) => ({
                                     ...current,
@@ -685,17 +746,32 @@ export const JobResultsPanel = ({
                                   </option>
                                 ))}
                               </select>
-                            </label>
+                              {rule.disabledReason ? (
+                                <span
+                                  id={fieldDisabledReasonId}
+                                  className="text-sm leading-6 text-amber-700"
+                                >
+                                  {rule.disabledReason}
+                                </span>
+                              ) : null}
+                            </div>
                           )
                         }
 
                         return (
-                          <label key={`${providerKey}:${field.key}`} className="grid gap-2">
-                            <span className="text-sm font-semibold text-slate-900">{field.label}</span>
+                          <div key={`${providerKey}:${field.key}`} className="grid gap-2">
+                            <label htmlFor={fieldInputId} className="text-sm font-semibold text-slate-900">
+                              {field.label}
+                            </label>
+                            <span id={fieldDescriptionId} className="text-sm leading-6 text-slate-500">
+                              {rule.description}
+                            </span>
                             <Input
-                              id={`upload-providerField-${field.key}`}
+                              id={fieldInputId}
                               type={field.inputType}
                               value={String(activeProviderFields[field.key] ?? "")}
+                              disabled={rule.disabled}
+                              aria-describedby={fieldDescribedBy}
                               onChange={(event) =>
                                 setProviderFieldMap((current) => ({
                                   ...current,
@@ -708,14 +784,21 @@ export const JobResultsPanel = ({
                               }
                               placeholder={field.placeholder}
                             />
-                          </label>
+                            {rule.disabledReason ? (
+                              <span
+                                id={fieldDisabledReasonId}
+                                className="text-sm leading-6 text-amber-700"
+                              >
+                                {rule.disabledReason}
+                              </span>
+                            ) : null}
+                          </div>
                         )
                       })}
                     </div>
                   </div>
                   {providerKey === "github" ? (
-                    <label
-                      htmlFor="upload-github-use-jsdelivr"
+                    <div
                       className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
                     >
                       <input
@@ -723,22 +806,57 @@ export const JobResultsPanel = ({
                         className="size-[1.1rem] shrink-0 accent-primary"
                         type="checkbox"
                         checked={githubUseJsDelivr}
-                        onChange={(event) => setGithubUseJsDelivr(event.target.checked)}
+                        aria-describedby="upload-github-use-jsdelivr-description"
+                        onChange={(event) =>
+                          setProviderUiStateMap((current) => ({
+                            ...current,
+                            [providerKey]: {
+                              ...activeProviderUiState,
+                              githubUseJsDelivr: event.target.checked,
+                            },
+                          }))
+                        }
                       />
                       <span className="grid gap-1">
-                        <span className="text-sm font-semibold text-slate-900">
+                        <label
+                          htmlFor="upload-github-use-jsdelivr"
+                          className="text-sm font-semibold text-slate-900"
+                        >
                           jsDelivr CDN 사용
-                        </span>
-                        <span className="text-sm leading-6 text-slate-500">
+                        </label>
+                        <span
+                          id="upload-github-use-jsdelivr-description"
+                          className="text-sm leading-6 text-slate-500"
+                        >
                           {githubUseJsDelivr
-                            ? buildGitHubJsDelivrCustomUrl({
-                                repo: String(activeProviderFields.repo ?? ""),
-                                branch: String(activeProviderFields.branch ?? ""),
-                              }) || "Repository를 입력하면 jsDelivr 주소를 만듭니다."
+                            ? githubJsDelivrUrl || "Repository를 입력하면 jsDelivr 주소를 만듭니다."
                             : "기본 GitHub 업로드 URL을 사용합니다."}
                         </span>
                       </span>
-                    </label>
+                    </div>
+                  ) : null}
+                  {providerKey === "github" && githubUseJsDelivr ? (
+                    <div className="grid gap-2">
+                      <label
+                        htmlFor="upload-github-jsdelivr-preview"
+                        className="text-sm font-semibold text-slate-900"
+                      >
+                        자동 Custom URL
+                      </label>
+                      <Input
+                        id="upload-github-jsdelivr-preview"
+                        value={githubJsDelivrUrl}
+                        readOnly
+                        aria-describedby="upload-github-jsdelivr-preview-description"
+                        placeholder="Repository와 Branch를 입력하면 미리보기가 보입니다."
+                      />
+                      <span
+                        id="upload-github-jsdelivr-preview-description"
+                        className="text-sm leading-6 text-slate-500"
+                      >
+                        jsDelivr 주소는 제출 시 Custom URL로 자동 적용됩니다.
+                      </span>
+                    </div>
                   ) : null}
                   <div className="flex justify-end">
                     <Button
@@ -747,7 +865,11 @@ export const JobResultsPanel = ({
                       className="w-full rounded-xl sm:w-auto"
                       disabled={
                         uploadSubmitting ||
-                        hasMissingRequiredProviderField(activeProviderDefinition, activeProviderFields)
+                        hasMissingRequiredUploadProviderField({
+                          provider: activeProviderDefinition,
+                          providerFields: activeProviderFields,
+                          providerUiState: activeProviderUiState,
+                        })
                       }
                     >
                       {uploadSubmitting ? "업로드 시작 중..." : "업로드 시작"}
@@ -769,7 +891,7 @@ export const JobResultsPanel = ({
           </section>
         ) : null}
 
-        {showExportResults ? (
+        {showExportSummary ? (
           <section className="grid gap-4 rounded-[1.5rem] border border-slate-200 bg-slate-50/80 p-4">
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
               <article className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
@@ -811,9 +933,10 @@ export const JobResultsPanel = ({
             <div className="job-results-header grid gap-4 lg:flex lg:items-start lg:justify-between">
               <div>
                 <CardDescription className="results-description text-sm leading-7 text-slate-600">
-                  {mode === "upload"
-                    ? "내보내기 결과를 먼저 확인한 뒤 업로드를 이어서 진행할 수 있습니다."
-                    : "생성된 파일과 상태를 확인합니다."}
+                  {buildResultsPanelDescription({
+                    mode,
+                    showUploadColumns,
+                  })}
                 </CardDescription>
               </div>
               <div
@@ -842,7 +965,9 @@ export const JobResultsPanel = ({
                 className="job-file-tree empty grid min-h-28 place-items-center rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-6 text-center text-sm text-slate-500"
               >
                 {activeJobFilter === "all"
-                  ? "완료된 결과가 여기에 표시됩니다."
+                  ? mode === "running"
+                    ? "완료된 결과가 아직 없습니다."
+                    : "완료된 결과가 여기에 표시됩니다."
                   : "현재 필터에 맞는 결과가 없습니다."}
               </div>
             ) : (
@@ -853,8 +978,10 @@ export const JobResultsPanel = ({
                 <Table className="w-full table-fixed">
                   <TableHeader className="sticky top-0 z-10">
                     <TableRow className="hover:bg-transparent">
-                      <TableHead className="w-[36%]">파일</TableHead>
-                      <TableHead className="w-[36%]">경로</TableHead>
+                      <TableHead className={showUploadColumns ? "w-[24%]" : "w-[36%]"}>파일</TableHead>
+                      <TableHead className={showUploadColumns ? "w-[24%]" : "w-[36%]"}>경로</TableHead>
+                      {showUploadColumns ? <TableHead className="w-[16%]">업로드</TableHead> : null}
+                      {showUploadColumns ? <TableHead className="w-[14%]">업로드 상태</TableHead> : null}
                       <TableHead className="w-24">상태</TableHead>
                       <TableHead className="w-16">경고</TableHead>
                     </TableRow>
@@ -864,6 +991,17 @@ export const JobResultsPanel = ({
                       const severity = buildJobItemSeverity(item)
                       const pathMeta = buildJobItemPathMeta(item)
                       const meta = severityMeta[severity]
+                      const externalPreviewUrl = item.externalPreviewUrl?.trim()
+                      const hasUploadCandidate = item.upload.candidateCount > 0
+                      const uploadRowStatus =
+                        showUploadColumns && hasUploadCandidate
+                          ? buildUploadRowStatus({
+                              jobStatus: job?.status,
+                              item,
+                            })
+                          : null
+                      const uploadedLinks =
+                        showUploadColumns && hasUploadCandidate ? buildUploadedLinkMeta(item) : []
 
                       return (
                         <TableRow
@@ -876,6 +1014,8 @@ export const JobResultsPanel = ({
                                 ? "bg-rose-50/20"
                                 : "",
                           )}
+                          data-upload-row-id={showUploadColumns && hasUploadCandidate ? item.id : undefined}
+                          data-upload-row-status={uploadRowStatus?.key}
                           data-severity={severity}
                         >
                           <TableCell className="min-w-0 align-top">
@@ -888,6 +1028,19 @@ export const JobResultsPanel = ({
                                 <strong className="break-all text-sm font-semibold text-slate-900">
                                   {pathMeta.fileLabel}
                                 </strong>
+                                {externalPreviewUrl ? (
+                                  <a
+                                    href={externalPreviewUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex w-fit items-center gap-1 text-xs font-medium text-sky-700 underline underline-offset-2"
+                                    data-job-item-preview-link
+                                    aria-label={`${item.title} 미리보기`}
+                                  >
+                                    <i className="ri-external-link-line text-[0.9rem]" aria-hidden="true" />
+                                    <span>미리보기</span>
+                                  </a>
+                                ) : null}
                                 <span className="whitespace-normal break-words text-xs leading-5 text-slate-500">
                                   {item.title}
                                 </span>
@@ -904,6 +1057,49 @@ export const JobResultsPanel = ({
                               </span>
                             </div>
                           </TableCell>
+                          {showUploadColumns ? (
+                            <TableCell className="align-top text-sm text-slate-700">
+                              {hasUploadCandidate ? (
+                                <div className="grid gap-1">
+                                  <span>
+                                    {item.upload.uploadedCount} / {item.upload.candidateCount}
+                                  </span>
+                                  {uploadedLinks.length > 0 ? (
+                                    <div className="flex flex-wrap gap-2 text-xs">
+                                      {uploadedLinks.map((link) => (
+                                        <a
+                                          key={`${item.id}:${link.label}`}
+                                          href={link.url}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          className="font-medium text-sky-700 underline underline-offset-2"
+                                        >
+                                          {link.label}
+                                        </a>
+                                      ))}
+                                    </div>
+                                  ) : null}
+                                </div>
+                              ) : (
+                                <span className="text-slate-400">-</span>
+                              )}
+                            </TableCell>
+                          ) : null}
+                          {showUploadColumns ? (
+                            <TableCell className="align-top">
+                              {uploadRowStatus ? (
+                                <Badge
+                                  variant="outline"
+                                  className={uploadRowBadgeClass(uploadRowStatus.key)}
+                                  data-upload-row-status-badge={uploadRowStatus.key}
+                                >
+                                  {uploadRowStatus.label}
+                                </Badge>
+                              ) : (
+                                <span className="text-sm text-slate-400">-</span>
+                              )}
+                            </TableCell>
+                          ) : null}
                           <TableCell className="align-top">
                             <Badge
                               className="min-w-16 justify-center rounded-full px-2.5 py-0.5"

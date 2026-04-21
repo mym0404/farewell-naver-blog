@@ -41,8 +41,9 @@
 - 기본 이미지 처리 방식은 `download-and-upload`이고, 기본 로컬 압축은 켜져 있다.
 - 이미지 처리 방식은 `download`, `remote`, `download-and-upload` 세 가지다.
 - 다운로드 실패 처리는 `warn-and-use-source`, `warn-and-omit` 두 가지다.
-- 업로드 provider catalog는 설치된 `piclist` runtime이 등록한 uploader config를 정규화한 결과를 그대로 따른다.
-- GitHub 이미지 업로드는 마지막 업로드 단계에서 `jsDelivr CDN 사용`을 켜면 Markdown URL을 `https://cdn.jsdelivr.net/gh/<repo>@<branch>` 기준으로 치환한다. branch가 비어 있으면 `@<branch>`는 생략한다.
+- 업로드 provider catalog는 설치된 `piclist` runtime이 등록한 uploader config를 영문 라벨 + 한국어 설명 중심으로 정규화한 결과를 따른다.
+- 업로드 provider form은 field 설명을 기본으로 보여 주고, 명확한 의존 조건이 있는 field는 비활성화 이유까지 같이 노출한다.
+- GitHub 이미지 업로드는 마지막 업로드 단계에서 `jsDelivr CDN 사용`을 켜면 `customUrl` 입력을 잠그고 `https://cdn.jsdelivr.net/gh/<repo>@<branch>` 기준 주소를 자동으로 사용한다. branch가 비어 있으면 `@<branch>`는 생략한다.
 - 경고/실패 처리 옵션은 asset 전략과 분리된 마지막 `진단 설정` 단계에서 조정한다.
 - 블로그 입력 단계의 `카테고리 불러오기`는 현재 블로그 ID 기준으로 카테고리 스냅샷을 재사용한다.
 - 카테고리 스캔 캐시는 서버 파일 `outputs/scan-cache.json`에 저장되어 새로고침 뒤에도 유지된다.
@@ -54,7 +55,9 @@
 - 실행 단계 progress bar는 `처리한 글 수 / 전체 글 수`를 기준으로 한다.
 - 업로드 단계 progress bar는 `업로드된 고유 자산 수 / 전체 대상 자산 수`를 기준으로 한다.
 - upload row 상태는 글 기준 `대기 / 부분 완료 / 완료 / 실패`만 사용한다.
+- upload row 상태 표현은 통합 결과 표 안에서 soft badge로 유지한다. `대기`도 outline만 쓰지 않고 별도 soft 색을 준다.
 - `upload-failed`가 되면 이미 업로드된 자산 수와 무관하게 모든 row 상태는 `실패`로 보인다.
 - `uploading` 중에 `uploadedCount === candidateCount`가 먼저 될 수 있지만, 이때는 rewrite 대기 구간일 뿐 최종 완료가 아니다.
 - `upload-completed`로 넘어간 뒤에도 업로드 대상이 있었던 job은 결과 단계에서 마지막 upload progress와 row 상태를 계속 볼 수 있어야 한다.
+- `running / upload / result` 단계는 분리된 row 표를 쓰지 않고 같은 결과 표에서 row 상태를 이어서 보여 준다.
 - 업로드 대상이 하나도 없으면 `download-and-upload`여도 upload 단계로 넘어가지 않고 `completed + skipped-no-candidates`로 닫힌다.

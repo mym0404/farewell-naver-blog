@@ -603,10 +603,10 @@ const assertUploadTargetsBounded = async ({
   label: string
 }) => {
   const bounded = await page.evaluate(() => {
-    const root = document.querySelector<HTMLElement>("#upload-targets-scroll")
+    const root = document.querySelector<HTMLElement>("#job-file-tree")
     const viewport = root?.querySelector<HTMLElement>('[data-slot="scroll-area-viewport"]')
-    const table = document.querySelector<HTMLElement>("#upload-targets-table")
-    const section = document.querySelector<HTMLElement>("#status-panel")
+    const table = root?.querySelector<HTMLElement>("table")
+    const section = document.querySelector<HTMLElement>(".job-results-panel")
 
     if (!root || !viewport || !table || !section) {
       return null
@@ -1558,8 +1558,7 @@ const run = async () => {
       throw new Error("post-submit flow reopened setup panels")
     }
 
-    await page.waitForSelector("#upload-targets-table")
-    await page.waitForSelector("#upload-targets-scroll")
+    await page.waitForSelector("#job-file-tree table")
     await page.waitForSelector("#upload-providerKey")
     await page.waitForSelector("#upload-providerField-repo")
     await page.waitForSelector("#upload-providerField-token")
@@ -1570,7 +1569,7 @@ const run = async () => {
       throw new Error("upload-ready panel did not expose the upload action")
     }
 
-    const uploadTargetPath = await page.locator("#upload-targets-table tbody tr td").nth(0).textContent()
+    const uploadTargetPath = await page.locator("#job-file-tree tbody tr td").nth(0).textContent()
 
     if (!uploadTargetPath?.includes("NestJS 업로드 플로우 점검")) {
       throw new Error("upload target table did not render the expected post")

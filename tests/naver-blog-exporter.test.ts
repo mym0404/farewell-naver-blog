@@ -138,6 +138,7 @@ assetPaths:
                 markdownReference: sharedPublicPath,
               },
             ],
+            uploadedUrls: [],
           },
           warnings: [],
           warningCount: 0,
@@ -192,24 +193,27 @@ describe("NaverBlogExporter", () => {
     expect(manifest.upload.status).toBe("not-requested")
     expect(manifest.upload.candidateCount).toBe(0)
     expect(manifest.posts[0]?.warningCount).toBeGreaterThanOrEqual(0)
-    expect(onProgress).toHaveBeenCalledWith({
-      total: 1,
-      completed: 1,
-      failed: 0,
-      warnings: manifest.warningCount,
-    })
-    expect(onItem).toHaveBeenCalledTimes(1)
-    expect(onItem.mock.calls[0]?.[0]).toMatchObject({
-      status: "success",
-      warningCount: expect.any(Number),
-      upload: {
-        eligible: false,
-        candidateCount: 0,
-        uploadedCount: 0,
-        failedCount: 0,
-        candidates: [],
-      },
-    })
+	    expect(onProgress).toHaveBeenCalledWith({
+	      total: 1,
+	      completed: 1,
+	      failed: 0,
+	      warnings: manifest.warningCount,
+	    })
+	    expect(onItem).toHaveBeenCalledTimes(1)
+	    expect(onItem.mock.calls[0]?.[0]).toMatchObject({
+	      status: "success",
+	      warningCount: expect.any(Number),
+	      externalPreviewUrl: expect.stringMatching(
+	        /^https:\/\/markdownviewer\.pages\.dev\/#share=/,
+	      ),
+	      upload: {
+	        eligible: false,
+	        candidateCount: 0,
+	        uploadedCount: 0,
+	        failedCount: 0,
+	        candidates: [],
+	      },
+	    })
 
     const manifestPath = path.join(outputDir, "manifest.json")
     const writtenManifest = JSON.parse(await readFile(manifestPath, "utf8")) as typeof manifest
@@ -614,16 +618,21 @@ describe("NaverBlogExporter", () => {
       })
 
       const rewrittenMarkdown = await readFile(fixture.markdownPath, "utf8")
-      const writtenManifest = JSON.parse(
-        await readFile(path.join(outputDir, "manifest.json"), "utf8"),
-      ) as typeof rewritten.manifest
+	      const writtenManifest = JSON.parse(
+	        await readFile(path.join(outputDir, "manifest.json"), "utf8"),
+	      ) as typeof rewritten.manifest
 
-      expect(rewrittenMarkdown).toContain("thumbnail: https://cdn.example.com/shared.png")
-      expect(rewrittenMarkdown).toContain("https://cdn.example.com/shared.png")
-      expect(writtenManifest.upload.status).toBe("upload-completed")
-      expect(writtenManifest.posts[0]?.assetPaths).toEqual(["https://cdn.example.com/shared.png"])
-      expect(rewritten.items[0]?.assetPaths).toEqual(["https://cdn.example.com/shared.png"])
-    } finally {
+	      expect(rewrittenMarkdown).toContain("thumbnail: https://cdn.example.com/shared.png")
+	      expect(rewrittenMarkdown).toContain("https://cdn.example.com/shared.png")
+	      expect(writtenManifest.upload.status).toBe("upload-completed")
+	      expect(writtenManifest.posts[0]?.assetPaths).toEqual(["https://cdn.example.com/shared.png"])
+	      expect(writtenManifest.posts[0]?.upload.uploadedUrls).toEqual(["https://cdn.example.com/shared.png"])
+	      expect(rewritten.items[0]?.assetPaths).toEqual(["https://cdn.example.com/shared.png"])
+	      expect(rewritten.items[0]?.upload.uploadedUrls).toEqual(["https://cdn.example.com/shared.png"])
+	      expect(rewritten.items[0]?.externalPreviewUrl).toMatch(
+	        /^https:\/\/markdownviewer\.pages\.dev\/#share=/,
+	      )
+	    } finally {
       await rm(outputDir, { recursive: true, force: true })
     }
   })
