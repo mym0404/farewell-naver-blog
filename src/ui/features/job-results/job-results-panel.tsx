@@ -201,6 +201,31 @@ const panelCopy: Record<JobResultsMode, { title: string; description: string }> 
 const toProgressValue = (completed: number, total: number) =>
   total > 0 ? Math.round((completed / total) * 100) : 0
 
+const CompactMetrics = ({
+  items,
+  className,
+}: {
+  items: Array<{ label: string; value: string }>
+  className?: string
+}) => (
+  <div
+    className={cn(
+      "flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1.5 text-sm leading-6 text-slate-600",
+      className,
+    )}
+  >
+    {items.map((item) => (
+      <span
+        key={item.label}
+        className="inline-flex min-w-0 max-w-full flex-wrap items-baseline gap-x-1.5 gap-y-0.5"
+      >
+        <span className="shrink-0 text-slate-500">{item.label}</span>
+        <strong className="min-w-0 break-all font-semibold text-slate-900">{item.value}</strong>
+      </span>
+    ))}
+  </div>
+)
+
 const buildUploadRowStatus = ({
   jobStatus,
   item,
@@ -456,24 +481,15 @@ export const JobResultsPanel = ({
                 indicatorClassName="bg-sky-600"
               />
             </div>
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <article className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
-                <span className="block text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">총 글</span>
-                <strong className="text-2xl font-semibold text-slate-900">{job?.progress.total ?? 0}</strong>
-              </article>
-              <article className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
-                <span className="block text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">완료</span>
-                <strong className="text-2xl font-semibold text-slate-900">{job?.progress.completed ?? 0}</strong>
-              </article>
-              <article className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
-                <span className="block text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">경고</span>
-                <strong className="text-2xl font-semibold text-slate-900">{job?.progress.warnings ?? 0}</strong>
-              </article>
-              <article className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
-                <span className="block text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">실패</span>
-                <strong className="text-2xl font-semibold text-slate-900">{job?.progress.failed ?? 0}</strong>
-              </article>
-            </div>
+            <CompactMetrics
+              items={[
+                { label: "총 글", value: String(job?.progress.total ?? 0) },
+                { label: "완료", value: String(job?.progress.completed ?? 0) },
+                { label: "경고", value: String(job?.progress.warnings ?? 0) },
+                { label: "실패", value: String(job?.progress.failed ?? 0) },
+              ]}
+              className="rounded-2xl border border-slate-200 bg-white px-4 py-3"
+            />
           </section>
         ) : null}
 
@@ -485,24 +501,15 @@ export const JobResultsPanel = ({
                   {buildUploadPanelCopy(job)}
                 </CardDescription>
               </div>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                <article className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-center">
-                  <span className="block text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">대상 글</span>
-                  <strong className="text-lg font-semibold text-slate-900">{job?.upload.eligiblePostCount ?? 0}</strong>
-                </article>
-                <article className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-center">
-                  <span className="block text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">대상 자산</span>
-                  <strong className="text-lg font-semibold text-slate-900">{job?.upload.candidateCount ?? 0}</strong>
-                </article>
-                <article className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-center">
-                  <span className="block text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">업로드 완료</span>
-                  <strong className="text-lg font-semibold text-slate-900">{job?.upload.uploadedCount ?? 0}</strong>
-                </article>
-                <article className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-center">
-                  <span className="block text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">실패</span>
-                  <strong className="text-lg font-semibold text-slate-900">{job?.upload.failedCount ?? 0}</strong>
-                </article>
-              </div>
+              <CompactMetrics
+                items={[
+                  { label: "대상 글", value: String(job?.upload.eligiblePostCount ?? 0) },
+                  { label: "대상 자산", value: String(job?.upload.candidateCount ?? 0) },
+                  { label: "업로드 완료", value: String(job?.upload.uploadedCount ?? 0) },
+                  { label: "실패", value: String(job?.upload.failedCount ?? 0) },
+                ]}
+                className="rounded-2xl border border-slate-200 bg-white px-4 py-3 lg:max-w-[32rem] lg:justify-end"
+              />
             </div>
 
             <div className="grid gap-2 rounded-2xl border border-slate-200 bg-white p-4">
@@ -893,28 +900,16 @@ export const JobResultsPanel = ({
 
         {showExportSummary ? (
           <section className="grid gap-4 rounded-[1.5rem] border border-slate-200 bg-slate-50/80 p-4">
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-              <article className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
-                <span className="block text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">총 글</span>
-                <strong className="text-2xl font-semibold text-slate-900">{job?.progress.total ?? 0}</strong>
-              </article>
-              <article className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
-                <span className="block text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">완료</span>
-                <strong className="text-2xl font-semibold text-slate-900">{job?.progress.completed ?? 0}</strong>
-              </article>
-              <article className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
-                <span className="block text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">경고</span>
-                <strong className="text-2xl font-semibold text-slate-900">{job?.progress.warnings ?? 0}</strong>
-              </article>
-              <article className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
-                <span className="block text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">실패</span>
-                <strong className="text-2xl font-semibold text-slate-900">{job?.progress.failed ?? 0}</strong>
-              </article>
-              <article className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
-                <span className="block text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">업로드</span>
-                <strong className="text-2xl font-semibold text-slate-900">{job?.upload.uploadedCount ?? 0}</strong>
-              </article>
-            </div>
+            <CompactMetrics
+              items={[
+                { label: "총 글", value: String(job?.progress.total ?? 0) },
+                { label: "완료", value: String(job?.progress.completed ?? 0) },
+                { label: "경고", value: String(job?.progress.warnings ?? 0) },
+                { label: "실패", value: String(job?.progress.failed ?? 0) },
+                { label: "업로드", value: String(job?.upload.uploadedCount ?? 0) },
+              ]}
+              className="rounded-2xl border border-slate-200 bg-white px-4 py-3"
+            />
 
             {job?.status === "failed" && job.error ? (
               <p className="text-sm leading-7 text-rose-600">{job.error}</p>

@@ -961,21 +961,19 @@ export const App = () => {
 
             <div
               id="summary"
-              className="wizard-summary-stats flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-slate-200/70 pt-2.5"
+              className="wizard-summary-stats flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-slate-200/70 pt-2.5 text-sm text-slate-600"
               aria-live="polite"
             >
               {summaryCards.map((card) => (
-                <div
+                <span
                   key={card.label}
-                  className="wizard-summary-stat flex min-w-0 items-baseline gap-1.5 text-xs leading-none"
+                  className="wizard-summary-metric inline-flex min-w-0 max-w-full flex-wrap items-baseline gap-x-1.5 gap-y-0.5"
                 >
-                  <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-slate-400">
-                    {card.label}
-                  </span>
-                  <strong className="min-w-0 break-all text-[0.8125rem] font-semibold tracking-[-0.02em] text-slate-700">
+                  <span className="shrink-0 text-slate-500">{card.label}</span>
+                  <strong className="min-w-0 break-all font-semibold text-slate-900">
                     {card.value}
                   </strong>
-                </div>
+                </span>
               ))}
             </div>
 
