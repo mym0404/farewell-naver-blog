@@ -5,6 +5,7 @@ import {
   extractBlogId,
   mapConcurrent,
   normalizeAssetUrl,
+  resolveRepoPath,
   sanitizePathSegment,
   slugifyTitle,
   toErrorMessage,
@@ -55,5 +56,11 @@ describe("shared utils", () => {
     })
 
     expect(results).toEqual(["0:30", "1:0", "2:10"])
+  })
+
+  it("resolves relative paths from the repository root", () => {
+    expect(resolveRepoPath("./output")).toBe("/Users/user1/Desktop/mj/goodbye-naver-blog/output")
+    expect(resolveRepoPath("dist/client")).toBe("/Users/user1/Desktop/mj/goodbye-naver-blog/dist/client")
+    expect(resolveRepoPath("/tmp/export")).toBe("/tmp/export")
   })
 })

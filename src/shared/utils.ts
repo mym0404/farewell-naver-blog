@@ -1,5 +1,6 @@
 import path from "node:path"
 import { mkdir, rm } from "node:fs/promises"
+import { fileURLToPath } from "node:url"
 
 export {
   getDateSlug,
@@ -9,6 +10,10 @@ export {
 } from "./path-format.js"
 
 const markdownLineWhitespacePattern = /[^\S\n]+/g
+const repoRootDir = fileURLToPath(new URL("../..", import.meta.url))
+
+export const resolveRepoPath = (targetPath: string) =>
+  path.isAbsolute(targetPath) ? targetPath : path.resolve(repoRootDir, targetPath)
 
 export const ensureDir = async (targetPath: string) => {
   await mkdir(targetPath, { recursive: true })

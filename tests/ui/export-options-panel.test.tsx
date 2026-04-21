@@ -251,6 +251,64 @@ describe("ExportOptionsPanel", () => {
     expect(query<HTMLElement>("#frontmatter-fields").className).toContain("2xl:grid-cols-3")
   })
 
+  it("shows an always-expanded file tree preview in the structure step", () => {
+    const options = defaultExportOptions()
+
+    render(
+      <ExportOptionsPanel
+        step="structure"
+        outputDir="./output"
+        options={options}
+        optionDescriptions={optionDescriptions}
+        frontmatterFieldOrder={frontmatterFieldOrder}
+        frontmatterFieldMeta={frontmatterFieldMeta}
+        frontmatterValidationErrors={[]}
+        onOutputDirChange={vi.fn()}
+        onOptionsChange={vi.fn()}
+      />,
+    )
+
+    const preview = query<HTMLElement>("#structure-file-tree-preview")
+
+    expect(preview.textContent).toContain("./output")
+    expect(preview.textContent).toContain("개발 메모")
+    expect(preview.textContent).toContain("React")
+    expect(preview.textContent).toContain("2026-04-11-첫-글")
+    expect(preview.textContent).toContain("public")
+    expect(preview.textContent).toContain("manifest.json")
+    expect(preview.textContent).toContain("b7d3f1-cover.jpg")
+  })
+
+  it("updates the structure preview when the folder rule changes", () => {
+    const options = defaultExportOptions()
+
+    options.structure.groupByCategory = false
+    options.structure.includeLogNoInPostFolderName = true
+    options.structure.slugStyle = "keep-title"
+    options.assets.imageHandlingMode = "remote"
+
+    render(
+      <ExportOptionsPanel
+        step="structure"
+        outputDir="/tmp/export"
+        options={options}
+        optionDescriptions={optionDescriptions}
+        frontmatterFieldOrder={frontmatterFieldOrder}
+        frontmatterFieldMeta={frontmatterFieldMeta}
+        frontmatterValidationErrors={[]}
+        onOutputDirChange={vi.fn()}
+        onOptionsChange={vi.fn()}
+      />,
+    )
+
+    const preview = query<HTMLElement>("#structure-file-tree-preview")
+
+    expect(preview.textContent).toContain("/tmp/export")
+    expect(preview.textContent).toContain("2026-04-11-223034929697-첫 글")
+    expect(preview.textContent).not.toContain("개발 메모")
+    expect(preview.textContent).not.toContain("public")
+  })
+
   it("does not render removed link card and video controls", () => {
     render(
       <ExportOptionsPanel

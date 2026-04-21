@@ -7,6 +7,7 @@
 
 ## 문서 지도
 - `.agents/knowledge/`: 반복해서 참조해야 하는 evergreen 저장소 지식
+- `.cache/`: 카테고리 스캔 캐시와 export UI 설정 같은 영속 로컬 상태 저장 위치
 - `docs/runbooks/`: 브라우저 검증, 단건 검증 같은 운영 절차
 - `docs/generated/`: harness가 다시 만드는 품질 보고서와 UI 스크린샷
 - `docs/plans/active/`: 진행 중 작업 메모

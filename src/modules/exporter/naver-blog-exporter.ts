@@ -14,6 +14,7 @@ import {
   ensureDir,
   extractBlogId,
   mapConcurrent,
+  resolveRepoPath,
   toErrorMessage,
 } from "../../shared/utils.js"
 import { NaverBlogFetcher } from "../blog-fetcher/naver-blog-fetcher.js"
@@ -99,7 +100,7 @@ export class NaverBlogExporter {
 
   async run() {
     const blogId = extractBlogId(this.request.blogIdOrUrl)
-    const outputDir = path.resolve(this.request.outputDir)
+    const outputDir = resolveRepoPath(this.request.outputDir)
     const options = cloneExportOptions(this.request.options)
     const fetcher = new NaverBlogFetcher({
       blogId,

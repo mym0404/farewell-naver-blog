@@ -10,7 +10,7 @@ import type {
   PostManifestEntry,
   ScanResult,
 } from "../shared/types.js"
-import { extractBlogId } from "../shared/utils.js"
+import { extractBlogId, resolveRepoPath } from "../shared/utils.js"
 
 const manifestFileName = "manifest.json"
 
@@ -106,7 +106,7 @@ const buildFallbackManifest = ({
 })
 
 export const getExportManifestPath = (outputDir: string) =>
-  path.join(path.resolve(outputDir), manifestFileName)
+  path.join(resolveRepoPath(outputDir), manifestFileName)
 
 export const readExportManifest = async (outputDir: string) => {
   try {

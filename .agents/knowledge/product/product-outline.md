@@ -19,8 +19,9 @@
 1. 사용자가 블로그 ID 또는 URL을 입력한다.
 2. scan으로 전체 공개 글 수, 카테고리 목록, 공개 글 메타데이터를 함께 확보한다.
 3. 카테고리 범위와 export 옵션을 조정한다.
-4. exporter가 scan snapshot을 재사용해 대상 글을 정하고, 제한된 동시성으로 공개 글 본문을 수집하면서도 결과 반영 순서는 원래 글 순서대로 유지해 Markdown, 자산, `manifest.json`을 생성한다.
-5. UI는 job status, summary, logs, 완료 파일 표, warning/error 필터, upload 상태 확인 흐름을 제공하고, 첫 로드에서는 마지막 `outputDir`의 `manifest.json`으로 이전 작업을 복구할 수 있다.
+4. 카테고리 스냅샷과 마지막 output 경로, export option 같은 영속 로컬 상태는 `.cache/` 아래 파일로 유지한다.
+5. exporter가 scan snapshot을 재사용해 대상 글을 정하고, 제한된 동시성으로 공개 글 본문을 수집하면서도 결과 반영 순서는 원래 글 순서대로 유지해 Markdown, 자산, `manifest.json`을 생성한다.
+6. UI는 job status, summary, logs, 완료 파일 표, warning/error 필터, upload 상태 확인 흐름을 제공하고, 첫 로드에서는 마지막 `outputDir`의 `manifest.json`으로 이전 작업을 복구할 수 있다.
 
 ## Output Rules
 - 기본 출력은 `GFM + YAML frontmatter + output/public 로컬 이미지 자산`이다.

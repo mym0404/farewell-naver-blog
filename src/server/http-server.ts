@@ -37,7 +37,7 @@ import type {
   ScanResult,
   UploadProviderValue,
 } from "../shared/types.js"
-import { extractBlogId, recreateDir, toErrorMessage } from "../shared/utils.js"
+import { extractBlogId, recreateDir, resolveRepoPath, toErrorMessage } from "../shared/utils.js"
 import {
   buildResumableExportManifest,
   readExportManifest,
@@ -49,10 +49,14 @@ import {
   type UploadProviderSource,
 } from "./image-upload-provider-source.js"
 
-const builtClientRoot = path.resolve(process.cwd(), "dist/client")
-const devIndexPath = path.resolve(process.cwd(), "index.html")
-const defaultScanCachePath = path.resolve(process.cwd(), "outputs/scan-cache.json")
-const defaultSettingsPath = path.resolve(process.cwd(), "export-ui-settings.json")
+const builtClientRoot = resolveRepoPath("dist/client")
+const devIndexPath = resolveRepoPath("index.html")
+const cacheRoot = resolveRepoPath(".cache")
+const legacyOutputsRoot = resolveRepoPath("outputs")
+const defaultScanCachePath = path.join(cacheRoot, "scan-cache.json")
+const legacyScanCachePath = path.join(legacyOutputsRoot, "scan-cache.json")
+const defaultSettingsPath = path.join(cacheRoot, "export-ui-settings.json")
+const legacySettingsPath = resolveRepoPath("export-ui-settings.json")
 const defaultOutputDir = "./output"
 
 const contentTypes: Record<string, string> = {
@@ -73,6 +77,28 @@ const fileExists = async (filePath: string) => {
     return true
   } catch {
     return false
+  }
+}
+
+const readFileWithFallback = async ({
+  filePath,
+  legacyFilePath,
+}: {
+  filePath: string
+  legacyFilePath?: string
+}) => {
+  try {
+    return await readFile(filePath, "utf8")
+  } catch (error) {
+    if (
+      (error as NodeJS.ErrnoException).code === "ENOENT" &&
+      legacyFilePath &&
+      legacyFilePath !== filePath
+    ) {
+      return readFile(legacyFilePath, "utf8")
+    }
+
+    throw error
   }
 }
 
@@ -181,7 +207,10 @@ const isSameOriginUploadRequest = (request: IncomingMessage) => {
 
 const readScanCacheFile = async (scanCachePath: string) => {
   try {
-    const raw = await readFile(scanCachePath, "utf8")
+    const raw = await readFileWithFallback({
+      filePath: scanCachePath,
+      legacyFilePath: scanCachePath === defaultScanCachePath ? legacyScanCachePath : undefined,
+    })
     const parsed = JSON.parse(raw) as {
       scans?: Record<string, ScanResult>
     }
@@ -219,7 +248,10 @@ const writeScanCacheFile = async ({
 
 const readPersistedUiState = async (settingsPath: string) => {
   try {
-    const raw = await readFile(settingsPath, "utf8")
+    const raw = await readFileWithFallback({
+      filePath: settingsPath,
+      legacyFilePath: settingsPath === defaultSettingsPath ? legacySettingsPath : undefined,
+    })
     const parsed = JSON.parse(raw) as {
       options?: PartialExportOptions
       lastOutputDir?: string
@@ -1184,7 +1216,7 @@ export const createHttpServer = ({
           return
         }
 
-        await recreateDir(path.resolve(exportRequest.outputDir))
+        await recreateDir(resolveRepoPath(exportRequest.outputDir))
         await writePersistedUiState({
           settingsPath,
           input: {

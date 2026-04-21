@@ -9,6 +9,11 @@ const rootDir = fileURLToPath(new URL(".", import.meta.url))
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  server: {
+    watch: {
+      ignored: ["**/.cache/**"],
+    },
+  },
   resolve: {
     alias: {
       "@": path.join(rootDir, "src/ui"),

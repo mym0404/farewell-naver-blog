@@ -10,7 +10,7 @@ import type {
   PostSummary,
   ScanResult,
 } from "../../shared/types.js"
-import { ensureDir, extractBlogId, recreateDir } from "../../shared/utils.js"
+import { ensureDir, extractBlogId, recreateDir, resolveRepoPath } from "../../shared/utils.js"
 import { NaverBlogFetcher } from "../blog-fetcher/naver-blog-fetcher.js"
 import { renderMarkdownPost } from "../converter/markdown-renderer.js"
 import { parsePostHtml } from "../parser/post-parser.js"
@@ -63,7 +63,7 @@ export const exportSinglePost = async ({
     onLog: (message: string) => void
   }) => SinglePostFetcher | Promise<SinglePostFetcher>
 }): Promise<ExportSinglePostDiagnostics> => {
-  const resolvedOutputDir = path.resolve(outputDir)
+  const resolvedOutputDir = resolveRepoPath(outputDir)
   const resolvedOptions = cloneExportOptions(options)
   const resolvedBlogId = extractBlogId(blogId)
   const fetcher = createFetcher

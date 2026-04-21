@@ -5,3 +5,4 @@ tmp
 output
 .env
 outputs
+.cache

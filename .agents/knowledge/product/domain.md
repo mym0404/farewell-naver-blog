@@ -46,7 +46,9 @@
 - GitHub 이미지 업로드는 마지막 업로드 단계에서 `jsDelivr CDN 사용`을 켜면 `customUrl` 입력을 잠그고 `https://cdn.jsdelivr.net/gh/<repo>@<branch>` 기준 주소를 자동으로 사용한다. branch가 비어 있으면 `@<branch>`는 생략한다.
 - 경고/실패 처리 옵션은 asset 전략과 분리된 마지막 `진단 설정` 단계에서 조정한다.
 - 블로그 입력 단계의 `카테고리 불러오기`는 현재 블로그 ID 기준으로 카테고리 스냅샷을 재사용한다.
-- 카테고리 스캔 캐시는 서버 파일 `outputs/scan-cache.json`에 저장되어 새로고침 뒤에도 유지된다.
+- 영속적인 UI 설정과 서버 캐시는 `.cache/` 아래에 저장한다.
+- 카테고리 스캔 캐시는 서버 파일 `.cache/scan-cache.json`에 저장되어 새로고침 뒤에도 유지된다.
+- 마지막 출력 디렉토리와 export option은 `.cache/export-ui-settings.json`의 `lastOutputDir`, `options`로 저장된다.
 - `강제로 불러오기`는 같은 블로그 입력이어도 파일 캐시를 무효화하고 `/api/scan`을 다시 호출한다.
 - `download-and-upload`는 export를 먼저 끝낸 뒤 같은 job을 `upload-ready -> uploading -> upload-completed | upload-failed`로 진행한다.
 - 웹 UI 복구 기준은 마지막 `outputDir`의 `manifest.json` 하나다. 별도 `metadata.json`은 두지 않는다.

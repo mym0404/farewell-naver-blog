@@ -72,7 +72,7 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 - category table은 parent-before-children 순서를 유지하고 depth 기반 indent로 위계를 바로 읽을 수 있어야 한다.
 - 카테고리 단계는 트리 선택과 함께 `카테고리 포함 범위`, `시작일`, `종료일` 입력을 같이 보여 준다.
 - 블로그 입력 단계 하단 액션에는 `카테고리 불러오기`와 `강제로 불러오기`를 같이 둔다.
-- 기본 `카테고리 불러오기`는 서버 파일 캐시 `outputs/scan-cache.json`을 재사용해 새로고침 뒤에도 같은 블로그 스캔을 빠르게 열어야 한다.
+- 기본 `카테고리 불러오기`는 서버 파일 캐시 `.cache/scan-cache.json`을 재사용해 새로고침 뒤에도 같은 블로그 스캔을 빠르게 열어야 한다.
 - 앱 첫 로드에서 마지막 `outputDir`의 `manifest.json.job`이 있으면 setup 첫 화면 대신 마지막 단계로 바로 진입하고, 복구 Dialog로 현재 상태와 요약을 먼저 보여 준다.
 - `강제로 불러오기`는 `캐시 무효화` tooltip을 노출하고, 같은 블로그 입력이어도 서버 재스캔을 강제한다.
 - option panel은 `구조 -> Frontmatter -> Markdown -> Assets -> Link 처리 -> 진단`을 각각 독립 단계로 렌더링한다.

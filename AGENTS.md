@@ -6,6 +6,7 @@
 
 ## Non-Negotiables
 - evergreen 프로젝트 지식은 `docs/`가 아니라 `.agents/knowledge/`를 먼저 읽는다.
+- 영속적인 UI 설정과 서버 파일 캐시는 작업 산출물 폴더가 아니라 `.cache/` 아래에 저장한다.
 - parser capability, sample fixture, renderer/exporter 계약이 바뀌면 관련 knowledge와 generated 문서를 같이 갱신한다.
 - parser/sample 회귀는 fixture-first가 기본이다. live 네이버 fetch는 fixture refresh/drift check 보조 경로로만 취급한다.
 - Playwright UI smoke와 live upload e2e는 유지한다. parser fixture 전환을 이유로 제거하지 않는다.
