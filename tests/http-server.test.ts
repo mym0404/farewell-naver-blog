@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm } from "node:fs/promises"
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { afterEach, describe, expect, it, vi } from "vitest"
@@ -395,6 +395,200 @@ describe("http server", () => {
     expect(body.options.markdown.formulaBlockWrapperOpen).toBe("$$")
     expect(body.options.assets.stickerAssetMode).toBe("ignore")
     expect(body.optionDescriptions["assets-imageContentMode"]).toBeUndefined()
+  })
+
+  it("loads persisted export settings from the project settings file", async () => {
+    const rootDir = await mkdtemp(path.join(tmpdir(), "export-settings-"))
+    const settingsPath = path.join(rootDir, "export-ui-settings.json")
+
+    await writeFile(
+      settingsPath,
+      JSON.stringify(
+        {
+          options: {
+            scope: {
+              categoryIds: [101, 202],
+              dateFrom: "2026-04-01",
+            },
+            structure: {
+              groupByCategory: false,
+            },
+            frontmatter: {
+              aliases: {
+                title: "postTitle",
+              },
+            },
+          },
+        },
+        null,
+        2,
+      ),
+      "utf8",
+    )
+
+    try {
+      activeServer = createTestHttpServer({
+        settingsPath,
+      })
+      const baseUrl = await startServer(activeServer)
+
+      const response = await fetch(`${baseUrl}/api/export-defaults`)
+      const body = (await response.json()) as {
+        options: {
+          scope: {
+            categoryIds: number[]
+            dateFrom: string | null
+          }
+          structure: {
+            groupByCategory: boolean
+          }
+          frontmatter: {
+            aliases: {
+              title: string
+            }
+          }
+        }
+      }
+
+      expect(response.status).toBe(200)
+      expect(body.options.scope.categoryIds).toEqual([])
+      expect(body.options.scope.dateFrom).toBe("2026-04-01")
+      expect(body.options.structure.groupByCategory).toBe(false)
+      expect(body.options.frontmatter.aliases.title).toBe("postTitle")
+    } finally {
+      await rm(rootDir, { recursive: true, force: true })
+    }
+  })
+
+  it("falls back to defaults when the settings file is malformed", async () => {
+    const rootDir = await mkdtemp(path.join(tmpdir(), "export-settings-"))
+    const settingsPath = path.join(rootDir, "export-ui-settings.json")
+    await writeFile(settingsPath, "{broken", "utf8")
+
+    try {
+      activeServer = createTestHttpServer({
+        settingsPath,
+      })
+      const baseUrl = await startServer(activeServer)
+
+      const response = await fetch(`${baseUrl}/api/export-defaults`)
+      const body = (await response.json()) as {
+        options: {
+          structure: {
+            groupByCategory: boolean
+          }
+          scope: {
+            categoryIds: number[]
+          }
+        }
+      }
+
+      expect(response.status).toBe(200)
+      expect(body.options.structure.groupByCategory).toBe(true)
+      expect(body.options.scope.categoryIds).toEqual([])
+    } finally {
+      await rm(rootDir, { recursive: true, force: true })
+    }
+  })
+
+  it("persists export settings without category ids", async () => {
+    const rootDir = await mkdtemp(path.join(tmpdir(), "export-settings-"))
+    const settingsPath = path.join(rootDir, "export-ui-settings.json")
+
+    try {
+      activeServer = createTestHttpServer({
+        settingsPath,
+      })
+      const baseUrl = await startServer(activeServer)
+
+      const response = await fetch(`${baseUrl}/api/export-settings`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          options: {
+            scope: {
+              categoryIds: [101],
+              categoryMode: "exact-selected",
+              dateFrom: "2026-04-01",
+              dateTo: null,
+            },
+            structure: {
+              groupByCategory: false,
+            },
+          },
+        }),
+      })
+
+      const saved = JSON.parse(await readFile(settingsPath, "utf8")) as {
+        options: {
+          scope?: {
+            categoryMode?: string
+            dateFrom?: string | null
+            dateTo?: string | null
+            categoryIds?: number[]
+          }
+          structure?: {
+            groupByCategory?: boolean
+          }
+        }
+      }
+
+      expect(response.status).toBe(204)
+      expect(saved.options.scope).toEqual({
+        categoryMode: "exact-selected",
+        dateFrom: "2026-04-01",
+        dateTo: null,
+      })
+      expect(saved.options.scope?.categoryIds).toBeUndefined()
+      expect(saved.options.structure?.groupByCategory).toBe(false)
+    } finally {
+      await rm(rootDir, { recursive: true, force: true })
+    }
+  })
+
+  it("rejects invalid persisted export settings payloads", async () => {
+    const rootDir = await mkdtemp(path.join(tmpdir(), "export-settings-"))
+    const settingsPath = path.join(rootDir, "export-ui-settings.json")
+
+    try {
+      activeServer = createTestHttpServer({
+        settingsPath,
+      })
+      const baseUrl = await startServer(activeServer)
+
+      const response = await fetch(`${baseUrl}/api/export-settings`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          options: {
+            frontmatter: {
+              enabled: true,
+              fields: {
+                title: true,
+                source: true,
+              },
+              aliases: {
+                title: "shared",
+                source: "shared",
+              },
+            },
+          },
+        }),
+      })
+
+      const body = (await response.json()) as {
+        error: string
+      }
+
+      expect(response.status).toBe(400)
+      expect(body.error).toContain("같은 alias")
+    } finally {
+      await rm(rootDir, { recursive: true, force: true })
+    }
   })
 
   it("returns the runtime-backed upload provider catalog", async () => {

@@ -19,6 +19,7 @@ import {
   frontmatterFieldMeta,
   frontmatterFieldOrder,
   optionDescriptions,
+  sanitizePersistedExportOptions,
   type PartialExportOptions,
 } from "../shared/export-options.js"
 import type { ExportRequest, ScanResult, UploadProviderValue } from "../shared/types.js"
@@ -32,6 +33,7 @@ import {
 const builtClientRoot = path.resolve(process.cwd(), "dist/client")
 const devIndexPath = path.resolve(process.cwd(), "index.html")
 const defaultScanCachePath = path.resolve(process.cwd(), "outputs/scan-cache.json")
+const defaultSettingsPath = path.resolve(process.cwd(), "export-ui-settings.json")
 
 const contentTypes: Record<string, string> = {
   ".css": "text/css; charset=utf-8",
@@ -175,6 +177,54 @@ const writeScanCacheFile = async ({
   )
 }
 
+const readPersistedExportOptions = async (settingsPath: string) => {
+  try {
+    const raw = await readFile(settingsPath, "utf8")
+    const parsed = JSON.parse(raw) as {
+      options?: PartialExportOptions
+    }
+
+    return cloneExportOptions(
+      sanitizePersistedExportOptions(
+        isPlainObject(parsed) && isPlainObject(parsed.options)
+          ? (parsed.options as PartialExportOptions)
+          : undefined,
+      ),
+    )
+  } catch (error) {
+    if (error instanceof Error && error.name === "SyntaxError") {
+      return defaultExportOptions()
+    }
+
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return defaultExportOptions()
+    }
+
+    return defaultExportOptions()
+  }
+}
+
+const writePersistedExportOptions = async ({
+  settingsPath,
+  options,
+}: {
+  settingsPath: string
+  options: PartialExportOptions
+}) => {
+  await mkdir(path.dirname(settingsPath), { recursive: true })
+  await writeFile(
+    settingsPath,
+    JSON.stringify(
+      {
+        options: sanitizePersistedExportOptions(options),
+      },
+      null,
+      2,
+    ),
+    "utf8",
+  )
+}
+
 const normalizeUploaderConfig = ({
   uploaderKey,
   providerFields,
@@ -286,12 +336,14 @@ export const createHttpServer = ({
   uploadPhaseRunner = runPicGoUploadPhase,
   uploadRewriter = rewriteUploadedAssets,
   scanCachePath = defaultScanCachePath,
+  settingsPath = defaultSettingsPath,
   uploadProviderSource = createPicListUploadProviderSource(),
 }: {
   jobStore?: JobStore
   uploadPhaseRunner?: typeof runPicGoUploadPhase
   uploadRewriter?: typeof rewriteUploadedAssets
   scanCachePath?: string
+  settingsPath?: string
   uploadProviderSource?: UploadProviderSource
 } = {}) => {
   const isDevelopment = process.env.NODE_ENV === "development"
@@ -547,17 +599,70 @@ export const createHttpServer = ({
       }
 
       if (method === "GET" && url.pathname === "/api/export-defaults") {
+        const persistedOptions = await readPersistedExportOptions(settingsPath)
+
         sendJson({
           response,
           statusCode: 200,
           body: {
             profile: "gfm",
-            options: defaultExportOptions(),
+            options: persistedOptions,
             frontmatterFieldOrder,
             frontmatterFieldMeta,
             optionDescriptions,
           },
         })
+        return
+      }
+
+      if (method === "POST" && url.pathname === "/api/export-settings") {
+        if (!hasJsonContentType(request)) {
+          sendJson({
+            response,
+            statusCode: 415,
+            body: {
+              error: "application/json 요청만 허용합니다.",
+            },
+          })
+          return
+        }
+
+        const payload = await parseJsonBody<{
+          options?: unknown
+        }>(request)
+
+        if (!isPlainObject(payload) || !isPlainObject(payload.options)) {
+          sendJson({
+            response,
+            statusCode: 400,
+            body: {
+              error: "options 객체는 필수입니다.",
+            },
+          })
+          return
+        }
+
+        try {
+          const sanitizedOptions = sanitizePersistedExportOptions(payload.options as PartialExportOptions)
+
+          cloneExportOptions(sanitizedOptions)
+          await writePersistedExportOptions({
+            settingsPath,
+            options: sanitizedOptions,
+          })
+        } catch (error) {
+          sendJson({
+            response,
+            statusCode: 400,
+            body: {
+              error: toErrorMessage(error),
+            },
+          })
+          return
+        }
+
+        response.writeHead(204)
+        response.end()
         return
       }
 

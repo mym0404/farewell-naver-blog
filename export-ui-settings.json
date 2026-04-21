@@ -1,0 +1,83 @@
+{
+  "options": {
+    "scope": {
+      "categoryMode": "selected-and-descendants",
+      "dateFrom": null,
+      "dateTo": null
+    },
+    "structure": {
+      "cleanOutputDir": true,
+      "groupByCategory": true,
+      "includeDateInPostFolderName": true,
+      "includeLogNoInPostFolderName": false,
+      "slugStyle": "kebab"
+    },
+    "frontmatter": {
+      "enabled": true,
+      "fields": {
+        "title": true,
+        "source": true,
+        "blogId": true,
+        "logNo": true,
+        "publishedAt": true,
+        "category": true,
+        "categoryPath": true,
+        "editorVersion": true,
+        "visibility": true,
+        "tags": true,
+        "thumbnail": true,
+        "video": true,
+        "warnings": true,
+        "exportedAt": true,
+        "assetPaths": false
+      },
+      "aliases": {
+        "title": "",
+        "source": "",
+        "blogId": "",
+        "logNo": "",
+        "publishedAt": "",
+        "category": "",
+        "categoryPath": "",
+        "editorVersion": "",
+        "visibility": "",
+        "tags": "",
+        "thumbnail": "",
+        "video": "",
+        "warnings": "",
+        "exportedAt": "",
+        "assetPaths": ""
+      }
+    },
+    "markdown": {
+      "linkStyle": "inlined",
+      "formulaInlineStyle": "wrapper",
+      "formulaInlineWrapperOpen": "$",
+      "formulaInlineWrapperClose": "$",
+      "formulaBlockStyle": "wrapper",
+      "formulaBlockWrapperOpen": "$$",
+      "formulaBlockWrapperClose": "$$",
+      "tableStyle": "gfm-or-html",
+      "imageStyle": "markdown-image",
+      "imageGroupStyle": "split-images",
+      "rawHtmlPolicy": "omit",
+      "dividerStyle": "dash",
+      "codeFenceStyle": "backtick",
+      "headingLevelOffset": 0
+    },
+    "assets": {
+      "imageHandlingMode": "download-and-upload",
+      "compressionEnabled": true,
+      "downloadFailureMode": "warn-and-use-source",
+      "stickerAssetMode": "ignore",
+      "downloadImages": true,
+      "downloadThumbnails": true,
+      "includeImageCaptions": true,
+      "thumbnailSource": "post-list-first"
+    },
+    "links": {
+      "sameBlogPostMode": "custom-url",
+      "sameBlogPostCustomUrlTemplate": ""
+    }
+  }
+}

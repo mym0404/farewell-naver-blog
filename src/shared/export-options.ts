@@ -284,6 +284,80 @@ export const defaultExportOptions = (): ExportOptions => ({
   },
 })
 
+export const sanitizePersistedExportOptions = (options?: PartialExportOptions): PartialExportOptions => {
+  const sanitized: PartialExportOptions = {}
+
+  if (options?.scope) {
+    const scope: NonNullable<PartialExportOptions["scope"]> = {}
+
+    if (options.scope.categoryMode) {
+      scope.categoryMode = options.scope.categoryMode
+    }
+
+    if ("dateFrom" in options.scope) {
+      scope.dateFrom = options.scope.dateFrom ?? null
+    }
+
+    if ("dateTo" in options.scope) {
+      scope.dateTo = options.scope.dateTo ?? null
+    }
+
+    if (Object.keys(scope).length > 0) {
+      sanitized.scope = scope
+    }
+  }
+
+  if (options?.structure) {
+    sanitized.structure = {
+      ...options.structure,
+    }
+  }
+
+  if (options?.frontmatter) {
+    const frontmatter: NonNullable<PartialExportOptions["frontmatter"]> = {}
+
+    if (typeof options.frontmatter.enabled === "boolean") {
+      frontmatter.enabled = options.frontmatter.enabled
+    }
+
+    if (options.frontmatter.fields) {
+      frontmatter.fields = {
+        ...options.frontmatter.fields,
+      }
+    }
+
+    if (options.frontmatter.aliases) {
+      frontmatter.aliases = {
+        ...options.frontmatter.aliases,
+      }
+    }
+
+    if (Object.keys(frontmatter).length > 0) {
+      sanitized.frontmatter = frontmatter
+    }
+  }
+
+  if (options?.markdown) {
+    sanitized.markdown = {
+      ...options.markdown,
+    }
+  }
+
+  if (options?.assets) {
+    sanitized.assets = {
+      ...options.assets,
+    }
+  }
+
+  if (options?.links) {
+    sanitized.links = {
+      ...options.links,
+    }
+  }
+
+  return sanitized
+}
+
 const coerceAssetOptions = (options: ExportOptions["assets"]) => {
   if (options.imageHandlingMode === "download-and-upload") {
     return {

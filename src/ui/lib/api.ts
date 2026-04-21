@@ -28,6 +28,18 @@ export const fetchJson = async <T>(input: RequestInfo | URL, init?: RequestInit)
   return body
 }
 
+const readErrorMessage = async (response: Response) => {
+  try {
+    const body = (await response.json()) as {
+      error?: string
+    }
+
+    return body.error ?? `request failed: ${response.status}`
+  } catch {
+    return `request failed: ${response.status}`
+  }
+}
+
 export const postJson = <T>(input: RequestInfo | URL, body: unknown) =>
   fetchJson<T>(input, {
     method: "POST",
@@ -36,6 +48,20 @@ export const postJson = <T>(input: RequestInfo | URL, body: unknown) =>
     },
     body: JSON.stringify(body),
   })
+
+export const postJsonNoContent = async (input: RequestInfo | URL, body: unknown) => {
+  const response = await fetch(input, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(body),
+  })
+
+  if (!response.ok) {
+    throw new Error(await readErrorMessage(response))
+  }
+}
 
 export const postUploadJson = <T>(input: RequestInfo | URL, body: unknown) =>
   fetchJson<T>(input, {

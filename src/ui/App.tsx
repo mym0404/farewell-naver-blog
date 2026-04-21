@@ -5,6 +5,7 @@ import {
   frontmatterFieldMeta,
   frontmatterFieldOrder,
   optionDescriptions,
+  sanitizePersistedExportOptions,
   validateFrontmatterAliases,
 } from "../shared/export-options.js"
 import { filterPostsByScope } from "../shared/export-scope.js"
@@ -39,7 +40,7 @@ import type {
   ExportDefaultsResponse,
   UploadProvidersResponse,
 } from "./lib/api.js"
-import { fetchJson, postJson } from "./lib/api.js"
+import { fetchJson, postJson, postJsonNoContent } from "./lib/api.js"
 import { cn } from "./lib/cn.js"
 
 const fallbackDefaults: ExportDefaultsResponse = {
@@ -56,6 +57,7 @@ const fallbackUploadProviders: UploadProviderCatalogResponse = {
 }
 
 const uploadProviderLoadErrorMessage = "업로드 설정을 불러오지 못했습니다."
+const exportSettingsSaveDelayMs = 300
 
 const setupSteps = [
   "blog-input",
@@ -199,6 +201,9 @@ const resolveScopedCategoryIds = ({
     : categories.map((category) => category.id)
 }
 
+const getPersistedOptionsSignature = (options: ExportOptions) =>
+  JSON.stringify(sanitizePersistedExportOptions(options))
+
 export const App = () => {
   const [defaults, setDefaults] = useState(fallbackDefaults)
   const [uploadProviders, setUploadProviders] = useState(fallbackUploadProviders)
@@ -225,6 +230,9 @@ export const App = () => {
   const lastNotifiedJobKeyRef = useRef<string | null>(null)
   const stepViewRef = useRef<HTMLElement | null>(null)
   const previousStepRef = useRef<WizardStep | null>(null)
+  const persistedOptionsSignatureRef = useRef<string | null>(null)
+  const hasLoadedDefaultsRef = useRef(false)
+  const latestPersistedOptionsRef = useRef(sanitizePersistedExportOptions(fallbackDefaults.options))
 
   const frontmatterValidationErrors = useMemo(
     () => validateFrontmatterAliases(options.frontmatter),
@@ -252,6 +260,11 @@ export const App = () => {
   const setupStepIndex = setupSteps.indexOf(setupStep)
   const shouldLoadUploadProviders =
     job?.status === "upload-ready" || job?.status === "upload-failed"
+  const persistedOptions = useMemo(() => sanitizePersistedExportOptions(options), [options])
+  const persistedOptionsSignature = useMemo(
+    () => JSON.stringify(persistedOptions),
+    [persistedOptions],
+  )
 
   const currentStep: WizardStep = useMemo(() => {
     if (submitting || job?.status === "queued" || job?.status === "running") {
@@ -306,6 +319,11 @@ export const App = () => {
           return
         }
 
+        const nextPersistedOptions = sanitizePersistedExportOptions(nextDefaults.options)
+
+        latestPersistedOptionsRef.current = nextPersistedOptions
+        persistedOptionsSignatureRef.current = getPersistedOptionsSignature(nextDefaults.options)
+        hasLoadedDefaultsRef.current = true
         setDefaults(nextDefaults)
         setOptions(nextDefaults.options)
       } catch (error) {
@@ -313,6 +331,11 @@ export const App = () => {
           return
         }
 
+        const nextPersistedOptions = sanitizePersistedExportOptions(fallbackDefaults.options)
+
+        latestPersistedOptionsRef.current = nextPersistedOptions
+        persistedOptionsSignatureRef.current = getPersistedOptionsSignature(fallbackDefaults.options)
+        hasLoadedDefaultsRef.current = true
         setDefaults(fallbackDefaults)
         setOptions(fallbackDefaults.options)
         setScanStatus(error instanceof Error ? error.message : String(error))
@@ -325,6 +348,40 @@ export const App = () => {
       cancelled = true
     }
   }, [])
+
+  useEffect(() => {
+    latestPersistedOptionsRef.current = persistedOptions
+  }, [persistedOptions])
+
+  useEffect(() => {
+    if (!hasLoadedDefaultsRef.current) {
+      return
+    }
+
+    if (persistedOptionsSignature === persistedOptionsSignatureRef.current) {
+      return
+    }
+
+    let cancelled = false
+    const timeoutId = window.setTimeout(() => {
+      void postJsonNoContent("/api/export-settings", {
+        options: latestPersistedOptionsRef.current,
+      })
+        .then(() => {
+          if (cancelled) {
+            return
+          }
+
+          persistedOptionsSignatureRef.current = persistedOptionsSignature
+        })
+        .catch(() => {})
+    }, exportSettingsSaveDelayMs)
+
+    return () => {
+      cancelled = true
+      window.clearTimeout(timeoutId)
+    }
+  }, [persistedOptionsSignature])
 
   useEffect(() => {
     setUploadProviders(fallbackUploadProviders)

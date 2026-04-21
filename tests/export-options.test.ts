@@ -5,6 +5,7 @@ import {
   frontmatterFieldMeta,
   getFrontmatterExportKey,
   optionDescriptions,
+  sanitizePersistedExportOptions,
   validateFrontmatterAliases,
 } from "../src/shared/export-options.js"
 
@@ -92,6 +93,29 @@ describe("export options", () => {
     expect(options.assets.imageHandlingMode).toBe("download-and-upload")
     expect(options.assets.downloadImages).toBe(true)
     expect(Object.hasOwn(options.assets, "imageContentMode")).toBe(false)
+  })
+
+  it("removes category ids from persisted options while keeping other scope fields", () => {
+    const sanitized = sanitizePersistedExportOptions({
+      scope: {
+        categoryIds: [101, 202],
+        categoryMode: "exact-selected",
+        dateFrom: "2026-04-01",
+        dateTo: null,
+      },
+      structure: {
+        groupByCategory: false,
+      },
+    })
+
+    expect(sanitized.scope).toEqual({
+      categoryMode: "exact-selected",
+      dateFrom: "2026-04-01",
+      dateTo: null,
+    })
+    expect(sanitized.structure).toEqual({
+      groupByCategory: false,
+    })
   })
 
   it("detects invalid alias format and collisions only for enabled fields", () => {

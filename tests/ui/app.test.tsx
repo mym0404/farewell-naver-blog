@@ -478,6 +478,8 @@ const skippedUploadJob: ExportJobState = {
   },
 }
 
+const waitForAutosave = () => new Promise((resolve) => setTimeout(resolve, 350))
+
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
@@ -539,6 +541,122 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "Link 처리" }))
     await user.click(screen.getByRole("button", { name: "진단 설정" }))
   }
+
+  it("restores persisted options from the bootstrap response", async () => {
+    const persistedOptions = defaultExportOptions()
+    persistedOptions.structure.groupByCategory = false
+    persistedOptions.frontmatter.aliases.title = "postTitle"
+
+    const fetchMock = vi.fn<typeof fetch>(async (input) => {
+      const url = typeof input === "string" ? input : input.toString()
+
+      if (url.endsWith("/api/export-defaults")) {
+        return buildJsonResponse({
+          profile: "gfm",
+          options: persistedOptions,
+          frontmatterFieldOrder,
+          frontmatterFieldMeta,
+          optionDescriptions,
+        })
+      }
+
+      if (url.endsWith("/api/scan")) {
+        return buildJsonResponse(scanResult)
+      }
+
+      throw new Error(`unexpected fetch: ${url}`)
+    })
+
+    vi.stubGlobal("fetch", fetchMock)
+
+    const user = renderApp()
+
+    await user.type(screen.getByLabelText("블로그 ID 또는 URL"), "mym0404")
+    await user.click(screen.getByRole("button", { name: "카테고리 불러오기" }))
+    await waitFor(() => {
+      expect(document.querySelector('[data-step-view="category-selection"]')).not.toBeNull()
+    })
+
+    await user.click(screen.getByRole("button", { name: "구조 설정" }))
+    expect(screen.getByRole("checkbox", { name: /카테고리 폴더 유지/ })).not.toBeChecked()
+
+    await user.click(screen.getByRole("button", { name: "Frontmatter 설정" }))
+    expect(screen.getByPlaceholderText("title")).toHaveValue("postTitle")
+  })
+
+  it("autosaves sanitized options and ignores blog, output, and category-only changes", async () => {
+    const savedPayloads: Array<{
+      options?: {
+        scope?: {
+          categoryIds?: number[]
+        }
+        structure?: {
+          groupByCategory?: boolean
+        }
+      }
+    }> = []
+
+    const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
+      const url = typeof input === "string" ? input : input.toString()
+      const bootstrapResponse = getBootstrapResponse(url)
+
+      if (bootstrapResponse) {
+        return bootstrapResponse
+      }
+
+      if (url.endsWith("/api/scan")) {
+        return buildJsonResponse(scanResult)
+      }
+
+      if (url.endsWith("/api/export-settings")) {
+        savedPayloads.push(JSON.parse(String(init?.body ?? "{}")) as (typeof savedPayloads)[number])
+        return new Response(null, {
+          status: 204,
+        })
+      }
+
+      throw new Error(`unexpected fetch: ${url}`)
+    })
+
+    vi.stubGlobal("fetch", fetchMock)
+
+    const user = renderApp()
+
+    await waitForAutosave()
+    expect(savedPayloads).toEqual([])
+
+    await user.type(screen.getByLabelText("블로그 ID 또는 URL"), "mym0404")
+    await waitForAutosave()
+    expect(savedPayloads).toEqual([])
+
+    await user.click(screen.getByRole("button", { name: "카테고리 불러오기" }))
+    await waitFor(() => {
+      expect(document.querySelector('[data-step-view="category-selection"]')).not.toBeNull()
+    })
+
+    await waitForAutosave()
+    expect(savedPayloads).toEqual([])
+
+    await user.click(screen.getByRole("button", { name: "전체 해제" }))
+    await user.click(screen.getByRole("checkbox", { name: /NestJS/ }))
+    await waitForAutosave()
+    expect(savedPayloads).toEqual([])
+
+    await user.click(screen.getByRole("button", { name: "구조 설정" }))
+    await user.clear(screen.getByRole("textbox", { name: /출력 경로/ }))
+    await user.type(screen.getByRole("textbox", { name: /출력 경로/ }), "/tmp/custom-output")
+    await waitForAutosave()
+    expect(savedPayloads).toEqual([])
+
+    await user.click(screen.getByRole("checkbox", { name: /카테고리 폴더 유지/ }))
+
+    await waitFor(() => {
+      expect(savedPayloads).toHaveLength(1)
+    })
+
+    expect(savedPayloads[0]?.options?.scope?.categoryIds).toBeUndefined()
+    expect(savedPayloads[0]?.options?.structure?.groupByCategory).toBe(false)
+  })
 
   it("runs the main export flow in the wizard without preview or modal", async () => {
     const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
