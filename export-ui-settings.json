@@ -6,7 +6,6 @@
       "dateTo": null
     },
     "structure": {
-      "cleanOutputDir": true,
       "groupByCategory": true,
       "includeDateInPostFolderName": true,
       "includeLogNoInPostFolderName": false,
@@ -73,11 +72,12 @@
       "downloadImages": true,
       "downloadThumbnails": true,
       "includeImageCaptions": true,
-      "thumbnailSource": "post-list-first"
+      "thumbnailSource": "none"
     },
     "links": {
-      "sameBlogPostMode": "custom-url",
+      "sameBlogPostMode": "keep-source",
       "sameBlogPostCustomUrlTemplate": ""
     }
-  }
+  },
+  "lastOutputDir": "/tmp/http-server-zero-candidates"
 }

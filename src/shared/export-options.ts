@@ -120,7 +120,6 @@ export const optionDescriptions: OptionDescriptionMap = {
   "scope-categoryMode": "선택한 카테고리만 내보낼지, 하위 카테고리까지 함께 포함할지 정합니다.",
   "scope-dateFrom": "이 날짜 이후에 발행한 글만 범위에 포함합니다.",
   "scope-dateTo": "이 날짜 이전에 발행한 글까지만 범위에 포함합니다.",
-  "structure-cleanOutputDir": "내보내기 전에 출력 폴더를 비우고 이번 결과만 다시 생성합니다.",
   "structure-groupByCategory": "카테고리 경로를 출력 폴더 구조에 유지할지 정합니다.",
   "structure-includeDateInPostFolderName": "글 폴더 이름 앞부분에 발행 날짜를 붙입니다.",
   "structure-includeLogNoInPostFolderName": "글 폴더 이름에 네이버 logNo를 함께 넣습니다.",
@@ -209,7 +208,6 @@ export const defaultExportOptions = (): ExportOptions => ({
     dateTo: null,
   },
   structure: {
-    cleanOutputDir: true,
     groupByCategory: true,
     includeDateInPostFolderName: true,
     includeLogNoInPostFolderName: false,
@@ -309,7 +307,20 @@ export const sanitizePersistedExportOptions = (options?: PartialExportOptions): 
 
   if (options?.structure) {
     sanitized.structure = {
-      ...options.structure,
+      groupByCategory: options.structure.groupByCategory,
+      includeDateInPostFolderName: options.structure.includeDateInPostFolderName,
+      includeLogNoInPostFolderName: options.structure.includeLogNoInPostFolderName,
+      slugStyle: options.structure.slugStyle,
+    }
+
+    Object.keys(sanitized.structure).forEach((key) => {
+      if (sanitized.structure && sanitized.structure[key as keyof typeof sanitized.structure] === undefined) {
+        delete sanitized.structure[key as keyof typeof sanitized.structure]
+      }
+    })
+
+    if (sanitized.structure && Object.keys(sanitized.structure).length === 0) {
+      delete sanitized.structure
     }
   }
 

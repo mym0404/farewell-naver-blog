@@ -60,7 +60,6 @@ describe("ExportOptionsPanel", () => {
         value: "/tmp/export",
       },
     })
-    await user.click(query<HTMLInputElement>("#structure-cleanOutputDir"))
     await user.click(query<HTMLInputElement>("#structure-groupByCategory"))
     await user.click(query<HTMLInputElement>("#structure-includeDateInPostFolderName"))
     await user.click(query<HTMLInputElement>("#structure-includeLogNoInPostFolderName"))
@@ -204,7 +203,6 @@ describe("ExportOptionsPanel", () => {
     expect(latestOutputDir).toBe("/tmp/export")
     expect(onOptionsChange).toHaveBeenCalled()
 
-    expect(latestOptions.structure.cleanOutputDir).toBe(false)
     expect(latestOptions.structure.groupByCategory).toBe(false)
     expect(latestOptions.structure.includeDateInPostFolderName).toBe(false)
     expect(latestOptions.structure.includeLogNoInPostFolderName).toBe(true)

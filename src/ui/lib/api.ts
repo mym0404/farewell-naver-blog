@@ -1,15 +1,21 @@
 import type {
   ExportJobState,
   ExportOptions,
+  ExportResumeSummary,
   FrontmatterFieldMeta,
   FrontmatterFieldName,
   OptionDescriptionMap,
+  ScanResult,
   UploadProviderCatalogResponse,
 } from "../../shared/types.js"
 
-export type ExportDefaultsResponse = {
+export type ExportBootstrapResponse = {
   profile: "gfm"
   options: ExportOptions
+  lastOutputDir: string
+  resumedJob: ExportJobState | null
+  resumeSummary: ExportResumeSummary | null
+  resumedScanResult: ScanResult | null
   frontmatterFieldOrder: FrontmatterFieldName[]
   frontmatterFieldMeta: Record<FrontmatterFieldName, FrontmatterFieldMeta>
   optionDescriptions: OptionDescriptionMap

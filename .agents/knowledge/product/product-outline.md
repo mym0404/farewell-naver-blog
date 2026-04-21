@@ -12,7 +12,7 @@
 - [../../../src/ui/App.tsx](../../../src/ui/App.tsx)
 
 ## 검증 방법
-- `pnpm smoke:ui`: scan, export, upload 결과 패널까지 사용자 흐름을 다시 확인할 때 실행한다.
+- `pnpm smoke:ui`: scan, export, upload, 복구 Dialog와 마지막 단계 복귀까지 사용자 흐름을 다시 확인할 때 실행한다.
 - `pnpm samples:verify`: renderer나 exporter 출력 규약이 저장된 sample fixture 회귀와 계속 맞는지 확인할 때 실행한다.
 
 ## User Flow
@@ -20,7 +20,7 @@
 2. scan으로 전체 공개 글 수, 카테고리 목록, 공개 글 메타데이터를 함께 확보한다.
 3. 카테고리 범위와 export 옵션을 조정한다.
 4. exporter가 scan snapshot을 재사용해 대상 글을 정하고, 제한된 동시성으로 공개 글 본문을 수집하면서도 결과 반영 순서는 원래 글 순서대로 유지해 Markdown, 자산, `manifest.json`을 생성한다.
-5. UI는 job status, summary, logs, 완료 파일 표, warning/error 필터, upload 상태 확인 흐름을 제공한다.
+5. UI는 job status, summary, logs, 완료 파일 표, warning/error 필터, upload 상태 확인 흐름을 제공하고, 첫 로드에서는 마지막 `outputDir`의 `manifest.json`으로 이전 작업을 복구할 수 있다.
 
 ## Output Rules
 - 기본 출력은 `GFM + YAML frontmatter + output/public 로컬 이미지 자산`이다.
@@ -29,6 +29,7 @@
 - 파일 구조 기본값은 category path 기반 폴더다.
 - 기본 글 폴더명은 `YYYY-MM-DD-slug`이고 Markdown 본문 파일은 그 안의 `index.md`다.
 - 다운로드 자산은 글 폴더 밖 `output/public/<sha256>.<ext>`에 모으고, 같은 바이트의 파일은 하나만 재사용한다.
+- `manifest.json`은 최종 결과 파일이면서 동시에 복구용 SoT다. export 중간 상태, upload 중간 상태, 완료 상태를 같은 파일 안에서 읽고 다시 띄운다.
 - 같은 자산 URL을 여러 글이 동시에 참조해도 in-flight cache로 중복 다운로드를 피한다.
 - 네이버 미리보기형 media/link card와 video는 일반 Markdown 링크로 export한다.
 - 본문 `<br>` 줄바꿈은 Markdown hard break로 유지해 미리보기와 실제 렌더에서 줄이 붙지 않게 한다.

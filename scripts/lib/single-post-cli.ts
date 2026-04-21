@@ -6,7 +6,6 @@ const entrypoint = "pnpm exec tsx scripts/export-single-post.ts"
 const allowedTopLevelOptionKeys = ["scope", "structure", "frontmatter", "markdown", "assets"] as const
 const allowedScopeKeys = ["categoryIds", "categoryMode", "dateFrom", "dateTo"] as const
 const allowedStructureKeys = [
-  "cleanOutputDir",
   "groupByCategory",
   "includeDateInPostFolderName",
   "includeLogNoInPostFolderName",
@@ -212,12 +211,6 @@ const validateStructureOptions = (value: unknown, optionsPath: string) => {
   assertAllowedKeys(value, allowedStructureKeys, "structure", optionsPath)
 
   const structure = defaultExportOptions().structure
-
-  if ("cleanOutputDir" in value) {
-    const cleanOutputDir = value.cleanOutputDir
-    assertBoolean(cleanOutputDir, "structure.cleanOutputDir", optionsPath)
-    structure.cleanOutputDir = cleanOutputDir
-  }
 
   if ("groupByCategory" in value) {
     const groupByCategory = value.groupByCategory

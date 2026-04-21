@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import { userEvent } from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -517,6 +517,10 @@ describe("App", () => {
       return buildJsonResponse({
         profile: "gfm",
         options: defaultExportOptions(),
+        lastOutputDir: "./output",
+        resumedJob: null,
+        resumeSummary: null,
+        resumedScanResult: null,
         frontmatterFieldOrder,
         frontmatterFieldMeta,
         optionDescriptions,
@@ -562,6 +566,10 @@ describe("App", () => {
         return buildJsonResponse({
           profile: "gfm",
           options: persistedOptions,
+          lastOutputDir: "./output",
+          resumedJob: null,
+          resumeSummary: null,
+          resumedScanResult: null,
           frontmatterFieldOrder,
           frontmatterFieldMeta,
           optionDescriptions,
@@ -590,6 +598,74 @@ describe("App", () => {
 
     await user.click(screen.getByRole("button", { name: "Frontmatter 설정" }))
     expect(screen.getByPlaceholderText("title")).toHaveValue("postTitle")
+  })
+
+  it("opens a resume dialog and restores the last running step from bootstrap", async () => {
+    const resumedJob: ExportJobState = {
+      ...completedJob,
+      id: "job-resumed",
+      status: "running",
+      resumeAvailable: true,
+      finishedAt: null,
+      request: {
+        ...completedJob.request,
+        outputDir: "./resume-output",
+      },
+      progress: {
+        total: 12,
+        completed: 5,
+        failed: 1,
+        warnings: 1,
+      },
+    }
+
+    const fetchMock = vi.fn<typeof fetch>(async (input) => {
+      const url = typeof input === "string" ? input : input.toString()
+
+      if (url.endsWith("/api/export-defaults")) {
+        return buildJsonResponse({
+          profile: "gfm",
+          options: defaultExportOptions(),
+          lastOutputDir: "./resume-output",
+          resumedJob,
+          resumeSummary: {
+            status: "running",
+            outputDir: "./resume-output",
+            totalPosts: 12,
+            completedCount: 5,
+            failedCount: 1,
+            uploadCandidateCount: 0,
+            uploadedCount: 0,
+          },
+          resumedScanResult: scanResult,
+          frontmatterFieldOrder,
+          frontmatterFieldMeta,
+          optionDescriptions,
+        })
+      }
+
+      if (url.endsWith("/api/upload-providers")) {
+        return buildJsonResponse(uploadProviderCatalog)
+      }
+
+      throw new Error(`unexpected fetch: ${url}`)
+    })
+
+    vi.stubGlobal("fetch", fetchMock)
+
+    const user = renderApp()
+
+    const dialog = await screen.findByRole("dialog")
+    expect(within(dialog).getByText("이전 작업을 다시 불러왔습니다.")).toBeInTheDocument()
+    expect(
+      within(dialog).getByText((_, element) => element?.textContent === "상태 running"),
+    ).toBeInTheDocument()
+    expect(
+      within(dialog).getByText((_, element) => element?.textContent === "출력 경로 ./resume-output"),
+    ).toBeInTheDocument()
+    expect(document.querySelector('[data-step-view="running"]')).not.toBeNull()
+    await user.click(within(dialog).getAllByRole("button", { name: "Close" })[0]!)
+    expect(screen.getByRole("button", { name: "남은 작업 계속" })).toBeInTheDocument()
   })
 
   it("autosaves sanitized options and ignores blog, output, and category-only changes", async () => {
@@ -1164,6 +1240,10 @@ describe("App", () => {
         return buildJsonResponse({
           profile: "gfm",
           options: defaultExportOptions(),
+          lastOutputDir: "./output",
+          resumedJob: null,
+          resumeSummary: null,
+          resumedScanResult: null,
           frontmatterFieldOrder,
           frontmatterFieldMeta,
           optionDescriptions,

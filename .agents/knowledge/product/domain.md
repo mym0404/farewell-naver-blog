@@ -16,7 +16,7 @@
 - `pnpm smoke:ui`: scan/export/upload 상태 전이와 사용자 흐름까지 바뀌었는지 확인할 때 실행한다.
 
 ## Problem Space
-이 저장소는 공개 네이버 블로그 글을 다른 환경으로 옮기기 쉬운 Markdown 세트로 export하는 도구다. 대상은 블로그 전체 또는 선택 카테고리이며, 결과물에는 본문 Markdown, YAML frontmatter, 자산 파일, `manifest.json`이 포함된다.
+이 저장소는 공개 네이버 블로그 글을 다른 환경으로 옮기기 쉬운 Markdown 세트로 export하는 도구다. 대상은 블로그 전체 또는 선택 카테고리이며, 결과물에는 본문 Markdown, YAML frontmatter, 자산 파일, 진행 상태까지 포함한 `manifest.json`이 포함된다.
 
 ## Core Entities
 - `blogIdOrUrl`: scan과 export의 시작점
@@ -26,7 +26,7 @@
 - `ParsedPost`: 공용 AST 블록, 태그, 비디오, 경고를 가진 파싱 결과
 - `UploadCandidate`: 로컬로 저장된 이미지/썸네일이 image upload 단계로 넘어갈 때 쓰는 자산 단위
 - `PostUploadSummary`: 글별 업로드 대상 수, 완료 수, 실패 수, candidate 목록을 가진 결과 묶음
-- `ExportManifest`: 전체 작업 결과와 post별 성공/실패, 업로드 요약을 기록하는 최종 묶음
+- `ExportManifest`: 전체 작업 결과와 post별 성공/실패, 업로드 요약, UI 복구용 job snapshot을 함께 기록하는 단일 묶음
 - `ExportJobState`: export 단계와 upload 단계를 같은 job 안에서 이어서 보여 주는 UI/API 상태
 
 ## Domain Constraints
@@ -49,6 +49,8 @@
 - 카테고리 스캔 캐시는 서버 파일 `outputs/scan-cache.json`에 저장되어 새로고침 뒤에도 유지된다.
 - `강제로 불러오기`는 같은 블로그 입력이어도 파일 캐시를 무효화하고 `/api/scan`을 다시 호출한다.
 - `download-and-upload`는 export를 먼저 끝낸 뒤 같은 job을 `upload-ready -> uploading -> upload-completed | upload-failed`로 진행한다.
+- 웹 UI 복구 기준은 마지막 `outputDir`의 `manifest.json` 하나다. 별도 `metadata.json`은 두지 않는다.
+- `manifest.json.job`은 `request`, `status`, `phase`, `logs`, `progress`, `items`, `scanResult`, `summary`를 담고, 새로고침/서버 재시작 뒤 UI bootstrap이 이 값을 기준으로 마지막 단계를 복구한다.
 - post-export 업로드 입력은 export 옵션에 저장하지 않고 결과 패널에서만 `providerKey + providerFields` 형태로 받는다.
 - `providerFields` 값 타입은 문자열만이 아니라 `string | number | boolean` scalar union이다.
 - job 단위 업로드 대상 수는 글별 참조 수 합계가 아니라 고유 `localPath` 수를 뜻한다.

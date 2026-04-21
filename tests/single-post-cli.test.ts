@@ -175,7 +175,6 @@ describe("single-post cli", () => {
 
       expect(exportSinglePost).toHaveBeenCalledTimes(1)
       expect(exportSinglePost.mock.calls[0][0].options.markdown.headingLevelOffset).toBe(2)
-      expect(exportSinglePost.mock.calls[0][0].options.structure.cleanOutputDir).toBe(true)
       expect(stdoutWrite).not.toHaveBeenCalled()
       expect(stderrWrite).toHaveBeenCalledWith(
         [

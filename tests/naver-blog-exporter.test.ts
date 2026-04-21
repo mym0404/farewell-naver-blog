@@ -511,7 +511,7 @@ describe("NaverBlogExporter", () => {
     await rm(outputDir, { recursive: true, force: true })
   })
 
-  it("cleans the output directory, logs count mismatches, and records failed job items", async () => {
+  it("keeps existing files, logs count mismatches, and records failed job items", async () => {
     const outputDir = await mkdtemp(path.join(tmpdir(), "bulk-export-"))
     const sentinelPath = path.join(outputDir, "stale.txt")
     const onLog = vi.fn()
@@ -546,7 +546,7 @@ describe("NaverBlogExporter", () => {
       await readFile(path.join(outputDir, "manifest.json"), "utf8"),
     ) as typeof manifest
 
-    await expect(readFile(sentinelPath, "utf8")).rejects.toThrow()
+    expect(await readFile(sentinelPath, "utf8")).toBe("stale")
     expect(manifest.failureCount).toBe(1)
     expect(manifest.successCount).toBe(0)
     expect(writtenManifest.posts[0]).toMatchObject({
@@ -575,7 +575,7 @@ describe("NaverBlogExporter", () => {
       failed: 1,
       warnings: 0,
     })
-    expect(onLog).toHaveBeenCalledWith(expect.stringContaining("출력 디렉터리 초기화 완료"))
+    expect(onLog).toHaveBeenCalledWith(expect.stringContaining("출력 디렉터리 준비 완료"))
     expect(onLog).toHaveBeenCalledWith(expect.stringContaining("collected=1, expected=2"))
 
     await rm(outputDir, { recursive: true, force: true })

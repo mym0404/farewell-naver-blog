@@ -138,7 +138,6 @@ export type ExportOptions = {
     dateTo: string | null
   }
   structure: {
-    cleanOutputDir: boolean
     groupByCategory: boolean
     includeDateInPostFolderName: boolean
     includeLogNoInPostFolderName: boolean
@@ -365,6 +364,7 @@ export type ExportJobItem = {
     name: string
     path: string[]
   }
+  editorVersion?: EditorVersion | null
   status: "success" | "failed"
   outputPath: string | null
   assetPaths: string[]
@@ -374,6 +374,64 @@ export type ExportJobItem = {
   error: string | null
   externalPreviewUrl?: string | null
   updatedAt: string
+}
+
+export type ScanResult = {
+  blogId: string
+  totalPostCount: number
+  categories: CategoryInfo[]
+  posts?: PostSummary[]
+}
+
+export type ExportJobState = {
+  id: string
+  request: ExportRequest
+  status: JobStatus
+  resumeAvailable?: boolean
+  logs: JobLog[]
+  createdAt: string
+  startedAt: string | null
+  finishedAt: string | null
+  progress: {
+    total: number
+    completed: number
+    failed: number
+    warnings: number
+  }
+  upload: UploadSummary
+  items: ExportJobItem[]
+  manifest: ExportManifest | null
+  error: string | null
+}
+
+export type ExportResumePhase = "export" | "upload-ready" | "uploading" | "result"
+
+export type ExportResumeSummary = {
+  status: JobStatus
+  outputDir: string
+  totalPosts: number
+  completedCount: number
+  failedCount: number
+  uploadCandidateCount: number
+  uploadedCount: number
+}
+
+export type ExportManifestJobState = {
+  id: string
+  phase: ExportResumePhase
+  request: ExportRequest
+  status: JobStatus
+  logs: JobLog[]
+  createdAt: string
+  startedAt: string | null
+  finishedAt: string | null
+  updatedAt: string
+  progress: ExportJobState["progress"]
+  upload: UploadSummary
+  items: ExportJobItem[]
+  error: string | null
+  scanResult: ScanResult | null
+  summary: ExportResumeSummary
 }
 
 export type ExportManifest = {
@@ -390,31 +448,5 @@ export type ExportManifest = {
   upload: UploadSummary
   categories: CategoryInfo[]
   posts: PostManifestEntry[]
-}
-
-export type ScanResult = {
-  blogId: string
-  totalPostCount: number
-  categories: CategoryInfo[]
-  posts?: PostSummary[]
-}
-
-export type ExportJobState = {
-  id: string
-  request: ExportRequest
-  status: JobStatus
-  logs: JobLog[]
-  createdAt: string
-  startedAt: string | null
-  finishedAt: string | null
-  progress: {
-    total: number
-    completed: number
-    failed: number
-    warnings: number
-  }
-  upload: UploadSummary
-  items: ExportJobItem[]
-  manifest: ExportManifest | null
-  error: string | null
+  job?: ExportManifestJobState
 }

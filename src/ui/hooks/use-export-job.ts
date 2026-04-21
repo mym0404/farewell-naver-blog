@@ -47,7 +47,8 @@ export const useExportJob = () => {
 
     let cancelled = false
     let timeoutId: number | null = null
-    const shouldLoadImmediately = !restartPollingRef.current
+    const shouldLoadImmediately =
+      !restartPollingRef.current && !displayedJobRef.current?.resumeAvailable
 
     restartPollingRef.current = false
 
@@ -69,7 +70,7 @@ export const useExportJob = () => {
       displayedJobRef.current = nextJob
       setJob(nextJob)
 
-      if (terminalStatuses.has(nextJob.status)) {
+      if (terminalStatuses.has(nextJob.status) || nextJob.resumeAvailable) {
         if (timeoutId !== null) {
           window.clearTimeout(timeoutId)
         }
@@ -81,7 +82,7 @@ export const useExportJob = () => {
 
     if (shouldLoadImmediately) {
       void load()
-    } else {
+    } else if (!displayedJobRef.current?.resumeAvailable) {
       scheduleNextLoad(job?.status)
     }
 
@@ -150,6 +151,7 @@ export const useExportJob = () => {
         ? {
             ...previousJob,
             status: "uploading",
+            resumeAvailable: false,
             upload: {
               ...previousJob.upload,
               status: "uploading",
@@ -200,11 +202,44 @@ export const useExportJob = () => {
     }
   }
 
+  const resumeJob = async () => {
+    if (!jobId) {
+      throw new Error("재개할 작업이 없습니다.")
+    }
+
+    setSubmitting(true)
+    setJob((current) =>
+      current
+        ? {
+            ...current,
+            resumeAvailable: false,
+          }
+        : current,
+    )
+
+    try {
+      const response = await postJson<{ jobId: string; status: string }>(`/api/export/${jobId}/resume`, {})
+      restartPollingRef.current = true
+      setPollVersion((current) => current + 1)
+      return response
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const hydrateJob = (nextJob: ExportJobState | null) => {
+    displayedJobRef.current = nextJob
+    setJob(nextJob)
+    setJobId(nextJob?.id ?? null)
+  }
+
   return {
     job,
     jobId,
     submitting,
     uploadSubmitting,
+    hydrateJob,
+    resumeJob,
     setJob,
     startJob,
     startUpload,

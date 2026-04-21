@@ -93,11 +93,7 @@ export const exportSinglePost = async ({
     throw new Error(`요청한 글이 scope 범위 밖입니다: ${resolvedBlogId}/${logNo}`)
   }
 
-  if (resolvedOptions.structure.cleanOutputDir) {
-    await recreateDir(resolvedOutputDir)
-  } else {
-    await ensureDir(resolvedOutputDir)
-  }
+  await recreateDir(resolvedOutputDir)
 
   const category = getCategoryForPost({
     categories: categoryMap,

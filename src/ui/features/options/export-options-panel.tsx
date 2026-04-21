@@ -287,23 +287,6 @@ export const ExportOptionsPanel = ({
 
       <OptionSection title="구조" note="출력 폴더와 파일 이름 규칙">
         <CheckField
-          inputId="structure-cleanOutputDir"
-          optionKey="structure-cleanOutputDir"
-          label="내보내기 전에 output 디렉터리 비우기"
-          description={description("structure-cleanOutputDir")}
-          checked={options.structure.cleanOutputDir}
-          onChange={(checked) =>
-            onOptionsChange((current) => ({
-              ...current,
-              structure: {
-                ...current.structure,
-                cleanOutputDir: checked,
-              },
-            }))
-          }
-        />
-
-        <CheckField
           inputId="structure-groupByCategory"
           optionKey="structure-groupByCategory"
           label="카테고리 폴더 유지"

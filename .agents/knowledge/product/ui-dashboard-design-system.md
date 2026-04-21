@@ -73,6 +73,7 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 - 카테고리 단계는 트리 선택과 함께 `카테고리 포함 범위`, `시작일`, `종료일` 입력을 같이 보여 준다.
 - 블로그 입력 단계 하단 액션에는 `카테고리 불러오기`와 `강제로 불러오기`를 같이 둔다.
 - 기본 `카테고리 불러오기`는 서버 파일 캐시 `outputs/scan-cache.json`을 재사용해 새로고침 뒤에도 같은 블로그 스캔을 빠르게 열어야 한다.
+- 앱 첫 로드에서 마지막 `outputDir`의 `manifest.json.job`이 있으면 setup 첫 화면 대신 마지막 단계로 바로 진입하고, 복구 Dialog로 현재 상태와 요약을 먼저 보여 준다.
 - `강제로 불러오기`는 `캐시 무효화` tooltip을 노출하고, 같은 블로그 입력이어도 서버 재스캔을 강제한다.
 - option panel은 `구조 -> Frontmatter -> Markdown -> Assets -> Link 처리 -> 진단`을 각각 독립 단계로 렌더링한다.
 - `Link 처리`의 커스텀 URL 모드는 지원 변수 설명과 현재 선택 범위 기준 실시간 변환 예시를 함께 보여 준다. 현재 변수는 `{slug}`, `{category}`, `{title}`, `{logNo}`, `{blogId}`, `{date}`, `{year}`, `{month}`, `{day}`다.
@@ -93,6 +94,7 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 - `running / upload / result`는 같은 결과 표를 공유하고, `download-and-upload`일 때만 업로드 관련 column을 추가한다.
 - 업로드 입력은 raw JSON textarea 대신 provider 선택과 schema-driven 필드 조합을 사용한다.
 - 업로드 폼은 `upload-ready`와 `upload-failed`에서만 보이고, provider 전환 뒤에도 provider별 입력값을 유지해야 한다.
+- `uploading + resumeAvailable` 복구 상태에서도 업로드 폼을 다시 보여 주고, 버튼은 `남은 업로드 계속`으로 바뀌어야 한다.
 - `upload-failed`일 때는 같은 job에서 마지막 provider 값을 복원한 상태로 바로 재시도할 수 있어야 한다.
 - running panel은 `#running-progress`에서 `처리한 글 수 / 전체 글 수`를 progress bar로 보여 준다.
 - upload panel은 `#upload-progress`에서 `업로드된 고유 자산 수 / 전체 대상 자산 수`를 progress bar로 보여 준다.
@@ -132,12 +134,13 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 ## Validation Rules
 - UI 변경 요청 검증은 먼저 `agent-browser`로 수행한다.
 - 수동 검증이 반복되거나 CI 회귀로 남길 가치가 생기면 Playwright harness 케이스로 올린다.
-- `scripts/harness/run-ui-smoke.ts`의 contrast gate selector는 회귀 방지 대상이다.
+- `scripts/harness/run-ui-smoke.ts`의 contrast gate selector와 `scripts/harness/run-ui-resume-smoke.ts`의 단계 복구 시나리오는 회귀 방지 대상이다.
 - 현재 contrast gate 대상에는 step label, header description, summary metric, category status, panel description, field help, frontmatter description, results description, job result text, scan status note, export action text가 포함된다.
 - smoke screenshot capture는 `docs/generated/ui-review/round-01`부터 `round-05`까지 동일 시나리오로 누적한다.
 - smoke는 desktop/mobile 모두 viewport horizontal overflow를 같이 검사한다.
 - smoke는 `data-step-view` 전환, scan 재사용/재조회, frontmatter 다열 grid, assets 단계 전 export 버튼 비노출을 같이 검사한다.
 - smoke는 mocked API payload로 `upload-ready -> uploading -> upload-failed -> retry -> upload-completed`를 강제로 재현하고, progress hook(`#running-progress`, `#upload-progress`), rewrite-pending full bar, row 상태, form visibility, mobile upload table overflow까지 확인한다.
+- smoke는 마지막 `outputDir`의 `manifest.json`만으로 `blog-input`, `running`, `upload`, `result` 단계 복구와 자동 재실행 금지, 수동 재개 버튼 동작까지 확인한다.
 - smoke screenshot과 로그에는 placeholder config만 쓰고, raw secret 값은 남기지 않는다.
 - contrast gate는 translucent card 배경까지 ancestor background를 합성해서 계산한다.
 

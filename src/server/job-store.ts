@@ -61,6 +61,7 @@ export class JobStore {
       id,
       request,
       status: "queued",
+      resumeAvailable: false,
       logs: [],
       createdAt: new Date().toISOString(),
       startedAt: null,
@@ -89,6 +90,32 @@ export class JobStore {
     return state
   }
 
+  hydrate(manifest: ExportManifest) {
+    if (!manifest.job) {
+      throw new Error("manifest job snapshot is missing")
+    }
+
+    const state: ExportJobState = {
+      id: manifest.job.id,
+      request: manifest.job.request,
+      status: manifest.job.status,
+      resumeAvailable: manifest.job.status === "running" || manifest.job.status === "uploading",
+      logs: manifest.job.logs,
+      createdAt: manifest.job.createdAt,
+      startedAt: manifest.job.startedAt,
+      finishedAt: manifest.job.finishedAt,
+      progress: manifest.job.progress,
+      upload: manifest.job.upload,
+      items: manifest.job.items,
+      manifest,
+      error: manifest.job.error,
+    }
+
+    this.jobs.set(state.id, state)
+
+    return state
+  }
+
   get(id: string) {
     return this.jobs.get(id) ?? null
   }
@@ -96,7 +123,15 @@ export class JobStore {
   start(id: string) {
     const job = this.mustGet(id)
     job.status = "running"
+    job.resumeAvailable = false
     job.startedAt = new Date().toISOString()
+  }
+
+  resume(id: string) {
+    const job = this.mustGet(id)
+    job.resumeAvailable = false
+    job.finishedAt = null
+    job.error = null
   }
 
   appendLog(id: string, message: string) {
@@ -136,6 +171,7 @@ export class JobStore {
   completeExport(id: string, manifest: ExportManifest) {
     const job = this.mustGet(id)
     job.manifest = manifest
+    job.resumeAvailable = false
     job.progress = {
       total: manifest.totalPosts,
       completed: manifest.successCount,
@@ -149,6 +185,7 @@ export class JobStore {
       title: post.title,
       source: post.source,
       category: post.category,
+      editorVersion: post.editorVersion,
       status: post.status,
       outputPath: post.outputPath,
       assetPaths: post.assetPaths,
@@ -175,6 +212,7 @@ export class JobStore {
     const updatedAt = new Date().toISOString()
 
     job.status = "uploading"
+    job.resumeAvailable = false
     job.error = null
     job.upload = {
       ...job.upload,
@@ -230,6 +268,7 @@ export class JobStore {
     const job = this.mustGet(id)
 
     job.status = "upload-completed"
+    job.resumeAvailable = false
     job.finishedAt = new Date().toISOString()
     job.manifest = input.manifest
     job.items = input.items
@@ -241,6 +280,7 @@ export class JobStore {
     const updatedAt = new Date().toISOString()
 
     job.status = "upload-failed"
+    job.resumeAvailable = false
     job.finishedAt = new Date().toISOString()
     job.error = error
     job.upload = {
@@ -281,6 +321,7 @@ export class JobStore {
   fail(id: string, error: string) {
     const job = this.mustGet(id)
     job.status = "failed"
+    job.resumeAvailable = false
     job.finishedAt = new Date().toISOString()
     job.error = error
   }

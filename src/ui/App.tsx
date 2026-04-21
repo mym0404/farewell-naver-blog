@@ -12,6 +12,7 @@ import { filterPostsByScope } from "../shared/export-scope.js"
 import type {
   ExportJobState,
   ExportOptions,
+  ExportResumeSummary,
   ScanResult,
   UploadProviderCatalogResponse,
   UploadProviderValue,
@@ -26,6 +27,14 @@ import {
   CardHeader,
   CardTitle,
 } from "./components/ui/card.js"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "./components/ui/dialog.js"
 import { Input } from "./components/ui/input.js"
 import { toast } from "./components/ui/sonner.js"
 import { toggleCategorySelection } from "./features/scan/category-selection.js"
@@ -37,15 +46,19 @@ import {
 import { JobResultsPanel } from "./features/job-results/job-results-panel.js"
 import { useExportJob } from "./hooks/use-export-job.js"
 import type {
-  ExportDefaultsResponse,
+  ExportBootstrapResponse,
   UploadProvidersResponse,
 } from "./lib/api.js"
 import { fetchJson, postJson, postJsonNoContent } from "./lib/api.js"
 import { cn } from "./lib/cn.js"
 
-const fallbackDefaults: ExportDefaultsResponse = {
+const fallbackDefaults: ExportBootstrapResponse = {
   profile: "gfm",
   options: defaultExportOptions(),
+  lastOutputDir: "./output",
+  resumedJob: null,
+  resumeSummary: null,
+  resumedScanResult: null,
   frontmatterFieldOrder,
   frontmatterFieldMeta,
   optionDescriptions,
@@ -148,6 +161,7 @@ const createErrorJobState = (
       options: request.options,
     },
     status: "failed",
+    resumeAvailable: false,
     logs: [],
     createdAt: new Date().toISOString(),
     startedAt: new Date().toISOString(),
@@ -210,6 +224,7 @@ export const App = () => {
   const [uploadProviderError, setUploadProviderError] = useState<string | null>(null)
   const [blogIdOrUrl, setBlogIdOrUrl] = useState("")
   const [outputDir, setOutputDir] = useState("./output")
+  const [resumeDialog, setResumeDialog] = useState<ExportResumeSummary | null>(null)
   const [scanCache, setScanCache] = useState<Record<string, ScanResult>>({})
   const [options, setOptions] = useState<ExportOptions>(
     fallbackDefaults.options,
@@ -226,7 +241,16 @@ export const App = () => {
   const [activeJobFilter, setActiveJobFilter] = useState<
     "all" | "warnings" | "errors"
   >("all")
-  const { job, submitting, uploadSubmitting, setJob, startJob, startUpload } = useExportJob()
+  const {
+    job,
+    submitting,
+    uploadSubmitting,
+    hydrateJob,
+    resumeJob,
+    setJob,
+    startJob,
+    startUpload,
+  } = useExportJob()
   const lastNotifiedJobKeyRef = useRef<string | null>(null)
   const stepViewRef = useRef<HTMLElement | null>(null)
   const previousStepRef = useRef<WizardStep | null>(null)
@@ -259,7 +283,9 @@ export const App = () => {
   const exportDisabled = !activeScanResult || frontmatterValidationErrors.length > 0
   const setupStepIndex = setupSteps.indexOf(setupStep)
   const shouldLoadUploadProviders =
-    job?.status === "upload-ready" || job?.status === "upload-failed"
+    job?.status === "upload-ready" ||
+    job?.status === "upload-failed" ||
+    (job?.status === "uploading" && job.resumeAvailable)
   const persistedOptions = useMemo(() => sanitizePersistedExportOptions(options), [options])
   const persistedOptionsSignature = useMemo(
     () => JSON.stringify(persistedOptions),
@@ -313,7 +339,7 @@ export const App = () => {
 
     const loadDefaults = async () => {
       try {
-        const nextDefaults = await fetchJson<ExportDefaultsResponse>("/api/export-defaults")
+        const nextDefaults = await fetchJson<ExportBootstrapResponse>("/api/export-defaults")
 
         if (cancelled) {
           return
@@ -325,7 +351,23 @@ export const App = () => {
         persistedOptionsSignatureRef.current = getPersistedOptionsSignature(nextDefaults.options)
         hasLoadedDefaultsRef.current = true
         setDefaults(nextDefaults)
-        setOptions(nextDefaults.options)
+        setOptions(nextDefaults.resumedJob?.request.options ?? nextDefaults.options)
+        setOutputDir(nextDefaults.resumedJob?.request.outputDir ?? nextDefaults.lastOutputDir)
+        setBlogIdOrUrl(nextDefaults.resumedJob?.request.blogIdOrUrl ?? "")
+
+        if (nextDefaults.resumedScanResult) {
+          setScanCache({
+            [nextDefaults.resumedScanResult.blogId]: nextDefaults.resumedScanResult,
+          })
+          setScanStatus(`${nextDefaults.resumedScanResult.blogId} 스캔 결과 재개`)
+          setCategoryStatus("이전 작업 상태를 복구했습니다.")
+        }
+
+        if (nextDefaults.resumedJob) {
+          lastNotifiedJobKeyRef.current = `${nextDefaults.resumedJob.id}:${nextDefaults.resumedJob.status}:${nextDefaults.resumedJob.finishedAt ?? ""}`
+          hydrateJob(nextDefaults.resumedJob)
+          setResumeDialog(nextDefaults.resumeSummary)
+        }
       } catch (error) {
         if (cancelled) {
           return
@@ -338,6 +380,7 @@ export const App = () => {
         hasLoadedDefaultsRef.current = true
         setDefaults(fallbackDefaults)
         setOptions(fallbackDefaults.options)
+        setOutputDir(fallbackDefaults.lastOutputDir)
         setScanStatus(error instanceof Error ? error.message : String(error))
       }
     }
@@ -695,6 +738,20 @@ export const App = () => {
     }
   }
 
+  const handleResumeExport = async () => {
+    try {
+      await resumeJob()
+      toast("남은 내보내기를 다시 시작했습니다.", {
+        description: "이전 진행 상태를 이어서 처리합니다.",
+      })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      toast.error("내보내기를 다시 시작하지 못했습니다.", {
+        description: message,
+      })
+    }
+  }
+
   const goToPreviousStep = () => {
     if (!isSetupStep || setupStepIndex <= 0) {
       return
@@ -785,10 +842,12 @@ export const App = () => {
           mode="running"
           job={job}
           activeJobFilter={activeJobFilter}
+          resumeSubmitting={submitting}
           uploadSubmitting={uploadSubmitting}
           uploadProviders={uploadProviders}
           uploadProviderError={uploadProviderError}
           onFilterChange={setActiveJobFilter}
+          onResumeExport={handleResumeExport}
           onUploadStart={handleUpload}
         />
       )
@@ -800,10 +859,12 @@ export const App = () => {
           mode="upload"
           job={job}
           activeJobFilter={activeJobFilter}
+          resumeSubmitting={submitting}
           uploadSubmitting={uploadSubmitting}
           uploadProviders={uploadProviders}
           uploadProviderError={uploadProviderError}
           onFilterChange={setActiveJobFilter}
+          onResumeExport={handleResumeExport}
           onUploadStart={handleUpload}
         />
       )
@@ -815,10 +876,12 @@ export const App = () => {
           mode="result"
           job={job}
           activeJobFilter={activeJobFilter}
+          resumeSubmitting={submitting}
           uploadSubmitting={uploadSubmitting}
           uploadProviders={uploadProviders}
           uploadProviderError={uploadProviderError}
           onFilterChange={setActiveJobFilter}
+          onResumeExport={handleResumeExport}
           onUploadStart={handleUpload}
         />
       )
@@ -924,6 +987,34 @@ export const App = () => {
 
   return (
     <main className="dashboard-shell relative min-h-screen w-full overflow-x-clip">
+      <Dialog open={Boolean(resumeDialog)} onOpenChange={(open) => (!open ? setResumeDialog(null) : null)}>
+        <DialogContent showCloseButton>
+          <DialogHeader>
+            <DialogTitle>이전 작업을 다시 불러왔습니다.</DialogTitle>
+            <DialogDescription>
+              output 상태를 읽어 마지막 작업 화면으로 복구했습니다.
+            </DialogDescription>
+          </DialogHeader>
+          {resumeDialog ? (
+            <div className="grid gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-700">
+              <p>
+                <strong className="font-semibold text-slate-900">상태</strong> {resumeDialog.status}
+              </p>
+              <p>
+                <strong className="font-semibold text-slate-900">출력 경로</strong> {resumeDialog.outputDir}
+              </p>
+              <p>
+                <strong className="font-semibold text-slate-900">진행</strong> 총 {resumeDialog.totalPosts} / 완료 {resumeDialog.completedCount} / 실패 {resumeDialog.failedCount}
+              </p>
+              <p>
+                <strong className="font-semibold text-slate-900">업로드</strong> {resumeDialog.uploadedCount} / {resumeDialog.uploadCandidateCount}
+              </p>
+            </div>
+          ) : null}
+          <DialogFooter showCloseButton />
+        </DialogContent>
+      </Dialog>
+
       <div
         id="dashboard-backdrop"
         className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_right,rgba(51,102,255,0.16),transparent_22%),radial-gradient(circle_at_bottom_left,rgba(79,140,255,0.08),transparent_28%),linear-gradient(180deg,#f8fbff_0%,var(--background)_100%)]"

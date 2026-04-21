@@ -29,8 +29,20 @@ import {
   sanitizePersistedExportOptions,
   type PartialExportOptions,
 } from "../shared/export-options.js"
-import type { ExportJobItem, ExportRequest, ExportManifest, ScanResult, UploadProviderValue } from "../shared/types.js"
-import { extractBlogId, toErrorMessage } from "../shared/utils.js"
+import type {
+  ExportJobItem,
+  ExportJobState,
+  ExportManifest,
+  ExportRequest,
+  ScanResult,
+  UploadProviderValue,
+} from "../shared/types.js"
+import { extractBlogId, recreateDir, toErrorMessage } from "../shared/utils.js"
+import {
+  buildResumableExportManifest,
+  readExportManifest,
+  writeExportManifest,
+} from "./export-job-manifest.js"
 import { JobStore } from "./job-store.js"
 import {
   createImageUploadProviderSource,
@@ -41,6 +53,7 @@ const builtClientRoot = path.resolve(process.cwd(), "dist/client")
 const devIndexPath = path.resolve(process.cwd(), "index.html")
 const defaultScanCachePath = path.resolve(process.cwd(), "outputs/scan-cache.json")
 const defaultSettingsPath = path.resolve(process.cwd(), "export-ui-settings.json")
+const defaultOutputDir = "./output"
 
 const contentTypes: Record<string, string> = {
   ".css": "text/css; charset=utf-8",
@@ -62,6 +75,26 @@ const fileExists = async (filePath: string) => {
     return false
   }
 }
+
+const toTimestamp = (value: string | null | undefined) => {
+  if (!value) {
+    return 0
+  }
+
+  const timestamp = Date.parse(value)
+
+  return Number.isNaN(timestamp) ? 0 : timestamp
+}
+
+const getJobActivityTimestamp = (job: ExportJobState) =>
+  Math.max(
+    toTimestamp(job.createdAt),
+    toTimestamp(job.startedAt),
+    toTimestamp(job.finishedAt),
+    toTimestamp(job.manifest?.job?.updatedAt),
+    ...job.logs.map((entry) => toTimestamp(entry.timestamp)),
+    ...job.items.map((item) => toTimestamp(item.updatedAt)),
+  )
 
 const readBody = async (request: IncomingMessage) => {
   const chunks: Buffer[] = []
@@ -184,46 +217,54 @@ const writeScanCacheFile = async ({
   )
 }
 
-const readPersistedExportOptions = async (settingsPath: string) => {
+const readPersistedUiState = async (settingsPath: string) => {
   try {
     const raw = await readFile(settingsPath, "utf8")
     const parsed = JSON.parse(raw) as {
       options?: PartialExportOptions
+      lastOutputDir?: string
     }
 
-    return cloneExportOptions(
-      sanitizePersistedExportOptions(
-        isPlainObject(parsed) && isPlainObject(parsed.options)
-          ? (parsed.options as PartialExportOptions)
-          : undefined,
+    return {
+      options: cloneExportOptions(
+        sanitizePersistedExportOptions(
+          isPlainObject(parsed) && isPlainObject(parsed.options)
+            ? (parsed.options as PartialExportOptions)
+            : undefined,
+        ),
       ),
-    )
+      lastOutputDir:
+        isPlainObject(parsed) && typeof parsed.lastOutputDir === "string" && parsed.lastOutputDir.trim()
+          ? parsed.lastOutputDir.trim()
+          : defaultOutputDir,
+    }
   } catch (error) {
-    if (error instanceof Error && error.name === "SyntaxError") {
-      return defaultExportOptions()
+    return {
+      options: defaultExportOptions(),
+      lastOutputDir: defaultOutputDir,
     }
-
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-      return defaultExportOptions()
-    }
-
-    return defaultExportOptions()
   }
 }
 
-const writePersistedExportOptions = async ({
+const writePersistedUiState = async ({
   settingsPath,
-  options,
+  input,
 }: {
   settingsPath: string
-  options: PartialExportOptions
+  input: {
+    options?: PartialExportOptions
+    lastOutputDir?: string
+  }
 }) => {
+  const current = await readPersistedUiState(settingsPath)
+
   await mkdir(path.dirname(settingsPath), { recursive: true })
   await writeFile(
     settingsPath,
     JSON.stringify(
       {
-        options: sanitizePersistedExportOptions(options),
+        options: sanitizePersistedExportOptions(input.options ?? current.options),
+        lastOutputDir: input.lastOutputDir ?? current.lastOutputDir,
       },
       null,
       2,
@@ -429,6 +470,8 @@ export const createHttpServer = ({
   let httpServer: HttpServer
   let viteDevServerPromise: Promise<ViteDevServer> | null = null
   let scanCachePromise: Promise<Record<string, ScanResult>> | null = null
+  const jobScanResults = new Map<string, ScanResult | null>()
+  const manifestPersistQueue = new Map<string, Promise<void>>()
 
   const ensureViteDevServer = () => {
     if (!viteDevServerPromise) {
@@ -474,6 +517,80 @@ export const createHttpServer = ({
       scans: next,
     })
     scanCachePromise = Promise.resolve(next)
+  }
+
+  const hydrateJobFromManifest = (manifest: ExportManifest) => {
+    if (!manifest.job) {
+      return null
+    }
+
+    const existingJob = jobStore.get(manifest.job.id)
+
+    if (existingJob && getJobActivityTimestamp(existingJob) >= toTimestamp(manifest.job.updatedAt)) {
+      return existingJob
+    }
+
+    jobScanResults.set(manifest.job.id, manifest.job.scanResult)
+    return jobStore.hydrate(manifest)
+  }
+
+  const persistJobManifest = (jobId: string) => {
+    const previousTask = manifestPersistQueue.get(jobId) ?? Promise.resolve()
+    const nextTask = previousTask
+      .catch(() => {})
+      .then(async () => {
+        const job = jobStore.get(jobId)
+
+        if (!job) {
+          return
+        }
+
+        const manifest = buildResumableExportManifest({
+          job,
+          scanResult: jobScanResults.get(jobId) ?? null,
+        })
+
+        job.manifest = manifest
+
+        await writeExportManifest({
+          outputDir: job.request.outputDir,
+          manifest,
+        })
+      })
+
+    manifestPersistQueue.set(jobId, nextTask)
+
+    return nextTask.finally(() => {
+      if (manifestPersistQueue.get(jobId) === nextTask) {
+        manifestPersistQueue.delete(jobId)
+      }
+    })
+  }
+
+  const scheduleJobManifestPersist = (jobId: string) => {
+    void persistJobManifest(jobId).catch((error) => {
+      console.error(`failed to persist manifest for ${jobId}:`, error)
+    })
+  }
+
+  const loadResumedJob = async (outputDir: string) => {
+    const manifest = await readExportManifest(outputDir)
+
+    if (!manifest?.job) {
+      return null
+    }
+
+    const resumedJob = hydrateJobFromManifest(manifest)
+
+    if (!resumedJob) {
+      return null
+    }
+
+    return {
+      job: resumedJob,
+      summary: manifest.job.summary,
+      scanResult: manifest.job.scanResult,
+    }
   }
 
   const sendBrowserApp = async ({
@@ -557,28 +674,53 @@ export const createHttpServer = ({
     jobId,
     request,
     cachedScanResult,
+    resume,
   }: {
     jobId: string
     request: ExportRequest
     cachedScanResult?: ScanResult | null
+    resume?: boolean
   }) => {
-    jobStore.start(jobId)
+    if (resume) {
+      jobStore.resume(jobId)
+    } else {
+      jobStore.start(jobId)
+    }
+    await persistJobManifest(jobId)
 
     try {
       const exporter = new NaverBlogExporter({
         request,
         cachedScanResult,
-        onLog: (message) => jobStore.appendLog(jobId, message),
-        onProgress: (progress) => jobStore.updateProgress(jobId, progress),
-        onItem: (item) => jobStore.appendItem(jobId, item),
+        resumeState: resume
+          ? {
+              items: jobStore.get(jobId)?.items ?? [],
+              manifest: jobStore.get(jobId)?.manifest ?? null,
+            }
+          : null,
+        writeManifestFile: false,
+        onLog: (message) => {
+          jobStore.appendLog(jobId, message)
+          scheduleJobManifestPersist(jobId)
+        },
+        onProgress: (progress) => {
+          jobStore.updateProgress(jobId, progress)
+          scheduleJobManifestPersist(jobId)
+        },
+        onItem: (item) => {
+          jobStore.appendItem(jobId, item)
+          scheduleJobManifestPersist(jobId)
+        },
       })
       const manifest = await exporter.run()
 
       jobStore.completeExport(jobId, manifest)
+      await persistJobManifest(jobId)
     } catch (error) {
       const message = toErrorMessage(error)
       jobStore.appendLog(jobId, message)
       jobStore.fail(jobId, message)
+      await persistJobManifest(jobId)
     }
   }
 
@@ -716,6 +858,7 @@ export const createHttpServer = ({
 
     jobStore.startUpload(jobId, uploadedLocalPaths)
     jobStore.appendLog(jobId, "Image Upload를 시작했습니다.")
+    await persistJobManifest(jobId)
 
     try {
       await rewriteReadyPosts({
@@ -739,9 +882,11 @@ export const createHttpServer = ({
             jobId,
             uploadedLocalPaths,
           })
+          scheduleJobManifestPersist(jobId)
         },
         onAssetStart: (candidate) => {
           jobStore.appendLog(jobId, `이미지 업로드 시작: ${candidate.localPath}`)
+          scheduleJobManifestPersist(jobId)
         },
         onAssetUploaded: async ({ result }) => {
           uploadedLocalPaths.add(result.candidate.localPath)
@@ -753,11 +898,13 @@ export const createHttpServer = ({
             jobId,
             uploadedLocalPaths,
           })
+          await persistJobManifest(jobId)
           await rewriteReadyPosts({
             jobId,
             uploadedLocalPaths,
             uploadResults,
           })
+          await persistJobManifest(jobId)
         },
       })
 
@@ -775,11 +922,13 @@ export const createHttpServer = ({
         jobId,
         uploadedLocalPaths,
       })
+      await persistJobManifest(jobId)
       await rewriteReadyPosts({
         jobId,
         uploadedLocalPaths,
         uploadResults,
       })
+      await persistJobManifest(jobId)
 
       const completedJob = jobStore.get(jobId)
 
@@ -807,6 +956,7 @@ export const createHttpServer = ({
         items: completedJob.items,
       })
       jobStore.appendLog(jobId, "Image Upload와 결과 치환이 완료되었습니다.")
+      await persistJobManifest(jobId)
     } catch (error) {
       if (error instanceof ImageUploadPhaseError) {
         syncJobUploadProgress({
@@ -817,6 +967,7 @@ export const createHttpServer = ({
             ...error.uploadedResults.map((result) => result.candidate.localPath),
           ]),
         })
+        await persistJobManifest(jobId)
       }
 
       const message = sanitizeUploadError({
@@ -830,6 +981,7 @@ export const createHttpServer = ({
 
       jobStore.appendLog(jobId, message)
       jobStore.failUpload(jobId, message)
+      await persistJobManifest(jobId)
     }
   }
 
@@ -848,14 +1000,19 @@ export const createHttpServer = ({
       }
 
       if (method === "GET" && url.pathname === "/api/export-defaults") {
-        const persistedOptions = await readPersistedExportOptions(settingsPath)
+        const persistedUiState = await readPersistedUiState(settingsPath)
+        const resumed = await loadResumedJob(persistedUiState.lastOutputDir)
 
         sendJson({
           response,
           statusCode: 200,
           body: {
             profile: "gfm",
-            options: persistedOptions,
+            options: persistedUiState.options,
+            lastOutputDir: persistedUiState.lastOutputDir,
+            resumedJob: resumed?.job ?? null,
+            resumeSummary: resumed?.summary ?? null,
+            resumedScanResult: resumed?.scanResult ?? null,
             frontmatterFieldOrder,
             frontmatterFieldMeta,
             optionDescriptions,
@@ -895,9 +1052,11 @@ export const createHttpServer = ({
           const sanitizedOptions = sanitizePersistedExportOptions(payload.options as PartialExportOptions)
 
           cloneExportOptions(sanitizedOptions)
-          await writePersistedExportOptions({
+          await writePersistedUiState({
             settingsPath,
-            options: sanitizedOptions,
+            input: {
+              options: sanitizedOptions,
+            },
           })
         } catch (error) {
           sendJson({
@@ -1025,7 +1184,16 @@ export const createHttpServer = ({
           return
         }
 
+        await recreateDir(path.resolve(exportRequest.outputDir))
+        await writePersistedUiState({
+          settingsPath,
+          input: {
+            lastOutputDir: exportRequest.outputDir,
+          },
+        })
+
         const job = jobStore.create(exportRequest)
+        jobScanResults.set(job.id, payload.scanResult ?? null)
 
         jobStore.appendLog(job.id, "작업을 큐에 등록했습니다.")
         void runExport({
@@ -1039,6 +1207,51 @@ export const createHttpServer = ({
           statusCode: 202,
           body: {
             jobId: job.id,
+          },
+        })
+        return
+      }
+
+      const resumeMatch = url.pathname.match(/^\/api\/export\/([^/]+)\/resume$/)
+
+      if (method === "POST" && resumeMatch?.[1]) {
+        const job = jobStore.get(resumeMatch[1])
+
+        if (!job) {
+          sendJson({
+            response,
+            statusCode: 404,
+            body: {
+              error: "job not found",
+            },
+          })
+          return
+        }
+
+        if (job.status !== "running" || !job.resumeAvailable) {
+          sendJson({
+            response,
+            statusCode: 409,
+            body: {
+              error: "재개 가능한 export 작업이 아닙니다.",
+            },
+          })
+          return
+        }
+
+        void runExport({
+          jobId: job.id,
+          request: job.request,
+          cachedScanResult: jobScanResults.get(job.id) ?? null,
+          resume: true,
+        })
+
+        sendJson({
+          response,
+          statusCode: 202,
+          body: {
+            jobId: job.id,
+            status: "running",
           },
         })
         return
@@ -1082,7 +1295,11 @@ export const createHttpServer = ({
           return
         }
 
-        if (job.status !== "upload-ready" && job.status !== "upload-failed") {
+        if (
+          job.status !== "upload-ready" &&
+          job.status !== "upload-failed" &&
+          !(job.status === "uploading" && job.resumeAvailable)
+        ) {
           sendJson({
             response,
             statusCode: 409,

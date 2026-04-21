@@ -1,11 +1,13 @@
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { NaverBlogFetcher } from "../src/modules/blog-fetcher/naver-blog-fetcher.js"
+import { NaverBlogExporter } from "../src/modules/exporter/naver-blog-exporter.js"
 import { defaultExportOptions } from "../src/shared/export-options.js"
 import type {
+  ExportManifest,
   ExportJobState,
   ScanResult,
   UploadCandidate,
@@ -377,44 +379,380 @@ afterEach(async () => {
 
 describe("http server", () => {
   it("returns frontmatter metadata from export defaults", async () => {
-    activeServer = createTestHttpServer()
-    const baseUrl = await startServer(activeServer)
+    const rootDir = await mkdtemp(path.join(tmpdir(), "export-defaults-"))
+    const settingsPath = path.join(rootDir, "export-ui-settings.json")
+    const outputDir = path.join(rootDir, "output")
 
-    const response = await fetch(`${baseUrl}/api/export-defaults`)
-    const body = (await response.json()) as {
-      frontmatterFieldMeta: {
-        title: {
-          label: string
-          description: string
-          defaultAlias: string
-        }
-      }
-      options: {
-        frontmatter: {
-          aliases: {
-            title: string
+    try {
+      await mkdir(outputDir, { recursive: true })
+      await writeFile(
+        settingsPath,
+        JSON.stringify({
+          lastOutputDir: outputDir,
+        }),
+      )
+
+      activeServer = createTestHttpServer({
+        settingsPath,
+      })
+      const baseUrl = await startServer(activeServer)
+
+      const response = await fetch(`${baseUrl}/api/export-defaults`)
+      const body = (await response.json()) as {
+        frontmatterFieldMeta: {
+          title: {
+            label: string
+            description: string
+            defaultAlias: string
           }
         }
-        markdown: {
-          formulaBlockWrapperOpen: string
+        options: {
+          frontmatter: {
+            aliases: {
+              title: string
+            }
+          }
+          structure: {
+            groupByCategory: boolean
+          }
+          markdown: {
+            formulaBlockWrapperOpen: string
+          }
+          assets: {
+            stickerAssetMode: string
+          }
         }
-        assets: {
-          stickerAssetMode: string
-        }
+        lastOutputDir: string
+        resumedJob: ExportJobState | null
+        optionDescriptions: Record<string, string>
       }
-      optionDescriptions: Record<string, string>
-    }
 
-    expect(response.ok).toBe(true)
-    expect(body.frontmatterFieldMeta.title).toEqual({
-      label: "title",
-      description: "글 제목을 기록합니다.",
-      defaultAlias: "title",
+      expect(response.ok).toBe(true)
+      expect(body.frontmatterFieldMeta.title).toEqual({
+        label: "title",
+        description: "글 제목을 기록합니다.",
+        defaultAlias: "title",
+      })
+      expect(body.options.frontmatter.aliases.title).toBe("")
+      expect(body.options.structure.groupByCategory).toBe(true)
+      expect(body.options.markdown.formulaBlockWrapperOpen).toBe("$$")
+      expect(body.options.assets.stickerAssetMode).toBe("ignore")
+      expect(body.lastOutputDir).toBe(outputDir)
+      expect(body.resumedJob).toBeNull()
+      expect(body.optionDescriptions["assets-imageContentMode"]).toBeUndefined()
+    } finally {
+      await rm(rootDir, { recursive: true, force: true })
+    }
+  })
+
+  it("hydrates resumed jobs from manifest.json", async () => {
+    const rootDir = await mkdtemp(path.join(tmpdir(), "export-manifest-resume-"))
+    const settingsPath = path.join(rootDir, "export-ui-settings.json")
+    const outputDir = path.join(rootDir, "output")
+
+    try {
+      await mkdir(outputDir, { recursive: true })
+      await writeFile(
+        settingsPath,
+        JSON.stringify({
+          lastOutputDir: outputDir,
+        }),
+      )
+      await writeFile(
+        path.join(outputDir, "manifest.json"),
+        JSON.stringify(
+          {
+            blogId: "mym0404",
+            profile: "gfm",
+            options: defaultExportOptions(),
+            selectedCategoryIds: [84],
+            startedAt: "2026-04-11T04:00:00.000Z",
+            finishedAt: null,
+            totalPosts: 3,
+            successCount: 1,
+            failureCount: 0,
+            warningCount: 0,
+            upload: {
+              status: "not-requested",
+              eligiblePostCount: 0,
+              candidateCount: 0,
+              uploadedCount: 0,
+              failedCount: 0,
+              terminalReason: null,
+            },
+            categories: baseScanResult.categories,
+            posts: [],
+            job: {
+              id: "job-resume",
+              phase: "export",
+              request: {
+                blogIdOrUrl: "mym0404",
+                outputDir,
+                profile: "gfm",
+                options: defaultExportOptions(),
+              },
+              status: "running",
+              logs: [
+                {
+                  timestamp: "2026-04-11T04:00:00.000Z",
+                  message: "이전 진행 상태를 복구했습니다.",
+                },
+              ],
+              createdAt: "2026-04-11T04:00:00.000Z",
+              startedAt: "2026-04-11T04:00:01.000Z",
+              finishedAt: null,
+              updatedAt: "2026-04-11T04:00:02.000Z",
+              progress: {
+                total: 3,
+                completed: 1,
+                failed: 0,
+                warnings: 0,
+              },
+              upload: {
+                status: "not-requested",
+                eligiblePostCount: 0,
+                candidateCount: 0,
+                uploadedCount: 0,
+                failedCount: 0,
+                terminalReason: null,
+              },
+              items: [],
+              error: null,
+              scanResult: baseScanResult,
+              summary: {
+                status: "running",
+                outputDir,
+                totalPosts: 3,
+                completedCount: 1,
+                failedCount: 0,
+                uploadCandidateCount: 0,
+                uploadedCount: 0,
+              },
+            },
+          } satisfies ExportManifest,
+          null,
+          2,
+        ),
+        "utf8",
+      )
+
+      activeServer = createTestHttpServer({
+        settingsPath,
+      })
+      const baseUrl = await startServer(activeServer)
+
+      const response = await fetch(`${baseUrl}/api/export-defaults`)
+      const body = (await response.json()) as {
+        resumedJob: ExportJobState | null
+        resumeSummary: {
+          status: string
+          outputDir: string
+        } | null
+        resumedScanResult: ScanResult | null
+      }
+
+      expect(response.ok).toBe(true)
+      expect(body.resumedJob?.id).toBe("job-resume")
+      expect(body.resumedJob?.status).toBe("running")
+      expect(body.resumedJob?.request.outputDir).toBe(outputDir)
+      expect(body.resumeSummary?.outputDir).toBe(outputDir)
+      expect(body.resumedScanResult?.blogId).toBe(baseScanResult.blogId)
+    } finally {
+      await rm(rootDir, { recursive: true, force: true })
+    }
+  })
+
+  it("returns an error when manifest.json is invalid", async () => {
+    const rootDir = await mkdtemp(path.join(tmpdir(), "export-manifest-invalid-"))
+    const settingsPath = path.join(rootDir, "export-ui-settings.json")
+    const outputDir = path.join(rootDir, "output")
+
+    try {
+      await mkdir(outputDir, { recursive: true })
+      await writeFile(
+        settingsPath,
+        JSON.stringify({
+          lastOutputDir: outputDir,
+        }),
+      )
+      await writeFile(path.join(outputDir, "manifest.json"), "{invalid", "utf8")
+
+      activeServer = createTestHttpServer({
+        settingsPath,
+      })
+      const baseUrl = await startServer(activeServer)
+
+      const response = await fetch(`${baseUrl}/api/export-defaults`)
+      const body = (await response.json()) as {
+        error: string
+      }
+
+      expect(response.status).toBe(500)
+      expect(body.error).toContain("JSON")
+    } finally {
+      await rm(rootDir, { recursive: true, force: true })
+    }
+  })
+
+  it("keeps the newer in-memory job when bootstrap sees an older manifest snapshot", async () => {
+    const rootDir = await mkdtemp(path.join(tmpdir(), "export-manifest-stale-"))
+    const settingsPath = path.join(rootDir, "export-ui-settings.json")
+    const outputDir = path.join(rootDir, "output")
+    const staleManifest = {
+      blogId: "mym0404",
+      profile: "gfm",
+      options: defaultExportOptions(),
+      selectedCategoryIds: [84],
+      startedAt: "2026-04-11T04:00:00.000Z",
+      finishedAt: null,
+      totalPosts: 3,
+      successCount: 1,
+      failureCount: 0,
+      warningCount: 0,
+      upload: {
+        status: "not-requested" as const,
+        eligiblePostCount: 0,
+        candidateCount: 0,
+        uploadedCount: 0,
+        failedCount: 0,
+        terminalReason: null,
+      },
+      categories: baseScanResult.categories,
+      posts: [],
+      job: {
+        id: "job-resume",
+        phase: "export" as const,
+        request: {
+          blogIdOrUrl: "mym0404",
+          outputDir,
+          profile: "gfm" as const,
+          options: defaultExportOptions(),
+        },
+        status: "running" as const,
+        logs: [
+          {
+            timestamp: "2026-04-11T04:00:00.000Z",
+            message: "이전 진행 상태를 복구했습니다.",
+          },
+        ],
+        createdAt: "2026-04-11T04:00:00.000Z",
+        startedAt: "2026-04-11T04:00:01.000Z",
+        finishedAt: null,
+        updatedAt: "2026-04-11T04:00:02.000Z",
+        progress: {
+          total: 3,
+          completed: 1,
+          failed: 0,
+          warnings: 0,
+        },
+        upload: {
+          status: "not-requested" as const,
+          eligiblePostCount: 0,
+          candidateCount: 0,
+          uploadedCount: 0,
+          failedCount: 0,
+          terminalReason: null,
+        },
+        items: [],
+        error: null,
+        scanResult: baseScanResult,
+        summary: {
+          status: "running" as const,
+          outputDir,
+          totalPosts: 3,
+          completedCount: 1,
+          failedCount: 0,
+          uploadCandidateCount: 0,
+          uploadedCount: 0,
+        },
+      },
+    } satisfies ExportManifest
+
+    let resolveRun: ((manifest: ExportManifest) => void) | undefined
+    const runPromise = new Promise<ExportManifest>((resolve) => {
+      resolveRun = resolve
     })
-    expect(body.options.frontmatter.aliases.title).toBe("")
-    expect(body.options.markdown.formulaBlockWrapperOpen).toBe("$$")
-    expect(body.options.assets.stickerAssetMode).toBe("ignore")
-    expect(body.optionDescriptions["assets-imageContentMode"]).toBeUndefined()
+    const exporterRunSpy = vi.spyOn(NaverBlogExporter.prototype, "run").mockImplementation(() => runPromise)
+
+    try {
+      await mkdir(outputDir, { recursive: true })
+      await writeFile(
+        settingsPath,
+        JSON.stringify({
+          lastOutputDir: outputDir,
+        }),
+      )
+      await writeFile(path.join(outputDir, "manifest.json"), JSON.stringify(staleManifest, null, 2), "utf8")
+
+      activeServer = createTestHttpServer({
+        settingsPath,
+      })
+      const baseUrl = await startServer(activeServer)
+
+      const firstBootstrap = await fetch(`${baseUrl}/api/export-defaults`)
+      const firstBody = (await firstBootstrap.json()) as {
+        resumedJob: ExportJobState | null
+      }
+
+      expect(firstBootstrap.status).toBe(200)
+      expect(firstBody.resumedJob?.resumeAvailable).toBe(true)
+
+      const resumeResponse = await fetch(`${baseUrl}/api/export/job-resume/resume`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: "{}",
+      })
+
+      expect(resumeResponse.status).toBe(202)
+
+      await vi.waitFor(async () => {
+        const persistedManifest = JSON.parse(
+          await readFile(path.join(outputDir, "manifest.json"), "utf8"),
+        ) as ExportManifest
+
+        expect(persistedManifest.job?.updatedAt).not.toBe(staleManifest.job.updatedAt)
+      })
+
+      await writeFile(path.join(outputDir, "manifest.json"), JSON.stringify(staleManifest, null, 2), "utf8")
+
+      const secondBootstrap = await fetch(`${baseUrl}/api/export-defaults`)
+      const secondBody = (await secondBootstrap.json()) as {
+        resumedJob: ExportJobState | null
+      }
+
+      expect(secondBootstrap.status).toBe(200)
+      expect(secondBody.resumedJob?.id).toBe("job-resume")
+      expect(secondBody.resumedJob?.resumeAvailable).toBe(false)
+
+      if (resolveRun) {
+        resolveRun({
+          ...staleManifest,
+          finishedAt: "2026-04-11T04:00:06.000Z",
+          job: {
+            ...staleManifest.job,
+            updatedAt: "2026-04-11T04:00:06.000Z",
+            status: "completed",
+            finishedAt: "2026-04-11T04:00:06.000Z",
+            summary: {
+              ...staleManifest.job.summary,
+              status: "completed",
+              completedCount: 3,
+            },
+          },
+          successCount: 3,
+        })
+      }
+      await vi.waitFor(() => {
+        expect(exporterRunSpy).toHaveBeenCalledTimes(1)
+      })
+    } finally {
+      if (resolveRun) {
+        resolveRun(staleManifest)
+      }
+      await rm(rootDir, { recursive: true, force: true })
+    }
   })
 
   it("loads persisted export settings from the project settings file", async () => {
@@ -468,6 +806,7 @@ describe("http server", () => {
             }
           }
         }
+        lastOutputDir: string
       }
 
       expect(response.status).toBe(200)
@@ -475,6 +814,7 @@ describe("http server", () => {
       expect(body.options.scope.dateFrom).toBe("2026-04-01")
       expect(body.options.structure.groupByCategory).toBe(false)
       expect(body.options.frontmatter.aliases.title).toBe("postTitle")
+      expect(body.lastOutputDir).toBe("./output")
     } finally {
       await rm(rootDir, { recursive: true, force: true })
     }
@@ -501,11 +841,13 @@ describe("http server", () => {
             categoryIds: number[]
           }
         }
+        lastOutputDir: string
       }
 
       expect(response.status).toBe(200)
       expect(body.options.structure.groupByCategory).toBe(true)
       expect(body.options.scope.categoryIds).toEqual([])
+      expect(body.lastOutputDir).toBe("./output")
     } finally {
       await rm(rootDir, { recursive: true, force: true })
     }
@@ -553,6 +895,7 @@ describe("http server", () => {
             groupByCategory?: boolean
           }
         }
+        lastOutputDir?: string
       }
 
       expect(response.status).toBe(204)
@@ -563,6 +906,7 @@ describe("http server", () => {
       })
       expect(saved.options.scope?.categoryIds).toBeUndefined()
       expect(saved.options.structure?.groupByCategory).toBe(false)
+      expect(saved.lastOutputDir).toBe("./output")
     } finally {
       await rm(rootDir, { recursive: true, force: true })
     }
@@ -915,7 +1259,9 @@ describe("http server", () => {
     })
 
     expect(uploadResponse.status).toBe(202)
-    expect(uploadPhaseRunner).toHaveBeenCalledTimes(1)
+    await vi.waitFor(() => {
+      expect(uploadPhaseRunner).toHaveBeenCalledTimes(1)
+    })
   })
 
   it("redacts only string provider fields in upload failures", async () => {

@@ -312,19 +312,23 @@ export const JobResultsPanel = ({
   mode,
   job,
   activeJobFilter,
+  resumeSubmitting,
   uploadSubmitting,
   uploadProviders,
   uploadProviderError,
   onFilterChange,
+  onResumeExport,
   onUploadStart,
 }: {
   mode: JobResultsMode
   job: ExportJobState | null
   activeJobFilter: JobFilter
+  resumeSubmitting: boolean
   uploadSubmitting: boolean
   uploadProviders: UploadProviderCatalogResponse
   uploadProviderError: string | null
   onFilterChange: (filter: JobFilter) => void
+  onResumeExport: () => Promise<void> | void
   onUploadStart: (input: {
     providerKey: string
     providerFields: Record<string, UploadProviderValue>
@@ -367,7 +371,11 @@ export const JobResultsPanel = ({
     (mode === "upload" || mode === "result") && (job?.upload.candidateCount ?? 0) > 0
   const showUploadForm =
     mode === "upload" &&
-    (job?.status === "upload-ready" || job?.status === "upload-failed")
+    (job?.status === "upload-ready" ||
+      job?.status === "upload-failed" ||
+      (job?.status === "uploading" && job.resumeAvailable))
+  const showResumeExportButton =
+    mode === "running" && job?.status === "running" && job.resumeAvailable
   const showExportSummary = mode === "upload" || mode === "result"
   const showExportResults = mode === "running" || mode === "upload" || mode === "result"
   const latestLogSignature = (() => {
@@ -451,6 +459,24 @@ export const JobResultsPanel = ({
               ]}
               className="rounded-2xl border border-slate-200 bg-white px-4 py-3"
             />
+            {showResumeExportButton ? (
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3">
+                <p className="text-sm leading-6 text-sky-900">
+                  이전 export 상태를 복구했습니다. 남은 글만 이어서 처리합니다.
+                </p>
+                <Button
+                  id="resume-export-submit"
+                  type="button"
+                  className="rounded-xl"
+                  disabled={resumeSubmitting}
+                  onClick={() => {
+                    void onResumeExport()
+                  }}
+                >
+                  {resumeSubmitting ? "재개 중..." : "남은 작업 계속"}
+                </Button>
+              </div>
+            ) : null}
           </section>
         ) : null}
 
@@ -842,7 +868,11 @@ export const JobResultsPanel = ({
                         })
                       }
                     >
-                      {uploadSubmitting ? "업로드 시작 중..." : "업로드 시작"}
+                      {uploadSubmitting
+                        ? "업로드 시작 중..."
+                        : job?.status === "uploading" && job.resumeAvailable
+                          ? "남은 업로드 계속"
+                          : "업로드 시작"}
                     </Button>
                   </div>
                 </form>

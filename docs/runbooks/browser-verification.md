@@ -7,7 +7,7 @@
 개별 글의 구조와 Markdown 결과를 비교해야 하면 [single-post-verification.md](./single-post-verification.md)를 따른다.
 
 ## Source Of Truth
-기본 자동 검증은 `scripts/harness/run-ui-smoke.ts` 이고, 이 문서는 수동 재현 절차를 보완한다.
+기본 자동 검증은 `scripts/harness/run-ui-smoke.ts`, `scripts/harness/run-ui-resume-smoke.ts` 이고, 이 문서는 수동 재현 절차를 보완한다.
 
 ## Browser Tool
 - UI 변경 요청의 수동 브라우저 검증은 `agent-browser`를 기본 도구로 사용한다.
@@ -22,6 +22,7 @@
 - [../../.agents/knowledge/product/ui-dashboard-design-system.md](../../.agents/knowledge/product/ui-dashboard-design-system.md)
 - [../../src/server/http-server.ts](../../src/server/http-server.ts)
 - [../../scripts/harness/run-ui-smoke.ts](../../scripts/harness/run-ui-smoke.ts)
+- [../../scripts/harness/run-ui-resume-smoke.ts](../../scripts/harness/run-ui-resume-smoke.ts)
 
 ## 검증 방법
 - `agent-browser`
@@ -47,6 +48,8 @@
 15. status, summary, logs, 완료 파일 표, manifest 응답을 확인한다.
 16. warning/error 필터를 눌러 결과가 좁혀지는지 확인한다.
 17. 결과 설명, field help, 파일 subtitle 텍스트가 육안으로도 옅지 않은지 확인한다.
+18. 앱을 새로 열었을 때 마지막 `outputDir`의 `manifest.json` 기준으로 복구 Dialog가 뜨고, `running / upload / result` 중 마지막 단계로 바로 진입하는지 확인한다.
+19. 복구 직후에는 자동으로 export/upload가 다시 시작되지 않고, 사용자가 `남은 작업 계속` 또는 `남은 업로드 계속`을 눌렀을 때만 이어지는지 확인한다.
 
 ## Screenshot Feedback Loop
 같은 시나리오로 아래 루프를 5번 반복한다.
@@ -104,4 +107,5 @@
 - zero-candidate 시 `skipped-no-candidates` 안내 여부
 - manifest 응답 여부
 - UI와 API 상태가 어긋나는지 여부
+- `manifest.json` 안의 진행 상태와 실제 UI 단계가 일치하는지 여부
 - 각 스크린샷 루프에서 수정한 시각 불일치 항목

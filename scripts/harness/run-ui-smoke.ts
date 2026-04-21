@@ -1084,6 +1084,10 @@ const run = async () => {
         buildJsonResponse({
           profile: "gfm",
           options: defaultExportOptions(),
+          lastOutputDir: outputDir,
+          resumedJob: null,
+          resumeSummary: null,
+          resumedScanResult: null,
           frontmatterFieldOrder,
           frontmatterFieldMeta,
           optionDescriptions,
@@ -1350,7 +1354,6 @@ const run = async () => {
     }
 
     await page.fill("#outputDir", outputDir)
-    await page.click("#structure-cleanOutputDir")
     await page.click("#structure-groupByCategory")
     await page.click('button:has-text("Frontmatter 설정")')
     await waitForStepView({

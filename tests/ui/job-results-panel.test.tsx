@@ -342,10 +342,12 @@ const renderPanel = ({
       mode={mode}
       job={job}
       activeJobFilter="all"
+      resumeSubmitting={false}
       uploadSubmitting={false}
       uploadProviders={uploadProviderCatalog}
       uploadProviderError={null}
       onFilterChange={vi.fn()}
+      onResumeExport={vi.fn()}
       onUploadStart={onUploadStart}
     />,
   )
@@ -401,10 +403,12 @@ describe("JobResultsPanel upload provider UX", () => {
         mode="upload"
         job={uploadReadyJob}
         activeJobFilter="all"
+        resumeSubmitting={false}
         uploadSubmitting={false}
         uploadProviders={uploadProviderCatalog}
         uploadProviderError={null}
         onFilterChange={vi.fn()}
+        onResumeExport={vi.fn()}
         onUploadStart={vi.fn()}
       />,
     )
@@ -420,10 +424,12 @@ describe("JobResultsPanel upload provider UX", () => {
         mode="upload"
         job={uploadingJob}
         activeJobFilter="all"
+        resumeSubmitting={false}
         uploadSubmitting={false}
         uploadProviders={uploadProviderCatalog}
         uploadProviderError={null}
         onFilterChange={vi.fn()}
+        onResumeExport={vi.fn()}
         onUploadStart={vi.fn()}
       />,
     )
@@ -462,10 +468,12 @@ describe("JobResultsPanel upload provider UX", () => {
           ],
         }}
         activeJobFilter="all"
+        resumeSubmitting={false}
         uploadSubmitting={false}
         uploadProviders={uploadProviderCatalog}
         uploadProviderError={null}
         onFilterChange={vi.fn()}
+        onResumeExport={vi.fn()}
         onUploadStart={vi.fn()}
       />,
     )
@@ -481,10 +489,12 @@ describe("JobResultsPanel upload provider UX", () => {
         mode="upload"
         job={uploadFailedJob}
         activeJobFilter="all"
+        resumeSubmitting={false}
         uploadSubmitting={false}
         uploadProviders={uploadProviderCatalog}
         uploadProviderError={null}
         onFilterChange={vi.fn()}
+        onResumeExport={vi.fn()}
         onUploadStart={vi.fn()}
       />,
     )

@@ -2,7 +2,7 @@
 
 [![codecov](https://codecov.io/gh/mym0404/farewell-naver-blog/graph/badge.svg)](https://codecov.io/gh/mym0404/farewell-naver-blog)
 
-네이버 블로그 공개 글을 스캔해서 Markdown, frontmatter, 로컬 자산, `manifest.json`으로 export하는 도구입니다.
+네이버 블로그 공개 글을 스캔해서 Markdown, frontmatter, 로컬 자산, 복구 가능한 `manifest.json`으로 export하는 도구입니다.
 
 ## 핵심
 
@@ -60,6 +60,8 @@ output/
 
 기본값은 카테고리 경로 유지, 글 폴더명 `YYYY-MM-DD-slug`, Markdown 파일명 `index.md`입니다.
 
+`manifest.json`은 최종 결과물 목록만 담는 파일이 아니라, 웹 UI가 새로 열렸을 때 이전 export/upload 진행 상태를 다시 올리는 단일 저장소 역할도 함께 합니다.
+
 ## 지원 블록
 
 사용자 기준으로 `SE2 / SE3 / ONE(SE4)`를 지원합니다.
@@ -112,7 +114,7 @@ output/
 
 - 본문 이미지와 썸네일을 함께 정리합니다.
 - 같은 자산은 중복 저장과 중복 업로드를 줄이는 방식으로 처리합니다.
-- 결과는 Markdown과 `manifest.json`에서 다시 추적할 수 있습니다.
+- 결과와 진행 상태는 Markdown과 `manifest.json`에서 다시 추적할 수 있습니다.
 
 ## 옵션
 
@@ -128,7 +130,7 @@ UI에서 아래 5개 옵션 묶음을 조절할 수 있습니다.
 
 - `pnpm parser:check`: 지원 범위와 샘플 검증 계약 확인
 - `pnpm samples:verify`: 저장된 대표 샘플 export 결과 회귀 확인
-- `pnpm smoke:ui`: Playwright 기반 UI 흐름 확인
+- `pnpm smoke:ui`: Playwright 기반 UI 흐름과 작업 복구 회귀 확인
 - `pnpm check:full`: 전체 기본 회귀 확인
 
 ## Upload Providers
@@ -137,6 +139,7 @@ UI에서 아래 5개 옵션 묶음을 조절할 수 있습니다.
 - 서버는 설치된 `piclist` runtime이 등록한 uploader 목록과 config schema를 읽어 `/api/upload-providers`로 노출합니다.
 - UI는 provider를 하드코딩하지 않고 runtime catalog 기준 schema-driven 폼으로 렌더링합니다.
 - GitHub를 고르면 `jsDelivr CDN 사용` 보조 UX를 계속 제공합니다.
-- 각 글에 필요한 이미지 업로드가 모두 끝나는 즉시 해당 Markdown과 `manifest.json` snapshot을 업로드 URL 기준으로 갱신합니다.
+- 각 글에 필요한 이미지 업로드가 모두 끝나는 즉시 해당 Markdown과 `manifest.json`을 업로드 URL 기준으로 갱신합니다.
+- 웹 UI는 마지막 `outputDir`의 `manifest.json`을 읽어 `running`, `upload-ready`, `uploading`, `upload-failed`, `completed`, `upload-completed`, `failed` 상태를 복구합니다. 자동 재실행은 하지 않고, 사용자가 직접 이어서 진행합니다.
 
 실업로드 검증은 `pnpm test:network:upload`를 사용하며, 현재는 GitHub 경로만 검증합니다.

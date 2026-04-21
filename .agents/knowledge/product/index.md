@@ -17,5 +17,5 @@
 - frontmatter, Markdown, 자산, 카테고리 선택 제약을 확인해야 할 때
 
 ## 검증
-- `pnpm smoke:ui`: scan, category 선택, export, upload 결과 화면까지 사용자 흐름을 다시 확인할 때 실행한다.
+- `pnpm smoke:ui`: scan, category 선택, export, upload, 작업 복구 화면까지 사용자 흐름을 다시 확인할 때 실행한다.
 - `pnpm quality:report`: sample coverage나 generated 품질 보고서가 제품 문맥에 영향을 줄 수 있을 때 실행한다.
