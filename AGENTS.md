@@ -9,6 +9,7 @@
 - parser capability, sample fixture, renderer/exporter 계약이 바뀌면 관련 knowledge와 generated 문서를 같이 갱신한다.
 - parser/sample 회귀는 fixture-first가 기본이다. live 네이버 fetch는 fixture refresh/drift check 보조 경로로만 취급한다.
 - Playwright UI smoke와 live upload e2e는 유지한다. parser fixture 전환을 이유로 제거하지 않는다.
+- 큰 변경 뒤에는 `pnpm smoke:ui`, `pnpm test:network:upload`를 둘 다 확인한다.
 - generated 문서는 수동 편집하지 않고 스크립트로 갱신한다.
 - commit, push, PR 생성은 사용자가 명시적으로 요청한 경우에만 수행한다.
 
