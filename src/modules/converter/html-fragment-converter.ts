@@ -54,12 +54,27 @@ export const sanitizeHtmlFragment = (html: string) => {
 export const convertHtmlToMarkdown = ({
   html,
   options,
+  resolveLinkUrl,
 }: {
   html: string
   options: Pick<ExportOptions, "markdown">
+  resolveLinkUrl?: (url: string) => string
 }) => {
   const sanitized = sanitizeHtmlFragment(html)
   const document = createDocument(sanitized)
+
+  if (resolveLinkUrl) {
+    document.querySelectorAll("a[href]").forEach((anchor) => {
+      const href = anchor.getAttribute("href")
+
+      if (!href?.trim()) {
+        return
+      }
+
+      anchor.setAttribute("href", resolveLinkUrl(href))
+    })
+  }
+
   const turndownService = createService({
     markdown: options.markdown,
   })

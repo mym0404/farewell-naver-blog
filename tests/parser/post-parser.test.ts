@@ -46,6 +46,30 @@ describe("post-parser routing", () => {
     expect(parsed.blocks).toEqual([{ type: "paragraph", text: "SE4 text" }])
   })
 
+  it("rewrites same-blog links before paragraph markdown is finalized", () => {
+    const parsed = parsePostHtml({
+      html: `
+        <script>var data = { smartEditorVersion: 4 }</script>
+        <div id="viewTypeSelector">
+          <div class="se-component se-text">
+            <script class="__se_module_data" data-module-v2='{"type":"v2_text"}'></script>
+            <p class="se-text-paragraph"><a href="https://m.blog.naver.com/PostView.naver?blogId=mym0404&logNo=2">내부 글</a></p>
+          </div>
+        </div>
+      `,
+      sourceUrl: "https://blog.naver.com/mym0404/1",
+      options: {
+        ...parserOptions,
+        resolveLinkUrl: (url) =>
+          url === "https://m.blog.naver.com/PostView.naver?blogId=mym0404&logNo=2"
+            ? "../other/index.md"
+            : url,
+      },
+    })
+
+    expect(parsed.blocks).toEqual([{ type: "paragraph", text: "[내부 글](../other/index.md)" }])
+  })
+
   it("routes SE3 html to the SE3 parser", () => {
     const parsed = parsePostHtml({
       html: `

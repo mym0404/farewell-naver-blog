@@ -386,7 +386,7 @@ describe("http server", () => {
     expect(body.optionDescriptions["assets-imageContentMode"]).toBeUndefined()
   })
 
-  it("returns the PicList-backed upload provider catalog", async () => {
+  it("returns the runtime-backed upload provider catalog", async () => {
     activeServer = createTestHttpServer()
     const baseUrl = await startServer(activeServer)
 
@@ -402,6 +402,36 @@ describe("http server", () => {
       "select",
       "checkbox",
     ])
+  })
+
+  it("loads upload providers lazily and hides internal runtime errors", async () => {
+    const uploadProviderSource = {
+      getCatalog: vi.fn(async () => {
+        throw new Error("runtime bootstrap failed")
+      }),
+      normalizeProviderFields: vi.fn(),
+    }
+
+    activeServer = createHttpServer({
+      uploadProviderSource,
+    })
+    const baseUrl = await startServer(activeServer)
+
+    expect(uploadProviderSource.getCatalog).not.toHaveBeenCalled()
+
+    const defaultsResponse = await fetch(`${baseUrl}/api/export-defaults`)
+    expect(defaultsResponse.status).toBe(200)
+    expect(uploadProviderSource.getCatalog).not.toHaveBeenCalled()
+
+    const response = await fetch(`${baseUrl}/api/upload-providers`)
+    const body = (await response.json()) as {
+      error: string
+    }
+
+    expect(response.status).toBe(503)
+    expect(body.error).toBe("업로드 설정을 불러오지 못했습니다.")
+    expect(body.error).not.toContain("PicList")
+    expect(uploadProviderSource.getCatalog).toHaveBeenCalledTimes(1)
   })
 
   it("persists scan results to a json file and reuses them after app reloads", async () => {

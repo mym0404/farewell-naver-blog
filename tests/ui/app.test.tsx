@@ -499,6 +499,7 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "Frontmatter 설정" }))
     await user.click(screen.getByRole("button", { name: "Markdown 설정" }))
     await user.click(screen.getByRole("button", { name: "Assets 설정" }))
+    await user.click(screen.getByRole("button", { name: "Link 처리" }))
     await user.click(screen.getByRole("button", { name: "진단 설정" }))
   }
 
@@ -569,6 +570,8 @@ describe("App", () => {
     expect(document.querySelector('[data-step-view="markdown-options"]')).not.toBeNull()
     await user.click(screen.getByRole("button", { name: "Assets 설정" }))
     expect(document.querySelector('[data-step-view="assets-options"]')).not.toBeNull()
+    await user.click(screen.getByRole("button", { name: "Link 처리" }))
+    expect(document.querySelector('[data-step-view="links-options"]')).not.toBeNull()
     await user.click(screen.getByRole("button", { name: "진단 설정" }))
     expect(document.querySelector('[data-step-view="diagnostics-options"]')).not.toBeNull()
 
@@ -966,6 +969,71 @@ describe("App", () => {
       expect(document.querySelector('[data-step-view="result"]')).not.toBeNull()
     }, { timeout: 7000 })
   }, 10000)
+
+  it("loads upload providers only when needed and hides internal runtime errors", async () => {
+    let uploadProviderRequestCount = 0
+    let jobFetchCount = 0
+    const uploadErrorReadyJob: ExportJobState = {
+      ...uploadReadyJob,
+      id: "job-upload-error",
+    }
+    const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
+      const url = typeof input === "string" ? input : input.toString()
+
+      if (url.endsWith("/api/export-defaults")) {
+        return buildJsonResponse({
+          profile: "gfm",
+          options: defaultExportOptions(),
+          frontmatterFieldOrder,
+          frontmatterFieldMeta,
+          optionDescriptions,
+        })
+      }
+
+      if (url.endsWith("/api/upload-providers")) {
+        uploadProviderRequestCount += 1
+        return buildJsonResponse(
+          {
+            error: "runtime bootstrap failed",
+          },
+          503,
+        )
+      }
+
+      if (url.endsWith("/api/scan")) {
+        return buildJsonResponse(scanResult)
+      }
+
+      if (url.endsWith("/api/export")) {
+        return buildJsonResponse({ jobId: "job-upload-error" }, init?.method === "POST" ? 202 : 200)
+      }
+
+      if (url.endsWith("/api/export/job-upload-error")) {
+        jobFetchCount += 1
+        return buildJsonResponse(uploadErrorReadyJob)
+      }
+
+      throw new Error(`unexpected fetch: ${url}`)
+    })
+
+    vi.stubGlobal("fetch", fetchMock)
+
+    const user = renderApp()
+
+    await moveToDiagnosticsStep(user)
+    expect(uploadProviderRequestCount).toBe(0)
+
+    await user.click(screen.getByRole("button", { name: "내보내기" }))
+
+    await waitFor(() => {
+      expect(jobFetchCount).toBeGreaterThan(0)
+      expect(document.querySelector('[data-step-view="upload"]')).not.toBeNull()
+      expect(screen.getByText("업로드 설정을 불러오지 못했습니다.")).toBeInTheDocument()
+    })
+
+    expect(uploadProviderRequestCount).toBe(1)
+    expect(screen.queryByText("runtime bootstrap failed")).toBeNull()
+  })
 
   it("keeps the same job editable after upload failure and allows retry with corrected fields", async () => {
     let uploadAttempt = 0

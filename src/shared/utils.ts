@@ -1,10 +1,13 @@
 import path from "node:path"
 import { mkdir, rm } from "node:fs/promises"
 
-const invalidPathCharacterPattern = /[<>:"/\\|?*\u0000-\u001f]/g
-const leadingDashPattern = /^-\s*/
-const multipleDashPattern = /-+/g
-const multipleWhitespacePattern = /\s+/g
+export {
+  getDateSlug,
+  sanitizeCategoryName,
+  sanitizePathSegment,
+  slugifyTitle,
+} from "./path-format.js"
+
 const markdownLineWhitespacePattern = /[^\S\n]+/g
 
 export const ensureDir = async (targetPath: string) => {
@@ -38,28 +41,6 @@ export const extractBlogId = (value: string) => {
   return trimmed
 }
 
-export const sanitizeCategoryName = (value: string) =>
-  value.replace(leadingDashPattern, "").trim()
-
-export const sanitizePathSegment = (value: string) => {
-  const cleaned = sanitizeCategoryName(value)
-    .replace(invalidPathCharacterPattern, " ")
-    .replace(multipleWhitespacePattern, " ")
-    .trim()
-
-  return cleaned || "untitled"
-}
-
-export const slugifyTitle = (value: string) => {
-  const slug = sanitizePathSegment(value)
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(multipleDashPattern, "-")
-    .replace(/^-|-$/g, "")
-
-  return slug || "post"
-}
-
 export const toKstDateTime = (timestamp: number) => {
   const formatter = new Intl.DateTimeFormat("sv-SE", {
     timeZone: "Asia/Seoul",
@@ -78,8 +59,6 @@ export const toKstDateTime = (timestamp: number) => {
 
   return `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}:${get("second")}+09:00`
 }
-
-export const getDateSlug = (isoDateTime: string) => isoDateTime.slice(0, 10)
 
 export const getSourceUrl = ({ blogId, logNo }: { blogId: string; logNo: string }) =>
   `https://blog.naver.com/${blogId}/${logNo}`

@@ -55,6 +55,8 @@ const fallbackUploadProviders: UploadProviderCatalogResponse = {
   providers: [],
 }
 
+const uploadProviderLoadErrorMessage = "업로드 설정을 불러오지 못했습니다."
+
 const setupSteps = [
   "blog-input",
   "category-selection",
@@ -62,6 +64,7 @@ const setupSteps = [
   "frontmatter-options",
   "markdown-options",
   "assets-options",
+  "links-options",
   "diagnostics-options",
 ] as const
 
@@ -73,6 +76,7 @@ const optionStepMap: Record<Extract<SetupStep, `${string}-options`>, ExportOptio
   "frontmatter-options": "frontmatter",
   "markdown-options": "markdown",
   "assets-options": "assets",
+  "links-options": "links",
   "diagnostics-options": "diagnostics",
 }
 
@@ -106,6 +110,10 @@ const stepMeta: Record<
   "assets-options": {
     title: "Assets 설정",
     description: "이미지 다운로드와 업로드 전략을 정합니다.",
+  },
+  "links-options": {
+    title: "Link 처리",
+    description: "같은 블로그 안의 다른 글 링크를 어떻게 바꿀지 정합니다.",
   },
   "diagnostics-options": {
     title: "진단 설정",
@@ -224,22 +232,26 @@ export const App = () => {
   )
   const currentScanTarget = blogIdOrUrl.trim()
   const activeScanResult = currentScanTarget ? scanCache[currentScanTarget] ?? null : null
-  const scopedPostCount = useMemo(() => {
+  const scopedPosts = useMemo(() => {
     if (!activeScanResult?.posts) {
-      return activeScanResult?.totalPostCount ?? 0
+      return []
     }
 
     return filterPostsByScope({
       posts: activeScanResult.posts,
       categories: activeScanResult.categories,
       options,
-    }).length
+    })
   }, [activeScanResult, options])
+  const scopedPostCount = activeScanResult?.posts ? scopedPosts.length : activeScanResult?.totalPostCount ?? 0
+  const linkTemplatePreviewPost = scopedPosts[0] ?? activeScanResult?.posts?.[0] ?? null
 
   const selectedCategoryIds = options.scope.categoryIds
   const selectedCount = activeScanResult ? selectedCategoryIds.length : 0
   const exportDisabled = !activeScanResult || frontmatterValidationErrors.length > 0
   const setupStepIndex = setupSteps.indexOf(setupStep)
+  const shouldLoadUploadProviders =
+    job?.status === "upload-ready" || job?.status === "upload-failed"
 
   const currentStep: WizardStep = useMemo(() => {
     if (submitting || job?.status === "queued" || job?.status === "running") {
@@ -315,6 +327,15 @@ export const App = () => {
   }, [])
 
   useEffect(() => {
+    setUploadProviders(fallbackUploadProviders)
+    setUploadProviderError(null)
+  }, [job?.id])
+
+  useEffect(() => {
+    if (!shouldLoadUploadProviders || uploadProviders.providers.length > 0 || uploadProviderError) {
+      return
+    }
+
     let cancelled = false
 
     const loadUploadProviders = async () => {
@@ -333,7 +354,7 @@ export const App = () => {
         }
 
         setUploadProviders(fallbackUploadProviders)
-        setUploadProviderError(error instanceof Error ? error.message : String(error))
+        setUploadProviderError(uploadProviderLoadErrorMessage)
       }
     }
 
@@ -342,7 +363,7 @@ export const App = () => {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [shouldLoadUploadProviders, uploadProviderError, uploadProviders.providers.length])
 
   useEffect(() => {
     if (!job) {
@@ -692,6 +713,8 @@ export const App = () => {
       case "markdown-options":
         return "Assets 설정"
       case "assets-options":
+        return "Link 처리"
+      case "links-options":
         return "진단 설정"
       case "diagnostics-options":
         return submitting ? "작업 등록 중" : "내보내기"
@@ -835,6 +858,7 @@ export const App = () => {
         frontmatterFieldOrder={defaults.frontmatterFieldOrder}
         frontmatterFieldMeta={defaults.frontmatterFieldMeta}
         frontmatterValidationErrors={frontmatterValidationErrors}
+        linkTemplatePreviewPost={linkTemplatePreviewPost}
         onOutputDirChange={setOutputDir}
         onOptionsChange={updateOptions}
       />

@@ -52,7 +52,9 @@ export const parsePostHtml = ({
 }: {
   html: string
   sourceUrl: string
-  options: Pick<ExportOptions, "markdown">
+  options: Pick<ExportOptions, "markdown"> & {
+    resolveLinkUrl?: (url: string) => string
+  }
 }) => {
   const editorVersion = detectEditorVersionFromHtml(html)
   const tags = extractTags(html)

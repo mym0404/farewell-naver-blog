@@ -220,6 +220,16 @@ const sanitizeUploadError = ({
   return redacted.slice(0, 240)
 }
 
+const sanitizeUploadProviderCatalogError = (error: unknown) => {
+  const rawMessage = toErrorMessage(error).replace(/\s+/g, " ").trim()
+
+  if (!rawMessage) {
+    return "업로드 설정을 불러오지 못했습니다."
+  }
+
+  return "업로드 설정을 불러오지 못했습니다."
+}
+
 const syncJobUploadProgress = ({
   jobStore,
   jobId,
@@ -288,10 +298,6 @@ export const createHttpServer = ({
   let httpServer: HttpServer
   let viteDevServerPromise: Promise<ViteDevServer> | null = null
   let scanCachePromise: Promise<Record<string, ScanResult>> | null = null
-
-  void uploadProviderSource.getCatalog().catch((error) => {
-    console.error(toErrorMessage(error))
-  })
 
   const ensureViteDevServer = () => {
     if (!viteDevServerPromise) {
@@ -556,13 +562,23 @@ export const createHttpServer = ({
       }
 
       if (method === "GET" && url.pathname === "/api/upload-providers") {
-        const catalog = await uploadProviderSource.getCatalog()
+        try {
+          const catalog = await uploadProviderSource.getCatalog()
 
-        sendJson({
-          response,
-          statusCode: 200,
-          body: catalog,
-        })
+          sendJson({
+            response,
+            statusCode: 200,
+            body: catalog,
+          })
+        } catch (error) {
+          sendJson({
+            response,
+            statusCode: 503,
+            body: {
+              error: sanitizeUploadProviderCatalogError(error),
+            },
+          })
+        }
         return
       }
 

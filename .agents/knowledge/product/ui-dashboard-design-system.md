@@ -73,7 +73,8 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 - 블로그 입력 단계 하단 액션에는 `카테고리 불러오기`와 `강제로 불러오기`를 같이 둔다.
 - 기본 `카테고리 불러오기`는 서버 파일 캐시 `outputs/scan-cache.json`을 재사용해 새로고침 뒤에도 같은 블로그 스캔을 빠르게 열어야 한다.
 - `강제로 불러오기`는 `캐시 무효화` tooltip을 노출하고, 같은 블로그 입력이어도 서버 재스캔을 강제한다.
-- option panel은 `구조 -> Frontmatter -> Markdown -> Assets -> 진단`을 각각 독립 단계로 렌더링한다.
+- option panel은 `구조 -> Frontmatter -> Markdown -> Assets -> Link 처리 -> 진단`을 각각 독립 단계로 렌더링한다.
+- `Link 처리`의 커스텀 URL 모드는 지원 변수 설명과 현재 선택 범위 기준 실시간 변환 예시를 함께 보여 준다. 현재 변수는 `{slug}`, `{category}`, `{title}`, `{logNo}`, `{blogId}`, `{date}`, `{year}`, `{month}`, `{day}`다.
 - `범위` 탭은 두지 않고, 카테고리 단계가 범위 설정을 함께 맡는다.
 - frontmatter 필드 목록은 데스크톱에서 2~3열 grid로 보여 주고, 각 필드 안에서 토글/설명/alias 입력을 함께 묶는다.
 - `Assets`는 `이미지 처리 방식`, `로컬 이미지 압축`, 다운로드 토글을 관리하고, 업로더 설정 폼은 여기 두지 않는다.
@@ -81,7 +82,7 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 - `Assets`의 기본값은 `download-and-upload + 로컬 이미지 압축 켬`이다.
 - `이미지 처리 방식`이 `remote`면 로컬 압축, 다운로드 토글은 모두 비활성화한다.
 - `이미지 처리 방식`이 `download-and-upload`면 결과 패널에서만 업로드 폼을 열고, 대상 자산 수와 상태를 함께 보여 준다.
-- 업로드 provider form은 `/api/upload-providers` catalog를 기준으로 그린다. provider 목록과 필드 종류는 PicList clone SoT를 그대로 따른다.
+- 업로드 provider form은 `/api/upload-providers` catalog를 기준으로 그린다. provider 목록과 필드 종류는 설치된 `piclist` runtime catalog를 그대로 따른다.
 - 업로드 단계의 GitHub provider는 `jsDelivr CDN 사용` 체크박스를 따로 두고, 켜면 `https://cdn.jsdelivr.net/gh/<repo>@<branch>` 기준 `customUrl`을 함께 보낸다. branch가 비어 있으면 `@<branch>`는 생략한다.
 - `진단 설정`은 마지막 옵션 단계이고, 현재는 `이미지 다운로드 실패 처리`를 담당한다.
 - `upload-ready`와 `upload-failed` 단계에서도 결과 파일 표를 같이 보여 주어 경고/실패를 업로드 전에 확인할 수 있어야 한다.

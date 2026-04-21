@@ -559,9 +559,7 @@ export const JobResultsPanel = ({
               uploadProviderError ? (
                 <p className="text-sm leading-7 text-rose-600">{uploadProviderError}</p>
               ) : uploadProviders.providers.length === 0 || !activeProviderDefinition ? (
-                <p className="text-sm leading-7 text-slate-600">
-                  PicList provider catalog를 불러오지 못했습니다.
-                </p>
+                <p className="text-sm leading-7 text-slate-600">업로드 설정을 불러오지 못했습니다.</p>
               ) : (
                 <form
                   id="upload-form"

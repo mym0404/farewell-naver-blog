@@ -17,6 +17,7 @@ import { parsePostHtml } from "../parser/post-parser.js"
 import { reviewParsedPost } from "../reviewer/post-reviewer.js"
 import { AssetStore } from "./asset-store.js"
 import { buildMarkdownFilePath, getCategoryForPost } from "./export-paths.js"
+import { buildPostLinkTargets, createSameBlogPostLinkResolver } from "./post-link-rewriter.js"
 
 export type SinglePostFetcher = {
   scanBlog: () => Promise<ScanResult>
@@ -109,11 +110,26 @@ export const exportSinglePost = async ({
     category,
     options: resolvedOptions,
   })
+  const postLinkTargets = buildPostLinkTargets({
+    outputDir: resolvedOutputDir,
+    posts: [post],
+    categories: scan.categories,
+    options: resolvedOptions,
+  })
+  const resolveLinkUrl = createSameBlogPostLinkResolver({
+    blogId: resolvedBlogId,
+    markdownFilePath,
+    options: resolvedOptions,
+    targets: postLinkTargets,
+  })
   const html = await fetcher.fetchPostHtml(post.logNo)
   const parsedPost = parsePostHtml({
     html,
     sourceUrl: post.source,
-    options: resolvedOptions,
+    options: {
+      markdown: resolvedOptions.markdown,
+      resolveLinkUrl,
+    },
   })
   const review = reviewParsedPost(parsedPost)
   const rendered = await renderMarkdownPost({
@@ -124,6 +140,7 @@ export const exportSinglePost = async ({
     reviewedWarnings: review.warnings,
     options: resolvedOptions,
     resolveAsset: async (input) => assetStore.saveAsset(input),
+    resolveLinkUrl,
   })
   const renderWarnings = rendered.warnings.filter((warning) => !review.warnings.includes(warning))
 

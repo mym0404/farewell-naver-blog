@@ -21,8 +21,10 @@ const escapeTableCell = (value: string) =>
 
 const createLinkFormatter = ({
   style,
+  resolveLinkUrl,
 }: {
   style: ExportOptions["markdown"]["linkStyle"]
+  resolveLinkUrl?: (url: string) => string
 }) => {
   const references: string[] = []
   const referenceMap = new Map<string, string>()
@@ -56,11 +58,13 @@ const createLinkFormatter = ({
     label: string
     url: string
   }) => {
+    const resolvedUrl = resolveLinkUrl ? resolveLinkUrl(url) : url
+
     if (style === "inlined") {
-      return `[${label}](${url})`
+      return `[${label}](${resolvedUrl})`
     }
 
-    return `[${label}][${getReferenceId({ label, url })}]`
+    return `[${label}][${getReferenceId({ label, url: resolvedUrl })}]`
   }
 
   return {
@@ -196,13 +200,16 @@ const buildDiagnosticsSection = (diagnostics: RenderDiagnostic[]) => {
 const extractFallbackText = ({
   html,
   options,
+  resolveLinkUrl,
 }: {
   html: string
   options: Pick<ExportOptions, "markdown">
+  resolveLinkUrl?: (url: string) => string
 }) => {
   const convertedMarkdown = convertHtmlToMarkdown({
     html,
     options,
+    resolveLinkUrl,
   }).trim()
 
   if (convertedMarkdown) {
@@ -319,6 +326,7 @@ export const renderMarkdownPost = async ({
   reviewedWarnings,
   options,
   resolveAsset,
+  resolveLinkUrl,
 }: {
   post: PostSummary
   category: CategoryInfo
@@ -331,6 +339,7 @@ export const renderMarkdownPost = async ({
     sourceUrl: string
     markdownFilePath: string
   }) => Promise<AssetRecord>
+  resolveLinkUrl?: (url: string) => string
 }) => {
   const initialWarnings = unique([...parsedPost.warnings, ...reviewedWarnings])
   const warnings: string[] = [...initialWarnings]
@@ -342,6 +351,7 @@ export const renderMarkdownPost = async ({
   const sections: string[] = []
   const linkFormatter = createLinkFormatter({
     style: options.markdown.linkStyle,
+    resolveLinkUrl,
   })
   const renderedVideos: Array<{
     title: string
@@ -492,6 +502,7 @@ export const renderMarkdownPost = async ({
     return convertHtmlToMarkdown({
       html: block.html,
       options,
+      resolveLinkUrl,
     })
   }
 
@@ -593,6 +604,7 @@ export const renderMarkdownPost = async ({
       const extractedText = extractFallbackText({
         html: block.html,
         options,
+        resolveLinkUrl,
       })
 
       if (options.markdown.rawHtmlPolicy === "omit") {

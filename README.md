@@ -27,7 +27,6 @@
 git clone https://github.com/mym0404/farewell-naver-blog.git
 cd farewell-naver-blog
 pnpm install
-git clone https://github.com/Kuingsmile/PicList.git ~/Downloads/PicList
 ```
 
 ### 실행
@@ -135,9 +134,8 @@ UI에서 아래 5개 옵션 묶음을 조절할 수 있습니다.
 ## Upload Providers
 
 - 업로드 모드는 export 뒤에 같은 job에서 이어집니다.
-- 업로드 provider Source Of Truth는 `~/Downloads/PicList` clone입니다. 폴더명이 소문자면 `~/Downloads/piclist`도 fallback으로 읽습니다.
-- 서버는 clone한 PicList가 runtime에 등록한 uploader 목록과 config schema를 읽어 `/api/upload-providers`로 노출합니다.
-- UI는 provider를 하드코딩하지 않고 PicList catalog 기준 schema-driven 폼으로 렌더링합니다.
+- 서버는 설치된 `piclist` runtime이 등록한 uploader 목록과 config schema를 읽어 `/api/upload-providers`로 노출합니다.
+- UI는 provider를 하드코딩하지 않고 runtime catalog 기준 schema-driven 폼으로 렌더링합니다.
 - GitHub를 고르면 `jsDelivr CDN 사용` 보조 UX를 계속 제공합니다.
 - 업로드가 끝나면 Markdown 안의 로컬 자산 경로를 업로드 URL로 치환합니다.
 

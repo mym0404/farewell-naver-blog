@@ -37,7 +37,7 @@
 5. `Assets` 탭에서 `이미지 처리 방식`을 확인하고, `download-and-upload` 경로에서도 업로드 provider 폼이 설정 탭에 나타나지 않는지 본다.
 6. export를 시작하고 상태가 `running`일 때 `#running-progress`가 `처리한 글 수 / 전체 글 수`를 반영하는지 본다.
 7. export가 `completed` 또는 `upload-ready`로 바뀌는지 확인한다.
-8. `upload-ready`면 결과 패널의 업로드 대상 표, `#upload-progress`, provider 선택, PicList clone catalog 기준 동적 필드, 시작 버튼이 보이는지 확인한다.
+8. `upload-ready`면 결과 패널의 업로드 대상 표, `#upload-progress`, provider 선택, runtime catalog 기준 동적 필드, 시작 버튼이 보이는지 확인한다.
 9. provider를 바꿨다가 돌아와도 각 provider 입력값이 유지되는지 확인한다. GitHub일 때만 `jsDelivr CDN 사용` 보조 UX가 보여야 한다.
 10. placeholder 값으로 업로드를 시작하고 `uploading` 동안 `#upload-progress`와 row 상태가 `대기 / 부분 완료 / 완료`로 바뀌는지 본다.
 11. `uploadedCount === candidateCount && status === "uploading"` 구간에서는 full bar여도 완료가 아니라 rewrite 대기 문구가 보이는지 확인한다.

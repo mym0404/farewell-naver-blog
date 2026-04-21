@@ -199,7 +199,9 @@ const parseTextBlocks = ({
   options,
 }: {
   $component: ReturnType<CheerioAPI>
-  options: Pick<ExportOptions, "markdown">
+  options: Pick<ExportOptions, "markdown"> & {
+    resolveLinkUrl?: (url: string) => string
+  }
 }) => {
   const texts = $component
     .find("p.se-text-paragraph")
@@ -208,6 +210,7 @@ const parseTextBlocks = ({
       convertHtmlToMarkdown({
         html: $component.find(paragraph).html() ?? "",
         options,
+        resolveLinkUrl: options.resolveLinkUrl,
       }),
     )
     .map((text) => compactMarkdownText(text))
@@ -301,11 +304,14 @@ const parseQuoteBlock = ({
   options,
 }: {
   $component: ReturnType<CheerioAPI>
-  options: Pick<ExportOptions, "markdown">
+  options: Pick<ExportOptions, "markdown"> & {
+    resolveLinkUrl?: (url: string) => string
+  }
 }) => {
   const quoteMarkdown = convertHtmlToMarkdown({
     html: $component.find("blockquote.se-quotation-container").html() ?? "",
     options,
+    resolveLinkUrl: options.resolveLinkUrl,
   })
 
   if (!quoteMarkdown) {
@@ -323,12 +329,15 @@ const parseHeadingBlock = ({
   options,
 }: {
   $component: ReturnType<CheerioAPI>
-  options: Pick<ExportOptions, "markdown">
+  options: Pick<ExportOptions, "markdown"> & {
+    resolveLinkUrl?: (url: string) => string
+  }
 }) => {
   const title = compactText(
     convertHtmlToMarkdown({
       html: $component.find(".se-module-text").html() ?? "",
       options,
+      resolveLinkUrl: options.resolveLinkUrl,
     }),
   )
 
@@ -521,7 +530,9 @@ const parseTableBlock = ({
   $: CheerioAPI
   $component: ReturnType<CheerioAPI>
   warnings: string[]
-  options: Pick<ExportOptions, "markdown">
+  options: Pick<ExportOptions, "markdown"> & {
+    resolveLinkUrl?: (url: string) => string
+  }
 }) => {
   const table = $component.find("table").first()
 
@@ -621,13 +632,16 @@ const parseUnsupportedComponent = ({
   $: CheerioAPI
   $component: ReturnType<CheerioAPI>
   warnings: string[]
-  options: Pick<ExportOptions, "markdown">
+  options: Pick<ExportOptions, "markdown"> & {
+    resolveLinkUrl?: (url: string) => string
+  }
 }) => {
   const className = $component.attr("class") ?? "unknown"
   const html = getComponentHtml({ $, $component })
   const markdown = convertHtmlToMarkdown({
     html,
     options,
+    resolveLinkUrl: options.resolveLinkUrl,
   })
 
   if (markdown) {
@@ -686,7 +700,9 @@ export const parseSe4Post = ({
   $: CheerioAPI
   sourceUrl: string
   tags: string[]
-  options: Pick<ExportOptions, "markdown">
+  options: Pick<ExportOptions, "markdown"> & {
+    resolveLinkUrl?: (url: string) => string
+  }
 }) => {
   const warnings: string[] = []
   const blocks: AstBlock[] = []

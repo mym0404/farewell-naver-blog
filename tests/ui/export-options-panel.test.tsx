@@ -161,6 +161,46 @@ describe("ExportOptionsPanel", () => {
     await user.click(query<HTMLInputElement>("#assets-includeImageCaptions"))
     await user.selectOptions(query<HTMLSelectElement>("#assets-thumbnailSource"), "none")
 
+    cleanup()
+
+    render(
+      <ExportOptionsPanel
+        step="links"
+        outputDir={latestOutputDir}
+        options={latestOptions}
+        optionDescriptions={optionDescriptions}
+        frontmatterFieldOrder={frontmatterFieldOrder}
+        frontmatterFieldMeta={frontmatterFieldMeta}
+        frontmatterValidationErrors={[]}
+        onOutputDirChange={onOutputDirChange}
+        onOptionsChange={onOptionsChange}
+      />,
+    )
+
+    await user.click(query<HTMLInputElement>("#links-sameBlogPostMode-custom-url"))
+
+    cleanup()
+
+    render(
+      <ExportOptionsPanel
+        step="links"
+        outputDir={latestOutputDir}
+        options={latestOptions}
+        optionDescriptions={optionDescriptions}
+        frontmatterFieldOrder={frontmatterFieldOrder}
+        frontmatterFieldMeta={frontmatterFieldMeta}
+        frontmatterValidationErrors={[]}
+        onOutputDirChange={onOutputDirChange}
+        onOptionsChange={onOptionsChange}
+      />,
+    )
+
+    fireEvent.change(query<HTMLInputElement>("#links-sameBlogPostCustomUrlTemplate"), {
+      target: {
+        value: "https://myblog/{slug}",
+      },
+    })
+
     expect(latestOutputDir).toBe("/tmp/export")
     expect(onOptionsChange).toHaveBeenCalled()
 
@@ -189,6 +229,8 @@ describe("ExportOptionsPanel", () => {
     expect(latestOptions.assets.downloadThumbnails).toBe(false)
     expect(latestOptions.assets.includeImageCaptions).toBe(false)
     expect(latestOptions.assets.thumbnailSource).toBe("none")
+    expect(latestOptions.links.sameBlogPostMode).toBe("custom-url")
+    expect(latestOptions.links.sameBlogPostCustomUrlTemplate).toBe("https://myblog/{slug}")
     expect(Object.hasOwn(latestOptions.assets, "imageContentMode")).toBe(false)
   })
 
@@ -286,5 +328,92 @@ describe("ExportOptionsPanel", () => {
     await user.selectOptions(query<HTMLSelectElement>("#assets-downloadFailureMode"), "warn-and-omit")
 
     expect(latestOptions.assets.downloadFailureMode).toBe("warn-and-omit")
+  })
+
+  it("shows the custom template input only for custom-url mode in the links step", async () => {
+    const user = userEvent.setup()
+    let latestOptions = defaultExportOptions()
+
+    render(
+      <ExportOptionsPanel
+        step="links"
+        outputDir="./output"
+        options={latestOptions}
+        optionDescriptions={optionDescriptions}
+        frontmatterFieldOrder={frontmatterFieldOrder}
+        frontmatterFieldMeta={frontmatterFieldMeta}
+        frontmatterValidationErrors={[]}
+        onOutputDirChange={vi.fn()}
+        onOptionsChange={(updater) => {
+          latestOptions = updater(latestOptions)
+        }}
+      />,
+    )
+
+    expect(document.querySelector("#links-sameBlogPostCustomUrlTemplate")).toBeNull()
+
+    await user.click(query<HTMLInputElement>("#links-sameBlogPostMode-custom-url"))
+
+    expect(latestOptions.links.sameBlogPostMode).toBe("custom-url")
+
+    cleanup()
+
+    render(
+      <ExportOptionsPanel
+        step="links"
+        outputDir="./output"
+        options={latestOptions}
+        optionDescriptions={optionDescriptions}
+        frontmatterFieldOrder={frontmatterFieldOrder}
+        frontmatterFieldMeta={frontmatterFieldMeta}
+        frontmatterValidationErrors={[]}
+        onOutputDirChange={vi.fn()}
+        onOptionsChange={(updater) => {
+          latestOptions = updater(latestOptions)
+        }}
+      />,
+    )
+
+    expect(query<HTMLInputElement>("#links-sameBlogPostCustomUrlTemplate").placeholder).toBe("https://myblog/{slug}")
+  })
+
+  it("shows supported variable descriptions and a live preview for custom templates", () => {
+    const options = defaultExportOptions()
+
+    options.links.sameBlogPostMode = "custom-url"
+    options.links.sameBlogPostCustomUrlTemplate = "https://myblog/{category}/{title}/{date}/{logNo}/{slug}"
+
+    render(
+      <ExportOptionsPanel
+        step="links"
+        outputDir="./output"
+        options={options}
+        optionDescriptions={optionDescriptions}
+        frontmatterFieldOrder={frontmatterFieldOrder}
+        frontmatterFieldMeta={frontmatterFieldMeta}
+        frontmatterValidationErrors={[]}
+        linkTemplatePreviewPost={{
+          blogId: "mym0404",
+          logNo: "223034929697",
+          title: "첫 글",
+          publishedAt: "2026-04-11T04:00:00.000Z",
+          categoryName: "NestJS",
+        }}
+        onOutputDirChange={vi.fn()}
+        onOptionsChange={vi.fn()}
+      />,
+    )
+
+    expect(screen.getAllByText("{slug}").length).toBeGreaterThan(0)
+    expect(screen.getByText("제목을 현재 slug 규칙에 맞춰 바꾼 값입니다.")).toBeInTheDocument()
+    expect(screen.getAllByText("{category}").length).toBeGreaterThan(0)
+    expect(screen.getByText("카테고리 이름만 path-safe 값으로 넣습니다.")).toBeInTheDocument()
+    expect(screen.getAllByText("{title}").length).toBeGreaterThan(0)
+    expect(screen.getByText("제목만 path-safe 값으로 넣습니다.")).toBeInTheDocument()
+    expect(screen.getAllByText("{date}").length).toBeGreaterThan(0)
+    expect(screen.getByText("발행일을 YYYY-MM-DD 형식으로 넣습니다.")).toBeInTheDocument()
+    expect(query<HTMLElement>("#links-sameBlogPostCustomUrlPreview").textContent).toBe(
+      "https://myblog/NestJS/첫-글/2026-04-11/223034929697/첫-글",
+    )
   })
 })

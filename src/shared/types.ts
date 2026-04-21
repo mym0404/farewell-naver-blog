@@ -55,6 +55,8 @@ export type ThumbnailSource = "post-list-first" | "first-body-image" | "none"
 
 export type StickerAssetMode = "ignore" | "download-original"
 
+export type SameBlogPostLinkMode = "keep-source" | "custom-url" | "relative-filepath"
+
 export type OptionDescriptionMap = Record<string, string>
 
 export type UploadProviderValue = string | number | boolean
@@ -165,6 +167,10 @@ export type ExportOptions = {
     downloadThumbnails: boolean
     includeImageCaptions: boolean
     thumbnailSource: ThumbnailSource
+  }
+  links: {
+    sameBlogPostMode: SameBlogPostLinkMode
+    sameBlogPostCustomUrlTemplate: string
   }
 }
 

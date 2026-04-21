@@ -23,6 +23,7 @@ import { parsePostHtml } from "../parser/post-parser.js"
 import { reviewParsedPost } from "../reviewer/post-reviewer.js"
 import { AssetStore } from "./asset-store.js"
 import { buildMarkdownFilePath, getCategoryForPost } from "./export-paths.js"
+import { buildPostLinkTargets, createSameBlogPostLinkResolver } from "./post-link-rewriter.js"
 import { dedupeUploadCandidatesByLocalPath } from "./upload-candidate-utils.js"
 
 const emptyPostUploadSummary = () => ({
@@ -166,6 +167,12 @@ export class NaverBlogExporter {
     }
 
     this.onLog(`필터 적용 후 export 대상 글 수: ${filteredPosts.length}`)
+    const postLinkTargets = buildPostLinkTargets({
+      outputDir,
+      posts: filteredPosts,
+      categories: scan.categories,
+      options,
+    })
 
     const flushCompletedResults = () => {
       while (pendingResults.has(nextResultIndex)) {
@@ -219,19 +226,28 @@ export class NaverBlogExporter {
 
         try {
           this.onLog(`글 수집 시작: ${post.logNo} ${post.title}`)
-          const html = await fetcher.fetchPostHtml(post.logNo)
-          const parsedPost = parsePostHtml({
-            html,
-            sourceUrl: post.source,
-            options,
-          })
-          const review = reviewParsedPost(parsedPost)
           const markdownFilePath = buildMarkdownFilePath({
             outputDir,
             post,
             category,
             options,
           })
+          const resolveLinkUrl = createSameBlogPostLinkResolver({
+            blogId,
+            markdownFilePath,
+            options,
+            targets: postLinkTargets,
+          })
+          const html = await fetcher.fetchPostHtml(post.logNo)
+          const parsedPost = parsePostHtml({
+            html,
+            sourceUrl: post.source,
+            options: {
+              markdown: options.markdown,
+              resolveLinkUrl,
+            },
+          })
+          const review = reviewParsedPost(parsedPost)
           const rendered = await renderMarkdownPost({
             post,
             category,
@@ -240,6 +256,7 @@ export class NaverBlogExporter {
             reviewedWarnings: review.warnings,
             options,
             resolveAsset: async (input) => assetStore.saveAsset(input),
+            resolveLinkUrl,
           })
 
           await ensureDir(path.dirname(markdownFilePath))

@@ -15,6 +15,7 @@ export type PartialExportOptions = {
   }
   markdown?: Partial<ExportOptions["markdown"]>
   assets?: Partial<ExportOptions["assets"]>
+  links?: Partial<ExportOptions["links"]>
 }
 
 export const frontmatterFieldOrder: FrontmatterFieldName[] = [
@@ -145,6 +146,8 @@ export const optionDescriptions: OptionDescriptionMap = {
   "assets-downloadThumbnails": "썸네일과 비디오 썸네일 파일을 실제로 다운로드할지 정합니다.",
   "assets-includeImageCaptions": "이미지 아래에 캡션 텍스트를 Markdown으로 함께 남깁니다.",
   "assets-thumbnailSource": "frontmatter thumbnail 값을 글 목록 썸네일, 본문 첫 미디어, 또는 제외 중에서 고릅니다.",
+  "links-sameBlogPostMode": "현재 export 중인 같은 블로그의 다른 글 링크를 그대로 둘지, 커스텀 URL이나 상대경로로 바꿀지 정합니다.",
+  "links-sameBlogPostCustomUrlTemplate": "지원 변수 {slug}, {category}, {title}, {logNo}, {blogId}, {date}, {year}, {month}, {day}를 넣어 커스텀 URL을 만듭니다.",
 }
 
 export const getFrontmatterExportKey = ({
@@ -275,6 +278,10 @@ export const defaultExportOptions = (): ExportOptions => ({
     includeImageCaptions: true,
     thumbnailSource: "post-list-first",
   },
+  links: {
+    sameBlogPostMode: "keep-source",
+    sameBlogPostCustomUrlTemplate: "",
+  },
 })
 
 const coerceAssetOptions = (options: ExportOptions["assets"]) => {
@@ -348,6 +355,12 @@ export const cloneExportOptions = (options?: PartialExportOptions) => {
       includeImageCaptions:
         options?.assets?.includeImageCaptions ?? defaults.assets.includeImageCaptions,
       thumbnailSource: options?.assets?.thumbnailSource ?? defaults.assets.thumbnailSource,
+    },
+    links: {
+      sameBlogPostMode:
+        options?.links?.sameBlogPostMode ?? defaults.links.sameBlogPostMode,
+      sameBlogPostCustomUrlTemplate:
+        options?.links?.sameBlogPostCustomUrlTemplate ?? defaults.links.sameBlogPostCustomUrlTemplate,
     },
   } satisfies ExportOptions
 

@@ -114,7 +114,9 @@ const parseSingleColumnTableAsParagraphs = ({
   options,
 }: {
   parsedTable: ReturnType<typeof parseHtmlTable>
-  options: Pick<ExportOptions, "markdown">
+  options: Pick<ExportOptions, "markdown"> & {
+    resolveLinkUrl?: (url: string) => string
+  }
 }) => {
   const isSingleColumn =
     !parsedTable.complex &&
@@ -132,6 +134,7 @@ const parseSingleColumnTableAsParagraphs = ({
       convertHtmlToMarkdown({
         html: row[0]?.html ?? "",
         options,
+        resolveLinkUrl: options.resolveLinkUrl,
       }),
     )
     .map((text) => text.trim())
@@ -149,8 +152,10 @@ const parseSingleColumnTableAsParagraphs = ({
 
 const parseBookWidgetBlocks = ({
   element,
+  resolveLinkUrl,
 }: {
   element: ReturnType<CheerioAPI>
+  resolveLinkUrl?: (url: string) => string
 }) => {
   const bookWidget = element.is('[s_type="db"][s_subtype="book"]') ? element : null
 
@@ -211,7 +216,7 @@ const parseBookWidgetBlocks = ({
   if (reviewUrl) {
     blocks.push({
       type: "paragraph",
-      text: `[${reviewLabel}](${reviewUrl})`,
+      text: `[${reviewLabel}](${resolveLinkUrl ? resolveLinkUrl(reviewUrl) : reviewUrl})`,
     })
   }
 
@@ -262,7 +267,9 @@ export const parseSe2Post = ({
 }: {
   $: CheerioAPI
   tags: string[]
-  options: Pick<ExportOptions, "markdown">
+  options: Pick<ExportOptions, "markdown"> & {
+    resolveLinkUrl?: (url: string) => string
+  }
 }) => {
   const warnings: string[] = []
   const blocks: AstBlock[] = []
@@ -284,7 +291,10 @@ export const parseSe2Post = ({
 
     const element = $(node)
     const tagName = node.tagName.toLowerCase()
-    const bookWidgetBlocks = parseBookWidgetBlocks({ element })
+    const bookWidgetBlocks = parseBookWidgetBlocks({
+      element,
+      resolveLinkUrl: options.resolveLinkUrl,
+    })
 
     if (bookWidgetBlocks) {
       blocks.push(...bookWidgetBlocks)
@@ -347,6 +357,7 @@ export const parseSe2Post = ({
       const markdown = convertHtmlToMarkdown({
         html: element.html() ?? "",
         options,
+        resolveLinkUrl: options.resolveLinkUrl,
       })
 
       if (markdown) {
@@ -361,6 +372,7 @@ export const parseSe2Post = ({
         convertHtmlToMarkdown({
           html: element.html() ?? "",
           options,
+          resolveLinkUrl: options.resolveLinkUrl,
         }),
       )
 
@@ -397,6 +409,7 @@ export const parseSe2Post = ({
     const markdown = convertHtmlToMarkdown({
       html,
       options,
+      resolveLinkUrl: options.resolveLinkUrl,
     })
 
     if (markdown) {

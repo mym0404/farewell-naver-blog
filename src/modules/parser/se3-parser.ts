@@ -12,7 +12,9 @@ const parseTextBlocks = ({
 }: {
   $: CheerioAPI
   $component: ReturnType<CheerioAPI>
-  options: Pick<ExportOptions, "markdown">
+  options: Pick<ExportOptions, "markdown"> & {
+    resolveLinkUrl?: (url: string) => string
+  }
 }) =>
   $component
     .find(".se_textarea")
@@ -21,6 +23,7 @@ const parseTextBlocks = ({
       convertHtmlToMarkdown({
         html: $(node).html() ?? "",
         options,
+        resolveLinkUrl: options.resolveLinkUrl,
       }),
     )
     .map((text) => compactMarkdownText(text))
@@ -80,7 +83,9 @@ export const parseSe3Post = ({
 }: {
   $: CheerioAPI
   tags: string[]
-  options: Pick<ExportOptions, "markdown">
+  options: Pick<ExportOptions, "markdown"> & {
+    resolveLinkUrl?: (url: string) => string
+  }
 }) => {
   const warnings: string[] = []
   const blocks: AstBlock[] = []
@@ -112,6 +117,7 @@ export const parseSe3Post = ({
       const markdown = convertHtmlToMarkdown({
         html: blockquote.html() ?? "",
         options,
+        resolveLinkUrl: options.resolveLinkUrl,
       })
 
       if (markdown) {
@@ -166,6 +172,7 @@ export const parseSe3Post = ({
     const markdown = convertHtmlToMarkdown({
       html: sanitizeHtmlFragment($.html($component) ?? ""),
       options,
+      resolveLinkUrl: options.resolveLinkUrl,
     })
 
     if (markdown) {

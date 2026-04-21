@@ -1381,6 +1381,16 @@ const run = async () => {
       throw new Error("export button should stay hidden inside the Assets tab")
     }
 
+    await page.click('button:has-text("Link 처리")')
+    await waitForStepView({
+      page,
+      step: "links-options",
+    })
+
+    if (await page.locator("#export-button").count()) {
+      throw new Error("export button should stay hidden inside the Link 처리 step")
+    }
+
     await page.click('button:has-text("진단 설정")')
     await waitForStepView({
       page,
@@ -1393,6 +1403,11 @@ const run = async () => {
       throw new Error("export button should be disabled when aliases collide")
     }
 
+    await page.click('button:has-text("이전")')
+    await waitForStepView({
+      page,
+      step: "links-options",
+    })
     await page.click('button:has-text("이전")')
     await waitForStepView({
       page,
@@ -1471,6 +1486,22 @@ const run = async () => {
 
     if (await page.locator("#upload-providerKey").count()) {
       throw new Error("upload form should not appear inside the Assets tab")
+    }
+
+    await page.click('button:has-text("Link 처리")')
+    await waitForStepView({
+      page,
+      step: "links-options",
+    })
+
+    await page.waitForSelector("#links-sameBlogPostMode-custom-url")
+    await page.click("#links-sameBlogPostMode-custom-url")
+    await page.fill("#links-sameBlogPostCustomUrlTemplate", "https://myblog/{slug}")
+
+    const livePreview = page.locator("#links-sameBlogPostCustomUrlPreview")
+
+    if (!(await livePreview.textContent())?.includes("https://myblog/")) {
+      throw new Error("custom link template preview did not update")
     }
 
     await page.click('button:has-text("진단 설정")')

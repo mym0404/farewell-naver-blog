@@ -5,7 +5,13 @@ import type {
   FrontmatterFieldMeta,
   FrontmatterFieldName,
   OptionDescriptionMap,
+  PostSummary,
 } from "../../../shared/types.js"
+import {
+  applySameBlogPostCustomUrlTemplate,
+  buildSameBlogPostTemplateValues,
+  sameBlogPostTemplateKeys,
+} from "../../../shared/same-blog-post-link-template.js"
 
 import { Alert, AlertDescription, AlertTitle } from "../../components/ui/alert.js"
 import { Badge } from "../../components/ui/badge.js"
@@ -18,7 +24,13 @@ import {
 } from "../../components/ui/card.js"
 import { Input } from "../../components/ui/input.js"
 
-export type ExportOptionsStep = "structure" | "frontmatter" | "markdown" | "assets" | "diagnostics"
+export type ExportOptionsStep =
+  | "structure"
+  | "frontmatter"
+  | "markdown"
+  | "assets"
+  | "links"
+  | "diagnostics"
 
 const OptionField = ({
   optionKey,
@@ -85,6 +97,47 @@ const CheckField = ({
   </label>
 )
 
+const RadioField = ({
+  inputId,
+  name,
+  optionKey,
+  label,
+  description,
+  checked,
+  onChange,
+  children,
+}: {
+  inputId: string
+  name: string
+  optionKey: string
+  label: string
+  description?: string
+  checked: boolean
+  onChange: () => void
+  children?: ReactNode
+}) => (
+  <label
+    className={`check flex flex-col rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(22,33,50,0.04)] ${checked ? "ring-2 ring-blue-100" : ""}`}
+    data-option-key={optionKey}
+  >
+    <span className="check-head flex items-start gap-3">
+      <input
+        id={inputId}
+        name={name}
+        className="mt-0.5 size-[1.1rem] shrink-0 accent-primary"
+        type="radio"
+        checked={checked}
+        onChange={onChange}
+      />
+      <span className="check-copy grid min-w-0 gap-1">
+        <span className="check-title text-sm font-semibold text-slate-900">{label}</span>
+        {description ? <small className="field-help text-sm leading-6 text-slate-500">{description}</small> : null}
+      </span>
+    </span>
+    {children ? <div className="pt-3">{children}</div> : null}
+  </label>
+)
+
 const OptionSection = ({
   title,
   note,
@@ -128,9 +181,58 @@ const stepMeta: Record<
     title: "Assets 설정",
     description: "이미지 다운로드와 업로드 전략을 정합니다.",
   },
+  links: {
+    title: "Link 처리",
+    description: "같은 블로그 안의 다른 글 링크를 어떻게 바꿀지 정합니다.",
+  },
   diagnostics: {
     title: "진단 설정",
     description: "경고와 실패 처리 방식을 정합니다.",
+  },
+}
+
+const linkTemplateVariableMeta: Record<
+  (typeof sameBlogPostTemplateKeys)[number],
+  {
+    label: string
+    description: string
+  }
+> = {
+  slug: {
+    label: "{slug}",
+    description: "제목을 현재 slug 규칙에 맞춰 바꾼 값입니다.",
+  },
+  category: {
+    label: "{category}",
+    description: "카테고리 이름만 path-safe 값으로 넣습니다.",
+  },
+  title: {
+    label: "{title}",
+    description: "제목만 path-safe 값으로 넣습니다.",
+  },
+  logNo: {
+    label: "{logNo}",
+    description: "네이버 글 번호를 그대로 넣습니다.",
+  },
+  blogId: {
+    label: "{blogId}",
+    description: "현재 export 중인 블로그 ID를 넣습니다.",
+  },
+  date: {
+    label: "{date}",
+    description: "발행일을 YYYY-MM-DD 형식으로 넣습니다.",
+  },
+  year: {
+    label: "{year}",
+    description: "발행 연도를 4자리로 넣습니다.",
+  },
+  month: {
+    label: "{month}",
+    description: "발행 월을 2자리로 넣습니다.",
+  },
+  day: {
+    label: "{day}",
+    description: "발행 일을 2자리로 넣습니다.",
   },
 }
 
@@ -142,6 +244,7 @@ export const ExportOptionsPanel = ({
   frontmatterFieldOrder,
   frontmatterFieldMeta,
   frontmatterValidationErrors,
+  linkTemplatePreviewPost,
   onOutputDirChange,
   onOptionsChange,
 }: {
@@ -152,10 +255,25 @@ export const ExportOptionsPanel = ({
   frontmatterFieldOrder: FrontmatterFieldName[]
   frontmatterFieldMeta: Record<FrontmatterFieldName, FrontmatterFieldMeta>
   frontmatterValidationErrors: string[]
+  linkTemplatePreviewPost?: Pick<PostSummary, "blogId" | "logNo" | "title" | "publishedAt" | "categoryName"> | null
   onOutputDirChange: (value: string) => void
   onOptionsChange: (updater: (current: ExportOptions) => ExportOptions) => void
 }) => {
   const description = (key: string) => optionDescriptions[key]
+  const linkTemplatePreviewValues = linkTemplatePreviewPost
+    ? buildSameBlogPostTemplateValues({
+        post: linkTemplatePreviewPost,
+        options,
+      })
+    : null
+  const customUrlTemplate = options.links.sameBlogPostCustomUrlTemplate.trim()
+  const customUrlPreview =
+    linkTemplatePreviewValues && customUrlTemplate
+      ? applySameBlogPostCustomUrlTemplate({
+          template: customUrlTemplate,
+          values: linkTemplatePreviewValues,
+        })
+      : null
 
   const structureSection = (
     <>
@@ -802,6 +920,155 @@ export const ExportOptionsPanel = ({
     </OptionSection>
   )
 
+  const linksSection = (
+    <OptionSection title="같은 블로그 글 링크" note="현재 export 중인 블로그 안의 다른 글 링크 처리 규칙">
+      <div className="grid gap-4 xl:col-span-2">
+        <RadioField
+          inputId="links-sameBlogPostMode-keep-source"
+          name="links-sameBlogPostMode"
+          optionKey="links-sameBlogPostMode"
+          label="원래 네이버 블로그 링크 유지"
+          description="같은 블로그 글이어도 기존 네이버 URL을 그대로 둡니다."
+          checked={options.links.sameBlogPostMode === "keep-source"}
+          onChange={() =>
+            onOptionsChange((current) => ({
+              ...current,
+              links: {
+                ...current.links,
+                sameBlogPostMode: "keep-source",
+              },
+            }))
+          }
+        />
+
+        <RadioField
+          inputId="links-sameBlogPostMode-custom-url"
+          name="links-sameBlogPostMode"
+          optionKey="links-sameBlogPostMode"
+          label="export 대상 글이면 커스텀 URL로 바꾸기"
+          description={description("links-sameBlogPostMode")}
+          checked={options.links.sameBlogPostMode === "custom-url"}
+          onChange={() =>
+            onOptionsChange((current) => ({
+              ...current,
+              links: {
+                ...current.links,
+                sameBlogPostMode: "custom-url",
+              },
+            }))
+          }
+        >
+          {options.links.sameBlogPostMode === "custom-url" ? (
+            <div className="grid gap-3 pl-7">
+              <label className="field grid min-h-0 gap-2 rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-4">
+                <span className="text-sm font-semibold text-slate-900">URL 템플릿</span>
+                <Input
+                  id="links-sameBlogPostCustomUrlTemplate"
+                  value={options.links.sameBlogPostCustomUrlTemplate}
+                  placeholder="https://myblog/{slug}"
+                  onChange={(event) =>
+                    onOptionsChange((current) => ({
+                      ...current,
+                      links: {
+                        ...current.links,
+                        sameBlogPostCustomUrlTemplate: event.target.value,
+                      },
+                    }))
+                  }
+                />
+                <small className="field-help text-sm leading-6 text-slate-500">
+                  지원 변수만 치환됩니다. 예: <span className="font-mono text-slate-700">https://myblog/{"{category}"}/{"{title}"}</span>
+                </small>
+              </label>
+
+              <div className="grid gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-4">
+                <div className="grid gap-1">
+                  <span className="text-sm font-semibold text-slate-900">실시간 변환 예시</span>
+                  <p className="text-sm leading-6 text-slate-500">
+                    {linkTemplatePreviewPost
+                      ? `${linkTemplatePreviewPost.title} 글을 기준으로 바로 보여줍니다.`
+                      : "선택 범위에 글이 있으면 여기에서 실제 변환 결과를 바로 보여줍니다."}
+                  </p>
+                </div>
+
+                <div className="grid gap-2 text-sm leading-6 text-slate-500">
+                  <span>현재 템플릿</span>
+                  <code className="break-all rounded-xl bg-slate-50 px-3 py-2 font-mono text-[0.8125rem] text-slate-700">
+                    {customUrlTemplate || "(비어 있음)"}
+                  </code>
+                </div>
+
+                <div className="grid gap-2 text-sm leading-6 text-slate-500">
+                  <span>변환 결과</span>
+                  <code
+                    id="links-sameBlogPostCustomUrlPreview"
+                    className="break-all rounded-xl bg-slate-900 px-3 py-2 font-mono text-[0.8125rem] text-slate-100"
+                  >
+                    {customUrlPreview ?? "템플릿을 입력하면 결과가 여기에서 바로 바뀝니다."}
+                  </code>
+                </div>
+              </div>
+
+              <div className="grid gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-4">
+                <div className="grid gap-1">
+                  <span className="text-sm font-semibold text-slate-900">사용 가능한 변수</span>
+                  <p className="text-sm leading-6 text-slate-500">
+                    아래 값은 현재 선택 범위 안의 글 하나를 예시로 바로 계산합니다.
+                  </p>
+                </div>
+
+                <div className="grid gap-3 md:grid-cols-2">
+                  {sameBlogPostTemplateKeys.map((key) => {
+                    const meta = linkTemplateVariableMeta[key]
+                    const exampleValue = linkTemplatePreviewValues?.[key] ?? "-"
+
+                    return (
+                      <div
+                        key={key}
+                        className="grid gap-2 rounded-2xl border border-slate-200 bg-slate-50/80 px-3 py-3"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="rounded-md bg-sky-100 px-1.5 py-0.5 font-mono text-sm text-sky-800">
+                            {meta.label}
+                          </span>
+                          <span className="text-sm font-medium text-slate-900">{meta.description}</span>
+                        </div>
+                        <div className="grid gap-1 text-sm leading-6 text-slate-500">
+                          <span>예시 값</span>
+                          <code className="break-all rounded-xl bg-white px-2 py-1 font-mono text-[0.8125rem] text-slate-700">
+                            {exampleValue}
+                          </code>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </RadioField>
+
+        <RadioField
+          inputId="links-sameBlogPostMode-relative-filepath"
+          name="links-sameBlogPostMode"
+          optionKey="links-sameBlogPostMode"
+          label="export 결과 기준 상대경로 filepath로 바꾸기"
+          description="같이 export 된 다른 글이면 현재 Markdown 파일 위치 기준 상대경로로 바꿉니다."
+          checked={options.links.sameBlogPostMode === "relative-filepath"}
+          onChange={() =>
+            onOptionsChange((current) => ({
+              ...current,
+              links: {
+                ...current.links,
+                sameBlogPostMode: "relative-filepath",
+              },
+            }))
+          }
+        />
+      </div>
+    </OptionSection>
+  )
+
   const diagnosticsSection = (
     <OptionSection title="진단" note="경고와 실패 처리 기준">
       <OptionField
@@ -837,6 +1104,7 @@ export const ExportOptionsPanel = ({
     frontmatter: frontmatterSection,
     markdown: markdownSection,
     assets: assetsSection,
+    links: linksSection,
     diagnostics: diagnosticsSection,
   }
 

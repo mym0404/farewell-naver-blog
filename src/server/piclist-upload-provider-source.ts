@@ -1,7 +1,5 @@
-import { access, readFile } from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
-import { createRequire } from "node:module"
 
 import type {
   UploadProviderCatalogResponse,
@@ -10,11 +8,6 @@ import type {
   UploadProviderOptionValue,
   UploadProviderValue,
 } from "../shared/types.js"
-
-const defaultClonePathCandidates = [
-  path.join(os.homedir(), "Downloads", "PicList"),
-  path.join(os.homedir(), "Downloads", "piclist"),
-]
 
 const providerLabelMap: Record<string, string> = {
   advancedplist: "Advanced Custom",
@@ -65,15 +58,6 @@ export type UploadProviderSource = {
     providerKey: string,
     value: unknown,
   ) => Promise<Record<string, UploadProviderValue> | null>
-}
-
-const fileExists = async (targetPath: string) => {
-  try {
-    await access(targetPath)
-    return true
-  } catch {
-    return false
-  }
 }
 
 const hasAscii = (value: string) => /[A-Za-z]/.test(value)
@@ -279,70 +263,6 @@ const createCatalogFromRuntime = (piclist: PicListLike): UploadProviderCatalogRe
   }
 }
 
-const resolveClonePath = async (clonePathCandidates: string[]) => {
-  for (const clonePath of clonePathCandidates) {
-    if (await fileExists(path.join(clonePath, "package.json"))) {
-      return clonePath
-    }
-  }
-
-  throw new Error("PicList clone not found under ~/Downloads")
-}
-
-const readCloneMetadata = async (clonePath: string) => {
-  const packageJsonPath = path.join(clonePath, "package.json")
-  const clonePackage = JSON.parse(await readFile(packageJsonPath, "utf8")) as {
-    version?: string
-    dependencies?: {
-      piclist?: string
-    }
-  }
-  const sourceMarkerPaths = [
-    path.join(clonePath, "src", "renderer", "utils", "static.ts"),
-    path.join(clonePath, "src", "main", "utils", "static.ts"),
-  ]
-
-  for (const sourceMarkerPath of sourceMarkerPaths) {
-    if (!(await fileExists(sourceMarkerPath))) {
-      throw new Error(`PicList source definition is missing: ${sourceMarkerPath}`)
-    }
-  }
-
-  return {
-    cloneVersion: clonePackage.version ?? "unknown",
-    runtimeRange: clonePackage.dependencies?.piclist ?? "",
-  }
-}
-
-const warnVersionMismatch = async ({
-  cloneVersion,
-  runtimeRange,
-}: {
-  cloneVersion: string
-  runtimeRange: string
-}) => {
-  const require = createRequire(import.meta.url)
-  const runtimePackage = require("piclist/package.json") as {
-    version?: string
-  }
-  const installedVersion = runtimePackage.version ?? "unknown"
-
-  if (!runtimeRange) {
-    console.warn(
-      `[PicList SoT] clone version ${cloneVersion} does not declare a piclist runtime dependency.`,
-    )
-    return
-  }
-
-  const normalizedExpectedVersion = runtimeRange.replace(/^[~^]/, "")
-
-  if (installedVersion !== normalizedExpectedVersion) {
-    console.warn(
-      `[PicList SoT] clone ${cloneVersion} expects piclist ${runtimeRange}, but installed runtime is ${installedVersion}.`,
-    )
-  }
-}
-
 const createRuntimeInstance = async () => {
   const { PicGo } = await import("piclist")
   const runtimeConfigPath = path.join(os.tmpdir(), "farewell-naver-blog-piclist-config.json")
@@ -418,21 +338,12 @@ const coerceTextValue = (rawValue: unknown) => {
   return trimmed ? trimmed : null
 }
 
-export const createPicListUploadProviderSource = ({
-  clonePathCandidates = defaultClonePathCandidates,
-}: {
-  clonePathCandidates?: string[]
-} = {}): UploadProviderSource => {
+export const createPicListUploadProviderSource = (): UploadProviderSource => {
   let catalogPromise: Promise<UploadProviderCatalogResponse> | null = null
 
   const getCatalog = async () => {
     if (!catalogPromise) {
       catalogPromise = (async () => {
-        const clonePath = await resolveClonePath(clonePathCandidates)
-        const cloneMetadata = await readCloneMetadata(clonePath)
-
-        await warnVersionMismatch(cloneMetadata)
-
         const piclist = await createRuntimeInstance()
         return createCatalogFromRuntime(piclist)
       })()

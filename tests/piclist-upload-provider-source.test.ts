@@ -1,7 +1,3 @@
-import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises"
-import { tmpdir } from "node:os"
-import path from "node:path"
-
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 const { picgoCreateMock } = vi.hoisted(() => ({
@@ -81,48 +77,18 @@ const createRuntimeMock = () => ({
   },
 })
 
-const createCloneFixture = async (rootDir: string) => {
-  await mkdir(path.join(rootDir, "src", "renderer", "utils"), { recursive: true })
-  await mkdir(path.join(rootDir, "src", "main", "utils"), { recursive: true })
-  await writeFile(
-    path.join(rootDir, "package.json"),
-    JSON.stringify(
-      {
-        version: "3.3.2",
-        dependencies: {
-          piclist: "2.3.5",
-        },
-      },
-      null,
-      2,
-    ),
-  )
-  await writeFile(path.join(rootDir, "src", "renderer", "utils", "static.ts"), "export {};\n")
-  await writeFile(path.join(rootDir, "src", "main", "utils", "static.ts"), "export {};\n")
-}
-
 describe("createPicListUploadProviderSource", () => {
-  let tempDir: string
-
   beforeEach(async () => {
-    tempDir = await mkdtemp(path.join(tmpdir(), "piclist-source-test-"))
     picgoCreateMock.mockReset()
     picgoCreateMock.mockReturnValue(createRuntimeMock())
   })
 
-  afterEach(async () => {
-    await rm(tempDir, { recursive: true, force: true })
+  afterEach(() => {
+    vi.restoreAllMocks()
   })
 
-  it("loads catalog from the fallback lowercase clone path and normalizes fields", async () => {
-    const uppercasePath = path.join(tempDir, "PicList")
-    const lowercasePath = path.join(tempDir, "piclist")
-
-    await createCloneFixture(lowercasePath)
-
-    const source = createPicListUploadProviderSource({
-      clonePathCandidates: [uppercasePath, lowercasePath],
-    })
+  it("loads catalog from the piclist runtime and normalizes fields", async () => {
+    const source = createPicListUploadProviderSource()
     const catalog = await source.getCatalog()
     const normalized = await source.normalizeProviderFields("tcyun", {
       secretId: "secret-id-123",
@@ -166,11 +132,13 @@ describe("createPicListUploadProviderSource", () => {
     })
   })
 
-  it("fails with a clear error when no clone path exists", async () => {
-    const source = createPicListUploadProviderSource({
-      clonePathCandidates: [path.join(tempDir, "PicList"), path.join(tempDir, "piclist")],
+  it("fails when the piclist runtime cannot be created", async () => {
+    picgoCreateMock.mockImplementation(() => {
+      throw new Error("runtime bootstrap failed")
     })
 
-    await expect(source.getCatalog()).rejects.toThrow("PicList clone not found under ~/Downloads")
+    const source = createPicListUploadProviderSource()
+
+    await expect(source.getCatalog()).rejects.toThrow("runtime bootstrap failed")
   })
 })
