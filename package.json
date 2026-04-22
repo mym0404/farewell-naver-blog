@@ -20,9 +20,7 @@
     "smoke:ui": "pnpm build:ui && tsx scripts/harness/run-ui-smoke-suite.ts",
     "quality:report": "tsx scripts/harness/generate-quality-report.ts",
     "check:local": "pnpm typecheck && pnpm test:offline && pnpm parser:check",
-    "check:quick": "pnpm check:local",
-    "check:full": "pnpm quality:report && pnpm check:local && pnpm samples:verify && pnpm smoke:ui",
-    "check": "pnpm check:full"
+    "check:full": "pnpm quality:report && pnpm typecheck && pnpm test:offline && pnpm parser:check && pnpm samples:verify && pnpm smoke:ui"
   },
   "dependencies": {
     "@radix-ui/react-scroll-area": "^1.2.10",

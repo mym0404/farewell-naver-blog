@@ -2,7 +2,7 @@
 
 ## 시작점
 - 프로젝트 개요와 출력 규약: [product/product-outline.md](./product/product-outline.md)
-- 검증 의미와 command graph: [engineering/validation.md](./engineering/validation.md)
+- 검증 의미와 bundle 구성: [engineering/validation.md](./engineering/validation.md)
 - engineering 라우터: [engineering/index.md](./engineering/index.md)
 - architecture 라우터: [architecture/index.md](./architecture/index.md)
 - product 라우터: [product/index.md](./product/index.md)
@@ -12,7 +12,7 @@
 ## 라우터 운영 규칙
 - evergreen 지식은 이 트리에서 관리한다. 루트 [../../AGENTS.md](../../AGENTS.md)가 항상 첫 진입점이다.
 - 실제 source of truth 우선순위는 사용자 지시와 루트 `AGENTS.md`, 코드/설정/테스트, evergreen knowledge, reference/generated 문서 순서다.
-- 스택, command graph, 구현 규칙은 `engineering/`, 모듈 경계와 파이프라인은 `architecture/`, 도메인 제약과 출력 규약은 `product/`, UI 규칙은 `DESIGN.md`로 내려간다.
+- 스택, verification bundle, 구현 규칙은 `engineering/`, 모듈 경계와 파이프라인은 `architecture/`, 도메인 제약과 출력 규약은 `product/`, UI 규칙은 `DESIGN.md`로 내려간다.
 - `.agents/knowledge/reference/` 아래 문서는 반복 절차와 산출물 참고용이다. 제품 계약이나 구조 계약의 source of truth가 아니다.
 
 ## 문서 지도
@@ -35,10 +35,10 @@
 - export 후 upload 상태 전이나 결과 패널을 바꾸면 [product/domain.md](./product/domain.md), [product/product-outline.md](./product/product-outline.md), `src/server/http-server.ts`를 함께 본다.
 
 ## 검증
-- `pnpm check:quick`: 저장소 파일 변경 뒤 가장 먼저 보는 기본 기준선이다.
+- `pnpm check:local`: 저장소 파일 변경 뒤 가장 먼저 보는 기본 기준선이다.
 - `pnpm quality:report`: parser capability나 sample corpus 변경으로 generated 품질 보고서가 달라질 때 실행한다.
 - 수정한 링크와 코드 기준점 수동 spot-check: knowledge 문서를 바꾼 뒤 라우팅과 앵커가 여전히 맞는지 확인할 때 실행한다.
-- alias 관계와 command graph는 [engineering/validation.md](./engineering/validation.md), [../../package.json](../../package.json)만 기준으로 본다.
+- verification bundle 구성은 [engineering/validation.md](./engineering/validation.md), [../../package.json](../../package.json)만 기준으로 본다.
 
 ## 우선순위
 1. 사용자 지시와 루트 [../../AGENTS.md](../../AGENTS.md)

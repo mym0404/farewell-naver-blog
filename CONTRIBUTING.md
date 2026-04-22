@@ -24,8 +24,7 @@ pnpm dev
 
 ## 주요 검증 명령
 
-- `pnpm check:quick`: 빠른 로컬 확인
-- `pnpm check:local`: 일반적인 구현 작업 뒤 기본 회귀
+- `pnpm check:local`: 저장소 파일 변경 뒤 기본 회귀
 - `pnpm check:full`: 네트워크, sample export, UI smoke까지 포함한 전체 회귀
 - `pnpm parser:check`: parser capability와 sample 계약 확인
 - `pnpm samples:verify`: sample export 결과 확인

@@ -131,6 +131,7 @@ UI에서 아래 5개 옵션 묶음을 조절할 수 있습니다.
 - `pnpm parser:check`: 지원 범위와 샘플 검증 계약 확인
 - `pnpm samples:verify`: 저장된 대표 샘플 export 결과 회귀 확인
 - `pnpm smoke:ui`: Playwright 기반 UI 흐름과 작업 복구 회귀 확인
+- `pnpm check:local`: 저장소 파일 변경 뒤 기본 로컬 기준선 확인
 - `pnpm check:full`: 전체 기본 회귀 확인
 
 ## Upload Providers

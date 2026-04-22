@@ -113,7 +113,7 @@
 ## 검증
 - 기본 명령
   - `pnpm build:ui`
-  - `pnpm check:quick`
+  - `pnpm check:local`
   - `pnpm smoke:ui`
 - smoke는 아래를 회귀 대상으로 본다.
   - dark 기본 렌더
