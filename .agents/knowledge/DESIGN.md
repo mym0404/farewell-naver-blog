@@ -16,6 +16,7 @@
 ## Source Of Truth
 - theme source of truth는 `globals.css`다.
 - primitive의 look은 `src/ui/components/ui/*`가 맡고, feature 파일은 layout과 composition 위주로 유지한다.
+- `src/ui/components/ui/*` 아래 shadcn CLI 생성 컴포넌트는 웬만하면 직접 고치지 않는다. 먼저 feature 조합, token, helper class, shadcn 문서 확인으로 해결하고, 공통 primitive 자체를 바꿔야 할 때만 수정한다.
 - 로고, favicon, OG image, 그 원본 preview처럼 번들링이 필요 없는 브랜드 자산은 `src`가 아니라 `public/brand/`에 둔다.
 - shadcn component를 다룰 때는 먼저 `npx shadcn@latest info --json`, `npx shadcn@latest docs <component>`로 현재 프로젝트 기준과 API를 확인한다.
 - 아이콘은 전부 Remix icon 기준으로 유지하고, 새 아이콘도 `@remixicon/react`에서만 고른다.
@@ -57,6 +58,7 @@
 - `Button`, `Card`, `Badge`, `Input`, `Table`, `Dialog`, `Alert`, `Progress`, `Sonner`는 semantic token만 사용한다.
 - dropdown과 single-choice select는 native `<select>` 대신 shadcn `Select`를 우선한다.
 - checkbox, option toggle처럼 이미 설치된 control은 native input보다 shadcn primitive를 우선한다.
+- shadcn CLI가 생성한 primitive 파일은 feature 버그를 막기 위한 임시 패치 장소로 쓰지 않는다.
 - 2~7개 선택지 전환은 가능하면 `ToggleGroup`으로 묶고, 별도 active button 조합을 만들지 않는다.
 - primitive variant로 해결 가능한 색 표현은 feature 파일에 남기지 않는다.
 - 새 variant가 필요하면 먼저 primitive에 추가한다.

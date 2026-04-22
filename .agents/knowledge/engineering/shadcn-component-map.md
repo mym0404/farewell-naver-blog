@@ -10,6 +10,7 @@
 - 전역 token과 helper surface: [../../../src/ui/styles/globals.css](../../../src/ui/styles/globals.css)
 - 디자인 규칙: [../DESIGN.md](../DESIGN.md)
 - shadcn CLI 기준 정보는 `npx shadcn@latest info --json` 출력과 [shadcn docs](https://ui.shadcn.com/docs)를 함께 본다.
+- `src/ui/components/ui/*`는 shadcn CLI 생성 surface로 본다. 웬만하면 feature 쪽 조합이나 token에서 해결하고, 공통 primitive 동작이나 variant 자체를 바꿔야 할 때만 직접 수정한다.
 
 ## 현재 설정
 - registry style은 `new-york`, base는 `radix`, icon library는 `remix`다.
@@ -93,8 +94,8 @@
 
 ## 새 컴포넌트를 추가할 때 순서
 1. 이미 설치된 primitive와 variant로 해결 가능한지 먼저 본다.
-2. look 차이만 있으면 feature 파일이 아니라 primitive나 token layer를 수정한다.
-3. 그래도 부족하면 `npx shadcn@latest docs <component>`로 API를 확인한다.
+2. look 차이만 있으면 feature 파일이나 token/helper class에서 먼저 해결하고, 그래도 공통 primitive 계약이 맞지 않을 때만 primitive를 수정한다.
+3. primitive를 건드리기 전에는 `npx shadcn@latest docs <component>`로 API와 권장 surface를 다시 확인한다.
 4. 새 primitive를 추가할 때만 `npx shadcn@latest add <component>`를 쓴다.
 
 ## 헷갈리기 쉬운 선택
