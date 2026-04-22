@@ -112,8 +112,9 @@
   --status-warning-fg: #7a3800;
   --shell-gradient:
     radial-gradient(circle at top center, rgba(10, 114, 239, 0.1), transparent 30%),
-    radial-gradient(circle at bottom left, rgba(222, 29, 141, 0.08), transparent 28%),
+    radial-gradient(circle at bottom left, rgba(3, 199, 90, 0.06), transparent 28%),
     linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+  --brand-mark-scroll-scale: 1;
   --brand-mark-opacity: 0.08;
   --brand-mark-glow: rgba(3, 199, 90, 0.16);
 }
@@ -177,8 +178,8 @@
   --status-warning-fg: #f3f4f6;
   --shell-gradient:
     radial-gradient(circle at top center, rgba(10, 114, 239, 0.16), transparent 26%),
-    radial-gradient(circle at 20% 80%, rgba(222, 29, 141, 0.14), transparent 28%),
-    radial-gradient(circle at 82% 18%, rgba(255, 91, 79, 0.08), transparent 22%),
+    radial-gradient(circle at 20% 80%, rgba(3, 199, 90, 0.12), transparent 28%),
+    radial-gradient(circle at 82% 18%, rgba(255, 255, 255, 0.05), transparent 22%),
     linear-gradient(180deg, #050505 0%, #0a0a0a 100%);
   --brand-mark-opacity: 0.12;
   --brand-mark-glow: rgba(3, 199, 90, 0.24);
@@ -319,8 +320,9 @@ pre,
   flex: none;
   user-select: none;
   opacity: var(--brand-mark-opacity);
-  filter: blur(24px) drop-shadow(0 0 110px var(--brand-mark-glow));
-  transform: translateY(22%) scale(1.12);
+  filter: blur(16px) drop-shadow(0 0 84px var(--brand-mark-glow));
+  transform: translateY(22%) scale(calc(1.12 * var(--brand-mark-scroll-scale)));
+  transform-origin: center bottom;
 }
 
 .board-card {
@@ -411,8 +413,8 @@ pre,
 
   .dashboard-brand-mark img {
     width: min(94vw, 24rem);
-    filter: blur(18px) drop-shadow(0 0 72px var(--brand-mark-glow));
-    transform: translateY(26%) scale(1.04);
+    filter: blur(12px) drop-shadow(0 0 48px var(--brand-mark-glow));
+    transform: translateY(26%) scale(calc(1.04 * var(--brand-mark-scroll-scale)));
   }
 }
 
