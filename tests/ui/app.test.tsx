@@ -668,6 +668,96 @@ describe("App", () => {
     expect(screen.getByRole("button", { name: "남은 작업 계속" })).toBeInTheDocument()
   })
 
+  it("resets the resumed output from the dialog", async () => {
+    const resumedJob: ExportJobState = {
+      ...completedJob,
+      id: "job-reset",
+      status: "running",
+      resumeAvailable: true,
+      finishedAt: null,
+      request: {
+        ...completedJob.request,
+        outputDir: "./resume-output",
+      },
+      progress: {
+        total: 12,
+        completed: 5,
+        failed: 1,
+        warnings: 1,
+      },
+    }
+
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true)
+
+    const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
+      const url = typeof input === "string" ? input : input.toString()
+
+      if (url.endsWith("/api/export-defaults")) {
+        return buildJsonResponse({
+          profile: "gfm",
+          options: defaultExportOptions(),
+          lastOutputDir: "./resume-output",
+          resumedJob,
+          resumeSummary: {
+            status: "running",
+            outputDir: "./resume-output",
+            totalPosts: 12,
+            completedCount: 5,
+            failedCount: 1,
+            uploadCandidateCount: 0,
+            uploadedCount: 0,
+          },
+          resumedScanResult: scanResult,
+          frontmatterFieldOrder,
+          frontmatterFieldMeta,
+          optionDescriptions,
+        })
+      }
+
+      if (url.endsWith("/api/export-reset")) {
+        expect(init?.method).toBe("POST")
+        expect(init?.body).toBe(
+          JSON.stringify({
+            outputDir: "./resume-output",
+            jobId: "job-reset",
+          }),
+        )
+
+        return buildJsonResponse({
+          profile: "gfm",
+          options: defaultExportOptions(),
+          lastOutputDir: "./output",
+          resumedJob: null,
+          resumeSummary: null,
+          resumedScanResult: null,
+          frontmatterFieldOrder,
+          frontmatterFieldMeta,
+          optionDescriptions,
+        })
+      }
+
+      throw new Error(`unexpected fetch: ${url}`)
+    })
+
+    vi.stubGlobal("fetch", fetchMock)
+
+    const user = renderApp()
+
+    const dialog = await screen.findByRole("dialog")
+    await user.click(within(dialog).getByRole("button", { name: "작업 초기화" }))
+
+    await waitFor(() => {
+      expect(confirmSpy).toHaveBeenCalledWith(
+        "./resume-output 경로의 작업내역을 모두 삭제하고 초기화할까요?",
+      )
+      expect(document.querySelector('[role="dialog"]')).toBeNull()
+      expect(document.querySelector('[data-step-view="blog-input"]')).not.toBeNull()
+    })
+
+    expect(screen.getByLabelText("블로그 ID 또는 URL")).toHaveValue("")
+    expect(screen.queryByRole("button", { name: "남은 작업 계속" })).not.toBeInTheDocument()
+  })
+
   it("autosaves sanitized options and ignores blog, output, and category-only changes", async () => {
     const savedPayloads: Array<{
       options?: {

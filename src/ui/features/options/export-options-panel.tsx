@@ -7,12 +7,14 @@ import type {
   OptionDescriptionMap,
   PostSummary,
 } from "../../../shared/types.js"
-import { getDateSlug, sanitizePathSegment, slugifyTitle } from "../../../shared/path-format.js"
+import { sanitizePathSegment } from "../../../shared/path-format.js"
+import { getDefaultSlugWhitespace } from "../../../shared/export-options.js"
 import {
-  applySameBlogPostCustomUrlTemplate,
-  buildSameBlogPostTemplateValues,
-  sameBlogPostTemplateKeys,
-} from "../../../shared/same-blog-post-link-template.js"
+  applyPostTemplate,
+  buildPostFolderName,
+  buildPostTemplateValues,
+  postTemplateKeys,
+} from "../../../shared/post-path-template.js"
 
 import { Alert, AlertDescription, AlertTitle } from "../../components/ui/alert.js"
 import { Badge } from "../../components/ui/badge.js"
@@ -43,30 +45,103 @@ type StructurePreviewTreeNode =
     }
 
 const structurePreviewSample = {
-  publishedAt: "2026-04-11T04:00:00.000Z",
-  logNo: "223034929697",
-  title: "첫 글",
-  categoryPath: ["개발 메모", "React"],
+  posts: [
+    {
+      publishedAt: "2026-04-11T04:00:00.000Z",
+      logNo: "223034929697",
+      title: "첫 글",
+      categoryPath: ["개발 메모", "React"],
+    },
+    {
+      publishedAt: "2026-04-12T04:00:00.000Z",
+      logNo: "223034929698",
+      title: "둘째 글",
+      categoryPath: ["개발 메모", "React"],
+    },
+    {
+      publishedAt: "2026-04-14T04:00:00.000Z",
+      logNo: "223034929755",
+      title: "세 번째 정리",
+      categoryPath: ["개발 메모", "TypeScript"],
+    },
+  ],
 }
 
-const buildStructurePreviewPostFolderName = (options: ExportOptions["structure"]) => {
-  const nameParts: string[] = []
+const buildStructurePreviewPostFolderName = ({
+  post,
+  options,
+}: {
+  post: (typeof structurePreviewSample.posts)[number]
+  options: ExportOptions["structure"]
+}) =>
+  buildPostFolderName({
+    post: {
+      blogId: "mym0404",
+      logNo: post.logNo,
+      title: post.title,
+      publishedAt: post.publishedAt,
+      categoryName: post.categoryPath.at(-1),
+    },
+    options: {
+      structure: options,
+    },
+  })
 
-  if (options.includeDateInPostFolderName) {
-    nameParts.push(getDateSlug(structurePreviewSample.publishedAt))
+const findFolderNode = (nodes: StructurePreviewTreeNode[], name: string) =>
+  nodes.find((node): node is Extract<StructurePreviewTreeNode, { kind: "folder" }> => node.kind === "folder" && node.name === name)
+
+const appendStructurePreviewPost = ({
+  items,
+  post,
+  options,
+}: {
+  items: StructurePreviewTreeNode[]
+  post: (typeof structurePreviewSample.posts)[number]
+  options: ExportOptions["structure"]
+}) => {
+  const postTree: StructurePreviewTreeNode = {
+    kind: "folder",
+    name: buildStructurePreviewPostFolderName({
+      post,
+      options,
+    }),
+    defaultOpen: true,
+    items: [
+      {
+        kind: "file",
+        name: "index.md",
+      },
+    ],
   }
 
-  if (options.includeLogNoInPostFolderName) {
-    nameParts.push(structurePreviewSample.logNo)
+  if (!options.groupByCategory) {
+    items.push(postTree)
+    return
   }
 
-  nameParts.push(
-    options.slugStyle === "keep-title"
-      ? sanitizePathSegment(structurePreviewSample.title)
-      : slugifyTitle(structurePreviewSample.title),
-  )
+  let currentLevel = items
 
-  return nameParts.filter(Boolean).join("-") || structurePreviewSample.logNo
+  for (const segment of post.categoryPath) {
+    const folderName = sanitizePathSegment(segment)
+    const existingFolder = findFolderNode(currentLevel, folderName)
+
+    if (existingFolder) {
+      currentLevel = existingFolder.items
+      continue
+    }
+
+    const nextFolder: StructurePreviewTreeNode = {
+      kind: "folder",
+      name: folderName,
+      defaultOpen: true,
+      items: [],
+    }
+
+    currentLevel.push(nextFolder)
+    currentLevel = nextFolder.items
+  }
+
+  currentLevel.push(postTree)
 }
 
 const buildStructurePreviewTree = ({
@@ -77,31 +152,15 @@ const buildStructurePreviewTree = ({
   options: ExportOptions
 }): StructurePreviewTreeNode => {
   const rootName = outputDir.trim() || "./output"
-  const postFolderName = buildStructurePreviewPostFolderName(options.structure)
-  let postTree: StructurePreviewTreeNode = {
-    kind: "folder",
-    name: postFolderName,
-    defaultOpen: true,
-    items: [
-      {
-        kind: "file",
-        name: "index.md",
-      },
-    ],
-  }
+  const rootItems: StructurePreviewTreeNode[] = []
 
-  if (options.structure.groupByCategory) {
-    for (const segment of [...structurePreviewSample.categoryPath].reverse()) {
-      postTree = {
-        kind: "folder",
-        name: sanitizePathSegment(segment),
-        defaultOpen: true,
-        items: [postTree],
-      }
-    }
-  }
-
-  const rootItems: StructurePreviewTreeNode[] = [postTree]
+  structurePreviewSample.posts.forEach((post) => {
+    appendStructurePreviewPost({
+      items: rootItems,
+      post,
+      options: options.structure,
+    })
+  })
 
   if (options.assets.imageHandlingMode !== "remote" && (options.assets.downloadImages || options.assets.downloadThumbnails)) {
     const publicItems: StructurePreviewTreeNode[] = []
@@ -205,28 +264,28 @@ const StructurePreviewTree = ({
   if (node.kind === "file") {
     return (
       <div
-        className={cn("flex min-h-9 items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-slate-600", depth > 0 && "ml-3")}
+        className={cn("flex min-h-7 items-center gap-1.5 rounded-md px-1.5 py-1 text-slate-600", depth > 0 && "ml-2")}
         data-tree-kind="file"
       >
-        <TreeFileIcon className="size-4 shrink-0 text-slate-400" />
-        <span className="min-w-0 truncate font-mono text-[0.8125rem]">{node.name}</span>
+        <TreeFileIcon className="size-3.5 shrink-0 text-slate-400" />
+        <span className="min-w-0 truncate font-mono text-[0.75rem] leading-5">{node.name}</span>
       </div>
     )
   }
 
   return (
-    <Collapsible className="grid gap-1" open>
+    <Collapsible className="grid gap-0.5" open>
       <div
         className={cn(
-          "flex min-h-9 items-center gap-2 rounded-lg px-2 py-1.5",
-          depth > 0 && "ml-3",
+          "flex min-h-7 items-center gap-1.5 rounded-md px-1.5 py-1",
+          depth > 0 && "ml-2",
         )}
       >
-        <TreeChevronIcon className="size-4 shrink-0 rotate-90 text-slate-400" />
-        <TreeFolderIcon className="size-4 shrink-0 text-sky-600" />
-        <span className="min-w-0 truncate font-mono text-[0.8125rem] text-slate-700">{node.name}</span>
+        <TreeChevronIcon className="size-3.5 shrink-0 rotate-90 text-slate-400" />
+        <TreeFolderIcon className="size-3.5 shrink-0 text-sky-600" />
+        <span className="min-w-0 truncate font-mono text-[0.75rem] leading-5 text-slate-700">{node.name}</span>
       </div>
-      <CollapsibleContent className="grid gap-1 border-l border-slate-200/80 pl-3">
+      <CollapsibleContent className="grid gap-0.5 border-l border-slate-200/80 pl-2.5">
         {node.items.map((child) => (
           <StructurePreviewTree key={`${node.name}:${child.name}`} node={child} depth={depth + 1} />
         ))}
@@ -403,7 +462,7 @@ const stepMeta: Record<
 }
 
 const linkTemplateVariableMeta: Record<
-  (typeof sameBlogPostTemplateKeys)[number],
+  (typeof postTemplateKeys)[number],
   {
     label: string
     description: string
@@ -437,13 +496,37 @@ const linkTemplateVariableMeta: Record<
     label: "{year}",
     description: "발행 연도를 4자리로 넣습니다.",
   },
+  YYYY: {
+    label: "{YYYY}",
+    description: "발행 연도를 4자리로 넣습니다.",
+  },
+  YY: {
+    label: "{YY}",
+    description: "발행 연도 뒤 2자리만 넣습니다.",
+  },
   month: {
     label: "{month}",
     description: "발행 월을 2자리로 넣습니다.",
   },
+  MM: {
+    label: "{MM}",
+    description: "발행 월을 2자리로 넣습니다.",
+  },
+  M: {
+    label: "{M}",
+    description: "발행 월을 1~12 숫자로 넣습니다.",
+  },
   day: {
     label: "{day}",
     description: "발행 일을 2자리로 넣습니다.",
+  },
+  DD: {
+    label: "{DD}",
+    description: "발행 일을 2자리로 넣습니다.",
+  },
+  D: {
+    label: "{D}",
+    description: "발행 일을 1~31 숫자로 넣습니다.",
   },
 }
 
@@ -471,20 +554,40 @@ export const ExportOptionsPanel = ({
   onOptionsChange: (updater: (current: ExportOptions) => ExportOptions) => void
 }) => {
   const description = (key: string) => optionDescriptions[key]
+  const structureTemplatePreviewPost = {
+    blogId: "mym0404",
+    logNo: structurePreviewSample.posts[0]?.logNo ?? "223034929697",
+    title: structurePreviewSample.posts[0]?.title ?? "첫 글",
+    publishedAt: structurePreviewSample.posts[0]?.publishedAt ?? "2026-04-11T04:00:00.000Z",
+    categoryName: structurePreviewSample.posts[0]?.categoryPath.at(-1) ?? "React",
+  }
   const linkTemplatePreviewValues = linkTemplatePreviewPost
-    ? buildSameBlogPostTemplateValues({
+    ? buildPostTemplateValues({
         post: linkTemplatePreviewPost,
         options,
       })
     : null
+  const structureTemplatePreviewValues = buildPostTemplateValues({
+    post: structureTemplatePreviewPost,
+    options,
+  })
   const customUrlTemplate = options.links.sameBlogPostCustomUrlTemplate.trim()
   const customUrlPreview =
     linkTemplatePreviewValues && customUrlTemplate
-      ? applySameBlogPostCustomUrlTemplate({
+      ? applyPostTemplate({
           template: customUrlTemplate,
           values: linkTemplatePreviewValues,
         })
       : null
+  const postFolderNameTemplate = options.structure.postFolderNameCustomTemplate.trim()
+  const postFolderNamePreview =
+    postFolderNameTemplate &&
+    buildPostFolderName({
+      post: structureTemplatePreviewPost,
+      options: {
+        structure: options.structure,
+      },
+    })
   const structurePreviewTree = buildStructurePreviewTree({
     outputDir,
     options,
@@ -524,6 +627,7 @@ export const ExportOptionsPanel = ({
           label="글 폴더 이름에 날짜 포함"
           description={description("structure-includeDateInPostFolderName")}
           checked={options.structure.includeDateInPostFolderName}
+          disabled={options.structure.postFolderNameMode === "custom-template"}
           onChange={(checked) =>
             onOptionsChange((current) => ({
               ...current,
@@ -541,6 +645,7 @@ export const ExportOptionsPanel = ({
           label="글 폴더 이름에 logNo 포함"
           description={description("structure-includeLogNoInPostFolderName")}
           checked={options.structure.includeLogNoInPostFolderName}
+          disabled={options.structure.postFolderNameMode === "custom-template"}
           onChange={(checked) =>
             onOptionsChange((current) => ({
               ...current,
@@ -557,19 +662,174 @@ export const ExportOptionsPanel = ({
             id="structure-slugStyle"
             value={options.structure.slugStyle}
             onChange={(event) =>
+              onOptionsChange((current) => {
+                const slugStyle = event.target.value as ExportOptions["structure"]["slugStyle"]
+
+                return {
+                  ...current,
+                  structure: {
+                    ...current.structure,
+                    slugStyle,
+                    slugWhitespace: getDefaultSlugWhitespace(slugStyle),
+                  },
+                }
+              })
+            }
+          >
+            <option value="kebab">kebab-case</option>
+            <option value="snake">snake_case</option>
+            <option value="keep-title">원본 제목 유지</option>
+          </select>
+        </OptionField>
+
+        <OptionField
+          optionKey="structure-slugWhitespace"
+          label="공백 처리"
+          description={description("structure-slugWhitespace")}
+        >
+          <select
+            id="structure-slugWhitespace"
+            value={options.structure.slugWhitespace}
+            onChange={(event) =>
               onOptionsChange((current) => ({
                 ...current,
                 structure: {
                   ...current.structure,
-                  slugStyle: event.target.value as ExportOptions["structure"]["slugStyle"],
+                  slugWhitespace: event.target.value as ExportOptions["structure"]["slugWhitespace"],
                 },
               }))
             }
           >
-            <option value="kebab">kebab-case</option>
-            <option value="keep-title">원본 제목 유지</option>
+            <option value="dash">-로 바꾸기</option>
+            <option value="underscore">_로 바꾸기</option>
+            <option value="keep-space">공백 유지</option>
           </select>
         </OptionField>
+
+        <div className="grid gap-4 xl:col-span-2">
+          <RadioField
+            inputId="structure-postFolderNameMode-preset"
+            name="structure-postFolderNameMode"
+            optionKey="structure-postFolderNameMode"
+            label="기본 규칙으로 글 폴더 이름 만들기"
+            description="날짜 포함, logNo 포함, slug 규칙을 조합해서 만듭니다."
+            checked={options.structure.postFolderNameMode === "preset"}
+            onChange={() =>
+              onOptionsChange((current) => ({
+                ...current,
+                structure: {
+                  ...current.structure,
+                  postFolderNameMode: "preset",
+                },
+              }))
+            }
+          />
+
+          <RadioField
+            inputId="structure-postFolderNameMode-custom-template"
+            name="structure-postFolderNameMode"
+            optionKey="structure-postFolderNameMode"
+            label="템플릿으로 글 폴더 이름 직접 구성"
+            description={description("structure-postFolderNameMode")}
+            checked={options.structure.postFolderNameMode === "custom-template"}
+            onChange={() =>
+              onOptionsChange((current) => ({
+                ...current,
+                structure: {
+                  ...current.structure,
+                  postFolderNameMode: "custom-template",
+                },
+              }))
+            }
+          >
+            {options.structure.postFolderNameMode === "custom-template" ? (
+              <div className="grid gap-3 pl-7">
+                <label className="field grid min-h-0 gap-2 rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-4">
+                  <span className="text-sm font-semibold text-slate-900">폴더명 템플릿</span>
+                  <Input
+                    id="structure-postFolderNameCustomTemplate"
+                    value={options.structure.postFolderNameCustomTemplate}
+                    placeholder="{date}-{slug}"
+                    onChange={(event) =>
+                      onOptionsChange((current) => ({
+                        ...current,
+                        structure: {
+                          ...current.structure,
+                          postFolderNameCustomTemplate: event.target.value,
+                        },
+                      }))
+                    }
+                  />
+                  <small className="field-help text-sm leading-6 text-slate-500">
+                    결과는 한 폴더 이름으로 정리됩니다. 예: <span className="font-mono text-slate-700">{"{date}"}-{"{category}"}-{"{slug}"}</span>
+                  </small>
+                </label>
+
+                <div className="grid gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-4">
+                  <div className="grid gap-1">
+                    <span className="text-sm font-semibold text-slate-900">실시간 폴더명 예시</span>
+                    <p className="text-sm leading-6 text-slate-500">
+                      {structureTemplatePreviewPost.title} 글을 기준으로 바로 보여줍니다.
+                    </p>
+                  </div>
+
+                  <div className="grid gap-2 text-sm leading-6 text-slate-500">
+                    <span>현재 템플릿</span>
+                    <code className="break-all rounded-xl bg-slate-50 px-3 py-2 font-mono text-[0.8125rem] text-slate-700">
+                      {postFolderNameTemplate || "(비어 있음)"}
+                    </code>
+                  </div>
+
+                  <div className="grid gap-2 text-sm leading-6 text-slate-500">
+                    <span>폴더 이름 결과</span>
+                    <code
+                      id="structure-postFolderNameCustomTemplatePreview"
+                      className="break-all rounded-xl bg-slate-900 px-3 py-2 font-mono text-[0.8125rem] text-slate-100"
+                    >
+                      {postFolderNamePreview ?? "템플릿을 입력하면 결과가 여기에서 바로 바뀝니다."}
+                    </code>
+                  </div>
+                </div>
+
+                <div className="grid gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-4">
+                  <div className="grid gap-1">
+                    <span className="text-sm font-semibold text-slate-900">사용 가능한 변수</span>
+                    <p className="text-sm leading-6 text-slate-500">
+                      아래 값은 구조 예시 글 하나를 기준으로 바로 계산합니다.
+                    </p>
+                  </div>
+
+                  <div className="grid gap-3 md:grid-cols-2">
+                    {postTemplateKeys.map((key) => {
+                      const meta = linkTemplateVariableMeta[key]
+                      const exampleValue = structureTemplatePreviewValues[key]
+
+                      return (
+                        <div
+                          key={`structure-${key}`}
+                          className="grid gap-2 rounded-2xl border border-slate-200 bg-slate-50/80 px-3 py-3"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="rounded-md bg-sky-100 px-1.5 py-0.5 font-mono text-sm text-sky-800">
+                              {meta.label}
+                            </span>
+                            <span className="text-sm font-medium text-slate-900">{meta.description}</span>
+                          </div>
+                          <div className="grid gap-1 text-sm leading-6 text-slate-500">
+                            <span>예시 값</span>
+                            <code className="break-all rounded-xl bg-white px-2 py-1 font-mono text-[0.8125rem] text-slate-700">
+                              {exampleValue}
+                            </code>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </RadioField>
+        </div>
 
         <div
           id="structure-file-tree-preview"
@@ -578,10 +838,10 @@ export const ExportOptionsPanel = ({
           <div className="grid gap-1">
             <span className="text-sm font-semibold text-slate-900">예시 파일 트리</span>
             <p className="text-sm leading-6 text-slate-500">
-              현재 옵션 기준으로 export 결과가 저장되는 예시입니다.
+              현재 옵션 기준으로 여러 글이 저장되는 예시입니다.
             </p>
           </div>
-          <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-3">
+          <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-2">
             <StructurePreviewTree node={structurePreviewTree} />
           </div>
         </div>
@@ -1231,9 +1491,9 @@ export const ExportOptionsPanel = ({
                 </div>
 
                 <div className="grid gap-3 md:grid-cols-2">
-                  {sameBlogPostTemplateKeys.map((key) => {
-                    const meta = linkTemplateVariableMeta[key]
-                    const exampleValue = linkTemplatePreviewValues?.[key] ?? "-"
+                    {postTemplateKeys.map((key) => {
+                      const meta = linkTemplateVariableMeta[key]
+                      const exampleValue = linkTemplatePreviewValues?.[key] ?? "-"
 
                     return (
                       <div

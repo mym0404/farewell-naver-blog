@@ -76,7 +76,11 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 - 앱 첫 로드에서 마지막 `outputDir`의 `manifest.json.job`이 있으면 setup 첫 화면 대신 마지막 단계로 바로 진입하고, 복구 Dialog로 현재 상태와 요약을 먼저 보여 준다.
 - `강제로 불러오기`는 `캐시 무효화` tooltip을 노출하고, 같은 블로그 입력이어도 서버 재스캔을 강제한다.
 - option panel은 `구조 -> Frontmatter -> Markdown -> Assets -> Link 처리 -> 진단`을 각각 독립 단계로 렌더링한다.
-- `Link 처리`의 커스텀 URL 모드는 지원 변수 설명과 현재 선택 범위 기준 실시간 변환 예시를 함께 보여 준다. 현재 변수는 `{slug}`, `{category}`, `{title}`, `{logNo}`, `{blogId}`, `{date}`, `{year}`, `{month}`, `{day}`다.
+- `구조 설정`의 예시 파일 트리는 compact row density를 유지하고, 한 글만이 아니라 여러 글이 현재 규칙으로 어떻게 배치되는지 같이 보여 준다.
+- `구조 설정`은 `slug 방식`, `공백 처리`와 별도로 글 폴더 이름을 `기본 규칙` 또는 `커스텀 템플릿`으로 정할 수 있어야 한다.
+- `구조 설정`의 커스텀 폴더명 모드는 지원 변수 설명과 구조 예시 글 기준 실시간 폴더명 미리보기를 함께 보여 준다. 현재 변수는 `{slug}`, `{category}`, `{title}`, `{logNo}`, `{blogId}`, `{date}`, `{year}`, `{YYYY}`, `{YY}`, `{month}`, `{MM}`, `{M}`, `{day}`, `{DD}`, `{D}`다.
+- `구조 설정`에서 커스텀 폴더명 모드를 켜면 날짜 포함, logNo 포함 토글은 읽기 전용으로 잠그고 템플릿이 실제 폴더명을 결정해야 한다.
+- `Link 처리`의 커스텀 URL 모드는 지원 변수 설명과 현재 선택 범위 기준 실시간 변환 예시를 함께 보여 준다. 현재 변수는 `{slug}`, `{category}`, `{title}`, `{logNo}`, `{blogId}`, `{date}`, `{year}`, `{YYYY}`, `{YY}`, `{month}`, `{MM}`, `{M}`, `{day}`, `{DD}`, `{D}`다.
 - `범위` 탭은 두지 않고, 카테고리 단계가 범위 설정을 함께 맡는다.
 - frontmatter 필드 목록은 데스크톱에서 2~3열 grid로 보여 주고, 각 필드 안에서 토글/설명/alias 입력을 함께 묶는다.
 - `Assets`는 `이미지 처리 방식`, `로컬 이미지 압축`, 다운로드 토글을 관리하고, 업로더 설정 폼은 여기 두지 않는다.

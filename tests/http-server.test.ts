@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
+import { access, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { afterEach, describe, expect, it, vi } from "vitest"
@@ -414,6 +414,10 @@ describe("http server", () => {
           }
           structure: {
             groupByCategory: boolean
+            slugStyle: string
+            slugWhitespace: string
+            postFolderNameMode: string
+            postFolderNameCustomTemplate: string
           }
           markdown: {
             formulaBlockWrapperOpen: string
@@ -435,6 +439,10 @@ describe("http server", () => {
       })
       expect(body.options.frontmatter.aliases.title).toBe("")
       expect(body.options.structure.groupByCategory).toBe(true)
+      expect(body.options.structure.slugStyle).toBe("snake")
+      expect(body.options.structure.slugWhitespace).toBe("underscore")
+      expect(body.options.structure.postFolderNameMode).toBe("preset")
+      expect(body.options.structure.postFolderNameCustomTemplate).toBe("")
       expect(body.options.markdown.formulaBlockWrapperOpen).toBe("$$")
       expect(body.options.assets.stickerAssetMode).toBe("ignore")
       expect(body.lastOutputDir).toBe(outputDir)
@@ -557,6 +565,126 @@ describe("http server", () => {
       expect(body.resumedJob?.request.outputDir).toBe(outputDir)
       expect(body.resumeSummary?.outputDir).toBe(outputDir)
       expect(body.resumedScanResult?.blogId).toBe(baseScanResult.blogId)
+    } finally {
+      await rm(rootDir, { recursive: true, force: true })
+    }
+  })
+
+  it("clears the resumed output directory and bootstrap state", async () => {
+    const rootDir = await mkdtemp(path.join(tmpdir(), "export-reset-"))
+    const settingsPath = path.join(rootDir, "export-ui-settings.json")
+    const outputDir = path.join(rootDir, "output")
+
+    try {
+      await mkdir(outputDir, { recursive: true })
+      await writeFile(
+        settingsPath,
+        JSON.stringify({
+          lastOutputDir: outputDir,
+        }),
+      )
+      await writeFile(
+        path.join(outputDir, "manifest.json"),
+        JSON.stringify(
+          {
+            blogId: "mym0404",
+            profile: "gfm",
+            options: defaultExportOptions(),
+            selectedCategoryIds: [84],
+            startedAt: "2026-04-11T04:00:00.000Z",
+            finishedAt: null,
+            totalPosts: 3,
+            successCount: 1,
+            failureCount: 0,
+            warningCount: 0,
+            upload: {
+              status: "not-requested",
+              eligiblePostCount: 0,
+              candidateCount: 0,
+              uploadedCount: 0,
+              failedCount: 0,
+              terminalReason: null,
+            },
+            categories: baseScanResult.categories,
+            posts: [],
+            job: {
+              id: "job-reset",
+              phase: "export",
+              request: {
+                blogIdOrUrl: "mym0404",
+                outputDir,
+                profile: "gfm",
+                options: defaultExportOptions(),
+              },
+              status: "running",
+              logs: [],
+              createdAt: "2026-04-11T04:00:00.000Z",
+              startedAt: "2026-04-11T04:00:01.000Z",
+              finishedAt: null,
+              updatedAt: "2026-04-11T04:00:02.000Z",
+              progress: {
+                total: 3,
+                completed: 1,
+                failed: 0,
+                warnings: 0,
+              },
+              upload: {
+                status: "not-requested",
+                eligiblePostCount: 0,
+                candidateCount: 0,
+                uploadedCount: 0,
+                failedCount: 0,
+                terminalReason: null,
+              },
+              items: [],
+              error: null,
+              scanResult: baseScanResult,
+              summary: {
+                status: "running",
+                outputDir,
+                totalPosts: 3,
+                completedCount: 1,
+                failedCount: 0,
+                uploadCandidateCount: 0,
+                uploadedCount: 0,
+              },
+            },
+          } satisfies ExportManifest,
+          null,
+          2,
+        ),
+        "utf8",
+      )
+
+      activeServer = createTestHttpServer({
+        settingsPath,
+      })
+      const baseUrl = await startServer(activeServer)
+
+      const response = await fetch(`${baseUrl}/api/export-reset`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          outputDir,
+          jobId: "job-reset",
+        }),
+      })
+      const body = (await response.json()) as {
+        lastOutputDir: string
+        resumedJob: ExportJobState | null
+      }
+
+      expect(response.status).toBe(200)
+      expect(body.lastOutputDir).toBe("./output")
+      expect(body.resumedJob).toBeNull()
+      await expect(access(outputDir)).rejects.toMatchObject({ code: "ENOENT" })
+
+      const saved = JSON.parse(await readFile(settingsPath, "utf8")) as {
+        lastOutputDir: string
+      }
+      expect(saved.lastOutputDir).toBe("./output")
     } finally {
       await rm(rootDir, { recursive: true, force: true })
     }
@@ -799,6 +927,10 @@ describe("http server", () => {
           }
           structure: {
             groupByCategory: boolean
+            slugStyle: string
+            slugWhitespace: string
+            postFolderNameMode: string
+            postFolderNameCustomTemplate: string
           }
           frontmatter: {
             aliases: {
@@ -813,6 +945,10 @@ describe("http server", () => {
       expect(body.options.scope.categoryIds).toEqual([])
       expect(body.options.scope.dateFrom).toBe("2026-04-01")
       expect(body.options.structure.groupByCategory).toBe(false)
+      expect(body.options.structure.slugStyle).toBe("snake")
+      expect(body.options.structure.slugWhitespace).toBe("underscore")
+      expect(body.options.structure.postFolderNameMode).toBe("preset")
+      expect(body.options.structure.postFolderNameCustomTemplate).toBe("")
       expect(body.options.frontmatter.aliases.title).toBe("postTitle")
       expect(body.lastOutputDir).toBe("./output")
     } finally {
@@ -836,6 +972,8 @@ describe("http server", () => {
         options: {
           structure: {
             groupByCategory: boolean
+            slugStyle: string
+            postFolderNameMode: string
           }
           scope: {
             categoryIds: number[]
@@ -846,6 +984,8 @@ describe("http server", () => {
 
       expect(response.status).toBe(200)
       expect(body.options.structure.groupByCategory).toBe(true)
+      expect(body.options.structure.slugStyle).toBe("snake")
+      expect(body.options.structure.postFolderNameMode).toBe("preset")
       expect(body.options.scope.categoryIds).toEqual([])
       expect(body.lastOutputDir).toBe("./output")
     } finally {
@@ -878,6 +1018,10 @@ describe("http server", () => {
             },
             structure: {
               groupByCategory: false,
+              slugStyle: "kebab",
+              slugWhitespace: "dash",
+              postFolderNameMode: "custom-template",
+              postFolderNameCustomTemplate: "{date}-{slug}",
             },
           },
         }),
@@ -893,6 +1037,10 @@ describe("http server", () => {
           }
           structure?: {
             groupByCategory?: boolean
+            slugStyle?: string
+            slugWhitespace?: string
+            postFolderNameMode?: string
+            postFolderNameCustomTemplate?: string
           }
         }
         lastOutputDir?: string
@@ -905,7 +1053,13 @@ describe("http server", () => {
         dateTo: null,
       })
       expect(saved.options.scope?.categoryIds).toBeUndefined()
-      expect(saved.options.structure?.groupByCategory).toBe(false)
+      expect(saved.options.structure).toEqual({
+        groupByCategory: false,
+        slugStyle: "kebab",
+        slugWhitespace: "dash",
+        postFolderNameMode: "custom-template",
+        postFolderNameCustomTemplate: "{date}-{slug}",
+      })
       expect(saved.lastOutputDir).toBe("./output")
     } finally {
       await rm(rootDir, { recursive: true, force: true })

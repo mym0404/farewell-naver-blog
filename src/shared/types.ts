@@ -4,7 +4,11 @@ export type EditorVersion = 2 | 3 | 4
 
 export type CategorySelectionMode = "selected-and-descendants" | "exact-selected"
 
-export type SlugStyle = "kebab" | "keep-title"
+export type SlugStyle = "kebab" | "snake" | "keep-title"
+
+export type SlugWhitespace = "dash" | "underscore" | "keep-space"
+
+export type PostFolderNameMode = "preset" | "custom-template"
 
 export type FrontmatterFieldName =
   | "title"
@@ -142,6 +146,9 @@ export type ExportOptions = {
     includeDateInPostFolderName: boolean
     includeLogNoInPostFolderName: boolean
     slugStyle: SlugStyle
+    slugWhitespace: SlugWhitespace
+    postFolderNameMode: PostFolderNameMode
+    postFolderNameCustomTemplate: string
   }
   frontmatter: {
     enabled: boolean

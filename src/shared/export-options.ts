@@ -123,7 +123,10 @@ export const optionDescriptions: OptionDescriptionMap = {
   "structure-groupByCategory": "카테고리 경로를 출력 폴더 구조에 유지할지 정합니다.",
   "structure-includeDateInPostFolderName": "글 폴더 이름 앞부분에 발행 날짜를 붙입니다.",
   "structure-includeLogNoInPostFolderName": "글 폴더 이름에 네이버 logNo를 함께 넣습니다.",
-  "structure-slugStyle": "제목을 안전한 slug로 바꿀지 원문 제목을 최대한 유지할지 정합니다.",
+  "structure-slugStyle": "글 제목을 kebab-case, snake_case, 원본 제목 유지 중 어떤 방식으로 쓸지 정합니다.",
+  "structure-slugWhitespace": "제목 안 공백과 치환된 구분 문자를 -, _, 공백 유지 중에서 정합니다.",
+  "structure-postFolderNameMode": "기본 규칙을 쓸지, 지원 변수를 조합한 커스텀 템플릿으로 글 폴더 이름을 만들지 정합니다.",
+  "structure-postFolderNameCustomTemplate": "지원 변수 {slug}, {category}, {title}, {logNo}, {blogId}, {date}, {year}, {YYYY}, {YY}, {month}, {MM}, {M}, {day}, {DD}, {D}를 조합해 글 폴더 이름을 만듭니다.",
   "frontmatter-enabled": "YAML frontmatter 블록 자체를 Markdown 파일 상단에 넣을지 정합니다.",
   "markdown-linkStyle": "일반 링크를 inline 형식으로 쓸지 reference 형식으로 분리할지 정합니다.",
   "markdown-formulaInlineWrapperOpen": "인라인 수식 앞에 붙일 래퍼 문자열입니다. 기본값은 `$`입니다.",
@@ -146,7 +149,18 @@ export const optionDescriptions: OptionDescriptionMap = {
   "assets-includeImageCaptions": "이미지 아래에 캡션 텍스트를 Markdown으로 함께 남깁니다.",
   "assets-thumbnailSource": "frontmatter thumbnail 값에 무엇을 넣을지 고릅니다. 글 목록 대표 썸네일, 본문 첫 이미지, 또는 저장 안 함 중에서 선택합니다.",
   "links-sameBlogPostMode": "현재 export 중인 같은 블로그의 다른 글 링크를 그대로 둘지, 커스텀 URL이나 상대경로로 바꿀지 정합니다.",
-  "links-sameBlogPostCustomUrlTemplate": "지원 변수 {slug}, {category}, {title}, {logNo}, {blogId}, {date}, {year}, {month}, {day}를 넣어 커스텀 URL을 만듭니다.",
+  "links-sameBlogPostCustomUrlTemplate": "지원 변수 {slug}, {category}, {title}, {logNo}, {blogId}, {date}, {year}, {YYYY}, {YY}, {month}, {MM}, {M}, {day}, {DD}, {D}를 넣어 커스텀 URL을 만듭니다.",
+}
+
+export const getDefaultSlugWhitespace = (slugStyle: ExportOptions["structure"]["slugStyle"]) => {
+  switch (slugStyle) {
+    case "kebab":
+      return "dash" as const
+    case "snake":
+      return "underscore" as const
+    case "keep-title":
+      return "keep-space" as const
+  }
 }
 
 export const getFrontmatterExportKey = ({
@@ -211,7 +225,10 @@ export const defaultExportOptions = (): ExportOptions => ({
     groupByCategory: true,
     includeDateInPostFolderName: true,
     includeLogNoInPostFolderName: false,
-    slugStyle: "kebab",
+    slugStyle: "snake",
+    slugWhitespace: "underscore",
+    postFolderNameMode: "preset",
+    postFolderNameCustomTemplate: "",
   },
   frontmatter: {
     enabled: true,
@@ -311,6 +328,9 @@ export const sanitizePersistedExportOptions = (options?: PartialExportOptions): 
       includeDateInPostFolderName: options.structure.includeDateInPostFolderName,
       includeLogNoInPostFolderName: options.structure.includeLogNoInPostFolderName,
       slugStyle: options.structure.slugStyle,
+      slugWhitespace: options.structure.slugWhitespace,
+      postFolderNameMode: options.structure.postFolderNameMode,
+      postFolderNameCustomTemplate: options.structure.postFolderNameCustomTemplate,
     }
 
     Object.keys(sanitized.structure).forEach((key) => {
@@ -383,6 +403,8 @@ const coerceAssetOptions = (options: ExportOptions["assets"]) => {
 
 export const cloneExportOptions = (options?: PartialExportOptions) => {
   const defaults = defaultExportOptions()
+  const slugStyle = options?.structure?.slugStyle ?? defaults.structure.slugStyle
+  const slugWhitespace = options?.structure?.slugWhitespace ?? getDefaultSlugWhitespace(slugStyle)
 
   const clonedOptions = {
     scope: {
@@ -393,6 +415,8 @@ export const cloneExportOptions = (options?: PartialExportOptions) => {
     structure: {
       ...defaults.structure,
       ...options?.structure,
+      slugStyle,
+      slugWhitespace,
     },
     frontmatter: {
       enabled: options?.frontmatter?.enabled ?? defaults.frontmatter.enabled,

@@ -222,6 +222,7 @@ export const App = () => {
   const [defaults, setDefaults] = useState(fallbackDefaults)
   const [uploadProviders, setUploadProviders] = useState(fallbackUploadProviders)
   const [uploadProviderError, setUploadProviderError] = useState<string | null>(null)
+  const [resettingResume, setResettingResume] = useState(false)
   const [blogIdOrUrl, setBlogIdOrUrl] = useState("")
   const [outputDir, setOutputDir] = useState("./output")
   const [resumeDialog, setResumeDialog] = useState<ExportResumeSummary | null>(null)
@@ -257,6 +258,40 @@ export const App = () => {
   const persistedOptionsSignatureRef = useRef<string | null>(null)
   const hasLoadedDefaultsRef = useRef(false)
   const latestPersistedOptionsRef = useRef(sanitizePersistedExportOptions(fallbackDefaults.options))
+
+  const applyBootstrapState = (nextDefaults: ExportBootstrapResponse) => {
+    setDefaults(nextDefaults)
+    setOptions(nextDefaults.resumedJob?.request.options ?? nextDefaults.options)
+    setOutputDir(nextDefaults.resumedJob?.request.outputDir ?? nextDefaults.lastOutputDir)
+    setBlogIdOrUrl(nextDefaults.resumedJob?.request.blogIdOrUrl ?? "")
+    setCategorySearch("")
+    setSetupStep("blog-input")
+    setActiveJobFilter("all")
+    setScanPending(false)
+
+    if (nextDefaults.resumedScanResult) {
+      setScanCache({
+        [nextDefaults.resumedScanResult.blogId]: nextDefaults.resumedScanResult,
+      })
+      setScanStatus(`${nextDefaults.resumedScanResult.blogId} 스캔 결과 재개`)
+      setCategoryStatus("이전 작업 상태를 복구했습니다.")
+    } else {
+      setScanCache({})
+      setScanStatus("블로그를 아직 스캔하지 않았습니다.")
+      setCategoryStatus("스캔 후 카테고리를 선택할 수 있습니다.")
+    }
+
+    if (nextDefaults.resumedJob) {
+      lastNotifiedJobKeyRef.current = `${nextDefaults.resumedJob.id}:${nextDefaults.resumedJob.status}:${nextDefaults.resumedJob.finishedAt ?? ""}`
+      hydrateJob(nextDefaults.resumedJob)
+      setResumeDialog(nextDefaults.resumeSummary)
+      return
+    }
+
+    lastNotifiedJobKeyRef.current = null
+    hydrateJob(null)
+    setResumeDialog(null)
+  }
 
   const frontmatterValidationErrors = useMemo(
     () => validateFrontmatterAliases(options.frontmatter),
@@ -350,24 +385,7 @@ export const App = () => {
         latestPersistedOptionsRef.current = nextPersistedOptions
         persistedOptionsSignatureRef.current = getPersistedOptionsSignature(nextDefaults.options)
         hasLoadedDefaultsRef.current = true
-        setDefaults(nextDefaults)
-        setOptions(nextDefaults.resumedJob?.request.options ?? nextDefaults.options)
-        setOutputDir(nextDefaults.resumedJob?.request.outputDir ?? nextDefaults.lastOutputDir)
-        setBlogIdOrUrl(nextDefaults.resumedJob?.request.blogIdOrUrl ?? "")
-
-        if (nextDefaults.resumedScanResult) {
-          setScanCache({
-            [nextDefaults.resumedScanResult.blogId]: nextDefaults.resumedScanResult,
-          })
-          setScanStatus(`${nextDefaults.resumedScanResult.blogId} 스캔 결과 재개`)
-          setCategoryStatus("이전 작업 상태를 복구했습니다.")
-        }
-
-        if (nextDefaults.resumedJob) {
-          lastNotifiedJobKeyRef.current = `${nextDefaults.resumedJob.id}:${nextDefaults.resumedJob.status}:${nextDefaults.resumedJob.finishedAt ?? ""}`
-          hydrateJob(nextDefaults.resumedJob)
-          setResumeDialog(nextDefaults.resumeSummary)
-        }
+        applyBootstrapState(nextDefaults)
       } catch (error) {
         if (cancelled) {
           return
@@ -378,9 +396,7 @@ export const App = () => {
         latestPersistedOptionsRef.current = nextPersistedOptions
         persistedOptionsSignatureRef.current = getPersistedOptionsSignature(fallbackDefaults.options)
         hasLoadedDefaultsRef.current = true
-        setDefaults(fallbackDefaults)
-        setOptions(fallbackDefaults.options)
-        setOutputDir(fallbackDefaults.lastOutputDir)
+        applyBootstrapState(fallbackDefaults)
         setScanStatus(error instanceof Error ? error.message : String(error))
       }
     }
@@ -752,6 +768,44 @@ export const App = () => {
     }
   }
 
+  const handleResetResume = async () => {
+    if (!resumeDialog) {
+      return
+    }
+
+    const confirmed = window.confirm(
+      `${resumeDialog.outputDir} 경로의 작업내역을 모두 삭제하고 초기화할까요?`,
+    )
+
+    if (!confirmed) {
+      return
+    }
+
+    setResettingResume(true)
+
+    try {
+      const nextDefaults = await postJson<ExportBootstrapResponse>("/api/export-reset", {
+        outputDir: resumeDialog.outputDir,
+        jobId: job?.id ?? null,
+      })
+      const nextPersistedOptions = sanitizePersistedExportOptions(nextDefaults.options)
+
+      latestPersistedOptionsRef.current = nextPersistedOptions
+      persistedOptionsSignatureRef.current = getPersistedOptionsSignature(nextDefaults.options)
+      applyBootstrapState(nextDefaults)
+      toast.success("이전 작업을 초기화했습니다.", {
+        description: `${resumeDialog.outputDir} 작업내역을 삭제했습니다.`,
+      })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      toast.error("작업 초기화에 실패했습니다.", {
+        description: message,
+      })
+    } finally {
+      setResettingResume(false)
+    }
+  }
+
   const goToPreviousStep = () => {
     if (!isSetupStep || setupStepIndex <= 0) {
       return
@@ -1011,7 +1065,11 @@ export const App = () => {
               </p>
             </div>
           ) : null}
-          <DialogFooter showCloseButton />
+          <DialogFooter showCloseButton>
+            <Button variant="destructive" onClick={() => void handleResetResume()} disabled={resettingResume}>
+              {resettingResume ? "초기화 중" : "작업 초기화"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

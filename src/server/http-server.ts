@@ -4,7 +4,7 @@ import {
   type Server as HttpServer,
   type ServerResponse,
 } from "node:http"
-import { access, mkdir, readFile, writeFile } from "node:fs/promises"
+import { access, mkdir, readFile, rm, writeFile } from "node:fs/promises"
 import path from "node:path"
 import type { ViteDevServer } from "vite"
 
@@ -625,6 +625,23 @@ export const createHttpServer = ({
     }
   }
 
+  const buildBootstrapResponse = async () => {
+    const persistedUiState = await readPersistedUiState(settingsPath)
+    const resumed = await loadResumedJob(persistedUiState.lastOutputDir)
+
+    return {
+      profile: "gfm" as const,
+      options: persistedUiState.options,
+      lastOutputDir: persistedUiState.lastOutputDir,
+      resumedJob: resumed?.job ?? null,
+      resumeSummary: resumed?.summary ?? null,
+      resumedScanResult: resumed?.scanResult ?? null,
+      frontmatterFieldOrder,
+      frontmatterFieldMeta,
+      optionDescriptions,
+    }
+  }
+
   const sendBrowserApp = async ({
     request,
     response,
@@ -1032,23 +1049,10 @@ export const createHttpServer = ({
       }
 
       if (method === "GET" && url.pathname === "/api/export-defaults") {
-        const persistedUiState = await readPersistedUiState(settingsPath)
-        const resumed = await loadResumedJob(persistedUiState.lastOutputDir)
-
         sendJson({
           response,
           statusCode: 200,
-          body: {
-            profile: "gfm",
-            options: persistedUiState.options,
-            lastOutputDir: persistedUiState.lastOutputDir,
-            resumedJob: resumed?.job ?? null,
-            resumeSummary: resumed?.summary ?? null,
-            resumedScanResult: resumed?.scanResult ?? null,
-            frontmatterFieldOrder,
-            frontmatterFieldMeta,
-            optionDescriptions,
-          },
+          body: await buildBootstrapResponse(),
         })
         return
       }
@@ -1103,6 +1107,72 @@ export const createHttpServer = ({
 
         response.writeHead(204)
         response.end()
+        return
+      }
+
+      if (method === "POST" && url.pathname === "/api/export-reset") {
+        if (!hasJsonContentType(request)) {
+          sendJson({
+            response,
+            statusCode: 415,
+            body: {
+              error: "application/json 요청만 허용합니다.",
+            },
+          })
+          return
+        }
+
+        const payload = await parseJsonBody<{
+          outputDir?: unknown
+          jobId?: unknown
+        }>(request)
+
+        if (!isPlainObject(payload) || typeof payload.outputDir !== "string" || !payload.outputDir.trim()) {
+          sendJson({
+            response,
+            statusCode: 400,
+            body: {
+              error: "outputDir는 필수입니다.",
+            },
+          })
+          return
+        }
+
+        const outputDir = payload.outputDir.trim()
+        const jobId = typeof payload.jobId === "string" && payload.jobId.trim() ? payload.jobId.trim() : null
+        const job = jobId ? jobStore.get(jobId) : null
+
+        if (job && !job.resumeAvailable && (job.status === "running" || job.status === "uploading")) {
+          sendJson({
+            response,
+            statusCode: 409,
+            body: {
+              error: "진행 중인 작업은 초기화할 수 없습니다.",
+            },
+          })
+          return
+        }
+
+        await rm(resolveRepoPath(outputDir), { recursive: true, force: true })
+
+        if (jobId) {
+          jobStore.delete(jobId)
+          jobScanResults.delete(jobId)
+          manifestPersistQueue.delete(jobId)
+        }
+
+        await writePersistedUiState({
+          settingsPath,
+          input: {
+            lastOutputDir: defaultOutputDir,
+          },
+        })
+
+        sendJson({
+          response,
+          statusCode: 200,
+          body: await buildBootstrapResponse(),
+        })
         return
       }
 

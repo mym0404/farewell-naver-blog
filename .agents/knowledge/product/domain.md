@@ -35,7 +35,7 @@
 - SE2, SE3, SE4 글을 공용 AST로 맞춘 뒤 Markdown으로 렌더링한다.
 - frontmatter는 field on/off와 alias를 같이 조절할 수 있고, 활성 field끼리 alias 충돌이 나면 export를 막는다.
 - 출력 파일은 글마다 독립 폴더를 만들고 Markdown 본문은 항상 그 안의 `index.md`에 쓴다.
-- `structure.groupByCategory`, `includeDateInPostFolderName`, `includeLogNoInPostFolderName` 조합으로 글 폴더 경로가 결정되고, 기본값은 날짜 + slug다.
+- `structure.groupByCategory`, `includeDateInPostFolderName`, `includeLogNoInPostFolderName`, `slugStyle`, `slugWhitespace`, `postFolderNameMode`, `postFolderNameCustomTemplate` 조합으로 글 폴더 경로가 결정되고, 기본값은 날짜 + snake_case slug다.
 - 다운로드 자산은 `output/public/<sha256>.<ext>` 단일 저장소에 쓴다.
 - 같은 자산 여부는 원본 응답 바이트의 SHA-256 해시로 판단한다. URL이 달라도 바이트가 같으면 같은 파일을 재사용한다.
 - 기본 이미지 처리 방식은 `download-and-upload`이고, 기본 로컬 압축은 켜져 있다.

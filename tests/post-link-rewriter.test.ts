@@ -79,7 +79,7 @@ describe("post-link-rewriter", () => {
     })
     const resolveLinkUrl = createSameBlogPostLinkResolver({
       blogId: "mym0404",
-      markdownFilePath: "/tmp/export/NestJS/2026-04-11-첫-글/index.md",
+      markdownFilePath: "/tmp/export/NestJS/2026-04-11-첫_글/index.md",
       options: {
         links: {
           sameBlogPostMode: "relative-filepath",
@@ -89,7 +89,7 @@ describe("post-link-rewriter", () => {
       targets,
     })
 
-    expect(resolveLinkUrl("https://m.blog.naver.com/mym0404/223034929698")).toBe("../2026-04-12-둘째-글/index.md")
+    expect(resolveLinkUrl("https://m.blog.naver.com/mym0404/223034929698")).toBe("../2026-04-12-둘째_글/index.md")
     expect(resolveLinkUrl("https://blog.naver.com/other/1")).toBe("https://blog.naver.com/other/1")
   })
 
@@ -107,17 +107,46 @@ describe("post-link-rewriter", () => {
       options: {
         links: {
           sameBlogPostMode: "custom-url",
-          sameBlogPostCustomUrlTemplate: "https://myblog/{category}/{title}/{year}/{month}/{day}/{blogId}/{logNo}/{slug}",
+          sameBlogPostCustomUrlTemplate: "https://myblog/{category}/{title}/{YYYY}/{MM}/{DD}/{YY}/{M}/{D}/{blogId}/{logNo}/{slug}",
         },
       },
       targets,
     })
 
     expect(resolveLinkUrl("https://blog.naver.com/mym0404/223034929698")).toBe(
-      "https://myblog/NestJS/둘째-글/2026/04/12/mym0404/223034929698/둘째-글",
+      "https://myblog/NestJS/둘째-글/2026/04/12/26/4/12/mym0404/223034929698/둘째_글",
     )
     expect(resolveLinkUrl("https://blog.naver.com/mym0404/999999999999")).toBe(
       "https://blog.naver.com/mym0404/999999999999",
+    )
+  })
+
+  it("uses custom post folder name templates for relative export paths", () => {
+    const options = defaultExportOptions()
+
+    options.structure.postFolderNameMode = "custom-template"
+    options.structure.postFolderNameCustomTemplate = "{year}_{month}_{logNo}_{slug}"
+
+    const targets = buildPostLinkTargets({
+      outputDir: "/tmp/export",
+      posts,
+      categories,
+      options,
+    })
+    const resolveLinkUrl = createSameBlogPostLinkResolver({
+      blogId: "mym0404",
+      markdownFilePath: "/tmp/export/NestJS/2026_04_223034929697_첫_글/index.md",
+      options: {
+        links: {
+          sameBlogPostMode: "relative-filepath",
+          sameBlogPostCustomUrlTemplate: "",
+        },
+      },
+      targets,
+    })
+
+    expect(resolveLinkUrl("https://m.blog.naver.com/mym0404/223034929698")).toBe(
+      "../2026_04_223034929698_둘째_글/index.md",
     )
   })
 })

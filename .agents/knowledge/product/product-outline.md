@@ -28,7 +28,8 @@
 - 본문 이미지는 옵션에 따라 로컬 파일 경로 또는 원본 URL로 렌더링할 수 있다.
 - 네이버 스티커는 기본적으로 무시하고, 필요할 때만 원본 자산 URL로 내려받는다.
 - 파일 구조 기본값은 category path 기반 폴더다.
-- 기본 글 폴더명은 `YYYY-MM-DD-slug`이고 Markdown 본문 파일은 그 안의 `index.md`다.
+- 기본 글 폴더명은 `YYYY-MM-DD-snake_case_slug`이고 Markdown 본문 파일은 그 안의 `index.md`다.
+- 필요하면 구조 설정에서 변수 템플릿으로 글 폴더 이름을 직접 조합할 수 있다.
 - 다운로드 자산은 글 폴더 밖 `output/public/<sha256>.<ext>`에 모으고, 같은 바이트의 파일은 하나만 재사용한다.
 - `manifest.json`은 최종 결과 파일이면서 동시에 복구용 SoT다. export 중간 상태, upload 중간 상태, 완료 상태를 같은 파일 안에서 읽고 다시 띄운다.
 - 같은 자산 URL을 여러 글이 동시에 참조해도 in-flight cache로 중복 다운로드를 피한다.

@@ -1,11 +1,10 @@
 import path from "node:path"
 
 import type { CategoryInfo, ExportOptions, PostSummary } from "../../shared/types.js"
+import { buildPostFolderName } from "../../shared/post-path-template.js"
 import {
-  getDateSlug,
   sanitizeCategoryName,
   sanitizePathSegment,
-  slugifyTitle,
 } from "../../shared/utils.js"
 
 export const getCategoryForPost = ({
@@ -58,23 +57,16 @@ export const buildMarkdownFilePath = ({
     segments.push(...categorySegments)
   }
 
-  const nameParts: string[] = []
-
-  if (options.structure.includeDateInPostFolderName) {
-    nameParts.push(getDateSlug(post.publishedAt))
-  }
-
-  if (options.structure.includeLogNoInPostFolderName) {
-    nameParts.push(post.logNo)
-  }
-
-  if (options.structure.slugStyle === "kebab") {
-    nameParts.push(slugifyTitle(post.title))
-  } else {
-    nameParts.push(sanitizePathSegment(post.title))
-  }
-
-  const postFolderName = nameParts.filter(Boolean).join("-") || post.logNo
+  const postFolderName = buildPostFolderName({
+    post: {
+      blogId: post.blogId,
+      logNo: post.logNo,
+      title: post.title,
+      publishedAt: post.publishedAt,
+      categoryName: category.name,
+    },
+    options,
+  })
 
   return path.join(...segments, postFolderName, "index.md")
 }

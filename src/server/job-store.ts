@@ -120,6 +120,10 @@ export class JobStore {
     return this.jobs.get(id) ?? null
   }
 
+  delete(id: string) {
+    this.jobs.delete(id)
+  }
+
   start(id: string) {
     const job = this.mustGet(id)
     job.status = "running"

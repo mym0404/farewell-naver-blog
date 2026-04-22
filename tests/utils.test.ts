@@ -1,8 +1,12 @@
+import path from "node:path"
+import { fileURLToPath } from "node:url"
+
 import { describe, expect, it } from "vitest"
 
 import {
   delay,
   extractBlogId,
+  formatTitleSegment,
   mapConcurrent,
   normalizeAssetUrl,
   resolveRepoPath,
@@ -10,6 +14,8 @@ import {
   slugifyTitle,
   toErrorMessage,
 } from "../src/shared/utils.js"
+
+const repoRoot = fileURLToPath(new URL("..", import.meta.url))
 
 describe("shared utils", () => {
   it("extracts blog ids from supported inputs and rejects blank values", () => {
@@ -24,6 +30,20 @@ describe("shared utils", () => {
     expect(sanitizePathSegment(":::")).toBe("untitled")
     expect(slugifyTitle("Hello   World")).toBe("hello-world")
     expect(slugifyTitle(":::")).toBe("untitled")
+    expect(
+      formatTitleSegment({
+        value: "Hello   World",
+        slugStyle: "snake",
+        slugWhitespace: "underscore",
+      }),
+    ).toBe("hello_world")
+    expect(
+      formatTitleSegment({
+        value: "Hello   World",
+        slugStyle: "keep-title",
+        slugWhitespace: "keep-space",
+      }),
+    ).toBe("Hello World")
   })
 
   it("normalizes asset urls and preserves invalid inputs", () => {
@@ -59,8 +79,8 @@ describe("shared utils", () => {
   })
 
   it("resolves relative paths from the repository root", () => {
-    expect(resolveRepoPath("./output")).toBe("/Users/user1/Desktop/mj/goodbye-naver-blog/output")
-    expect(resolveRepoPath("dist/client")).toBe("/Users/user1/Desktop/mj/goodbye-naver-blog/dist/client")
+    expect(resolveRepoPath("./output")).toBe(path.join(repoRoot, "output"))
+    expect(resolveRepoPath("dist/client")).toBe(path.join(repoRoot, "dist/client"))
     expect(resolveRepoPath("/tmp/export")).toBe("/tmp/export")
   })
 })

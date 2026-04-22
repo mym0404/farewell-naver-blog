@@ -33,6 +33,10 @@ describe("export options", () => {
     expect(options.structure.groupByCategory).toBe(true)
     expect(options.structure.includeDateInPostFolderName).toBe(true)
     expect(options.structure.includeLogNoInPostFolderName).toBe(false)
+    expect(options.structure.slugStyle).toBe("snake")
+    expect(options.structure.slugWhitespace).toBe("underscore")
+    expect(options.structure.postFolderNameMode).toBe("preset")
+    expect(options.structure.postFolderNameCustomTemplate).toBe("")
     expect(Object.hasOwn(options.structure, "postDirectoryName")).toBe(false)
     expect(Object.hasOwn(options.assets, "assetPathMode")).toBe(false)
     expect(Object.hasOwn(options.assets, "imageContentMode")).toBe(false)
@@ -118,6 +122,42 @@ describe("export options", () => {
     })
   })
 
+  it("keeps new slug structure fields in persisted options", () => {
+    const sanitized = sanitizePersistedExportOptions({
+      structure: {
+        slugStyle: "kebab",
+        slugWhitespace: "dash",
+        postFolderNameMode: "custom-template",
+        postFolderNameCustomTemplate: "{date}-{slug}",
+      },
+    })
+
+    expect(sanitized.structure).toEqual({
+      slugStyle: "kebab",
+      slugWhitespace: "dash",
+      postFolderNameMode: "custom-template",
+      postFolderNameCustomTemplate: "{date}-{slug}",
+    })
+  })
+
+  it("infers legacy slug whitespace from stored slug style", () => {
+    expect(
+      cloneExportOptions({
+        structure: {
+          slugStyle: "kebab",
+        },
+      }).structure.slugWhitespace,
+    ).toBe("dash")
+
+    expect(
+      cloneExportOptions({
+        structure: {
+          slugStyle: "keep-title",
+        },
+      }).structure.slugWhitespace,
+    ).toBe("keep-space")
+  })
+
   it("detects invalid alias format and collisions only for enabled fields", () => {
     const errors = validateFrontmatterAliases({
       enabled: true,
@@ -173,6 +213,10 @@ describe("export options", () => {
 
   it("exposes option descriptions for newly added export controls", () => {
     expect(optionDescriptions["structure-groupByCategory"]).toContain("카테고리 경로")
+    expect(optionDescriptions["structure-slugStyle"]).toContain("snake_case")
+    expect(optionDescriptions["structure-slugWhitespace"]).toContain("공백")
+    expect(optionDescriptions["structure-postFolderNameMode"]).toContain("커스텀 템플릿")
+    expect(optionDescriptions["structure-postFolderNameCustomTemplate"]).toContain("{slug}")
     expect(optionDescriptions["assets-imageHandlingMode"]).toContain("업로드")
     expect(optionDescriptions["assets-compressionEnabled"]).toContain("압축")
     expect(optionDescriptions["assets-downloadFailureMode"]).toContain("원본 URL")
@@ -182,6 +226,8 @@ describe("export options", () => {
     expect(optionDescriptions["links-sameBlogPostCustomUrlTemplate"]).toContain("{category}")
     expect(optionDescriptions["links-sameBlogPostCustomUrlTemplate"]).toContain("{title}")
     expect(optionDescriptions["links-sameBlogPostCustomUrlTemplate"]).toContain("{date}")
+    expect(optionDescriptions["links-sameBlogPostCustomUrlTemplate"]).toContain("{YYYY}")
+    expect(optionDescriptions["structure-postFolderNameCustomTemplate"]).toContain("{MM}")
     expect(optionDescriptions["assets-imageContentMode"]).toBeUndefined()
     expect(optionDescriptions["markdown-formulaBlockWrapperOpen"]).toContain("$$")
     expect(optionDescriptions["assets-assetPathMode"]).toBeUndefined()
