@@ -63,14 +63,14 @@
 - `pnpm typecheck`: TypeScript 오류만 빠르게 다시 확인할 때 실행한다.
 - `pnpm test:offline`: 네트워크 없는 로컬 테스트만 다시 확인할 때 실행한다.
 - `pnpm test:coverage`: V8 coverage 리포트와 threshold를 다시 확인할 때 실행한다.
-- `pnpm parser:check`: capability catalog, parser fixture, sample fixture, 테스트/sample 연결이 구조적으로 맞는지 확인할 때 실행한다. `parser-fixture` 분류 자체의 타당성은 자동 판정하지 않는다.
+- `pnpm parser:check`: capability catalog, parser fixture, sample fixture, 테스트/sample 연결과 generated knowledge projection freshness가 구조적으로 맞는지 확인할 때 실행한다. `parser-fixture` 분류 자체의 타당성은 자동 판정하지 않는다.
 - `pnpm samples:verify`: 저장된 sample fixture가 parser -> review -> render 경로와 계속 맞는지 확인할 때 실행한다.
 - `pnpm samples:refresh -- --id <sampleId>`: 지정 sample 하나의 live HTML과 expected Markdown fixture를 갱신할 때 실행한다.
 - `pnpm smoke:ui`: Playwright로 고정한 mock 기반 scan -> category select -> export -> upload 화면 회귀와 `manifest.json` 기반 단계 복구 회귀를 `run-ui-smoke.ts`, `run-ui-resume-smoke.ts`로 함께 확인할 때 실행한다.
 - `pnpm test:network:resume-export`: 개발 서버에서 실제 네이버 공개 글 범위를 export하다가 중간 종료한 뒤, 같은 `output/` 하위 경로의 `manifest.json`을 읽어 resume export를 끝까지 확인할 때 실행한다. 범위는 환경변수로 바꿀 수 있고, 외부 업로드는 하지 않는다.
 - `pnpm test:network:resume-export:se2-table`: `blogpeople`의 SE2 표 본문이 포함된 `2013-06-26`~`2013-06-27`, category `21` 범위를 export하다가 중간 종료한 뒤 resume export를 끝까지 확인할 때 실행한다.
 - `pnpm test:network:upload`: Playwright가 실제 브라우저 UI로 `mym0404` 공개 글 1건을 scan, scope 설정, export한 뒤 GitHub `mym0404/image-archive` `master` branch의 동적 prefix `farewell-live/<timestamp>` 아래로 `piclist` runtime 실업로드를 수행할 때 실행한다. 루트 `.env`에서 `FAREWELL_UPLOAD_E2E=1`, `FAREWELL_UPLOAD_E2E_GITHUB_TOKEN`를 읽는다.
-- `pnpm quality:report`: parser block fixture coverage, parser capability test mapping coverage, capability/sample coverage generated 품질 리포트를 다시 만들 때 실행한다.
+- `pnpm quality:report`: parser/sample knowledge projection과 parser block fixture coverage, parser capability test mapping coverage, capability/sample coverage generated 품질 리포트를 다시 만들 때 실행한다.
 
 ## 보장하지 않는 것
 - `pnpm test:offline`은 live 네이버 HTML drift를 보장하지 않는다.

@@ -1,9 +1,15 @@
+import {
+  blockOutputFamilyDefinitions,
+  blockOutputFamilyOrder,
+  resolveBlockOutputSelection,
+} from "../../src/shared/block-registry.js"
 import { defaultExportOptions } from "../../src/shared/export-options.js"
-import type { ExportOptions } from "../../src/shared/types.js"
+import { parserCapabilities } from "../../src/shared/parser-capabilities.js"
+import type { ExportOptions, ParserCapabilityId } from "../../src/shared/types.js"
 
 const entrypoint = "pnpm exec tsx scripts/export-single-post.ts"
 
-const allowedTopLevelOptionKeys = ["scope", "structure", "frontmatter", "markdown", "assets"] as const
+const allowedTopLevelOptionKeys = ["scope", "structure", "frontmatter", "markdown", "blockOutputs", "assets", "links"] as const
 const allowedScopeKeys = ["categoryIds", "categoryMode", "dateFrom", "dateTo"] as const
 const allowedStructureKeys = [
   "groupByCategory",
@@ -11,10 +17,10 @@ const allowedStructureKeys = [
   "includeLogNoInPostFolderName",
   "postDirectoryName",
   "assetDirectoryName",
-  "folderStrategy",
-  "includeDateInFilename",
-  "includeLogNoInFilename",
   "slugStyle",
+  "slugWhitespace",
+  "postFolderNameMode",
+  "postFolderNameCustomTemplate",
 ] as const
 const allowedFrontmatterKeys = ["enabled", "fields", "aliases"] as const
 const allowedFrontmatterFieldKeys = [
@@ -36,47 +42,35 @@ const allowedFrontmatterFieldKeys = [
 ] as const
 const allowedMarkdownKeys = [
   "linkStyle",
-  "formulaStyle",
-  "formulaInlineWrapperOpen",
-  "formulaInlineWrapperClose",
-  "formulaBlockStyle",
-  "formulaBlockWrapperOpen",
-  "formulaBlockWrapperClose",
-  "tableStyle",
-  "imageStyle",
-  "imageGroupStyle",
-  "rawHtmlPolicy",
-  "dividerStyle",
-  "codeFenceStyle",
-  "headingLevelOffset",
 ] as const
+const allowedBlockOutputsKeys = ["defaults", "overrides"] as const
 const allowedAssetsKeys = [
   "imageHandlingMode",
   "compressionEnabled",
-  "assetPathMode",
   "stickerAssetMode",
   "downloadImages",
   "downloadThumbnails",
   "includeImageCaptions",
   "thumbnailSource",
 ] as const
+const allowedLinksKeys = ["sameBlogPostMode", "sameBlogPostCustomUrlTemplate"] as const
 
 const categoryModes = ["selected-and-descendants", "exact-selected"] as const
-const folderStrategies = ["category-path", "flat"] as const
-const slugStyles = ["kebab", "keep-title"] as const
+const slugStyles = ["kebab", "snake", "keep-title"] as const
+const slugWhitespaces = ["dash", "underscore", "keep-space"] as const
+const postFolderNameModes = ["preset", "custom-template"] as const
 const linkStyles = ["inlined", "referenced"] as const
-const formulaStyles = ["double-dollar", "math-fence"] as const
-const formulaBlockStyles = ["wrapper", "math-fence"] as const
-const tableStyles = ["gfm-or-html", "html-only"] as const
-const imageStyles = ["markdown-image", "linked-image", "source-only"] as const
-const imageGroupStyles = ["split-images", "html"] as const
-const rawHtmlPolicies = ["keep", "omit"] as const
-const dividerStyles = ["dash", "asterisk"] as const
-const codeFenceStyles = ["backtick", "tilde"] as const
-const assetPathModes = ["relative", "remote"] as const
 const imageHandlingModes = ["download", "remote", "download-and-upload"] as const
 const stickerAssetModes = ["ignore", "download-original"] as const
 const thumbnailSources = ["post-list-first", "first-body-image", "none"] as const
+const sameBlogPostModes = ["keep-source", "custom-url", "relative-filepath"] as const
+const parserCapabilityIdSet = new Set(parserCapabilities.map((capability) => capability.id))
+const parserCapabilityBlockTypeMap = new Map(
+  parserCapabilities.map((capability) => [capability.id, capability.blockType]),
+)
+const blockOutputFamilyDefinitionMap = new Map(
+  blockOutputFamilyDefinitions.map((definition) => [definition.blockType, definition]),
+)
 
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value)
@@ -252,28 +246,28 @@ const validateStructureOptions = (value: unknown, optionsPath: string) => {
     )
   }
 
-  if ("folderStrategy" in value) {
-    const folderStrategy = value.folderStrategy
-    assertEnum(folderStrategy, folderStrategies, "structure.folderStrategy", optionsPath)
-    structure.groupByCategory = folderStrategy === "category-path"
-  }
-
-  if ("includeDateInFilename" in value) {
-    const includeDateInFilename = value.includeDateInFilename
-    assertBoolean(includeDateInFilename, "structure.includeDateInFilename", optionsPath)
-    structure.includeDateInPostFolderName = includeDateInFilename
-  }
-
-  if ("includeLogNoInFilename" in value) {
-    const includeLogNoInFilename = value.includeLogNoInFilename
-    assertBoolean(includeLogNoInFilename, "structure.includeLogNoInFilename", optionsPath)
-    structure.includeLogNoInPostFolderName = includeLogNoInFilename
-  }
-
   if ("slugStyle" in value) {
     const slugStyle = value.slugStyle
     assertEnum(slugStyle, slugStyles, "structure.slugStyle", optionsPath)
     structure.slugStyle = slugStyle
+  }
+
+  if ("slugWhitespace" in value) {
+    const slugWhitespace = value.slugWhitespace
+    assertEnum(slugWhitespace, slugWhitespaces, "structure.slugWhitespace", optionsPath)
+    structure.slugWhitespace = slugWhitespace
+  }
+
+  if ("postFolderNameMode" in value) {
+    const postFolderNameMode = value.postFolderNameMode
+    assertEnum(postFolderNameMode, postFolderNameModes, "structure.postFolderNameMode", optionsPath)
+    structure.postFolderNameMode = postFolderNameMode
+  }
+
+  if ("postFolderNameCustomTemplate" in value) {
+    const postFolderNameCustomTemplate = value.postFolderNameCustomTemplate
+    assertString(postFolderNameCustomTemplate, "structure.postFolderNameCustomTemplate", optionsPath)
+    structure.postFolderNameCustomTemplate = postFolderNameCustomTemplate
   }
 
   return structure
@@ -342,83 +336,140 @@ const validateMarkdownOptions = (value: unknown, optionsPath: string) => {
     markdown.linkStyle = linkStyle
   }
 
-  if ("formulaStyle" in value) {
-    const formulaStyle = value.formulaStyle
-    assertEnum(formulaStyle, formulaStyles, "markdown.formulaStyle", optionsPath)
-    markdown.formulaBlockStyle = formulaStyle === "math-fence" ? "math-fence" : "wrapper"
-    markdown.formulaBlockWrapperOpen = "$$"
-    markdown.formulaBlockWrapperClose = "$$"
-  }
-
-  if ("formulaInlineWrapperOpen" in value) {
-    assertString(value.formulaInlineWrapperOpen, "markdown.formulaInlineWrapperOpen", optionsPath)
-    markdown.formulaInlineWrapperOpen = value.formulaInlineWrapperOpen
-  }
-
-  if ("formulaInlineWrapperClose" in value) {
-    assertString(value.formulaInlineWrapperClose, "markdown.formulaInlineWrapperClose", optionsPath)
-    markdown.formulaInlineWrapperClose = value.formulaInlineWrapperClose
-  }
-
-  if ("formulaBlockStyle" in value) {
-    const formulaBlockStyle = value.formulaBlockStyle
-    assertEnum(formulaBlockStyle, formulaBlockStyles, "markdown.formulaBlockStyle", optionsPath)
-    markdown.formulaBlockStyle = formulaBlockStyle
-  }
-
-  if ("formulaBlockWrapperOpen" in value) {
-    assertString(value.formulaBlockWrapperOpen, "markdown.formulaBlockWrapperOpen", optionsPath)
-    markdown.formulaBlockWrapperOpen = value.formulaBlockWrapperOpen
-  }
-
-  if ("formulaBlockWrapperClose" in value) {
-    assertString(value.formulaBlockWrapperClose, "markdown.formulaBlockWrapperClose", optionsPath)
-    markdown.formulaBlockWrapperClose = value.formulaBlockWrapperClose
-  }
-
-  if ("tableStyle" in value) {
-    const tableStyle = value.tableStyle
-    assertEnum(tableStyle, tableStyles, "markdown.tableStyle", optionsPath)
-    markdown.tableStyle = tableStyle
-  }
-
-  if ("imageStyle" in value) {
-    const imageStyle = value.imageStyle
-    assertEnum(imageStyle, imageStyles, "markdown.imageStyle", optionsPath)
-    markdown.imageStyle = imageStyle
-  }
-
-  if ("imageGroupStyle" in value) {
-    const imageGroupStyle = value.imageGroupStyle
-    assertEnum(imageGroupStyle, imageGroupStyles, "markdown.imageGroupStyle", optionsPath)
-    markdown.imageGroupStyle = imageGroupStyle
-  }
-
-  if ("rawHtmlPolicy" in value) {
-    const rawHtmlPolicy = value.rawHtmlPolicy
-    assertEnum(rawHtmlPolicy, rawHtmlPolicies, "markdown.rawHtmlPolicy", optionsPath)
-    markdown.rawHtmlPolicy = rawHtmlPolicy
-  }
-
-  if ("dividerStyle" in value) {
-    const dividerStyle = value.dividerStyle
-    assertEnum(dividerStyle, dividerStyles, "markdown.dividerStyle", optionsPath)
-    markdown.dividerStyle = dividerStyle
-  }
-
-  if ("codeFenceStyle" in value) {
-    const codeFenceStyle = value.codeFenceStyle
-    assertEnum(codeFenceStyle, codeFenceStyles, "markdown.codeFenceStyle", optionsPath)
-    markdown.codeFenceStyle = codeFenceStyle
-  }
-
-  if ("headingLevelOffset" in value) {
-    const headingLevelOffset = value.headingLevelOffset
-    assertFiniteNumber(headingLevelOffset, "markdown.headingLevelOffset", optionsPath)
-    markdown.headingLevelOffset = headingLevelOffset
-  }
-
   return markdown
+}
+
+const validateBlockOutputSelection = ({
+  value,
+  context,
+  optionsPath,
+  blockType,
+}: {
+  value: unknown
+  context: string
+  optionsPath: string
+  blockType: keyof ExportOptions["blockOutputs"]["defaults"]
+}) => {
+  assertPlainObject(value, context, optionsPath)
+  assertAllowedKeys(value, ["variant", "params"], context, optionsPath)
+
+  const definition =
+    blockOutputFamilyDefinitionMap.get(blockType) ??
+    failOptions(optionsPath, `${context} references unknown block type: ${blockType}`)
+
+  const nextSelection = resolveBlockOutputSelection({
+    blockType,
+  })
+
+  if ("variant" in value) {
+    const variant = value.variant
+    assertString(variant, `${context}.variant`, optionsPath)
+
+    if (!definition.variants.some((item) => item.id === variant)) {
+      failOptions(
+        optionsPath,
+        `${context}.variant must be one of: ${definition.variants.map((item) => item.id).join(", ")}`,
+      )
+    }
+
+    nextSelection.variant = variant
+  }
+
+  if ("params" in value) {
+    const paramsValue = value.params
+    assertPlainObject(paramsValue, `${context}.params`, optionsPath)
+
+    const allowedParamKeys = new Set(definition.params?.map((param) => param.key) ?? [])
+    assertAllowedKeys(
+      paramsValue,
+      Array.from(allowedParamKeys),
+      `${context}.params`,
+      optionsPath,
+    )
+
+    nextSelection.params = {
+      ...(nextSelection.params ?? {}),
+    }
+
+    for (const [paramKey, paramValue] of Object.entries(paramsValue)) {
+      const paramDefinition =
+        definition.params?.find((param) => param.key === paramKey) ??
+        failOptions(optionsPath, `${context}.params.${paramKey} is not supported`)
+
+      if (paramDefinition.input === "number") {
+        assertFiniteNumber(paramValue, `${context}.params.${paramKey}`, optionsPath)
+      } else {
+        assertString(paramValue, `${context}.params.${paramKey}`, optionsPath)
+      }
+
+      nextSelection.params[paramKey] = paramValue
+    }
+  }
+
+  return nextSelection
+}
+
+const validateBlockOutputsOptions = (value: unknown, optionsPath: string) => {
+  assertPlainObject(value, "blockOutputs", optionsPath)
+  assertAllowedKeys(value, allowedBlockOutputsKeys, "blockOutputs", optionsPath)
+
+  const blockOutputs = defaultExportOptions().blockOutputs
+
+  if ("defaults" in value) {
+    const defaultsValue = value.defaults
+    assertPlainObject(defaultsValue, "blockOutputs.defaults", optionsPath)
+    assertAllowedKeys(defaultsValue, blockOutputFamilyOrder, "blockOutputs.defaults", optionsPath)
+
+    const nextDefaults = {
+      ...blockOutputs.defaults,
+    }
+
+    for (const blockType of blockOutputFamilyOrder) {
+      if (blockType in defaultsValue) {
+        nextDefaults[blockType] = validateBlockOutputSelection({
+          value: defaultsValue[blockType],
+          context: `blockOutputs.defaults.${blockType}`,
+          optionsPath,
+          blockType,
+        })
+      }
+    }
+
+    blockOutputs.defaults = nextDefaults
+  }
+
+  if ("overrides" in value) {
+    const overridesValue = value.overrides
+    assertPlainObject(overridesValue, "blockOutputs.overrides", optionsPath)
+    assertAllowedKeys(
+      overridesValue,
+      Array.from(parserCapabilityIdSet),
+      "blockOutputs.overrides",
+      optionsPath,
+    )
+
+    const nextOverrides = {
+      ...blockOutputs.overrides,
+    }
+
+    for (const [capabilityId, selection] of Object.entries(overridesValue)) {
+      const typedCapabilityId = capabilityId as ParserCapabilityId
+      const blockType =
+        parserCapabilityBlockTypeMap.get(typedCapabilityId) ??
+        failOptions(optionsPath, `blockOutputs.overrides.${capabilityId} references unknown capability`)
+
+      nextOverrides[typedCapabilityId] = validateBlockOutputSelection({
+        value: selection,
+        context: `blockOutputs.overrides.${capabilityId}`,
+        optionsPath,
+        blockType,
+      })
+    }
+
+    blockOutputs.overrides = nextOverrides
+  }
+
+  return blockOutputs
 }
 
 const validateAssetsOptions = (value: unknown, optionsPath: string) => {
@@ -437,12 +488,6 @@ const validateAssetsOptions = (value: unknown, optionsPath: string) => {
     const compressionEnabled = value.compressionEnabled
     assertBoolean(compressionEnabled, "assets.compressionEnabled", optionsPath)
     assets.compressionEnabled = compressionEnabled
-  }
-
-  if ("assetPathMode" in value) {
-    const assetPathMode = value.assetPathMode
-    assertEnum(assetPathMode, assetPathModes, "assets.assetPathMode", optionsPath)
-    assets.imageHandlingMode = assetPathMode === "remote" ? "remote" : "download"
   }
 
   if ("stickerAssetMode" in value) {
@@ -478,6 +523,27 @@ const validateAssetsOptions = (value: unknown, optionsPath: string) => {
   return assets
 }
 
+const validateLinksOptions = (value: unknown, optionsPath: string) => {
+  assertPlainObject(value, "links", optionsPath)
+  assertAllowedKeys(value, allowedLinksKeys, "links", optionsPath)
+
+  const links = defaultExportOptions().links
+
+  if ("sameBlogPostMode" in value) {
+    const sameBlogPostMode = value.sameBlogPostMode
+    assertEnum(sameBlogPostMode, sameBlogPostModes, "links.sameBlogPostMode", optionsPath)
+    links.sameBlogPostMode = sameBlogPostMode
+  }
+
+  if ("sameBlogPostCustomUrlTemplate" in value) {
+    const sameBlogPostCustomUrlTemplate = value.sameBlogPostCustomUrlTemplate
+    assertString(sameBlogPostCustomUrlTemplate, "links.sameBlogPostCustomUrlTemplate", optionsPath)
+    links.sameBlogPostCustomUrlTemplate = sameBlogPostCustomUrlTemplate
+  }
+
+  return links
+}
+
 const validateSinglePostOptionsJson = (value: unknown, optionsPath: string): ExportOptions => {
   assertPlainObject(value, "root", optionsPath)
   assertAllowedKeys(value, allowedTopLevelOptionKeys, "root", optionsPath)
@@ -500,8 +566,16 @@ const validateSinglePostOptionsJson = (value: unknown, optionsPath: string): Exp
     options.markdown = validateMarkdownOptions(value.markdown, optionsPath)
   }
 
+  if ("blockOutputs" in value) {
+    options.blockOutputs = validateBlockOutputsOptions(value.blockOutputs, optionsPath)
+  }
+
   if ("assets" in value) {
     options.assets = validateAssetsOptions(value.assets, optionsPath)
+  }
+
+  if ("links" in value) {
+    options.links = validateLinksOptions(value.links, optionsPath)
   }
 
   return options

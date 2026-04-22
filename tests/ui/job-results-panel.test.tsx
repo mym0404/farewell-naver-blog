@@ -420,6 +420,9 @@ describe("JobResultsPanel upload provider UX", () => {
     expect(within(resultsTable).getByRole("columnheader", { name: "업로드 상태" })).toBeInTheDocument()
     expect(within(resultsTable).getByRole("columnheader", { name: "상태" })).toBeInTheDocument()
     expect(within(resultsTable).getByRole("columnheader", { name: "액션" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "전체 1" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "경고 0" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "에러 0" })).toBeInTheDocument()
     expect(within(resultsTable).queryByRole("columnheader", { name: "경로" })).not.toBeInTheDocument()
     expect(within(resultsTable).queryByRole("columnheader", { name: "경고" })).not.toBeInTheDocument()
     expect(within(resultsTable).getByText("NestJS")).toBeInTheDocument()
@@ -535,7 +538,7 @@ describe("JobResultsPanel upload provider UX", () => {
     expect(document.querySelector('[data-upload-row-status-badge="failed"]')).not.toBeNull()
   })
 
-  it("renders action buttons for preview and local file open", async () => {
+  it("renders action buttons for source, preview, and local file open", async () => {
     const user = userEvent.setup()
     const fetchMock = vi.fn<typeof fetch>(async (input) => {
       if (input === "/api/local-file/preview-link") {
@@ -556,7 +559,12 @@ describe("JobResultsPanel upload provider UX", () => {
 
     expect(
       screen.getByRole("button", {
-        name: "첫 글 외부 미리보기",
+        name: "첫 글 네이버 원문 보기",
+      }),
+    ).toHaveAttribute("data-job-item-source-link")
+    expect(
+      screen.getByRole("button", {
+        name: "첫 글 마크다운 미리보기",
       }),
     ).toHaveAttribute("data-job-item-preview-link")
     expect(screen.getByRole("button", { name: "첫 글 파일 열기" }).className).toContain("text-muted-foreground")
@@ -565,7 +573,15 @@ describe("JobResultsPanel upload provider UX", () => {
 
     expect((await screen.findAllByText(`${testOutputDir}/posts/first/index.md`)).length).toBeGreaterThan(0)
 
-    await user.click(screen.getByRole("button", { name: "첫 글 외부 미리보기" }))
+    await user.click(screen.getByRole("button", { name: "첫 글 네이버 원문 보기" }))
+
+    expect(openMock).toHaveBeenCalledWith(
+      "https://blog.naver.com/mym0404/223034929697",
+      "_blank",
+      "noopener,noreferrer",
+    )
+
+    await user.click(screen.getByRole("button", { name: "첫 글 마크다운 미리보기" }))
 
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/local-file/preview-link",
@@ -581,7 +597,11 @@ describe("JobResultsPanel upload provider UX", () => {
         }),
       }),
     )
-    expect(openMock).toHaveBeenCalledWith("https://markdownviewer.pages.dev/#share=test", "_blank", "noopener,noreferrer")
+    expect(openMock).toHaveBeenCalledWith(
+      "https://markdownviewer.pages.dev/#share=test",
+      "_blank",
+      "noopener,noreferrer",
+    )
 
     await user.click(screen.getByRole("button", { name: "첫 글 파일 열기" }))
 

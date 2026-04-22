@@ -155,35 +155,35 @@ describe("ExportOptionsPanel", () => {
     )
 
     await selectOption({ user, trigger: "#markdown-linkStyle", value: "referenced" })
-    fireEvent.change(query<HTMLInputElement>("#markdown-formulaInlineWrapperOpen"), {
+    fireEvent.change(query<HTMLInputElement>("#blockOutputs-defaults-formula-inlineOpen"), {
       target: {
         value: "\\(",
       },
     })
-    fireEvent.change(query<HTMLInputElement>("#markdown-formulaInlineWrapperClose"), {
+    fireEvent.change(query<HTMLInputElement>("#blockOutputs-defaults-formula-inlineClose"), {
       target: {
         value: "\\)",
       },
     })
-    await selectOption({ user, trigger: "#markdown-formulaBlockStyle", value: "math-fence" })
-    fireEvent.change(query<HTMLInputElement>("#markdown-formulaBlockWrapperOpen"), {
+    fireEvent.change(query<HTMLInputElement>("#blockOutputs-defaults-formula-blockOpen"), {
       target: {
-        value: "```math",
+        value: "\\[",
       },
     })
-    fireEvent.change(query<HTMLInputElement>("#markdown-formulaBlockWrapperClose"), {
+    fireEvent.change(query<HTMLInputElement>("#blockOutputs-defaults-formula-blockClose"), {
       target: {
-        value: "```",
+        value: "\\]",
       },
     })
-    await selectOption({ user, trigger: "#markdown-imageStyle", value: "linked-image" })
-    await selectOption({ user, trigger: "#markdown-dividerStyle", value: "asterisk" })
-    await selectOption({ user, trigger: "#markdown-codeFenceStyle", value: "tilde" })
-    fireEvent.change(query<HTMLInputElement>("#markdown-headingLevelOffset"), {
+    await selectOption({ user, trigger: "#blockOutputs-defaults-image-variant", value: "linked-image" })
+    await selectOption({ user, trigger: "#blockOutputs-defaults-divider-variant", value: "asterisk-rule" })
+    await selectOption({ user, trigger: "#blockOutputs-defaults-code-variant", value: "tilde-fence" })
+    fireEvent.change(query<HTMLInputElement>("#blockOutputs-defaults-heading-levelOffset"), {
       target: {
         value: "2",
       },
     })
+    await selectOption({ user, trigger: "#blockOutputs-overrides-se4-formula-variant", value: "math-fence" })
 
     cleanup()
 
@@ -283,15 +283,15 @@ describe("ExportOptionsPanel", () => {
     expect(latestOptions.frontmatter.fields.title).toBe(false)
     expect(latestOptions.frontmatter.aliases.title).toBe("headline")
     expect(latestOptions.markdown.linkStyle).toBe("referenced")
-    expect(latestOptions.markdown.formulaInlineWrapperOpen).toBe("\\(")
-    expect(latestOptions.markdown.formulaInlineWrapperClose).toBe("\\)")
-    expect(latestOptions.markdown.formulaBlockStyle).toBe("math-fence")
-    expect(latestOptions.markdown.formulaBlockWrapperOpen).toBe("```math")
-    expect(latestOptions.markdown.formulaBlockWrapperClose).toBe("```")
-    expect(latestOptions.markdown.imageStyle).toBe("linked-image")
-    expect(latestOptions.markdown.dividerStyle).toBe("asterisk")
-    expect(latestOptions.markdown.codeFenceStyle).toBe("tilde")
-    expect(latestOptions.markdown.headingLevelOffset).toBe(2)
+    expect(latestOptions.blockOutputs.defaults.formula?.params?.inlineOpen).toBe("\\(")
+    expect(latestOptions.blockOutputs.defaults.formula?.params?.inlineClose).toBe("\\)")
+    expect(latestOptions.blockOutputs.defaults.formula?.params?.blockOpen).toBe("\\[")
+    expect(latestOptions.blockOutputs.defaults.formula?.params?.blockClose).toBe("\\]")
+    expect(latestOptions.blockOutputs.defaults.image?.variant).toBe("linked-image")
+    expect(latestOptions.blockOutputs.defaults.divider?.variant).toBe("asterisk-rule")
+    expect(latestOptions.blockOutputs.defaults.code?.variant).toBe("tilde-fence")
+    expect(latestOptions.blockOutputs.defaults.heading?.params?.levelOffset).toBe(2)
+    expect(latestOptions.blockOutputs.overrides["se4-formula"]?.variant).toBe("math-fence")
     expect(latestOptions.assets.imageHandlingMode).toBe("remote")
     expect(latestOptions.assets.compressionEnabled).toBe(false)
     expect(latestOptions.assets.stickerAssetMode).toBe("download-original")
@@ -402,7 +402,7 @@ describe("ExportOptionsPanel", () => {
     )
   })
 
-  it("does not render removed link card and video controls", () => {
+  it("does not render removed link card and video controls while showing block cards", () => {
     render(
       <ExportOptionsPanel
         step="markdown"
@@ -421,6 +421,112 @@ describe("ExportOptionsPanel", () => {
     expect(screen.queryByLabelText("Video Style")).not.toBeInTheDocument()
     expect(document.querySelector("#markdown-linkCardStyle")).toBeNull()
     expect(document.querySelector("#markdown-videoStyle")).toBeNull()
+    expect(document.querySelector('[data-block-output-card="formula"]')).not.toBeNull()
+    expect(document.querySelector('[data-block-output-card="se4-formula"]')).not.toBeNull()
+  })
+
+  it("updates block preview snippets when block output selections change", async () => {
+    const user = userEvent.setup()
+    let latestOptions = defaultExportOptions()
+
+    render(
+      <ExportOptionsPanel
+        step="markdown"
+        outputDir={testOutputDir}
+        options={latestOptions}
+        optionDescriptions={optionDescriptions}
+        frontmatterFieldOrder={frontmatterFieldOrder}
+        frontmatterFieldMeta={frontmatterFieldMeta}
+        frontmatterValidationErrors={[]}
+        onOutputDirChange={vi.fn()}
+        onOptionsChange={(updater) => {
+          latestOptions = updater(latestOptions)
+        }}
+      />,
+    )
+
+    expect(query<HTMLElement>('[data-block-output-card="code"] pre').textContent).toContain("```ts")
+
+    await selectOption({ user, trigger: "#blockOutputs-defaults-code-variant", value: "tilde-fence" })
+
+    cleanup()
+
+    render(
+      <ExportOptionsPanel
+        step="markdown"
+        outputDir={testOutputDir}
+        options={latestOptions}
+        optionDescriptions={optionDescriptions}
+        frontmatterFieldOrder={frontmatterFieldOrder}
+        frontmatterFieldMeta={frontmatterFieldMeta}
+        frontmatterValidationErrors={[]}
+        onOutputDirChange={vi.fn()}
+        onOptionsChange={vi.fn()}
+      />,
+    )
+
+    expect(query<HTMLElement>('[data-block-output-card="code"] pre').textContent).toContain("~~~ts")
+  })
+
+  it("renders image preview with local asset paths unless remote mode is selected", () => {
+    const options = defaultExportOptions()
+
+    render(
+      <ExportOptionsPanel
+        step="markdown"
+        outputDir={testOutputDir}
+        options={options}
+        optionDescriptions={optionDescriptions}
+        frontmatterFieldOrder={frontmatterFieldOrder}
+        frontmatterFieldMeta={frontmatterFieldMeta}
+        frontmatterValidationErrors={[]}
+        onOutputDirChange={vi.fn()}
+        onOptionsChange={vi.fn()}
+      />,
+    )
+
+    expect(query<HTMLElement>('[data-block-output-card="image"] pre').textContent).toContain("../../public/image.png")
+
+    cleanup()
+
+    options.assets.imageHandlingMode = "remote"
+
+    render(
+      <ExportOptionsPanel
+        step="markdown"
+        outputDir={testOutputDir}
+        options={options}
+        optionDescriptions={optionDescriptions}
+        frontmatterFieldOrder={frontmatterFieldOrder}
+        frontmatterFieldMeta={frontmatterFieldMeta}
+        frontmatterValidationErrors={[]}
+        onOutputDirChange={vi.fn()}
+        onOptionsChange={vi.fn()}
+      />,
+    )
+
+    expect(query<HTMLElement>('[data-block-output-card="image"] pre').textContent).toContain("https://example.com/image.png")
+  })
+
+  it("shows raw html preview as diagnostics output instead of inline warning text", () => {
+    render(
+      <ExportOptionsPanel
+        step="markdown"
+        outputDir={testOutputDir}
+        options={defaultExportOptions()}
+        optionDescriptions={optionDescriptions}
+        frontmatterFieldOrder={frontmatterFieldOrder}
+        frontmatterFieldMeta={frontmatterFieldMeta}
+        frontmatterValidationErrors={[]}
+        onOutputDirChange={vi.fn()}
+        onOptionsChange={vi.fn()}
+      />,
+    )
+
+    const preview = query<HTMLElement>('[data-block-output-card="rawHtml"] pre').textContent
+
+    expect(preview).toContain("## Export Diagnostics")
+    expect(preview).toContain("raw HTML 블록을 생략했습니다")
   })
 
   it("keeps upload credentials out of the assets step and disables local-only controls in remote mode", () => {

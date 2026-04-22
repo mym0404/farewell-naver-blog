@@ -1,9 +1,14 @@
+import { readFile } from "node:fs/promises"
+
 import { parserCapabilities } from "../../src/shared/parser-capabilities.js"
 import { sampleCorpus } from "../../src/shared/sample-corpus.js"
+import { buildGeneratedDocs } from "./lib/report-generation.js"
 import { collectParserStatus } from "./lib/parser-status.js"
+import { repoPath } from "./lib/paths.js"
 
 const run = async () => {
   const parserStatus = await collectParserStatus()
+  const generatedDocs = await buildGeneratedDocs()
   const failures = [
     ...parserStatus.missingParserFixtureBlockTypes.map(
       (blockType) => `missing parser fixture: ${blockType}`,
@@ -24,6 +29,37 @@ const run = async () => {
       (editorVersion) => `missing sample corpus editor coverage: ${editorVersion}`,
     ),
   ]
+
+  const staleDocChecks = [
+    {
+      label: "parser block catalog",
+      filePath: repoPath(".agents", "knowledge", "architecture", "parser-block-catalog.md"),
+      expected: generatedDocs.parserBlockCatalog,
+    },
+    {
+      label: "sample corpus",
+      filePath: repoPath(".agents", "knowledge", "product", "sample-corpus.md"),
+      expected: generatedDocs.sampleCorpusDoc,
+    },
+    {
+      label: "quality score",
+      filePath: repoPath(".agents", "knowledge", "reference", "generated", "quality-score.md"),
+      expected: generatedDocs.qualityScore,
+    },
+    {
+      label: "sample coverage",
+      filePath: repoPath(".agents", "knowledge", "reference", "generated", "sample-coverage.md"),
+      expected: generatedDocs.sampleCoverage,
+    },
+  ]
+
+  for (const staleDocCheck of staleDocChecks) {
+    const currentContent = await readFile(staleDocCheck.filePath, "utf8").catch(() => null)
+
+    if (currentContent !== staleDocCheck.expected) {
+      failures.push(`stale markdown: ${staleDocCheck.label}`)
+    }
+  }
 
   if (parserCapabilities.length !== new Set(parserCapabilities.map((item) => item.id)).size) {
     failures.push("parser capability id must be unique")

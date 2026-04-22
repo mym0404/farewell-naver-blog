@@ -5,8 +5,16 @@ import type {
   FrontmatterFieldMeta,
   FrontmatterFieldName,
   OptionDescriptionMap,
+  ParserCapabilityId,
   PostSummary,
 } from "../../../shared/types.js"
+import {
+  blockOutputCapabilityOverrideDefinitions,
+  blockOutputFamilyDefinitions,
+  getBlockOutputFamilyDefinition,
+  resolveBlockOutputSelection,
+} from "../../../shared/block-registry.js"
+import { renderBlockOutputPreview } from "../../../shared/block-output-preview.js"
 import { formatCategorySegment } from "../../../shared/path-format.js"
 import { getDefaultSlugWhitespace } from "../../../shared/export-options.js"
 import {
@@ -485,6 +493,180 @@ const OptionSection = ({
   </section>
 )
 
+const blockOutputCardClass = "field-card grid gap-4 rounded-[1.5rem] px-4 py-4 xl:col-span-2"
+
+const isBlockOutputParamVisible = ({
+  variant,
+  variants,
+}: {
+  variant: string
+  variants?: string[]
+}) => !variants || variants.includes(variant)
+
+const BlockOutputPreview = ({
+  snippet,
+}: {
+  snippet: string
+}) => (
+  <div className="grid gap-2">
+    <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Preview</span>
+    <pre className="code-surface overflow-x-auto whitespace-pre-wrap rounded-2xl px-3 py-3 font-mono text-[0.8125rem] leading-6 text-foreground">
+      {snippet}
+    </pre>
+  </div>
+)
+
+const BlockOutputCard = ({
+  options,
+  family,
+  overrideCapabilityId,
+  onOptionsChange,
+}: {
+  options: ExportOptions
+  family: (typeof blockOutputFamilyDefinitions)[number]
+  overrideCapabilityId?: ParserCapabilityId
+  onOptionsChange: (updater: (current: ExportOptions) => ExportOptions) => void
+}) => {
+  const selection = resolveBlockOutputSelection({
+    blockType: family.blockType,
+    capabilityId: overrideCapabilityId,
+    blockOutputs: options.blockOutputs,
+  })
+  const overrideDefinition = overrideCapabilityId
+    ? blockOutputCapabilityOverrideDefinitions.find((item) => item.capabilityId === overrideCapabilityId)
+    : null
+  const previewSnippet = renderBlockOutputPreview({
+    block: overrideCapabilityId
+      ? (overrideDefinition?.previewBlock ?? family.previewBlock)
+      : family.previewBlock,
+    selection,
+    linkStyle: options.markdown.linkStyle,
+    includeImageCaptions: options.assets.includeImageCaptions,
+    imageHandlingMode: options.assets.imageHandlingMode,
+  })
+  const optionKeyPrefix = overrideCapabilityId ? `blockOutputs-overrides-${overrideCapabilityId}` : `blockOutputs-defaults-${family.blockType}`
+  const updateSelection = (updater: (current: NonNullable<typeof selection>) => NonNullable<typeof selection>) => {
+    onOptionsChange((current) => {
+      const currentSelection = resolveBlockOutputSelection({
+        blockType: family.blockType,
+        capabilityId: overrideCapabilityId,
+        blockOutputs: current.blockOutputs,
+      })
+      const nextSelection = updater(currentSelection)
+
+      if (overrideCapabilityId) {
+        return {
+          ...current,
+          blockOutputs: {
+            ...current.blockOutputs,
+            overrides: {
+              ...current.blockOutputs.overrides,
+              [overrideCapabilityId]: nextSelection,
+            },
+          },
+        }
+      }
+
+      return {
+        ...current,
+        blockOutputs: {
+          ...current.blockOutputs,
+          defaults: {
+            ...current.blockOutputs.defaults,
+            [family.blockType]: nextSelection,
+          },
+        },
+      }
+    })
+  }
+
+  return (
+    <Card className={blockOutputCardClass} data-block-output-card={overrideCapabilityId ?? family.blockType}>
+      <CardHeader className="gap-2 px-0 pb-0">
+        <div className="flex items-start justify-between gap-3">
+          <div className="grid gap-1">
+            <CardTitle className="text-base tracking-[-0.03em]">
+              {overrideCapabilityId
+                ? overrideDefinition?.label ?? family.label
+                : family.label}
+            </CardTitle>
+            <CardDescription className="text-sm leading-6">
+              {overrideCapabilityId
+                ? overrideDefinition?.description ?? family.description
+                : family.description}
+            </CardDescription>
+          </div>
+          {overrideCapabilityId ? <Badge variant="secondary">{overrideCapabilityId}</Badge> : <Badge variant="outline">{family.blockType}</Badge>}
+        </div>
+      </CardHeader>
+      <CardContent className="grid gap-4 px-0 pb-0">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)]">
+          <div className="grid gap-4">
+            {family.variants.length > 1 ? (
+              <OptionField
+                optionKey={`${optionKeyPrefix}-variant`}
+                labelFor={`${optionKeyPrefix}-variant`}
+                label="출력 방식"
+              >
+                <OptionSelectField
+                  inputId={`${optionKeyPrefix}-variant`}
+                  value={selection.variant}
+                  options={family.variants.map((variant) => ({
+                    value: variant.id,
+                    label: variant.label,
+                  }))}
+                  onValueChange={(variant) =>
+                    updateSelection((current) => ({
+                      ...current,
+                      variant,
+                    }))
+                  }
+                />
+              </OptionField>
+            ) : null}
+
+            {family.params
+              ?.filter((param) =>
+                isBlockOutputParamVisible({
+                  variant: selection.variant,
+                  variants: param.whenVariants,
+                }),
+              )
+              .map((param) => (
+                <OptionField
+                  key={`${optionKeyPrefix}-${param.key}`}
+                  optionKey={`${optionKeyPrefix}-${param.key}`}
+                  label={param.label}
+                  description={param.description}
+                >
+                  <Input
+                    id={`${optionKeyPrefix}-${param.key}`}
+                    type={param.input === "number" ? "number" : "text"}
+                    value={String(selection.params?.[param.key] ?? "")}
+                    onChange={(event) =>
+                      updateSelection((current) => ({
+                        ...current,
+                        params: {
+                          ...(current.params ?? {}),
+                          [param.key]:
+                            param.input === "number"
+                              ? Number(event.target.value || "0")
+                              : event.target.value,
+                        },
+                      }))
+                    }
+                  />
+                </OptionField>
+              ))}
+          </div>
+
+          <BlockOutputPreview snippet={previewSnippet} />
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
 const stepMeta: Record<
   ExportOptionsStep,
   {
@@ -502,7 +684,7 @@ const stepMeta: Record<
   },
   markdown: {
     title: "Markdown 설정",
-    description: "링크, 수식, 표, 이미지 렌더링 규칙을 정합니다.",
+    description: "링크 스타일과 블록별 출력 결과를 정합니다.",
   },
   assets: {
     title: "Assets 설정",
@@ -1043,7 +1225,7 @@ export const ExportOptionsPanel = ({
   )
 
   const markdownSection = (
-    <OptionSection title="Markdown 규칙" note="링크, 미디어, 코드, 표">
+    <OptionSection title="Markdown 규칙" note="링크 방식과 블록별 출력 결과를 정합니다. 아래 preview는 실제 export될 Markdown snippet 기준입니다.">
       <OptionField
         optionKey="markdown-linkStyle"
         labelFor="markdown-linkStyle"
@@ -1068,254 +1250,41 @@ export const ExportOptionsPanel = ({
           }
         />
       </OptionField>
-
-      <OptionField
-        optionKey="markdown-formulaInlineWrapperOpen"
-        label="인라인 수식 시작 문자열"
-        description={description("markdown-formulaInlineWrapperOpen")}
-      >
-        <Input
-          id="markdown-formulaInlineWrapperOpen"
-          value={options.markdown.formulaInlineWrapperOpen}
-          onChange={(event) =>
-            onOptionsChange((current) => ({
-              ...current,
-              markdown: {
-                ...current.markdown,
-                formulaInlineWrapperOpen: event.target.value,
-              },
-            }))
-          }
+      {blockOutputFamilyDefinitions.map((family) => (
+        <BlockOutputCard
+          key={family.blockType}
+          options={options}
+          family={family}
+          onOptionsChange={onOptionsChange}
         />
-      </OptionField>
+      ))}
+      <div className="field-card grid gap-3 rounded-[1.5rem] px-4 py-4 xl:col-span-2">
+        <div className="grid gap-1">
+          <p className="text-sm font-semibold text-foreground">Capability override</p>
+          <p className="field-help text-sm leading-6">
+            기본 블록 출력과 다르게 처리할 capability만 별도로 덮어씁니다.
+          </p>
+        </div>
+        <div className="grid gap-4">
+          {blockOutputCapabilityOverrideDefinitions.map((overrideDefinition) => {
+            const family = getBlockOutputFamilyDefinition(overrideDefinition.blockType)
 
-      <OptionField
-        optionKey="markdown-formulaInlineWrapperClose"
-        label="인라인 수식 끝 문자열"
-        description={description("markdown-formulaInlineWrapperClose")}
-      >
-        <Input
-          id="markdown-formulaInlineWrapperClose"
-          value={options.markdown.formulaInlineWrapperClose}
-          onChange={(event) =>
-            onOptionsChange((current) => ({
-              ...current,
-              markdown: {
-                ...current.markdown,
-                formulaInlineWrapperClose: event.target.value,
-              },
-            }))
-          }
-        />
-      </OptionField>
+            if (!family) {
+              return null
+            }
 
-      <OptionField
-        optionKey="markdown-formulaBlockStyle"
-        labelFor="markdown-formulaBlockStyle"
-        label="블록 수식 형식"
-        description={description("markdown-formulaBlockStyle")}
-      >
-        <OptionSelectField
-          inputId="markdown-formulaBlockStyle"
-          value={options.markdown.formulaBlockStyle}
-          options={[
-            { value: "wrapper", label: "custom wrapper" },
-            { value: "math-fence", label: "```math fence" },
-          ]}
-          onValueChange={(formulaBlockStyle) =>
-            onOptionsChange((current) => ({
-              ...current,
-              markdown: {
-                ...current.markdown,
-                formulaBlockStyle,
-              },
-            }))
-          }
-        />
-      </OptionField>
-
-      <OptionField
-        optionKey="markdown-formulaBlockWrapperOpen"
-        label="블록 수식 시작 문자열"
-        description={description("markdown-formulaBlockWrapperOpen")}
-      >
-        <Input
-          id="markdown-formulaBlockWrapperOpen"
-          value={options.markdown.formulaBlockWrapperOpen}
-          onChange={(event) =>
-            onOptionsChange((current) => ({
-              ...current,
-              markdown: {
-                ...current.markdown,
-                formulaBlockWrapperOpen: event.target.value,
-              },
-            }))
-          }
-        />
-      </OptionField>
-
-      <OptionField
-        optionKey="markdown-formulaBlockWrapperClose"
-        label="블록 수식 끝 문자열"
-        description={description("markdown-formulaBlockWrapperClose")}
-      >
-        <Input
-          id="markdown-formulaBlockWrapperClose"
-          value={options.markdown.formulaBlockWrapperClose}
-          onChange={(event) =>
-            onOptionsChange((current) => ({
-              ...current,
-              markdown: {
-                ...current.markdown,
-                formulaBlockWrapperClose: event.target.value,
-              },
-            }))
-          }
-        />
-      </OptionField>
-
-      <OptionField
-        optionKey="markdown-tableStyle"
-        labelFor="markdown-tableStyle"
-        label="표 형식"
-        description={description("markdown-tableStyle")}
-      >
-        <OptionSelectField
-          inputId="markdown-tableStyle"
-          value={options.markdown.tableStyle}
-          options={[{ value: "gfm-or-html", label: "Markdown 우선, 복잡한 표는 best-effort 변환" }]}
-          onValueChange={(tableStyle) =>
-            onOptionsChange((current) => ({
-              ...current,
-              markdown: {
-                ...current.markdown,
-                tableStyle,
-              },
-            }))
-          }
-        />
-      </OptionField>
-
-      <OptionField
-        optionKey="markdown-imageStyle"
-        labelFor="markdown-imageStyle"
-        label="이미지 형식"
-        description={description("markdown-imageStyle")}
-      >
-        <OptionSelectField
-          inputId="markdown-imageStyle"
-          value={options.markdown.imageStyle}
-          options={[
-            { value: "markdown-image", label: "일반 Markdown 이미지" },
-            { value: "linked-image", label: "이미지를 원본 링크로 감싸기" },
-            { value: "source-only", label: "링크만 남기기" },
-          ]}
-          onValueChange={(imageStyle) =>
-            onOptionsChange((current) => ({
-              ...current,
-              markdown: {
-                ...current.markdown,
-                imageStyle,
-              },
-            }))
-          }
-        />
-      </OptionField>
-
-      <OptionField
-        optionKey="markdown-imageGroupStyle"
-        labelFor="markdown-imageGroupStyle"
-        label="이미지 묶음 형식"
-        description={description("markdown-imageGroupStyle")}
-      >
-        <OptionSelectField
-          inputId="markdown-imageGroupStyle"
-          value={options.markdown.imageGroupStyle === "html" ? "split-images" : options.markdown.imageGroupStyle}
-          options={[{ value: "split-images", label: "개별 이미지로 분해" }]}
-          onValueChange={(imageGroupStyle) =>
-            onOptionsChange((current) => ({
-              ...current,
-              markdown: {
-                ...current.markdown,
-                imageGroupStyle,
-              },
-            }))
-          }
-        />
-      </OptionField>
-
-      <OptionField
-        optionKey="markdown-dividerStyle"
-        labelFor="markdown-dividerStyle"
-        label="구분선 형식"
-        description={description("markdown-dividerStyle")}
-      >
-        <OptionSelectField
-          inputId="markdown-dividerStyle"
-          value={options.markdown.dividerStyle}
-          options={[
-            { value: "dash", label: "---" },
-            { value: "asterisk", label: "***" },
-          ]}
-          onValueChange={(dividerStyle) =>
-            onOptionsChange((current) => ({
-              ...current,
-              markdown: {
-                ...current.markdown,
-                dividerStyle,
-              },
-            }))
-          }
-        />
-      </OptionField>
-
-      <OptionField
-        optionKey="markdown-codeFenceStyle"
-        labelFor="markdown-codeFenceStyle"
-        label="코드 fence 형식"
-        description={description("markdown-codeFenceStyle")}
-      >
-        <OptionSelectField
-          inputId="markdown-codeFenceStyle"
-          value={options.markdown.codeFenceStyle}
-          options={[
-            { value: "backtick", label: "```" },
-            { value: "tilde", label: "~~~" },
-          ]}
-          onValueChange={(codeFenceStyle) =>
-            onOptionsChange((current) => ({
-              ...current,
-              markdown: {
-                ...current.markdown,
-                codeFenceStyle,
-              },
-            }))
-          }
-        />
-      </OptionField>
-
-      <OptionField
-        optionKey="markdown-headingLevelOffset"
-        label="제목 레벨 오프셋"
-        description={description("markdown-headingLevelOffset")}
-      >
-        <Input
-          id="markdown-headingLevelOffset"
-          type="number"
-          min="-2"
-          max="3"
-          value={options.markdown.headingLevelOffset}
-          onChange={(event) =>
-            onOptionsChange((current) => ({
-              ...current,
-              markdown: {
-                ...current.markdown,
-                headingLevelOffset: Number(event.target.value || "0"),
-              },
-            }))
-          }
-        />
-      </OptionField>
+            return (
+              <BlockOutputCard
+                key={overrideDefinition.capabilityId}
+                options={options}
+                family={family}
+                overrideCapabilityId={overrideDefinition.capabilityId}
+                onOptionsChange={onOptionsChange}
+              />
+            )
+          })}
+        </div>
+      </div>
     </OptionSection>
   )
 

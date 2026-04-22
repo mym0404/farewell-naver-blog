@@ -13,202 +13,41 @@ import type {
   ParsedPost,
   PostSummary,
 } from "../../shared/types.js"
+import { resolveBlockOutputSelection } from "../../shared/block-registry.js"
+import {
+  buildDiagnosticsSection,
+  createLinkFormatter,
+  getDividerMarker,
+  getHeadingLevelOffset,
+  getHtmlConversionOptions,
+  type RenderDiagnostic,
+  renderCodeBlock,
+  renderFormula,
+  renderGfmTable,
+  renderImageBlockMarkdown,
+  renderLinkCardBlock,
+  renderParagraph,
+  renderQuote,
+} from "../../shared/block-markdown.js"
 import { getFrontmatterExportKey } from "../../shared/export-options.js"
-import { compactMarkdownText, compactText, unique } from "../../shared/utils.js"
-
-const escapeTableCell = (value: string) =>
-  value.replace(/\|/g, "\\|").replace(/\n+/g, "<br>").trim() || " "
-
-const createLinkFormatter = ({
-  style,
-  resolveLinkUrl,
-}: {
-  style: ExportOptions["markdown"]["linkStyle"]
-  resolveLinkUrl?: (url: string) => string
-}) => {
-  const references: string[] = []
-  const referenceMap = new Map<string, string>()
-
-  const getReferenceId = ({
-    label,
-    url,
-  }: {
-    label: string
-    url: string
-  }) => {
-    const key = `${label}\u0000${url}`
-    const existing = referenceMap.get(key)
-
-    if (existing) {
-      return existing
-    }
-
-    const nextId = `ref-${referenceMap.size + 1}`
-
-    referenceMap.set(key, nextId)
-    references.push(`[${nextId}]: ${url}`)
-
-    return nextId
-  }
-
-  const formatLink = ({
-    label,
-    url,
-  }: {
-    label: string
-    url: string
-  }) => {
-    const resolvedUrl = resolveLinkUrl ? resolveLinkUrl(url) : url
-
-    if (style === "inlined") {
-      return `[${label}](${resolvedUrl})`
-    }
-
-    return `[${label}][${getReferenceId({ label, url: resolvedUrl })}]`
-  }
-
-  return {
-    formatLink,
-    renderReferenceSection: () => (references.length > 0 ? references.join("\n") : ""),
-  }
-}
-
-const isDegenerateMarkdownLine = (line: string) => /^[*_~`]+$/.test(line.trim())
-
-const normalizeMarkdownText = (text: string) =>
-  compactMarkdownText(
-    text
-      .replace(/([^\s*])\*{4,}([^\s*])/g, "$1**$2"),
-  )
-    .split("\n")
-    .filter((line) => line.trim() && !isDegenerateMarkdownLine(line))
-    .join("\n")
-    .trim()
-
-const renderParagraph = (text: string) => normalizeMarkdownText(text)
-
-const renderQuote = (text: string) =>
-  text
-    .split("\n")
-    .map((line) => `> ${line}`)
-    .join("\n")
-
-const renderCodeBlock = ({
-  language,
-  code,
-  style,
-}: {
-  language: string | null
-  code: string
-  style: ExportOptions["markdown"]["codeFenceStyle"]
-}) => {
-  const fence = style === "tilde" ? "~~~" : "```"
-
-  return `${fence}${language ?? ""}\n${code}\n${fence}`
-}
-
-const renderWrappedFormula = ({
-  formula,
-  open,
-  close,
-  display,
-}: {
-  formula: string
-  open: string
-  close: string
-  display: boolean
-}) => {
-  if (display) {
-    return `${open}\n${formula}\n${close}`
-  }
-
-  return `${open}${formula}${close}`
-}
-
-const renderFormula = ({
-  formula,
-  display,
-  options,
-}: {
-  formula: string
-  display: boolean
-  options: Pick<ExportOptions, "markdown">
-}) => {
-  if (!display) {
-    return renderWrappedFormula({
-      formula,
-      open: options.markdown.formulaInlineWrapperOpen,
-      close: options.markdown.formulaInlineWrapperClose,
-      display: false,
-    })
-  }
-
-  if (options.markdown.formulaBlockStyle === "math-fence") {
-    return `\`\`\`math\n${formula}\n\`\`\``
-  }
-
-  return renderWrappedFormula({
-    formula,
-    open: options.markdown.formulaBlockWrapperOpen,
-    close: options.markdown.formulaBlockWrapperClose,
-    display: true,
-  })
-}
-
-type RenderDiagnostic = {
-  level: "warning" | "error"
-  message: string
-  detail?: string
-}
-
-const renderDiagnosticCallout = ({
-  level,
-  message,
-  detail,
-}: RenderDiagnostic) => {
-  const label = level === "error" ? "Error" : "Warning"
-  const icon = level === "error" ? "❌" : "⚠️"
-  const lines = [`> ${icon} ${label}: ${message}`]
-
-  if (detail?.trim()) {
-    lines.push(
-      ...detail
-        .split("\n")
-        .map((line) => line.trim())
-        .filter(Boolean)
-        .map((line) => `> ${line}`),
-    )
-  }
-
-  return lines.join("\n")
-}
-
-const buildDiagnosticsSection = (diagnostics: RenderDiagnostic[]) => {
-  const uniqueDiagnostics = unique(
-    diagnostics.map((diagnostic) => JSON.stringify(diagnostic)),
-  ).map((diagnostic) => JSON.parse(diagnostic) as RenderDiagnostic)
-
-  if (uniqueDiagnostics.length === 0) {
-    return ""
-  }
-
-  return ["## Export Diagnostics", uniqueDiagnostics.map(renderDiagnosticCallout).join("\n\n")]
-    .filter(Boolean)
-    .join("\n\n")
-}
+import { getParserCapabilityId } from "../../shared/parser-capabilities.js"
+import { compactText, unique } from "../../shared/utils.js"
 
 const extractFallbackText = ({
   html,
-  options,
+  htmlConversionOptions,
   resolveLinkUrl,
 }: {
   html: string
-  options: Pick<ExportOptions, "markdown">
+  htmlConversionOptions: {
+    linkStyle: ExportOptions["markdown"]["linkStyle"]
+    dividerMarker: "---" | "***"
+  }
   resolveLinkUrl?: (url: string) => string
 }) => {
   const convertedMarkdown = convertHtmlToMarkdown({
     html,
-    options,
+    options: htmlConversionOptions,
     resolveLinkUrl,
   }).trim()
 
@@ -219,67 +58,6 @@ const extractFallbackText = ({
   return compactText(load(html).text())
 }
 
-const renderLinkCardBlock = ({
-  block,
-  formatLink,
-}: {
-  block: Extract<AstBlock, { type: "linkCard" }>
-  formatLink: (input: { label: string; url: string }) => string
-}) => {
-  const title = block.card.title || block.card.url
-  const description = normalizeMarkdownText(block.card.description)
-    .split("\n")
-    .filter((line) => {
-      const trimmed = line.trim()
-
-      if (!trimmed) {
-        return false
-      }
-
-      if (/^[()]+$/.test(trimmed)) {
-        return false
-      }
-
-      if (trimmed === block.card.url) {
-        return false
-      }
-
-      return true
-    })
-    .join("\n")
-
-  if (block.card.imageUrl) {
-    return formatLink({
-      label: title,
-      url: block.card.url,
-    })
-  }
-
-  return [formatLink({ label: title, url: block.card.url }), description].filter(Boolean).join("\n\n")
-}
-
-const renderGfmTable = (block: Extract<AstBlock, { type: "table" }>) => {
-  const [headerRow, ...bodyRows] = block.rows
-
-  if (!headerRow) {
-    return block.html
-  }
-
-  const columnCount = headerRow.length
-  const normalizeRow = (cells: typeof headerRow) =>
-    [
-      ...cells.map((cell) => escapeTableCell(cell.text)),
-      ...Array.from({ length: Math.max(0, columnCount - cells.length) }, () => " "),
-    ].slice(0, columnCount)
-
-  const lines = [
-    `| ${normalizeRow(headerRow).join(" | ")} |`,
-    `| ${Array.from({ length: columnCount }, () => "---").join(" | ")} |`,
-    ...bodyRows.map((row) => `| ${normalizeRow(row).join(" | ")} |`),
-  ]
-
-  return lines.join("\n")
-}
 
 const buildFrontmatter = ({
   fields,
@@ -352,6 +130,13 @@ export const renderMarkdownPost = async ({
   const linkFormatter = createLinkFormatter({
     style: options.markdown.linkStyle,
     resolveLinkUrl,
+  })
+  const htmlConversionOptions = getHtmlConversionOptions({
+    linkStyle: options.markdown.linkStyle,
+    dividerSelection: resolveBlockOutputSelection({
+      blockType: "divider",
+      blockOutputs: options.blockOutputs,
+    }),
   })
   const renderedVideos: Array<{
     title: string
@@ -443,34 +228,24 @@ export const renderMarkdownPost = async ({
 
     maybeRecordBodyThumbnail(assetPath)
 
-    const safeLabel = image.alt || image.caption || "Image"
-    const lines: string[] = []
-
-    if (options.markdown.imageStyle === "source-only") {
-      lines.push(
-        linkFormatter.formatLink({
-          label: safeLabel,
-          url: assetPath,
-        }),
-      )
-    } else {
-      const imageMarkdown = `![${image.alt}](${assetPath})`
-      const content =
-        options.markdown.imageStyle === "linked-image"
-          ? linkFormatter.formatLink({
-              label: imageMarkdown,
-              url: renderableSourceUrl,
-            })
-          : imageMarkdown
-
-      lines.push(content)
-    }
-
-    if (options.assets.includeImageCaptions && image.caption) {
-      lines.push(`_${image.caption}_`)
-    }
-
-    return lines.join("\n\n")
+    const imageSelection = resolveBlockOutputSelection({
+      blockType: "image",
+      capabilityId: getParserCapabilityId({
+        editorVersion: parsedPost.editorVersion,
+        blockType: "image",
+      }),
+      blockOutputs: options.blockOutputs,
+    })
+    return renderImageBlockMarkdown({
+      image: {
+        ...image,
+        originalSourceUrl: renderableSourceUrl,
+      },
+      assetPath,
+      selection: imageSelection,
+      formatLink: linkFormatter.formatLink,
+      includeImageCaptions: options.assets.includeImageCaptions,
+    })
   }
 
   const renderVideoBlock = async (block: Extract<AstBlock, { type: "video" }>) => {
@@ -487,18 +262,42 @@ export const renderMarkdownPost = async ({
   }
 
   const renderTableBlock = (block: Extract<AstBlock, { type: "table" }>) => {
+    const capabilityId = getParserCapabilityId({
+      editorVersion: parsedPost.editorVersion,
+      blockType: "table",
+    })
+    const selection = resolveBlockOutputSelection({
+      blockType: "table",
+      capabilityId,
+      blockOutputs: options.blockOutputs,
+    })
+
+    if (selection.variant === "html-only") {
+      return block.html
+    }
+
     if (block.rows.length > 0) {
       return renderGfmTable(block)
     }
 
     return convertHtmlToMarkdown({
       html: block.html,
-      options,
+      options: htmlConversionOptions,
       resolveLinkUrl,
     })
   }
 
   for (const block of parsedPost.blocks) {
+    const capabilityId = getParserCapabilityId({
+      editorVersion: parsedPost.editorVersion,
+      blockType: block.type,
+    })
+    const selection = resolveBlockOutputSelection({
+      blockType: block.type,
+      capabilityId,
+      blockOutputs: options.blockOutputs,
+    })
+
     if (block.type === "paragraph") {
       sections.push(renderParagraph(block.text))
       continue
@@ -506,7 +305,7 @@ export const renderMarkdownPost = async ({
 
     if (block.type === "heading") {
       const adjustedLevel = Math.min(
-        Math.max(block.level + options.markdown.headingLevelOffset, 1),
+        Math.max(block.level + getHeadingLevelOffset(selection), 1),
         6,
       )
 
@@ -520,7 +319,7 @@ export const renderMarkdownPost = async ({
     }
 
     if (block.type === "divider") {
-      sections.push(options.markdown.dividerStyle === "asterisk" ? "***" : "---")
+      sections.push(getDividerMarker(selection))
       continue
     }
 
@@ -529,7 +328,7 @@ export const renderMarkdownPost = async ({
         renderCodeBlock({
           language: block.language,
           code: block.code,
-          style: options.markdown.codeFenceStyle,
+          variant: selection.variant,
         }),
       )
       continue
@@ -540,7 +339,7 @@ export const renderMarkdownPost = async ({
         renderFormula({
           formula: block.formula,
           display: block.display,
-          options,
+          selection,
         }),
       )
       continue
@@ -552,16 +351,6 @@ export const renderMarkdownPost = async ({
     }
 
     if (block.type === "imageGroup") {
-      if (options.markdown.imageGroupStyle === "html") {
-        const message = "imageGroup html 옵션은 지원하지 않아 개별 이미지 Markdown으로 변환했습니다."
-
-        warnings.push(message)
-        diagnostics.push({
-          level: "warning",
-          message,
-        })
-      }
-
       const groupSections: string[] = []
 
       for (const image of block.images) {
@@ -595,11 +384,11 @@ export const renderMarkdownPost = async ({
     if (block.type === "rawHtml") {
       const extractedText = extractFallbackText({
         html: block.html,
-        options,
+        htmlConversionOptions,
         resolveLinkUrl,
       })
 
-      if (options.markdown.rawHtmlPolicy === "omit") {
+      if (selection.variant === "omit") {
         const message = `raw HTML 블록을 생략했습니다: ${block.reason}`
 
         warnings.push(message)

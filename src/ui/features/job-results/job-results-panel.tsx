@@ -390,7 +390,30 @@ export const JobResultsPanel = ({
     buildInitialProviderUiStateMap(uploadProviders),
   )
   const [previewPendingIds, setPreviewPendingIds] = useState<string[]>([])
-  const jobItems = getJobItems(job).filter((item) => {
+  const allJobItems = getJobItems(job)
+  const jobFilterCounts = allJobItems.reduce(
+    (counts, item) => {
+      const severity = buildJobItemSeverity(item)
+
+      counts.all += 1
+
+      if (severity === "warning") {
+        counts.warnings += 1
+      }
+
+      if (severity === "error") {
+        counts.errors += 1
+      }
+
+      return counts
+    },
+    {
+      all: 0,
+      warnings: 0,
+      errors: 0,
+    } satisfies Record<JobFilter, number>,
+  )
+  const jobItems = allJobItems.filter((item) => {
     const severity = buildJobItemSeverity(item)
 
     if (activeJobFilter === "warnings") {
@@ -1059,7 +1082,8 @@ export const JobResultsPanel = ({
                     data-job-filter={filter}
                     onClick={() => onFilterChange(filter)}
                   >
-                    {filter === "all" ? "전체" : filter === "warnings" ? "경고" : "에러"}
+                    {filter === "all" ? "전체" : filter === "warnings" ? "경고" : "에러"}{" "}
+                    {jobFilterCounts[filter]}
                   </Button>
                 ))}
               </div>
@@ -1139,7 +1163,7 @@ export const JobResultsPanel = ({
                           className={cn(
                             "last:border-b-0",
                             severity === "warning"
-                              ? "bg-[var(--status-ready-bg)]"
+                              ? "bg-[color-mix(in_srgb,var(--status-warning-bg)_55%,transparent)]"
                               : severity === "error"
                                 ? "bg-[var(--status-error-bg)]"
                                 : "",

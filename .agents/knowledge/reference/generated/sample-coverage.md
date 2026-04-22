@@ -22,29 +22,29 @@
 | --- | --- | --- | --- |
 | `se2-paragraph` | `paragraph` | `sample-fixture` | `se2-legacy`, `se2-code-image-autolayout`, `se2-table-rawhtml-navigation` |
 | `se3-paragraph` | `paragraph` | `sample-fixture` | `se3-legacy`, `se3-quote-imagegroup-note9`, `se3-quote-table-vita` |
-| `se4-paragraph` | `paragraph` | `sample-fixture` | `se4-formula-code-linkcard` |
+| `se4-paragraph` | `paragraph` | `sample-fixture` | `se4-formula-code-linkcard`, `se4-heading-itinerary`, `se4-image-group` |
 | `se2-heading` | `heading` | `parser-fixture` | - |
 | `se4-heading` | `heading` | `sample-fixture` | `se4-heading-itinerary` |
 | `se2-quote` | `quote` | `parser-fixture` | - |
 | `se3-quote` | `quote` | `sample-fixture` | `se3-quote-imagegroup-note9`, `se3-quote-table-vita` |
 | `se4-quote` | `quote` | `sample-fixture` | `se4-quote-formula-code` |
 | `se2-divider` | `divider` | `parser-fixture` | - |
-| `se4-divider` | `divider` | `sample-fixture` | `se4-formula-code-linkcard`, `se4-image-group` |
+| `se4-divider` | `divider` | `sample-fixture` | `se4-formula-code-linkcard`, `se4-image-group`, `se4-heading-itinerary` |
 | `se2-code` | `code` | `sample-fixture` | `se2-code-image-autolayout` |
 | `se3-code` | `code` | `parser-fixture` | - |
 | `se4-code` | `code` | `sample-fixture` | `se4-formula-code-linkcard`, `se4-quote-formula-code` |
 | `se4-formula` | `formula` | `sample-fixture` | `se4-formula-code-linkcard`, `se4-quote-formula-code` |
 | `se2-image` | `image` | `sample-fixture` | `se2-code-image-autolayout`, `se2-table-rawhtml-navigation` |
 | `se3-image` | `image` | `sample-fixture` | `se3-quote-imagegroup-note9`, `se3-quote-table-vita` |
-| `se4-image` | `image` | `sample-fixture` | `se4-video-table`, `se4-image-legacy-link`, `se4-quote-formula-code` |
+| `se4-image` | `image` | `sample-fixture` | `se4-video-table`, `se4-image-legacy-link`, `se4-quote-formula-code`, `se4-heading-itinerary` |
 | `se2-imageGroup` | `imageGroup` | `sample-fixture` | `se2-thumburl-image-group` |
 | `se3-imageGroup` | `imageGroup` | `sample-fixture` | `se3-quote-imagegroup-note9` |
-| `se4-imageGroup` | `imageGroup` | `sample-fixture` | `se4-image-group` |
+| `se4-imageGroup` | `imageGroup` | `sample-fixture` | `se4-image-group`, `se4-heading-itinerary` |
 | `se4-video` | `video` | `sample-fixture` | `se4-video-table` |
-| `se4-linkCard` | `linkCard` | `sample-fixture` | `se4-formula-code-linkcard`, `se4-quote-formula-code` |
+| `se4-linkCard` | `linkCard` | `sample-fixture` | `se4-formula-code-linkcard`, `se4-quote-formula-code`, `se4-heading-itinerary` |
 | `se2-table` | `table` | `sample-fixture` | `se2-table-rawhtml-navigation` |
 | `se3-table` | `table` | `sample-fixture` | `se3-quote-table-vita` |
-| `se4-table` | `table` | `sample-fixture` | `se4-video-table` |
+| `se4-table` | `table` | `sample-fixture` | `se4-video-table`, `se4-heading-itinerary` |
 | `se2-rawHtml` | `rawHtml` | `sample-fixture` | `se2-table-rawhtml-navigation` |
 | `se4-rawHtml` | `rawHtml` | `parser-fixture` | - |
 

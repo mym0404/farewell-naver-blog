@@ -5,6 +5,7 @@
 
 ## Source Of Truth
 - 실제 harness 동작은 `package.json`, `scripts/harness/*`, generated 보고서 출력 경로가 기준이다.
+- parser/sample knowledge projection의 canonical SoT는 `src/shared/block-registry.ts`, `src/shared/parser-capabilities.ts`, `src/shared/sample-corpus.ts`다.
 - 사용자 수동 개발 서버는 `pnpm dev`의 `4173` 포트를 기준으로 보고, harness가 띄우는 서버는 이 포트와 겹치지 않게 `listen(0)` 또는 별도 포트를 사용한다.
 
 ## 관련 코드
@@ -25,7 +26,7 @@
 
 ## Harness Roles
 - `check-parser-capabilities.ts`
-  capability id, parser fixture, sample fixture, 테스트, sample link 연결이 끊기지 않았는지 확인한다.
+  capability id, parser fixture, sample fixture, 테스트, sample link 연결과 generated knowledge 문서 freshness가 끊기지 않았는지 확인한다.
 - `verify-sample-exports.ts`
   저장된 `source.html`을 parse -> review -> render로 다시 돌려 `expected.md`와 전체 비교한다. `sample-fixture` capability만 이 경로로 확인한다.
 - `refresh-sample-fixtures.ts`
@@ -37,7 +38,7 @@
 - `run-live-server.ts`, live UI harness들
   격리된 settings/cache 경로와 임시 포트를 사용해 사용자 `pnpm dev` 서버, 다른 harness 실행과 충돌하지 않게 서버를 띄운다.
 - `generate-quality-report.ts`
-  parser block fixture coverage, parser capability test mapping coverage, `sample-fixture` capability coverage, `parser-fixture` capability 목록을 `.agents/knowledge/reference/generated/quality-score.md`, `.agents/knowledge/reference/generated/sample-coverage.md`로 다시 계산한다.
+  parser/sample knowledge projection과 parser block fixture coverage, parser capability test mapping coverage, `sample-fixture` capability coverage, `parser-fixture` capability 목록을 generated markdown으로 다시 계산한다.
 
 ## Fixture 운영 규칙
 - sample fixture는 `tests/fixtures/samples/<sampleId>/source.html`, `expected.md` 구조를 사용한다.
@@ -49,6 +50,7 @@
 
 ## Generated Outputs
 - generated 보고서는 현재 커버리지와 gap을 보여 주는 관찰 결과이며 source of truth는 아니다.
+- `.agents/knowledge/architecture/parser-block-catalog.md`, `.agents/knowledge/product/sample-corpus.md`는 code-derived projection이며 수동 편집하지 않는다.
 - `.agents/knowledge/reference/generated/ui-review/*` 스크린샷은 Playwright smoke 시나리오 비교 기록이다.
 - generated 산출물은 수동 편집하지 않고 해당 harness를 다시 실행해 갱신한다.
 

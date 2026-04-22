@@ -53,6 +53,13 @@ export type DividerStyle = "dash" | "asterisk"
 
 export type CodeFenceStyle = "backtick" | "tilde"
 
+export type BlockOutputParamValue = string | number | boolean
+
+export type BlockOutputSelection = {
+  variant: string
+  params?: Record<string, BlockOutputParamValue>
+}
+
 export type ImageHandlingMode = "download" | "remote" | "download-and-upload"
 
 export type AssetDownloadFailureMode =
@@ -169,19 +176,10 @@ export type ExportOptions = {
   }
   markdown: {
     linkStyle: MarkdownLinkStyle
-    formulaInlineStyle: FormulaInlineStyle
-    formulaInlineWrapperOpen: string
-    formulaInlineWrapperClose: string
-    formulaBlockStyle: FormulaBlockStyle
-    formulaBlockWrapperOpen: string
-    formulaBlockWrapperClose: string
-    tableStyle: TableStyle
-    imageStyle: ImageStyle
-    imageGroupStyle: ImageGroupStyle
-    rawHtmlPolicy: RawHtmlPolicy
-    dividerStyle: DividerStyle
-    codeFenceStyle: CodeFenceStyle
-    headingLevelOffset: number
+  }
+  blockOutputs: {
+    defaults: Partial<Record<BlockType, BlockOutputSelection>>
+    overrides: Partial<Record<ParserCapabilityId, BlockOutputSelection>>
   }
   assets: {
     imageHandlingMode: ImageHandlingMode

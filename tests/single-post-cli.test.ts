@@ -126,7 +126,22 @@ describe("single-post cli", () => {
     const markdownFilePath = path.join(outputDir, "posts", "single-post.md")
 
     await mkdir(outputDir, { recursive: true })
-    await writeFile(optionsPath, JSON.stringify({ markdown: { headingLevelOffset: 2 } }), "utf8")
+    await writeFile(
+      optionsPath,
+      JSON.stringify({
+        blockOutputs: {
+          defaults: {
+            heading: {
+              variant: "markdown-heading",
+              params: {
+                levelOffset: 2,
+              },
+            },
+          },
+        },
+      }),
+      "utf8",
+    )
 
     const stdoutWrite = vi.fn()
     const stderrWrite = vi.fn()
@@ -177,7 +192,7 @@ describe("single-post cli", () => {
       })
 
       expect(exportSinglePost).toHaveBeenCalledTimes(1)
-      expect(exportSinglePost.mock.calls[0][0].options.markdown.headingLevelOffset).toBe(2)
+      expect(exportSinglePost.mock.calls[0][0].options.blockOutputs.defaults.heading?.params?.levelOffset).toBe(2)
       expect(stdoutWrite).not.toHaveBeenCalled()
       expect(stderrWrite).toHaveBeenCalledWith(
         [
@@ -279,7 +294,21 @@ describe("single-post cli", () => {
     const optionsPath = path.join(rootDir, "options.json")
 
     await mkdir(outputDir, { recursive: true })
-    await writeFile(optionsPath, JSON.stringify({ markdown: { headingLevelOffset: "bad" } }), "utf8")
+    await writeFile(
+      optionsPath,
+      JSON.stringify({
+        blockOutputs: {
+          defaults: {
+            heading: {
+              params: {
+                levelOffset: "bad",
+              },
+            },
+          },
+        },
+      }),
+      "utf8",
+    )
 
     const exportSinglePost = vi.fn()
 
@@ -396,6 +425,76 @@ describe("single-post cli", () => {
           stderrWrite: vi.fn(),
         }),
       ).rejects.toThrow("markdown contains unsupported keys: videoStyle")
+
+      expect(exportSinglePost).not.toHaveBeenCalled()
+    } finally {
+      await rm(rootDir, { recursive: true, force: true })
+    }
+  })
+
+  it("fails fast when removed structure legacy keys are present in options JSON", async () => {
+    const rootDir = await mkdtemp(path.join(tmpdir(), "single-post-cli-"))
+    const outputDir = path.join(rootDir, "output")
+    const optionsPath = path.join(rootDir, "options.json")
+
+    await mkdir(outputDir, { recursive: true })
+    await writeFile(optionsPath, JSON.stringify({ structure: { folderStrategy: "flat" } }), "utf8")
+
+    const exportSinglePost = vi.fn()
+
+    try {
+      await expect(
+        runSinglePostCli({
+          argv: [
+            "--blogId",
+            "my-blog",
+            "--logNo",
+            "123456789012",
+            "--outputDir",
+            outputDir,
+            "--options",
+            optionsPath,
+          ],
+          exportSinglePost: exportSinglePost as RunSinglePostExportFn,
+          stdoutWrite: vi.fn(),
+          stderrWrite: vi.fn(),
+        }),
+      ).rejects.toThrow("structure contains unsupported keys: folderStrategy")
+
+      expect(exportSinglePost).not.toHaveBeenCalled()
+    } finally {
+      await rm(rootDir, { recursive: true, force: true })
+    }
+  })
+
+  it("fails fast when removed asset legacy keys are present in options JSON", async () => {
+    const rootDir = await mkdtemp(path.join(tmpdir(), "single-post-cli-"))
+    const outputDir = path.join(rootDir, "output")
+    const optionsPath = path.join(rootDir, "options.json")
+
+    await mkdir(outputDir, { recursive: true })
+    await writeFile(optionsPath, JSON.stringify({ assets: { assetPathMode: "remote" } }), "utf8")
+
+    const exportSinglePost = vi.fn()
+
+    try {
+      await expect(
+        runSinglePostCli({
+          argv: [
+            "--blogId",
+            "my-blog",
+            "--logNo",
+            "123456789012",
+            "--outputDir",
+            outputDir,
+            "--options",
+            optionsPath,
+          ],
+          exportSinglePost: exportSinglePost as RunSinglePostExportFn,
+          stdoutWrite: vi.fn(),
+          stderrWrite: vi.fn(),
+        }),
+      ).rejects.toThrow("assets contains unsupported keys: assetPathMode")
 
       expect(exportSinglePost).not.toHaveBeenCalled()
     } finally {

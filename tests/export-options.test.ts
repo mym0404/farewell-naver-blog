@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 
+import { resolveBlockOutputSelection } from "../src/shared/block-registry.js"
 import {
   cloneExportOptions,
   frontmatterFieldMeta,
@@ -28,8 +29,9 @@ describe("export options", () => {
     expect(options.assets.downloadFailureMode).toBe("warn-and-use-source")
     expect(options.links.sameBlogPostMode).toBe("keep-source")
     expect(options.links.sameBlogPostCustomUrlTemplate).toBe("")
-    expect(options.markdown.formulaInlineWrapperOpen).toBe("$")
-    expect(options.markdown.formulaBlockWrapperOpen).toBe("$$")
+    expect(options.markdown.linkStyle).toBe("inlined")
+    expect(options.blockOutputs.defaults.formula?.params?.inlineOpen).toBe("$")
+    expect(options.blockOutputs.defaults.formula?.params?.blockOpen).toBe("$$")
     expect(options.structure.groupByCategory).toBe(true)
     expect(options.structure.includeDateInPostFolderName).toBe(true)
     expect(options.structure.includeLogNoInPostFolderName).toBe(false)
@@ -42,7 +44,7 @@ describe("export options", () => {
     expect(Object.hasOwn(options.assets, "imageContentMode")).toBe(false)
   })
 
-  it("drops removed legacy markdown options while keeping supported fields", () => {
+  it("drops removed legacy markdown block output options while keeping supported fields", () => {
     const legacyOptions = JSON.parse(`{
       "markdown": {
         "linkStyle": "referenced",
@@ -55,9 +57,69 @@ describe("export options", () => {
     const options = cloneExportOptions(legacyOptions)
 
     expect(options.markdown.linkStyle).toBe("referenced")
-    expect(options.markdown.headingLevelOffset).toBe(1)
+    expect("headingLevelOffset" in options.markdown).toBe(false)
     expect("linkCardStyle" in options.markdown).toBe(false)
     expect("videoStyle" in options.markdown).toBe(false)
+  })
+
+  it("merges block output defaults and capability overrides", () => {
+    const options = cloneExportOptions({
+      blockOutputs: {
+        defaults: {
+          code: {
+            variant: "tilde-fence",
+          },
+          formula: {
+            variant: "math-fence",
+            params: {
+              inlineOpen: "\\(",
+              inlineClose: "\\)",
+            },
+          },
+        },
+        overrides: {
+          "se4-formula": {
+            variant: "wrapper",
+            params: {
+              blockOpen: "\\[",
+              blockClose: "\\]",
+            },
+          },
+        },
+      },
+    })
+
+    expect(options.blockOutputs.defaults.code?.variant).toBe("tilde-fence")
+    expect(options.blockOutputs.defaults.formula?.variant).toBe("math-fence")
+    expect(options.blockOutputs.defaults.formula?.params?.inlineOpen).toBe("\\(")
+    expect(options.blockOutputs.overrides["se4-formula"]?.variant).toBe("wrapper")
+    expect(options.blockOutputs.overrides["se4-formula"]?.params?.inlineOpen).toBe("\\(")
+    expect(options.blockOutputs.overrides["se4-formula"]?.params?.blockOpen).toBe("\\[")
+  })
+
+  it("keeps built-in block output params when only part of them are overridden", () => {
+    const options = cloneExportOptions({
+      blockOutputs: {
+        defaults: {
+          formula: {
+            variant: "wrapper",
+            params: {
+              inlineOpen: "\\(",
+            },
+          },
+        },
+      },
+    })
+
+    const selection = resolveBlockOutputSelection({
+      blockType: "formula",
+      blockOutputs: options.blockOutputs,
+    })
+
+    expect(selection.params?.inlineOpen).toBe("\\(")
+    expect(selection.params?.inlineClose).toBe("$")
+    expect(selection.params?.blockOpen).toBe("$$")
+    expect(selection.params?.blockClose).toBe("$$")
   })
 
   it("returns field name when alias is blank", () => {
@@ -231,7 +293,7 @@ describe("export options", () => {
     expect(optionDescriptions["links-sameBlogPostCustomUrlTemplate"]).toContain("{YYYY}")
     expect(optionDescriptions["structure-postFolderNameCustomTemplate"]).toContain("{MM}")
     expect(optionDescriptions["assets-imageContentMode"]).toBeUndefined()
-    expect(optionDescriptions["markdown-formulaBlockWrapperOpen"]).toContain("$$")
+    expect(optionDescriptions["markdown-linkStyle"]).toContain("reference")
     expect(optionDescriptions["assets-assetPathMode"]).toBeUndefined()
   })
 })

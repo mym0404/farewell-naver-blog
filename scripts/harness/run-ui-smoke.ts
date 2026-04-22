@@ -1184,13 +1184,17 @@ const run = async () => {
       throw new Error("removed markdown link card controls reappeared")
     }
 
+    if (!(await page.locator('[data-block-output-card="formula"]').count())) {
+      throw new Error("block output cards should appear in the markdown step")
+    }
+
     await chooseSelectOption({
       page,
       trigger: "#markdown-linkStyle",
       value: "referenced",
     })
-    await page.fill("#markdown-formulaInlineWrapperOpen", "\\(")
-    await page.fill("#markdown-formulaInlineWrapperClose", "\\)")
+    await page.fill("#blockOutputs-defaults-formula-inlineOpen", "\\(")
+    await page.fill("#blockOutputs-defaults-formula-inlineClose", "\\)")
     await page.click('button:has-text("Assets 설정")')
     await waitForStepView({
       page,
@@ -1422,9 +1426,9 @@ const run = async () => {
       throw new Error("upload-ready panel did not expose the upload action")
     }
 
-    const uploadTargetPath = await page.locator("#job-file-tree tbody tr td").nth(0).textContent()
+    const uploadTargetRow = await page.locator("#job-file-tree tbody tr").first().textContent()
 
-    if (!uploadTargetPath?.includes("NestJS 업로드 플로우 점검")) {
+    if (!uploadTargetRow?.includes("NestJS 업로드 플로우 점검")) {
       throw new Error("upload target table did not render the expected post")
     }
 

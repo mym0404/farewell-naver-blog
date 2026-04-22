@@ -190,10 +190,15 @@ describe("renderMarkdownPost", () => {
   it("renders custom formula wrappers and image asset references", async () => {
     const options = defaultExportOptions()
 
-    options.markdown.formulaInlineWrapperOpen = "\\("
-    options.markdown.formulaInlineWrapperClose = "\\)"
-    options.markdown.formulaBlockWrapperOpen = "\\["
-    options.markdown.formulaBlockWrapperClose = "\\]"
+    options.blockOutputs.defaults.formula = {
+      variant: "wrapper",
+      params: {
+        inlineOpen: "\\(",
+        inlineClose: "\\)",
+        blockOpen: "\\[",
+        blockClose: "\\]",
+      },
+    }
 
     const rendered = await renderMarkdownPost({
       post,
@@ -319,7 +324,9 @@ describe("renderMarkdownPost", () => {
 
     options.frontmatter.enabled = false
     options.markdown.linkStyle = "referenced"
-    options.markdown.imageStyle = "source-only"
+    options.blockOutputs.defaults.image = {
+      variant: "source-only",
+    }
 
     const rendered = await renderMarkdownPost({
       post,
@@ -375,10 +382,22 @@ describe("renderMarkdownPost", () => {
   it("renders fallback warnings for image-group and table edge cases while keeping videos as plain links", async () => {
     const options = defaultExportOptions()
 
-    options.markdown.formulaBlockStyle = "math-fence"
-    options.markdown.codeFenceStyle = "tilde"
-    options.markdown.dividerStyle = "asterisk"
-    options.markdown.imageGroupStyle = "html"
+    options.blockOutputs.defaults.formula = {
+      variant: "math-fence",
+      params: {
+        inlineOpen: "$",
+        inlineClose: "$",
+      },
+    }
+    options.blockOutputs.defaults.code = {
+      variant: "tilde-fence",
+    }
+    options.blockOutputs.defaults.divider = {
+      variant: "asterisk-rule",
+    }
+    options.blockOutputs.defaults.table = {
+      variant: "html-only",
+    }
 
     const rendered = await renderMarkdownPost({
       post,
@@ -440,11 +459,10 @@ describe("renderMarkdownPost", () => {
     expect(rendered.markdown).toContain("***")
     expect(rendered.markdown).toContain("~~~")
     expect(rendered.markdown).toContain("```math\nx+y\n```")
-    expect(rendered.markdown).toContain("imageGroup html 옵션은 지원하지 않아")
     expect(rendered.markdown).toContain("[HTML Demo](https://example.com/watch-html)")
     expect(rendered.markdown).not.toContain("![HTML Demo]")
     expect(rendered.markdown).not.toContain("Open Original Post")
-    expect(rendered.markdown).toContain("<table><tbody><tr><td>cell</td></tr></tbody></table>")
+    expect(rendered.markdown).toContain("<table><tr><td>cell</td></tr></table>")
     expect(rendered.markdown).toContain("> ❌ Error: raw HTML 블록을 생략했습니다: iframe-only")
   })
 

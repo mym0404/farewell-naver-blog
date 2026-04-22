@@ -1,9 +1,17 @@
 import type {
+  BlockType,
   ExportOptions,
   FrontmatterFieldMeta,
   FrontmatterFieldName,
   OptionDescriptionMap,
+  ParserCapabilityId,
 } from "./types.js"
+import {
+  blockOutputFamilyOrder,
+  defaultBlockOutputSelections,
+  resolveBlockOutputSelection,
+} from "./block-registry.js"
+import { parserCapabilities } from "./parser-capabilities.js"
 
 export type PartialExportOptions = {
   scope?: Partial<ExportOptions["scope"]>
@@ -14,6 +22,10 @@ export type PartialExportOptions = {
     aliases?: Partial<Record<FrontmatterFieldName, string>>
   }
   markdown?: Partial<ExportOptions["markdown"]>
+  blockOutputs?: {
+    defaults?: Partial<Record<BlockType, ExportOptions["blockOutputs"]["defaults"][BlockType]>>
+    overrides?: Partial<Record<ParserCapabilityId, ExportOptions["blockOutputs"]["overrides"][ParserCapabilityId]>>
+  }
   assets?: Partial<ExportOptions["assets"]>
   links?: Partial<ExportOptions["links"]>
 }
@@ -129,17 +141,6 @@ export const optionDescriptions: OptionDescriptionMap = {
   "structure-postFolderNameCustomTemplate": "지원 변수 {slug}, {category}, {title}, {logNo}, {blogId}, {date}, {year}, {YYYY}, {YY}, {month}, {MM}, {M}, {day}, {DD}, {D}를 조합해 글 폴더 이름을 만듭니다.",
   "frontmatter-enabled": "YAML frontmatter 블록 자체를 Markdown 파일 상단에 넣을지 정합니다.",
   "markdown-linkStyle": "일반 링크를 inline 형식으로 쓸지 reference 형식으로 분리할지 정합니다.",
-  "markdown-formulaInlineWrapperOpen": "인라인 수식 앞에 붙일 래퍼 문자열입니다. 기본값은 `$`입니다.",
-  "markdown-formulaInlineWrapperClose": "인라인 수식 뒤에 붙일 래퍼 문자열입니다. 기본값은 `$`입니다.",
-  "markdown-formulaBlockStyle": "블록 수식을 wrapper 문자열로 감쌀지 `math` fence를 사용할지 정합니다.",
-  "markdown-formulaBlockWrapperOpen": "블록 수식 시작 래퍼 문자열입니다. 기본값은 `$$`입니다.",
-  "markdown-formulaBlockWrapperClose": "블록 수식 종료 래퍼 문자열입니다. 기본값은 `$$`입니다.",
-  "markdown-tableStyle": "단순 표는 Markdown으로 유지하고 복잡한 표는 가능한 텍스트를 최대한 보존합니다.",
-  "markdown-imageStyle": "이미지를 일반 Markdown 이미지, 원본 링크 감싸기, 링크만 남기기 중에서 고릅니다.",
-  "markdown-imageGroupStyle": "이미지 묶음을 개별 이미지로 풀어서 렌더링하는 방식을 제어합니다.",
-  "markdown-dividerStyle": "구분선을 `---` 또는 `***` 중 어떤 문자로 출력할지 정합니다.",
-  "markdown-codeFenceStyle": "코드 블록 fence 문자를 backtick 또는 tilde로 정합니다.",
-  "markdown-headingLevelOffset": "제목 레벨을 전체적으로 올리거나 내려서 다른 문서 구조에 맞춥니다.",
   "assets-imageHandlingMode": "이미지를 로컬로 유지할지, 원본 URL을 유지할지, 내보낸 뒤 업로드까지 이어갈지 정합니다.",
   "assets-compressionEnabled": "다운로드한 로컬 이미지 파일에 안전한 압축을 적용할지 정합니다.",
   "assets-downloadFailureMode": "이미지 다운로드가 실패했을 때 경고 후 원본 URL 유지, 경고 없이 원본 URL 유지, 이미지 생략 중에서 정합니다.",
@@ -269,19 +270,12 @@ export const defaultExportOptions = (): ExportOptions => ({
   },
   markdown: {
     linkStyle: "inlined",
-    formulaInlineStyle: "wrapper",
-    formulaInlineWrapperOpen: "$",
-    formulaInlineWrapperClose: "$",
-    formulaBlockStyle: "wrapper",
-    formulaBlockWrapperOpen: "$$",
-    formulaBlockWrapperClose: "$$",
-    tableStyle: "gfm-or-html",
-    imageStyle: "markdown-image",
-    imageGroupStyle: "split-images",
-    rawHtmlPolicy: "omit",
-    dividerStyle: "dash",
-    codeFenceStyle: "backtick",
-    headingLevelOffset: 0,
+  },
+  blockOutputs: {
+    defaults: Object.fromEntries(
+      blockOutputFamilyOrder.map((blockType) => [blockType, defaultBlockOutputSelections[blockType]]),
+    ) as ExportOptions["blockOutputs"]["defaults"],
+    overrides: {},
   },
   assets: {
     imageHandlingMode: "download-and-upload",
@@ -369,8 +363,30 @@ export const sanitizePersistedExportOptions = (options?: PartialExportOptions): 
   }
 
   if (options?.markdown) {
-    sanitized.markdown = {
-      ...options.markdown,
+    const markdown: PartialExportOptions["markdown"] = {}
+
+    if (options.markdown.linkStyle) {
+      markdown.linkStyle = options.markdown.linkStyle
+    }
+
+    if (Object.keys(markdown).length > 0) {
+      sanitized.markdown = markdown
+    }
+  }
+
+  if (options?.blockOutputs) {
+    const blockOutputs: NonNullable<PartialExportOptions["blockOutputs"]> = {}
+
+    if (options.blockOutputs.defaults) {
+      blockOutputs.defaults = { ...options.blockOutputs.defaults }
+    }
+
+    if (options.blockOutputs.overrides) {
+      blockOutputs.overrides = { ...options.blockOutputs.overrides }
+    }
+
+    if (Object.keys(blockOutputs).length > 0) {
+      sanitized.blockOutputs = blockOutputs
     }
   }
 
@@ -401,10 +417,58 @@ const coerceAssetOptions = (options: ExportOptions["assets"]) => {
   return options
 }
 
+const parserCapabilityBlockTypeMap = new Map(
+  parserCapabilities.map((capability) => [capability.id, capability.blockType]),
+)
+
+const buildDefaultBlockOutputs = (options?: PartialExportOptions["blockOutputs"]) =>
+  Object.fromEntries(
+    blockOutputFamilyOrder.map((blockType) => [
+      blockType,
+      resolveBlockOutputSelection({
+        blockType,
+        blockOutputs: options,
+      }),
+    ]),
+  ) as ExportOptions["blockOutputs"]["defaults"]
+
+const buildBlockOutputOverrides = ({
+  defaults,
+  overrides,
+}: {
+  defaults: ExportOptions["blockOutputs"]["defaults"]
+  overrides?: NonNullable<PartialExportOptions["blockOutputs"]>["overrides"]
+}) => {
+  const resolvedOverrides: ExportOptions["blockOutputs"]["overrides"] = {}
+
+  for (const [capabilityId, selection] of Object.entries(overrides ?? {})) {
+    const typedCapabilityId = capabilityId as ParserCapabilityId
+    const blockType = parserCapabilityBlockTypeMap.get(typedCapabilityId)
+
+    if (!blockType || !selection) {
+      continue
+    }
+
+    resolvedOverrides[typedCapabilityId] = resolveBlockOutputSelection({
+      blockType,
+      capabilityId: typedCapabilityId,
+      blockOutputs: {
+        defaults,
+        overrides: {
+          [typedCapabilityId]: selection,
+        },
+      },
+    })
+  }
+
+  return resolvedOverrides
+}
+
 export const cloneExportOptions = (options?: PartialExportOptions) => {
   const defaults = defaultExportOptions()
   const slugStyle = options?.structure?.slugStyle ?? defaults.structure.slugStyle
   const slugWhitespace = options?.structure?.slugWhitespace ?? getDefaultSlugWhitespace(slugStyle)
+  const resolvedBlockOutputDefaults = buildDefaultBlockOutputs(options?.blockOutputs)
 
   const clonedOptions = {
     scope: {
@@ -431,24 +495,13 @@ export const cloneExportOptions = (options?: PartialExportOptions) => {
     },
     markdown: {
       linkStyle: options?.markdown?.linkStyle ?? defaults.markdown.linkStyle,
-      formulaInlineStyle: options?.markdown?.formulaInlineStyle ?? defaults.markdown.formulaInlineStyle,
-      formulaInlineWrapperOpen:
-        options?.markdown?.formulaInlineWrapperOpen ?? defaults.markdown.formulaInlineWrapperOpen,
-      formulaInlineWrapperClose:
-        options?.markdown?.formulaInlineWrapperClose ?? defaults.markdown.formulaInlineWrapperClose,
-      formulaBlockStyle: options?.markdown?.formulaBlockStyle ?? defaults.markdown.formulaBlockStyle,
-      formulaBlockWrapperOpen:
-        options?.markdown?.formulaBlockWrapperOpen ?? defaults.markdown.formulaBlockWrapperOpen,
-      formulaBlockWrapperClose:
-        options?.markdown?.formulaBlockWrapperClose ?? defaults.markdown.formulaBlockWrapperClose,
-      tableStyle: options?.markdown?.tableStyle ?? defaults.markdown.tableStyle,
-      imageStyle: options?.markdown?.imageStyle ?? defaults.markdown.imageStyle,
-      imageGroupStyle: options?.markdown?.imageGroupStyle ?? defaults.markdown.imageGroupStyle,
-      rawHtmlPolicy: options?.markdown?.rawHtmlPolicy ?? defaults.markdown.rawHtmlPolicy,
-      dividerStyle: options?.markdown?.dividerStyle ?? defaults.markdown.dividerStyle,
-      codeFenceStyle: options?.markdown?.codeFenceStyle ?? defaults.markdown.codeFenceStyle,
-      headingLevelOffset:
-        options?.markdown?.headingLevelOffset ?? defaults.markdown.headingLevelOffset,
+    },
+    blockOutputs: {
+      defaults: resolvedBlockOutputDefaults,
+      overrides: buildBlockOutputOverrides({
+        defaults: resolvedBlockOutputDefaults,
+        overrides: options?.blockOutputs?.overrides,
+      }),
     },
     assets: {
       imageHandlingMode:

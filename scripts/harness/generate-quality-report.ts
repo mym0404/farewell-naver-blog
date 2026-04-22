@@ -5,6 +5,14 @@ const run = async () => {
   const generated = await buildGeneratedDocs()
 
   await writeUtf8({
+    targetPath: repoPath(".agents", "knowledge", "architecture", "parser-block-catalog.md"),
+    content: generated.parserBlockCatalog,
+  })
+  await writeUtf8({
+    targetPath: repoPath(".agents", "knowledge", "product", "sample-corpus.md"),
+    content: generated.sampleCorpusDoc,
+  })
+  await writeUtf8({
     targetPath: repoPath(".agents", "knowledge", "reference", "generated", "quality-score.md"),
     content: generated.qualityScore,
   })
@@ -14,7 +22,7 @@ const run = async () => {
   })
 
   console.log(
-    "quality:report updated .agents/knowledge/reference/generated/quality-score.md and .agents/knowledge/reference/generated/sample-coverage.md",
+    "quality:report updated parser/sample knowledge docs and generated coverage reports",
   )
 }
 
