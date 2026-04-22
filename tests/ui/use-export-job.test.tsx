@@ -7,6 +7,7 @@ import { defaultExportOptions } from "../../src/shared/export-options.js"
 import type { ExportJobState, ScanResult } from "../../src/shared/types.js"
 import { useExportJob } from "../../src/ui/hooks/use-export-job.js"
 import { fetchJson, postJson, postUploadJson } from "../../src/ui/lib/api.js"
+import { createTestPath } from "../helpers/test-paths.js"
 
 vi.mock("../../src/ui/lib/api.js", () => ({
   fetchJson: vi.fn(),
@@ -17,6 +18,7 @@ vi.mock("../../src/ui/lib/api.js", () => ({
 const mockedFetchJson = vi.mocked(fetchJson)
 const mockedPostJson = vi.mocked(postJson)
 const mockedPostUploadJson = vi.mocked(postUploadJson)
+const testOutputDir = createTestPath("ui-use-export-job", "output")
 const scanResult: ScanResult = {
   blogId: "mym0404",
   totalPostCount: 1,
@@ -64,7 +66,7 @@ describe("useExportJob", () => {
         id: "job-1",
         request: {
           blogIdOrUrl: "mym0404",
-          outputDir: "./output",
+          outputDir: testOutputDir,
           profile: "gfm",
           options: defaultExportOptions(),
         },
@@ -95,7 +97,7 @@ describe("useExportJob", () => {
         id: "job-1",
         request: {
           blogIdOrUrl: "mym0404",
-          outputDir: "./output",
+          outputDir: testOutputDir,
           profile: "gfm",
           options: defaultExportOptions(),
         },
@@ -138,7 +140,7 @@ describe("useExportJob", () => {
     await act(async () => {
       await result.current.startJob({
         blogIdOrUrl: "mym0404",
-        outputDir: "./output",
+        outputDir: testOutputDir,
         options: defaultExportOptions(),
         scanResult,
       })
@@ -151,7 +153,7 @@ describe("useExportJob", () => {
     expect(result.current.jobId).toBe("job-1")
     expect(mockedPostJson).toHaveBeenCalledWith("/api/export", {
       blogIdOrUrl: "mym0404",
-      outputDir: "./output",
+      outputDir: testOutputDir,
       options: defaultExportOptions(),
       scanResult,
     })
@@ -178,7 +180,7 @@ describe("useExportJob", () => {
         id: "job-2",
         request: {
           blogIdOrUrl: "mym0404",
-          outputDir: "./output",
+          outputDir: testOutputDir,
           profile: "gfm",
           options: uploadFlowOptions,
         },
@@ -209,7 +211,7 @@ describe("useExportJob", () => {
         id: "job-2",
         request: {
           blogIdOrUrl: "mym0404",
-          outputDir: "./output",
+          outputDir: testOutputDir,
           profile: "gfm",
           options: uploadFlowOptions,
         },
@@ -241,7 +243,7 @@ describe("useExportJob", () => {
     await act(async () => {
       await result.current.startJob({
         blogIdOrUrl: "mym0404",
-        outputDir: "./output",
+        outputDir: testOutputDir,
         options: uploadFlowOptions,
         scanResult,
       })
@@ -285,7 +287,7 @@ describe("useExportJob", () => {
         id: "job-burst",
         request: {
           blogIdOrUrl: "mym0404",
-          outputDir: "./output",
+          outputDir: testOutputDir,
           profile: "gfm",
           options: uploadFlowOptions,
         },
@@ -316,7 +318,7 @@ describe("useExportJob", () => {
         id: "job-burst",
         request: {
           blogIdOrUrl: "mym0404",
-          outputDir: "./output",
+          outputDir: testOutputDir,
           profile: "gfm",
           options: uploadFlowOptions,
         },
@@ -347,7 +349,7 @@ describe("useExportJob", () => {
         id: "job-burst",
         request: {
           blogIdOrUrl: "mym0404",
-          outputDir: "./output",
+          outputDir: testOutputDir,
           profile: "gfm",
           options: uploadFlowOptions,
         },
@@ -397,7 +399,7 @@ describe("useExportJob", () => {
     await act(async () => {
       await result.current.startJob({
         blogIdOrUrl: "mym0404",
-        outputDir: "./output",
+        outputDir: testOutputDir,
         options: uploadFlowOptions,
         scanResult,
       })
@@ -427,7 +429,7 @@ describe("useExportJob", () => {
       id: "job-3",
       request: {
         blogIdOrUrl: "mym0404",
-        outputDir: "./output",
+        outputDir: testOutputDir,
         profile: "gfm",
         options: uploadFlowOptions,
       },
@@ -465,7 +467,7 @@ describe("useExportJob", () => {
     await act(async () => {
       await result.current.startJob({
         blogIdOrUrl: "mym0404",
-        outputDir: "./output",
+        outputDir: testOutputDir,
         options: uploadFlowOptions,
       })
     })
@@ -496,7 +498,7 @@ describe("useExportJob", () => {
       id: "job-4",
       request: {
         blogIdOrUrl: "mym0404",
-        outputDir: "./output",
+        outputDir: testOutputDir,
         profile: "gfm",
         options: uploadFlowOptions,
       },
@@ -558,7 +560,7 @@ describe("useExportJob", () => {
     await act(async () => {
       await result.current.startJob({
         blogIdOrUrl: "mym0404",
-        outputDir: "./output",
+        outputDir: testOutputDir,
         options: uploadFlowOptions,
       })
     })
@@ -597,7 +599,7 @@ describe("useExportJob", () => {
       id: "job-resume",
       request: {
         blogIdOrUrl: "mym0404",
-        outputDir: "./output",
+        outputDir: testOutputDir,
         profile: "gfm" as const,
         options: defaultExportOptions(),
       },

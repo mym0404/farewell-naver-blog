@@ -14,6 +14,10 @@ import {
 } from "../../src/shared/export-options.js"
 import type { ExportJobState, ScanResult, UploadProviderCatalogResponse } from "../../src/shared/types.js"
 import { App } from "../../src/ui/App.js"
+import { createTestPath } from "../helpers/test-paths.js"
+
+const testOutputDir = createTestPath("ui-app", "output")
+const testResumeOutputDir = createTestPath("ui-app", "resume-output")
 
 const buildJsonResponse = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -200,7 +204,7 @@ const completedJob: ExportJobState = {
   id: "job-1",
   request: {
     blogIdOrUrl: "mym0404",
-    outputDir: "./output",
+    outputDir: testOutputDir,
     profile: "gfm",
     options: exportedOptions,
   },
@@ -547,7 +551,7 @@ describe("App", () => {
       return buildJsonResponse({
         profile: "gfm",
         options: defaultExportOptions(),
-        lastOutputDir: "./output",
+        lastOutputDir: testOutputDir,
         resumedJob: null,
         resumeSummary: null,
         resumedScanResult: null,
@@ -604,7 +608,7 @@ describe("App", () => {
         return buildJsonResponse({
           profile: "gfm",
           options: persistedOptions,
-          lastOutputDir: "./output",
+          lastOutputDir: testOutputDir,
           resumedJob: null,
           resumeSummary: null,
           resumedScanResult: null,
@@ -684,7 +688,7 @@ describe("App", () => {
       buildJsonResponse({
         profile: "gfm",
         options: defaultExportOptions(),
-        lastOutputDir: "./output",
+        lastOutputDir: testOutputDir,
         resumedJob: null,
         resumeSummary: null,
         resumedScanResult: null,
@@ -769,7 +773,7 @@ describe("App", () => {
       finishedAt: null,
       request: {
         ...completedJob.request,
-        outputDir: "./resume-output",
+        outputDir: testResumeOutputDir,
       },
       progress: {
         total: 12,
@@ -786,11 +790,11 @@ describe("App", () => {
         return buildJsonResponse({
           profile: "gfm",
           options: defaultExportOptions(),
-          lastOutputDir: "./resume-output",
+          lastOutputDir: testResumeOutputDir,
           resumedJob,
           resumeSummary: {
             status: "running",
-            outputDir: "./resume-output",
+            outputDir: testResumeOutputDir,
             totalPosts: 12,
             completedCount: 5,
             failedCount: 1,
@@ -821,7 +825,7 @@ describe("App", () => {
       within(dialog).getByText((_, element) => element?.textContent === "상태 running"),
     ).toBeInTheDocument()
     expect(
-      within(dialog).getByText((_, element) => element?.textContent === "출력 경로 ./resume-output"),
+      within(dialog).getByText((_, element) => element?.textContent === `출력 경로 ${testResumeOutputDir}`),
     ).toBeInTheDocument()
     expect(document.querySelector('[data-step-view="running"]')).not.toBeNull()
     expect(within(dialog).queryByRole("button", { name: "닫기" })).toBeNull()
@@ -838,7 +842,7 @@ describe("App", () => {
       finishedAt: null,
       request: {
         ...completedJob.request,
-        outputDir: "./resume-output",
+        outputDir: testResumeOutputDir,
       },
       progress: {
         total: 12,
@@ -855,11 +859,11 @@ describe("App", () => {
         return buildJsonResponse({
           profile: "gfm",
           options: defaultExportOptions(),
-          lastOutputDir: "./resume-output",
+          lastOutputDir: testResumeOutputDir,
           resumedJob,
           resumeSummary: {
             status: "running",
-            outputDir: "./resume-output",
+            outputDir: testResumeOutputDir,
             totalPosts: 12,
             completedCount: 5,
             failedCount: 1,
@@ -877,7 +881,7 @@ describe("App", () => {
         expect(init?.method).toBe("POST")
         expect(init?.body).toBe(
           JSON.stringify({
-            outputDir: "./resume-output",
+            outputDir: testResumeOutputDir,
             jobId: "job-reset",
           }),
         )
@@ -885,7 +889,7 @@ describe("App", () => {
         return buildJsonResponse({
           profile: "gfm",
           options: defaultExportOptions(),
-          lastOutputDir: "./output",
+          lastOutputDir: testOutputDir,
           resumedJob: null,
           resumeSummary: null,
           resumedScanResult: null,
@@ -921,7 +925,7 @@ describe("App", () => {
       resumeAvailable: true,
       request: {
         ...runningJob.request,
-        outputDir: "./resume-output",
+        outputDir: testResumeOutputDir,
       },
     }
 
@@ -930,12 +934,12 @@ describe("App", () => {
 
       if (url.endsWith("/api/export-resume/lookup")) {
         expect(init?.method).toBe("POST")
-        expect(init?.body).toBe(JSON.stringify({ outputDir: "./resume-output" }))
+        expect(init?.body).toBe(JSON.stringify({ outputDir: testResumeOutputDir }))
         return buildJsonResponse({
           resumedJob,
           resumeSummary: {
             status: "running",
-            outputDir: "./resume-output",
+            outputDir: testResumeOutputDir,
             totalPosts: 5,
             completedCount: 2,
             failedCount: 0,
@@ -954,12 +958,12 @@ describe("App", () => {
 
       if (url.endsWith("/api/export-resume/restore")) {
         expect(init?.method).toBe("POST")
-        expect(init?.body).toBe(JSON.stringify({ outputDir: "./resume-output" }))
+        expect(init?.body).toBe(JSON.stringify({ outputDir: testResumeOutputDir }))
         return buildJsonResponse({
           resumedJob,
           resumeSummary: {
             status: "running",
-            outputDir: "./resume-output",
+            outputDir: testResumeOutputDir,
             totalPosts: 5,
             completedCount: 2,
             failedCount: 0,
@@ -983,7 +987,7 @@ describe("App", () => {
 
     await user.type(screen.getByLabelText("블로그 ID 또는 URL"), "mym0404")
     await user.clear(screen.getByRole("textbox", { name: /출력 경로/ }))
-    await user.type(screen.getByRole("textbox", { name: /출력 경로/ }), "./resume-output")
+    await user.type(screen.getByRole("textbox", { name: /출력 경로/ }), testResumeOutputDir)
     await user.click(screen.getByRole("button", { name: "카테고리 불러오기" }))
 
     const dialog = await screen.findByRole("dialog")
@@ -1004,7 +1008,7 @@ describe("App", () => {
       resumeAvailable: true,
       request: {
         ...runningJob.request,
-        outputDir: "./resume-output",
+        outputDir: testResumeOutputDir,
       },
     }
 
@@ -1016,7 +1020,7 @@ describe("App", () => {
           resumedJob,
           resumeSummary: {
             status: "running",
-            outputDir: "./resume-output",
+            outputDir: testResumeOutputDir,
             totalPosts: 5,
             completedCount: 2,
             failedCount: 0,
@@ -1037,7 +1041,7 @@ describe("App", () => {
         expect(init?.method).toBe("POST")
         expect(init?.body).toBe(
           JSON.stringify({
-            outputDir: "./resume-output",
+            outputDir: testResumeOutputDir,
             jobId: "job-existing-output",
           }),
         )
@@ -1045,7 +1049,7 @@ describe("App", () => {
         return buildJsonResponse({
           profile: "gfm",
           options: defaultExportOptions(),
-          lastOutputDir: "./output",
+          lastOutputDir: testOutputDir,
           resumedJob: null,
           resumeSummary: null,
           resumedScanResult: null,
@@ -1069,7 +1073,7 @@ describe("App", () => {
 
     await user.type(screen.getByLabelText("블로그 ID 또는 URL"), "mym0404")
     await user.clear(screen.getByRole("textbox", { name: /출력 경로/ }))
-    await user.type(screen.getByRole("textbox", { name: /출력 경로/ }), "./resume-output")
+    await user.type(screen.getByRole("textbox", { name: /출력 경로/ }), testResumeOutputDir)
     await user.click(screen.getByRole("button", { name: "카테고리 불러오기" }))
 
     const dialog = await screen.findByRole("dialog")
@@ -1222,7 +1226,7 @@ describe("App", () => {
     expect(document.querySelector('[data-step-view="structure-options"] #outputDir')).toBeNull()
   })
 
-  it("restores the default output path when the field is left empty", async () => {
+  it("restores the bootstrap output path when the field is left empty", async () => {
     vi.stubGlobal("fetch", vi.fn<typeof fetch>(async (input) => {
       const url = typeof input === "string" ? input : input.toString()
       const bootstrapResponse = getBootstrapResponse(url)
@@ -1240,7 +1244,7 @@ describe("App", () => {
     await user.clear(outputDirInput)
     fireEvent.blur(outputDirInput)
 
-    expect(outputDirInput).toHaveValue("./output")
+    expect(outputDirInput).toHaveValue(testOutputDir)
   })
 
   it("runs the main export flow in the wizard without preview or modal", async () => {
@@ -1260,7 +1264,7 @@ describe("App", () => {
         expect(init?.body).toBe(
           JSON.stringify({
             blogIdOrUrl: "mym0404",
-            outputDir: "./output",
+            outputDir: testOutputDir,
             options: exportedOptions,
             scanResult,
           }),
@@ -1752,7 +1756,7 @@ describe("App", () => {
         return buildJsonResponse({
           profile: "gfm",
           options: defaultExportOptions(),
-          lastOutputDir: "./output",
+          lastOutputDir: testOutputDir,
           resumedJob: null,
           resumeSummary: null,
           resumedScanResult: null,

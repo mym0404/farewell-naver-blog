@@ -675,7 +675,11 @@ const runScenario = async ({
 }
 
 const run = async () => {
-  const server = createHttpServer()
+  const tempRoot = await mkdtemp(path.join(tmpdir(), "farewell-naver-blog-resume-smoke-"))
+  const server = createHttpServer({
+    settingsPath: path.join(tempRoot, "export-ui-settings.json"),
+    scanCachePath: path.join(tempRoot, "scan-cache.json"),
+  })
   await new Promise<void>((resolve) => {
     server.listen(0, "127.0.0.1", () => resolve())
   })
@@ -691,7 +695,6 @@ const run = async () => {
     headless: !process.argv.includes("--headed"),
     slowMo: process.argv.includes("--headed") ? 200 : 0,
   })
-  const tempRoot = await mkdtemp(path.join(tmpdir(), "farewell-naver-blog-resume-smoke-"))
 
   const emptyOutputDir = path.join(tempRoot, "empty-output")
   const runningOutputDir = path.join(tempRoot, "running-output")

@@ -14,6 +14,10 @@ import {
 } from "../../src/shared/export-options.js"
 import type { ExportOptions } from "../../src/shared/types.js"
 import { ExportOptionsPanel } from "../../src/ui/features/options/export-options-panel.js"
+import { createTestPath } from "../helpers/test-paths.js"
+
+const testOutputDir = createTestPath("ui-export-options-panel", "output")
+const testExportDir = createTestPath("ui-export-options-panel", "export")
 
 afterEach(() => {
   cleanup()
@@ -87,7 +91,7 @@ describe("ExportOptionsPanel", () => {
     render(
       <ExportOptionsPanel
         step="structure"
-        outputDir="./output"
+        outputDir={testOutputDir}
         options={latestOptions}
         optionDescriptions={optionDescriptions}
         frontmatterFieldOrder={frontmatterFieldOrder}
@@ -110,7 +114,7 @@ describe("ExportOptionsPanel", () => {
     render(
       <ExportOptionsPanel
         step="frontmatter"
-        outputDir="./output"
+        outputDir={testOutputDir}
         options={latestOptions}
         optionDescriptions={optionDescriptions}
         frontmatterFieldOrder={frontmatterFieldOrder}
@@ -139,7 +143,7 @@ describe("ExportOptionsPanel", () => {
     render(
       <ExportOptionsPanel
         step="markdown"
-        outputDir="./output"
+        outputDir={testOutputDir}
         options={latestOptions}
         optionDescriptions={optionDescriptions}
         frontmatterFieldOrder={frontmatterFieldOrder}
@@ -186,7 +190,7 @@ describe("ExportOptionsPanel", () => {
     render(
       <ExportOptionsPanel
         step="assets"
-        outputDir="./output"
+        outputDir={testOutputDir}
         options={latestOptions}
         optionDescriptions={optionDescriptions}
         frontmatterFieldOrder={frontmatterFieldOrder}
@@ -209,7 +213,7 @@ describe("ExportOptionsPanel", () => {
     render(
       <ExportOptionsPanel
         step="links"
-        outputDir="./output"
+        outputDir={testOutputDir}
         options={latestOptions}
         optionDescriptions={optionDescriptions}
         frontmatterFieldOrder={frontmatterFieldOrder}
@@ -227,7 +231,7 @@ describe("ExportOptionsPanel", () => {
     render(
       <ExportOptionsPanel
         step="links"
-        outputDir="./output"
+        outputDir={testOutputDir}
         options={latestOptions}
         optionDescriptions={optionDescriptions}
         frontmatterFieldOrder={frontmatterFieldOrder}
@@ -249,7 +253,7 @@ describe("ExportOptionsPanel", () => {
     render(
       <ExportOptionsPanel
         step="structure"
-        outputDir="./output"
+        outputDir={testOutputDir}
         options={latestOptions}
         optionDescriptions={optionDescriptions}
         frontmatterFieldOrder={frontmatterFieldOrder}
@@ -306,7 +310,7 @@ describe("ExportOptionsPanel", () => {
     render(
       <ExportOptionsPanel
         step="structure"
-        outputDir="./output"
+        outputDir={testOutputDir}
         options={options}
         optionDescriptions={optionDescriptions}
         frontmatterFieldOrder={frontmatterFieldOrder}
@@ -319,7 +323,7 @@ describe("ExportOptionsPanel", () => {
 
     const preview = query<HTMLElement>("#structure-file-tree-preview")
 
-    expect(preview.textContent).toContain("./output")
+    expect(preview.textContent).toContain(testOutputDir)
     expect(preview.textContent).toContain("개발_메모")
     expect(preview.textContent).toContain("react")
     expect(preview.textContent).toContain("typescript")
@@ -343,7 +347,7 @@ describe("ExportOptionsPanel", () => {
     render(
       <ExportOptionsPanel
         step="structure"
-        outputDir="/tmp/export"
+        outputDir={testExportDir}
         options={options}
         optionDescriptions={optionDescriptions}
         frontmatterFieldOrder={frontmatterFieldOrder}
@@ -356,7 +360,7 @@ describe("ExportOptionsPanel", () => {
 
     const preview = query<HTMLElement>("#structure-file-tree-preview")
 
-    expect(preview.textContent).toContain("/tmp/export")
+    expect(preview.textContent).toContain(testExportDir)
     expect(preview.textContent).toContain("2026-04-11-223034929697-첫 글")
     expect(preview.textContent).toContain("2026-04-12-223034929698-둘째 글")
     expect(preview.textContent).toContain("2026-04-14-223034929755-세 번째 정리")
@@ -373,7 +377,7 @@ describe("ExportOptionsPanel", () => {
     render(
       <ExportOptionsPanel
         step="structure"
-        outputDir="./output"
+        outputDir={testOutputDir}
         options={options}
         optionDescriptions={optionDescriptions}
         frontmatterFieldOrder={frontmatterFieldOrder}
@@ -402,7 +406,7 @@ describe("ExportOptionsPanel", () => {
     render(
       <ExportOptionsPanel
         step="markdown"
-        outputDir="./output"
+        outputDir={testOutputDir}
         options={defaultExportOptions()}
         optionDescriptions={optionDescriptions}
         frontmatterFieldOrder={frontmatterFieldOrder}
@@ -427,7 +431,7 @@ describe("ExportOptionsPanel", () => {
     render(
       <ExportOptionsPanel
         step="assets"
-        outputDir="./output"
+        outputDir={testOutputDir}
         options={options}
         optionDescriptions={optionDescriptions}
         frontmatterFieldOrder={frontmatterFieldOrder}
@@ -457,7 +461,7 @@ describe("ExportOptionsPanel", () => {
     render(
       <ExportOptionsPanel
         step="diagnostics"
-        outputDir="./output"
+        outputDir={testOutputDir}
         options={latestOptions}
         optionDescriptions={optionDescriptions}
         frontmatterFieldOrder={frontmatterFieldOrder}
@@ -482,7 +486,7 @@ describe("ExportOptionsPanel", () => {
     render(
       <ExportOptionsPanel
         step="links"
-        outputDir="./output"
+        outputDir={testOutputDir}
         options={latestOptions}
         optionDescriptions={optionDescriptions}
         frontmatterFieldOrder={frontmatterFieldOrder}
@@ -506,7 +510,7 @@ describe("ExportOptionsPanel", () => {
     render(
       <ExportOptionsPanel
         step="links"
-        outputDir="./output"
+        outputDir={testOutputDir}
         options={latestOptions}
         optionDescriptions={optionDescriptions}
         frontmatterFieldOrder={frontmatterFieldOrder}
@@ -531,7 +535,7 @@ describe("ExportOptionsPanel", () => {
     render(
       <ExportOptionsPanel
         step="links"
-        outputDir="./output"
+        outputDir={testOutputDir}
         options={options}
         optionDescriptions={optionDescriptions}
         frontmatterFieldOrder={frontmatterFieldOrder}

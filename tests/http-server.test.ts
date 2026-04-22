@@ -17,8 +17,11 @@ import type {
 } from "../src/shared/types.js"
 import { AbortOperationError } from "../src/shared/utils.js"
 import { createHttpServer } from "../src/server/http-server.js"
+import { createTestPath } from "./helpers/test-paths.js"
 
 let activeServer: ReturnType<typeof createHttpServer> | null = null
+let testServerRootSequence = 0
+const testServerRoots = new Set<string>()
 
 const uploadHtml = `
   <script>var data = { smartEditorVersion: 4 }</script>
@@ -345,11 +348,19 @@ const createUploadProviderSourceStub = () => ({
 
 const createTestHttpServer = (
   options: NonNullable<Parameters<typeof createHttpServer>[0]> = {},
-) =>
-  createHttpServer({
+) => {
+  testServerRootSequence += 1
+  const serverRoot = createTestPath("http-server", `server-${testServerRootSequence}`)
+
+  testServerRoots.add(serverRoot)
+
+  return createHttpServer({
+    settingsPath: options.settingsPath ?? path.join(serverRoot, "export-ui-settings.json"),
+    scanCachePath: options.scanCachePath ?? path.join(serverRoot, "scan-cache.json"),
     uploadProviderSource: createUploadProviderSourceStub(),
     ...options,
   })
+}
 
 const createUploadPayload = (
   providerFields: Record<string, UploadProviderValue>,
@@ -377,6 +388,13 @@ afterEach(async () => {
     })
   })
   activeServer = null
+
+  await Promise.all(
+    Array.from(testServerRoots, async (serverRoot) => {
+      await rm(serverRoot, { recursive: true, force: true })
+    }),
+  )
+  testServerRoots.clear()
 })
 
 describe("http server", () => {
@@ -688,7 +706,7 @@ describe("http server", () => {
       await writeFile(
         settingsPath,
         JSON.stringify({
-          lastOutputDir: "./output",
+          lastOutputDir: createTestPath("http-server", "previous-output"),
         }),
       )
       await mkdir(outputDir, { recursive: true })
@@ -799,10 +817,9 @@ describe("http server", () => {
   it("does not hydrate resumed jobs from temporary output directories", async () => {
     const rootDir = await mkdtemp(path.join(tmpdir(), "export-manifest-temp-resume-"))
     const settingsPath = path.join(rootDir, "export-ui-settings.json")
-    const outputDir = "/tmp/farewell-temp-resume-output"
+    const outputDir = await mkdtemp(path.join("/tmp", "farewell-temp-resume-output-"))
 
     try {
-      await mkdir(outputDir, { recursive: true })
       await writeFile(
         settingsPath,
         JSON.stringify({
@@ -1662,7 +1679,7 @@ describe("http server", () => {
       normalizeProviderFields: vi.fn(),
     }
 
-    activeServer = createHttpServer({
+    activeServer = createTestHttpServer({
       uploadProviderSource,
     })
     const baseUrl = await startServer(activeServer)
@@ -1965,7 +1982,7 @@ describe("http server", () => {
       },
       body: JSON.stringify({
         blogIdOrUrl: "https://blog.naver.com/mym0404",
-        outputDir: "/tmp/http-server-upload-ready",
+        outputDir: createTestPath("http-server", "upload-ready-output"),
         options,
       }),
     })
@@ -2062,7 +2079,7 @@ describe("http server", () => {
       },
       body: JSON.stringify({
         blogIdOrUrl: "https://blog.naver.com/mym0404",
-        outputDir: "/tmp/http-server-upload-provider-scalars",
+        outputDir: createTestPath("http-server", "upload-provider-scalars-output"),
         options,
       }),
     })
@@ -2125,7 +2142,7 @@ describe("http server", () => {
       },
       body: JSON.stringify({
         blogIdOrUrl: "https://blog.naver.com/mym0404",
-        outputDir: "/tmp/http-server-upload-provider-redaction",
+        outputDir: createTestPath("http-server", "upload-provider-redaction-output"),
         options,
       }),
     })
@@ -2194,7 +2211,7 @@ describe("http server", () => {
       },
       body: JSON.stringify({
         blogIdOrUrl: "https://blog.naver.com/mym0404",
-        outputDir: "/tmp/http-server-cross-site",
+        outputDir: createTestPath("http-server", "cross-site-output"),
         options,
       }),
     })
@@ -2248,7 +2265,7 @@ describe("http server", () => {
       },
       body: JSON.stringify({
         blogIdOrUrl: "https://blog.naver.com/mym0404",
-        outputDir: "/tmp/http-server-missing-origin",
+        outputDir: createTestPath("http-server", "missing-origin-output"),
         options,
       }),
     })
@@ -2310,7 +2327,7 @@ describe("http server", () => {
       },
       body: JSON.stringify({
         blogIdOrUrl: "https://blog.naver.com/mym0404",
-        outputDir: "/tmp/http-server-upload-retry",
+        outputDir: createTestPath("http-server", "upload-retry-output"),
         options,
       }),
     })
@@ -2534,7 +2551,7 @@ describe("http server", () => {
       },
       body: JSON.stringify({
         blogIdOrUrl: "https://blog.naver.com/mym0404",
-        outputDir: "/tmp/http-server-upload-progress",
+        outputDir: createTestPath("http-server", "upload-progress-output"),
         options,
       }),
     })
@@ -2618,7 +2635,7 @@ describe("http server", () => {
       },
       body: JSON.stringify({
         blogIdOrUrl: "https://blog.naver.com/mym0404",
-        outputDir: "/tmp/http-server-rewrite-failure",
+        outputDir: createTestPath("http-server", "rewrite-failure-output"),
         options,
       }),
     })
@@ -2776,7 +2793,7 @@ describe("http server", () => {
       },
       body: JSON.stringify({
         blogIdOrUrl: "https://blog.naver.com/mym0404",
-        outputDir: "/tmp/http-server-batch-rewrite-failure",
+        outputDir: createTestPath("http-server", "batch-rewrite-failure-output"),
         options,
       }),
     })
@@ -2840,7 +2857,7 @@ describe("http server", () => {
       },
       body: JSON.stringify({
         blogIdOrUrl: "https://blog.naver.com/mym0404",
-        outputDir: "/tmp/http-server-zero-candidates",
+        outputDir: createTestPath("http-server", "zero-candidates-output"),
         options,
       }),
     })

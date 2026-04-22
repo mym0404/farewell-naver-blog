@@ -14,8 +14,12 @@ import {
   slugifyTitle,
   toErrorMessage,
 } from "../src/shared/utils.js"
+import { createTestPath } from "./helpers/test-paths.js"
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url))
+const relativeTempOutputDir = path.relative(repoRoot, createTestPath("utils", "output"))
+const relativeTempClientDir = path.relative(repoRoot, createTestPath("utils", "dist", "client"))
+const absoluteTempExportDir = createTestPath("utils", "export")
 
 describe("shared utils", () => {
   it("extracts blog ids from supported inputs and rejects blank values", () => {
@@ -79,8 +83,8 @@ describe("shared utils", () => {
   })
 
   it("resolves relative paths from the repository root", () => {
-    expect(resolveRepoPath("./output")).toBe(path.join(repoRoot, "output"))
-    expect(resolveRepoPath("dist/client")).toBe(path.join(repoRoot, "dist/client"))
-    expect(resolveRepoPath("/tmp/export")).toBe("/tmp/export")
+    expect(resolveRepoPath(relativeTempOutputDir)).toBe(path.resolve(repoRoot, relativeTempOutputDir))
+    expect(resolveRepoPath(relativeTempClientDir)).toBe(path.resolve(repoRoot, relativeTempClientDir))
+    expect(resolveRepoPath(absoluteTempExportDir)).toBe(absoluteTempExportDir)
   })
 })

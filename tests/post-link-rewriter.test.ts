@@ -7,6 +7,9 @@ import {
 } from "../src/modules/exporter/post-link-rewriter.js"
 import { defaultExportOptions } from "../src/shared/export-options.js"
 import type { CategoryInfo, PostSummary } from "../src/shared/types.js"
+import { createTestPath } from "./helpers/test-paths.js"
+
+const testExportDir = createTestPath("post-link-rewriter", "export")
 
 const categories: CategoryInfo[] = [
   {
@@ -72,14 +75,14 @@ describe("post-link-rewriter", () => {
   it("rewrites matched same-blog links to relative file paths", () => {
     const options = defaultExportOptions()
     const targets = buildPostLinkTargets({
-      outputDir: "/tmp/export",
+      outputDir: testExportDir,
       posts,
       categories,
       options,
     })
     const resolveLinkUrl = createSameBlogPostLinkResolver({
       blogId: "mym0404",
-      markdownFilePath: "/tmp/export/nestjs/2026-04-11-첫_글/index.md",
+      markdownFilePath: `${testExportDir}/nestjs/2026-04-11-첫_글/index.md`,
       options: {
         links: {
           sameBlogPostMode: "relative-filepath",
@@ -96,14 +99,14 @@ describe("post-link-rewriter", () => {
   it("rewrites matched same-blog links to custom slug URLs and keeps unmatched links as-is", () => {
     const options = defaultExportOptions()
     const targets = buildPostLinkTargets({
-      outputDir: "/tmp/export",
+      outputDir: testExportDir,
       posts,
       categories,
       options,
     })
     const resolveLinkUrl = createSameBlogPostLinkResolver({
       blogId: "mym0404",
-      markdownFilePath: "/tmp/export/nestjs/2026-04-11-first/index.md",
+      markdownFilePath: `${testExportDir}/nestjs/2026-04-11-first/index.md`,
       options: {
         links: {
           sameBlogPostMode: "custom-url",
@@ -128,14 +131,14 @@ describe("post-link-rewriter", () => {
     options.structure.postFolderNameCustomTemplate = "{year}_{month}_{logNo}_{slug}"
 
     const targets = buildPostLinkTargets({
-      outputDir: "/tmp/export",
+      outputDir: testExportDir,
       posts,
       categories,
       options,
     })
     const resolveLinkUrl = createSameBlogPostLinkResolver({
       blogId: "mym0404",
-      markdownFilePath: "/tmp/export/nestjs/2026_04_223034929697_첫_글/index.md",
+      markdownFilePath: `${testExportDir}/nestjs/2026_04_223034929697_첫_글/index.md`,
       options: {
         links: {
           sameBlogPostMode: "relative-filepath",

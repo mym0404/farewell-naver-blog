@@ -3,6 +3,9 @@ import { describe, expect, it } from "vitest"
 import { renderMarkdownPost } from "../src/modules/converter/markdown-renderer.js"
 import { defaultExportOptions } from "../src/shared/export-options.js"
 import type { AssetRecord, CategoryInfo, ParsedPost, PostSummary } from "../src/shared/types.js"
+import { createTestPath } from "./helpers/test-paths.js"
+
+const testMarkdownFilePath = createTestPath("markdown-renderer", "output", "posts", "Algorithm", "test.md")
 
 const category: CategoryInfo = {
   id: 84,
@@ -156,7 +159,7 @@ describe("renderMarkdownPost", () => {
       post,
       category,
       parsedPost,
-      markdownFilePath: "/tmp/output/posts/Algorithm/test.md",
+      markdownFilePath: testMarkdownFilePath,
       reviewedWarnings: [],
       options: defaultExportOptions(),
       resolveAsset: async ({ kind, sourceUrl }) =>
@@ -196,7 +199,7 @@ describe("renderMarkdownPost", () => {
       post,
       category,
       parsedPost,
-      markdownFilePath: "/tmp/output/posts/Algorithm/test.md",
+      markdownFilePath: testMarkdownFilePath,
       reviewedWarnings: [],
       options,
       resolveAsset: async ({ kind, sourceUrl }) =>
@@ -221,7 +224,7 @@ describe("renderMarkdownPost", () => {
         ...parsedPost,
         blocks: [{ type: "paragraph", text: "**파이썬 웹 프로그래밍**  \n작가  \n김석훈" }],
       },
-      markdownFilePath: "/tmp/output/posts/Algorithm/test.md",
+      markdownFilePath: testMarkdownFilePath,
       reviewedWarnings: [],
       options: defaultExportOptions(),
       resolveAsset: async ({ kind, sourceUrl }) =>
@@ -260,7 +263,7 @@ describe("renderMarkdownPost", () => {
           },
         ],
       },
-      markdownFilePath: "/tmp/output/posts/Algorithm/test.md",
+      markdownFilePath: testMarkdownFilePath,
       reviewedWarnings: ["review warning"],
       options: defaultExportOptions(),
       resolveAsset: async ({ kind, sourceUrl }) =>
@@ -295,7 +298,7 @@ describe("renderMarkdownPost", () => {
       post,
       category,
       parsedPost,
-      markdownFilePath: "/tmp/output/posts/Algorithm/test.md",
+      markdownFilePath: testMarkdownFilePath,
       reviewedWarnings: [],
       options,
       resolveAsset: async ({ kind, sourceUrl }) =>
@@ -349,7 +352,7 @@ describe("renderMarkdownPost", () => {
           },
         ],
       },
-      markdownFilePath: "/tmp/output/posts/Algorithm/test.md",
+      markdownFilePath: testMarkdownFilePath,
       reviewedWarnings: [],
       options,
       resolveAsset: async ({ kind, sourceUrl }) =>
@@ -423,7 +426,7 @@ describe("renderMarkdownPost", () => {
           },
         ],
       },
-      markdownFilePath: "/tmp/output/posts/Algorithm/test.md",
+      markdownFilePath: testMarkdownFilePath,
       reviewedWarnings: [],
       options,
       resolveAsset: async ({ kind, sourceUrl }) =>
@@ -463,7 +466,7 @@ describe("renderMarkdownPost", () => {
           },
         ],
       },
-      markdownFilePath: "/tmp/output/posts/Algorithm/test.md",
+      markdownFilePath: testMarkdownFilePath,
       reviewedWarnings: [],
       options: defaultExportOptions(),
       resolveAsset: async ({ kind, sourceUrl }) =>
@@ -502,7 +505,7 @@ describe("renderMarkdownPost", () => {
           },
         ],
       },
-      markdownFilePath: "/tmp/output/posts/Algorithm/test.md",
+      markdownFilePath: testMarkdownFilePath,
       reviewedWarnings: [],
       options,
       resolveAsset: async () => {

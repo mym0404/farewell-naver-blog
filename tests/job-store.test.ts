@@ -3,10 +3,13 @@ import { describe, expect, it } from "vitest"
 import { defaultExportOptions } from "../src/shared/export-options.js"
 import type { ExportManifest, ExportRequest } from "../src/shared/types.js"
 import { JobStore } from "../src/server/job-store.js"
+import { createTestPath } from "./helpers/test-paths.js"
+
+const testOutputDir = createTestPath("job-store", "output")
 
 const request: ExportRequest = {
   blogIdOrUrl: "mym0404",
-  outputDir: "./output",
+  outputDir: testOutputDir,
   profile: "gfm",
   options: defaultExportOptions(),
 }
@@ -90,7 +93,7 @@ const manifest: ExportManifest = {
     },
     summary: {
       status: "completed",
-      outputDir: "./output",
+      outputDir: testOutputDir,
       totalPosts: 1,
       completedCount: 1,
       failedCount: 0,

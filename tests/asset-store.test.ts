@@ -4,6 +4,9 @@ import { describe, expect, it, vi } from "vitest"
 
 import { AssetStore } from "../src/modules/exporter/asset-store.js"
 import { defaultExportOptions } from "../src/shared/export-options.js"
+import { createTestPath } from "./helpers/test-paths.js"
+
+const testOutputDir = createTestPath("asset-store", "output")
 
 describe("AssetStore", () => {
   it("returns remote references when downloads are disabled", async () => {
@@ -12,7 +15,7 @@ describe("AssetStore", () => {
     options.assets.imageHandlingMode = "remote"
 
     const store = new AssetStore({
-      outputDir: "/tmp/output",
+      outputDir: testOutputDir,
       downloader: {
         downloadBinary: vi.fn(),
       },
@@ -22,7 +25,7 @@ describe("AssetStore", () => {
     const asset = await store.saveAsset({
       kind: "image",
       sourceUrl: "https://example.com/image.png",
-      markdownFilePath: "/tmp/output/posts/test/index.md",
+      markdownFilePath: `${testOutputDir}/posts/test/index.md`,
     })
 
     expect(asset.reference).toBe("https://example.com/image.png")
@@ -37,7 +40,7 @@ describe("AssetStore", () => {
       contentType: "image/png",
     }))
     const store = new AssetStore({
-      outputDir: "/tmp/output",
+      outputDir: testOutputDir,
       downloader: {
         downloadBinary: vi.fn(),
         fetchBinary,
@@ -48,12 +51,12 @@ describe("AssetStore", () => {
     const first = await store.saveAsset({
       kind: "image",
       sourceUrl: "https://example.com/image.png",
-      markdownFilePath: "/tmp/output/posts/test/index.md",
+      markdownFilePath: `${testOutputDir}/posts/test/index.md`,
     })
     const second = await store.saveAsset({
       kind: "image",
       sourceUrl: "https://example.com/image.png",
-      markdownFilePath: "/tmp/output/posts/test/index.md",
+      markdownFilePath: `${testOutputDir}/posts/test/index.md`,
     })
 
     const expectedHash = createHash("sha256").update("image-bytes").digest("hex")
@@ -82,7 +85,7 @@ describe("AssetStore", () => {
         contentType: "image/jpeg",
       })
     const store = new AssetStore({
-      outputDir: "/tmp/output",
+      outputDir: testOutputDir,
       downloader: {
         downloadBinary: vi.fn(),
         fetchBinary,
@@ -93,12 +96,12 @@ describe("AssetStore", () => {
     const first = await store.saveAsset({
       kind: "image",
       sourceUrl: "https://example.com/image.png",
-      markdownFilePath: "/tmp/output/posts/first/index.md",
+      markdownFilePath: `${testOutputDir}/posts/first/index.md`,
     })
     const second = await store.saveAsset({
       kind: "thumbnail",
       sourceUrl: "https://cdn.example.com/thumb.jpg",
-      markdownFilePath: "/tmp/output/posts/second/index.md",
+      markdownFilePath: `${testOutputDir}/posts/second/index.md`,
     })
 
     const expectedHash = createHash("sha256").update("same-bytes").digest("hex")
@@ -123,7 +126,7 @@ describe("AssetStore", () => {
       }
     })
     const store = new AssetStore({
-      outputDir: "/tmp/output",
+      outputDir: testOutputDir,
       downloader: {
         downloadBinary: vi.fn(),
         fetchBinary,
@@ -134,12 +137,12 @@ describe("AssetStore", () => {
     const firstPromise = store.saveAsset({
       kind: "image",
       sourceUrl: "https://example.com/image.png",
-      markdownFilePath: "/tmp/output/posts/first/index.md",
+      markdownFilePath: `${testOutputDir}/posts/first/index.md`,
     })
     const secondPromise = store.saveAsset({
       kind: "image",
       sourceUrl: "https://example.com/image.png",
-      markdownFilePath: "/tmp/output/posts/second/index.md",
+      markdownFilePath: `${testOutputDir}/posts/second/index.md`,
     })
 
     await Promise.resolve()
@@ -172,7 +175,7 @@ describe("AssetStore", () => {
         contentType: "image/png",
       })
     const store = new AssetStore({
-      outputDir: "/tmp/output",
+      outputDir: testOutputDir,
       downloader: {
         downloadBinary: vi.fn(),
         fetchBinary,
@@ -183,12 +186,12 @@ describe("AssetStore", () => {
     const firstPromise = store.saveAsset({
       kind: "image",
       sourceUrl: "https://example.com/image.png",
-      markdownFilePath: "/tmp/output/posts/first/index.md",
+      markdownFilePath: `${testOutputDir}/posts/first/index.md`,
     })
     const secondPromise = store.saveAsset({
       kind: "image",
       sourceUrl: "https://example.com/image.png",
-      markdownFilePath: "/tmp/output/posts/second/index.md",
+      markdownFilePath: `${testOutputDir}/posts/second/index.md`,
     })
 
     await Promise.resolve()
@@ -202,7 +205,7 @@ describe("AssetStore", () => {
     const recovered = await store.saveAsset({
       kind: "image",
       sourceUrl: "https://example.com/image.png",
-      markdownFilePath: "/tmp/output/posts/recovered/index.md",
+      markdownFilePath: `${testOutputDir}/posts/recovered/index.md`,
     })
     const expectedHash = createHash("sha256").update("recovered-image").digest("hex")
 
@@ -222,7 +225,7 @@ describe("AssetStore", () => {
     options.assets.compressionEnabled = true
 
     const store = new AssetStore({
-      outputDir: "/tmp/output",
+      outputDir: testOutputDir,
       downloader: {
         downloadBinary,
         fetchBinary,
@@ -234,7 +237,7 @@ describe("AssetStore", () => {
     const asset = await store.saveAsset({
       kind: "image",
       sourceUrl: "https://example.com/image.png",
-      markdownFilePath: "/tmp/output/posts/test/index.md",
+      markdownFilePath: `${testOutputDir}/posts/test/index.md`,
     })
 
     expect(fetchBinary).toHaveBeenCalledTimes(1)

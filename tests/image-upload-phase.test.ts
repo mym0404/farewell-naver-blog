@@ -6,6 +6,9 @@ import {
   runImageUploadPhase,
   type ImageUploadProgress,
 } from "../src/modules/exporter/image-upload-phase.js"
+import { createTestPath } from "./helpers/test-paths.js"
+
+const testExportDir = createTestPath("image-upload-phase", "export")
 
 const createCandidate = (localPath: string, sourceUrl = `https://example.com/${localPath}`): UploadCandidate => ({
   kind: "image",
@@ -30,7 +33,7 @@ describe("runImageUploadPhase", () => {
 
     const results = await runImageUploadPhase(
       {
-        outputDir: "/tmp/export",
+        outputDir: testExportDir,
         candidates: [
           createCandidate("public/a.png"),
           createCandidate("public/a.png", "https://example.com/duplicate-a.png"),
@@ -54,7 +57,7 @@ describe("runImageUploadPhase", () => {
     expect(client.changeCurrentUploader).toHaveBeenCalledWith("github", {
       repo: "owner/name",
     })
-    expect(upload.mock.calls).toEqual([[["/tmp/export/public/a.png"]], [["/tmp/export/public/b.png"]]])
+    expect(upload.mock.calls).toEqual([[[`${testExportDir}/public/a.png`]], [[`${testExportDir}/public/b.png`]]])
     expect(startedCandidates).toEqual(["public/a.png", "public/b.png"])
     expect(uploadedCandidates).toEqual(["public/a.png", "public/b.png"])
     expect(progressUpdates).toEqual([
@@ -98,7 +101,7 @@ describe("runImageUploadPhase", () => {
 
     const uploadPromise = runImageUploadPhase(
       {
-        outputDir: "/tmp/export",
+        outputDir: testExportDir,
         candidates: [createCandidate("public/a.png"), createCandidate("public/b.png")],
         uploaderKey: "github",
         uploaderConfig: {

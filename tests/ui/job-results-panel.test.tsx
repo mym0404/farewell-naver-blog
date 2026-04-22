@@ -13,6 +13,9 @@ import type {
   UploadProviderValue,
 } from "../../src/shared/types.js"
 import { JobResultsPanel } from "../../src/ui/features/job-results/job-results-panel.js"
+import { createTestPath } from "../helpers/test-paths.js"
+
+const testOutputDir = createTestPath("ui-job-results-panel", "output")
 
 afterEach(() => {
   cleanup()
@@ -240,7 +243,7 @@ const uploadReadyJob: ExportJobState = {
   id: "job-upload-ready",
   request: {
     blogIdOrUrl: "mym0404",
-    outputDir: "./output",
+    outputDir: testOutputDir,
     profile: "gfm",
     options: (() => {
       const options = defaultExportOptions()
@@ -557,7 +560,7 @@ describe("JobResultsPanel upload provider UX", () => {
 
     await user.hover(screen.getByText("first"))
 
-    expect((await screen.findAllByText("./output/posts/first/index.md")).length).toBeGreaterThan(0)
+    expect((await screen.findAllByText(`${testOutputDir}/posts/first/index.md`)).length).toBeGreaterThan(0)
 
     await user.click(screen.getByRole("button", { name: "첫 글 외부 미리보기" }))
 
@@ -570,7 +573,7 @@ describe("JobResultsPanel upload provider UX", () => {
           "x-requested-with": "XMLHttpRequest",
         },
         body: JSON.stringify({
-          outputDir: "./output",
+          outputDir: testOutputDir,
           outputPath: "posts/first/index.md",
         }),
       }),
@@ -588,7 +591,7 @@ describe("JobResultsPanel upload provider UX", () => {
           "x-requested-with": "XMLHttpRequest",
         },
         body: JSON.stringify({
-          outputDir: "./output",
+          outputDir: testOutputDir,
           outputPath: "posts/first/index.md",
         }),
       }),

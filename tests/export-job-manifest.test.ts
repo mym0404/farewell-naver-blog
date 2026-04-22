@@ -3,6 +3,9 @@ import { describe, expect, it } from "vitest"
 import { defaultExportOptions } from "../src/shared/export-options.js"
 import type { ExportJobState, ScanResult } from "../src/shared/types.js"
 import { buildResumableExportManifest } from "../src/server/export-job-manifest.js"
+import { createTestPath } from "./helpers/test-paths.js"
+
+const testOutputDir = createTestPath("export-job-manifest", "output")
 
 const scanResult: ScanResult = {
   blogId: "mym0404",
@@ -49,7 +52,7 @@ const job: ExportJobState = {
   id: "job-resume",
   request: {
     blogIdOrUrl: "mym0404",
-    outputDir: "./output",
+    outputDir: testOutputDir,
     profile: "gfm",
     options: defaultExportOptions(),
   },

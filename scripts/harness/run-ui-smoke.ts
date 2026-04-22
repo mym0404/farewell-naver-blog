@@ -76,6 +76,7 @@ const mobileViewport = {
   width: 375,
   height: 812,
 } as const
+const fallbackSmokeOutputDir = path.join(tmpdir(), `farewell-naver-blog-smoke-fixture-${process.pid}`, "output")
 
 const getCaptureDir = () => {
   const index = process.argv.indexOf("--capture-dir")
@@ -301,7 +302,7 @@ const createBaseJob = () => ({
   id: "job-smoke",
   request: {
     blogIdOrUrl: "mym0404",
-    outputDir: "/tmp/farewell-naver-blog-smoke",
+    outputDir: fallbackSmokeOutputDir,
     profile: "gfm",
     options: createUploadFlowOptions(),
   },
@@ -400,7 +401,7 @@ const buildUploadJob = ({
       selectedCategoryIds: [101],
       startedAt: uploadTimelineTimestamps.startedAt,
       finishedAt,
-      outputDir: "/tmp/farewell-naver-blog-smoke",
+      outputDir: fallbackSmokeOutputDir,
       totalPosts: uploadTargetCount,
       successCount: uploadTargetCount,
       failureCount: 0,
@@ -748,7 +749,12 @@ const waitForStepView = async ({
 }
 
 const run = async () => {
-  const server = createHttpServer()
+  const tempRoot = await mkdtemp(path.join(tmpdir(), "farewell-naver-blog-smoke-"))
+  const outputDir = path.join(tempRoot, "output")
+  const server = createHttpServer({
+    settingsPath: path.join(tempRoot, "export-ui-settings.json"),
+    scanCachePath: path.join(tempRoot, "scan-cache.json"),
+  })
   await new Promise<void>((resolve) => {
     server.listen(0, "127.0.0.1", () => resolve())
   })
@@ -766,7 +772,6 @@ const run = async () => {
     viewport: desktopViewport,
   })
   const page = await context.newPage()
-  const outputDir = await mkdtemp(path.join(tmpdir(), "farewell-naver-blog-smoke-"))
   const captureDir = getCaptureDir()
 
   page.on("console", (message) => {
@@ -1670,7 +1675,7 @@ const run = async () => {
   } finally {
     await browser.close()
     server.close()
-    await rm(outputDir, {
+    await rm(tempRoot, {
       recursive: true,
       force: true,
     })

@@ -10,8 +10,11 @@ import {
   singlePostCliUsage,
 } from "../scripts/lib/single-post-cli.js"
 import { type RunSinglePostCliDeps, runSinglePostCli } from "../scripts/export-single-post.js"
+import { createTestPath } from "./helpers/test-paths.js"
 
 type RunSinglePostExportFn = NonNullable<RunSinglePostCliDeps["exportSinglePost"]>
+const testOutputDir = createTestPath("single-post-cli", "output")
+const testExporterMarkdownFilePath = createTestPath("single-post-cli", "output", "posts", "my-blog.md")
 
 describe("single-post cli", () => {
   it("parses required and optional flags", () => {
@@ -22,7 +25,7 @@ describe("single-post cli", () => {
         "--logNo",
         "123456789012",
         "--outputDir",
-        "./output",
+        testOutputDir,
         "--report",
         "./report.json",
         "--manualReviewMarkdownPath",
@@ -36,7 +39,7 @@ describe("single-post cli", () => {
     ).toEqual({
       blogId: "my-blog",
       logNo: "123456789012",
-      outputDir: "./output",
+      outputDir: testOutputDir,
       reportPath: "./report.json",
       manualReviewMarkdownPath: "./post.md",
       metadataCachePath: "./metadata-cache.json",
@@ -47,7 +50,7 @@ describe("single-post cli", () => {
 
   it("throws the usage string when required flags are missing", () => {
     expect(() =>
-      parseSinglePostCliArgs(["--blogId", "my-blog", "--outputDir", "./output"]),
+      parseSinglePostCliArgs(["--blogId", "my-blog", "--outputDir", testOutputDir]),
     ).toThrow(singlePostCliUsage())
   })
 
@@ -64,7 +67,7 @@ describe("single-post cli", () => {
         logNo: "123456789012",
         editorVersion: 4,
         blockTypes: ["paragraph", "code"],
-        exporterMarkdownFilePath: "/tmp/output/posts/my-blog.md",
+        exporterMarkdownFilePath: testExporterMarkdownFilePath,
         manualReviewMarkdownFilePath: "/tmp/manual-review/post.md",
         metadataCachePath: "/tmp/manual-review/metadata-cache.json",
         parserWarnings: ["parser 1", "parser 2"],
@@ -79,7 +82,7 @@ describe("single-post cli", () => {
       "parserWarnings: 2",
       "reviewerWarnings: 1",
       "renderWarnings: 0",
-      "exporterMarkdownFilePath: /tmp/output/posts/my-blog.md",
+      `exporterMarkdownFilePath: ${testExporterMarkdownFilePath}`,
       "manualReviewMarkdownFilePath: /tmp/manual-review/post.md",
       "metadataCachePath: /tmp/manual-review/metadata-cache.json",
     ].join("\n"))
@@ -92,7 +95,7 @@ describe("single-post cli", () => {
         logNo: "123456789012",
         editorVersion: 4,
         blockTypes: [],
-        exporterMarkdownFilePath: "/tmp/output/posts/my-blog.md",
+        exporterMarkdownFilePath: testExporterMarkdownFilePath,
         manualReviewMarkdownFilePath: null,
         metadataCachePath: null,
         parserWarnings: [],
@@ -107,7 +110,7 @@ describe("single-post cli", () => {
       "parserWarnings: 0",
       "reviewerWarnings: 0",
       "renderWarnings: 1",
-      "exporterMarkdownFilePath: /tmp/output/posts/my-blog.md",
+      `exporterMarkdownFilePath: ${testExporterMarkdownFilePath}`,
       "manualReviewMarkdownFilePath: (not provided)",
       "metadataCachePath: (not provided)",
     ].join("\n"))
