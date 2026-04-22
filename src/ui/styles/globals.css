@@ -114,6 +114,8 @@
     radial-gradient(circle at top center, rgba(10, 114, 239, 0.1), transparent 30%),
     radial-gradient(circle at bottom left, rgba(222, 29, 141, 0.08), transparent 28%),
     linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+  --brand-mark-opacity: 0.08;
+  --brand-mark-glow: rgba(3, 199, 90, 0.16);
 }
 
 .dark {
@@ -178,6 +180,8 @@
     radial-gradient(circle at 20% 80%, rgba(222, 29, 141, 0.14), transparent 28%),
     radial-gradient(circle at 82% 18%, rgba(255, 91, 79, 0.08), transparent 22%),
     linear-gradient(180deg, #050505 0%, #0a0a0a 100%);
+  --brand-mark-opacity: 0.12;
+  --brand-mark-glow: rgba(3, 199, 90, 0.24);
 }
 
 .light {
@@ -301,6 +305,24 @@ pre,
   background: var(--shell-gradient);
 }
 
+.dashboard-brand-mark {
+  position: fixed;
+  inset-inline: 0;
+  bottom: -9rem;
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.dashboard-brand-mark img {
+  width: min(82vw, 34rem);
+  flex: none;
+  user-select: none;
+  opacity: var(--brand-mark-opacity);
+  filter: blur(24px) drop-shadow(0 0 110px var(--brand-mark-glow));
+  transform: translateY(22%) scale(1.12);
+}
+
 .board-card {
   border: 1px solid var(--border);
   background: var(--panel);
@@ -380,6 +402,18 @@ pre,
   background: var(--card);
   color: var(--foreground);
   box-shadow: var(--panel-shadow-border), 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+
+@media (max-width: 640px) {
+  .dashboard-brand-mark {
+    bottom: -7rem;
+  }
+
+  .dashboard-brand-mark img {
+    width: min(94vw, 24rem);
+    filter: blur(18px) drop-shadow(0 0 72px var(--brand-mark-glow));
+    transform: translateY(26%) scale(1.04);
+  }
 }
 
 .wizard-kicker,

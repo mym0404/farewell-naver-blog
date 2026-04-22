@@ -1430,6 +1430,9 @@ export const App = () => {
         className="shell-backdrop pointer-events-none fixed inset-0 -z-10"
         aria-hidden="true"
       />
+      <div className="dashboard-brand-mark pointer-events-none fixed inset-x-0 z-0" aria-hidden="true">
+        <img src="/brand/logo.svg" alt="" />
+      </div>
 
       {bootstrapping ? (
         <section className="fixed inset-0 z-50 grid place-items-center px-4 py-6" data-step-view="bootstrap-loading">
@@ -1458,7 +1461,7 @@ export const App = () => {
         </section>
       ) : null}
 
-      <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-5 px-4 py-5 xl:px-6 xl:py-6">
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-5 px-4 py-5 xl:px-6 xl:py-6">
         <Card variant="panel" className="overflow-hidden">
           <CardContent className="grid gap-4 p-5">
             <div className="grid gap-2.5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
