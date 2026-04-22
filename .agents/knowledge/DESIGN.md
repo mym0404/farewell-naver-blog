@@ -6,6 +6,7 @@
 ## 시작점
 - UI 셸과 단계 전환: [../../src/ui/App.tsx](../../src/ui/App.tsx)
 - 전역 토큰과 helper surface: [../../src/ui/styles/globals.css](../../src/ui/styles/globals.css)
+- 브랜드/소셜 정적 자산: [../../public/brand](../../public/brand)
 - shadcn chooser와 현재 사용처: [./engineering/shadcn-component-map.md](./engineering/shadcn-component-map.md)
 - 옵션 패널: [../../src/ui/features/options/export-options-panel.tsx](../../src/ui/features/options/export-options-panel.tsx)
 - 결과/업로드 패널: [../../src/ui/features/job-results/job-results-panel.tsx](../../src/ui/features/job-results/job-results-panel.tsx)
@@ -15,6 +16,7 @@
 ## Source Of Truth
 - theme source of truth는 `globals.css`다.
 - primitive의 look은 `src/ui/components/ui/*`가 맡고, feature 파일은 layout과 composition 위주로 유지한다.
+- 로고, favicon, OG image, 그 원본 preview처럼 번들링이 필요 없는 브랜드 자산은 `src`가 아니라 `public/brand/`에 둔다.
 - shadcn component를 다룰 때는 먼저 `npx shadcn@latest info --json`, `npx shadcn@latest docs <component>`로 현재 프로젝트 기준과 API를 확인한다.
 - 아이콘은 전부 Remix icon 기준으로 유지하고, 새 아이콘도 `@remixicon/react`에서만 고른다.
 - dark/light 선호값은 서버가 `.cache/export-ui-settings.json`에 저장하고 bootstrap 응답으로 복구한다.

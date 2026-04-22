@@ -1,11 +1,8 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
   <title>Goodbye Naver Blog logo</title>
-  <rect x="142" y="88" width="44" height="168" rx="22" fill="#03C75A" />
-  <rect x="202" y="68" width="44" height="188" rx="22" fill="#03C75A" />
-  <rect x="262" y="84" width="44" height="172" rx="22" fill="#03C75A" />
-  <rect x="322" y="118" width="44" height="138" rx="22" fill="#03C75A" />
-  <rect x="148" y="224" width="214" height="174" rx="70" fill="#03C75A" />
-  <rect x="100" y="252" width="128" height="50" rx="25" transform="rotate(-32 100 252)" fill="#03C75A" />
-  <path d="M388 176C416 194 432 222 432 256" stroke="#03C75A" stroke-width="20" stroke-linecap="round" opacity="0.45" />
-  <path d="M416 138C458 168 482 212 482 262" stroke="#03C75A" stroke-width="16" stroke-linecap="round" opacity="0.22" />
+  <path
+    d="M17.5 2C19.9853 2 22 4.01472 22 6.5C22 7.85621 21.4001 9.07229 20.4511 9.89732C20.8061 10.8644 21 11.9096 21 13C21 17.9706 16.9706 22 12 22C7.02944 22 3 17.9706 3 13C3 11.9096 3.19392 10.8644 3.54916 9.8972C2.59995 9.07229 2 7.85621 2 6.5C2 4.01472 4.01472 2 6.5 2C8.12553 2 9.54976 2.86189 10.3406 4.15362C10.8774 4.05251 11.4326 4 12 4C12.5674 4 13.1226 4.05251 13.6609 4.15294C14.4502 2.86189 15.8745 2 17.5 2ZM10 13H8C8 15.2091 9.79086 17 12 17C14.2091 17 16 15.2091 16 13H14C14 14.1046 13.1046 15 12 15C10.8954 15 10 14.1046 10 13Z"
+    transform="translate(55 55) scale(18.25)"
+    fill="#03C75A"
+  />
 </svg>

@@ -19,6 +19,7 @@
 - `.agents/knowledge/`: 반복해서 참조해야 하는 evergreen 저장소 지식
 - `.agents/knowledge/reference/`: runbook, generated 보고서, README 이미지처럼 깊게 보는 참고 자료
 - `.cache/`: 카테고리 스캔 캐시와 export UI 설정 같은 영속 로컬 상태 저장 위치
+- `public/brand/`: 로고, favicon, OG image, preview 원본 같은 정적 브랜드 자산 위치
 - `.agents/plans/`: 진행 중 작업 메모와 실행 증거
 - `README.md`, `CONTRIBUTING.md`: 사용자와 기여자용 진입 문서
 
