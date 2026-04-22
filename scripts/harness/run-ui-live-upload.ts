@@ -440,9 +440,13 @@ const waitForObservedUploadState = async ({
 
 const run = async () => {
   const config = resolveLiveUploadConfig()
-  const server = createHttpServer()
   const browserMode = resolveBrowserMode()
   const browser = await chromium.launch(browserMode)
+  const tempRoot = await mkdtemp(path.join(tmpdir(), "farewell-live-upload-harness-"))
+  const server = createHttpServer({
+    settingsPath: path.join(tempRoot, "export-ui-settings.json"),
+    scanCachePath: path.join(tempRoot, "scan-cache.json"),
+  })
   const context = await browser.newContext({
     viewport: {
       width: 1440,
@@ -450,7 +454,7 @@ const run = async () => {
     },
   })
   const page = await context.newPage()
-  const outputDir = await mkdtemp(path.join(tmpdir(), "farewell-live-upload-ui-"))
+  const outputDir = path.join(tempRoot, "output")
   const captureDir = getCaptureDir()
   const consoleErrors: string[] = []
   const pageErrors: string[] = []
@@ -565,6 +569,14 @@ const run = async () => {
     }
 
     await page.selectOption("#assets-imageHandlingMode", "download-and-upload")
+    await clickWizardButton({
+      page,
+      label: "Link 처리",
+    })
+    await waitForStepView({
+      page,
+      step: "links-options",
+    })
     await clickWizardButton({
       page,
       label: "진단 설정",
@@ -954,6 +966,10 @@ const run = async () => {
     await context.close()
     await browser.close()
     await rm(outputDir, {
+      recursive: true,
+      force: true,
+    })
+    await rm(tempRoot, {
       recursive: true,
       force: true,
     })
