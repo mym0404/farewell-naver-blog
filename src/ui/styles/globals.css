@@ -488,17 +488,22 @@ pre,
 }
 
 .log-surface {
-  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
-  background: color-mix(in srgb, var(--background) 72%, black 28%);
-  color: var(--foreground);
+  border: 1px solid #232323;
+  background: #0a0a0a;
+  color: #fafafa;
+}
+
+.log-surface .logs,
+.log-surface [data-job-log-message] {
+  color: #fafafa;
 }
 
 .log-line {
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 74%, transparent);
+  border-bottom: 1px solid rgba(250, 250, 250, 0.08);
 }
 
 .log-meta {
-  color: var(--muted-foreground);
+  color: rgba(250, 250, 250, 0.62);
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
 }

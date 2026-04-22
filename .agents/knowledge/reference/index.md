@@ -1,7 +1,7 @@
 # Reference Index
 
 ## 목적
-이 문서는 `.agents/knowledge` 아래의 참고 자료 경로를 모아 둔 인덱스다. evergreen 규칙은 상위 knowledge 문서를 우선 보고, 반복 절차나 generated 출력이 필요할 때 여기서 내려간다.
+이 문서는 `.agents/knowledge` 아래의 참고 자료 경로를 모아 둔 인덱스다. evergreen 규칙은 상위 knowledge 문서를 우선 보고, 반복 절차나 generated 출력이 필요할 때 여기서 내려간다. 이 트리는 source of truth가 아니라 reference tier다.
 
 ## 시작점
 - 전체 knowledge 라우터: [../index.md](../index.md)

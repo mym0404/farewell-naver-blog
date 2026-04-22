@@ -13,7 +13,7 @@
 
 ## 검증 방법
 - `pnpm typecheck`: 모듈 경계나 import 방향을 바꾼 뒤 정적 연결 상태를 빠르게 확인할 때 실행한다.
-- focused test 또는 `pnpm check:quick`: `check:quick`는 현재 `check:local` 별칭이다. 바뀐 모듈 seam이 실제 동작과 parser 계약을 깨지 않았는지 확인할 때 실행한다.
+- focused test 또는 `pnpm check:quick`: 바뀐 모듈 seam이 실제 동작과 parser 계약을 깨지 않았는지 확인할 때 실행한다.
 
 ## Module Boundaries
 - `blog-fetcher`: 네이버 모바일 API, 글 HTML fetch, 자산 다운로드

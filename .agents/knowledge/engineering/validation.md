@@ -5,6 +5,7 @@
 
 ## Source Of Truth
 - 실제 검증 명령은 `package.json`, `scripts/harness/*`, `.github/workflows/required-checks.yml`이 기준이다.
+- `check:*` alias 관계와 command graph 풀이는 이 문서와 `package.json`에만 둔다. 다른 knowledge 문서는 검증 의미만 설명한다.
 
 ## 관련 코드
 - [../../../package.json](../../../package.json)
@@ -17,9 +18,15 @@
 - [../../../scripts/harness/run-ui-live-upload.ts](../../../scripts/harness/run-ui-live-upload.ts)
 
 ## 검증 방법
-- `pnpm check:quick`: 현재 `check:local` 별칭이다. 저장소 파일을 수정한 모든 턴에서 가장 먼저 실행하는 기본 검사다. 같은 로컬 기준선(`typecheck + test:offline + parser:check`)을 다시 확인한다.
+- `pnpm check:quick`: 저장소 파일을 수정한 모든 턴에서 가장 먼저 실행하는 기본 검사다. 같은 로컬 기준선을 다시 확인한다.
 - `pnpm check:full`: fixture-based sample regression, generated coverage, Playwright smoke UI까지 포함한 전체 기본 회귀가 필요할 때 실행한다.
 - `pnpm test:coverage`: 커버리지 게이트나 CI 동작을 다시 확인해야 할 때 실행한다.
+
+## Baseline Command Graph
+- `package.json` 기준으로 `pnpm check:quick`는 현재 `pnpm check:local`을 호출한다.
+- `package.json` 기준으로 `pnpm check:local`은 `pnpm typecheck && pnpm test:offline && pnpm parser:check`를 실행한다.
+- `package.json` 기준으로 `pnpm check:full`은 `pnpm quality:report && pnpm check:local && pnpm samples:verify && pnpm smoke:ui`를 실행한다.
+- `package.json` 기준으로 `pnpm check`는 `pnpm check:full`을 호출한다.
 
 ## 테스트 종류
 - parser unit
@@ -45,10 +52,10 @@
   V8 coverage threshold를 확인한다.
 
 ## Primary Commands
-- `pnpm check:quick`: 현재 `pnpm check:local` 별칭이다. 저장소 파일을 수정한 모든 턴에서 가장 먼저 실행하는 기본 검사다.
-- `pnpm check:local`: `typecheck + test:offline + parser:check` 기본 회귀를 확인할 때 실행한다.
-- `pnpm check:full`: `quality:report + check:local + samples:verify + smoke:ui` 전체 기본 회귀를 확인할 때 실행한다.
-- `pnpm check`: `check:full`을 그대로 부를 때 실행한다.
+- `pnpm check:quick`: 저장소 파일을 수정한 모든 턴에서 가장 먼저 실행하는 기본 검사다.
+- `pnpm check:local`: 타입, 오프라인 테스트, parser 구조 계약까지 포함한 기본 회귀를 확인할 때 실행한다.
+- `pnpm check:full`: generated 품질 보고서, sample fixture, Playwright smoke UI까지 묶은 전체 기본 회귀를 확인할 때 실행한다.
+- `pnpm check`: CI나 수동 검증에서 전체 기본 회귀 진입점을 그대로 부를 때 실행한다.
 
 ## Focused Commands
 - `pnpm dev`: `tsx watch`와 Vite HMR이 붙은 개발 서버를 `http://localhost:4173`에 띄울 때 실행한다.

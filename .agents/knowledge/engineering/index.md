@@ -3,7 +3,7 @@
 ## 여기서 찾는 것
 - 런타임, 주요 의존성, 진입점: [stack.md](./stack.md)
 - 구현 우선순위와 문서 경계: [coding-guidelines.md](./coding-guidelines.md)
-- 패키지 스크립트, 훅, CI, 재검증 루프: [validation.md](./validation.md)
+- 패키지 스크립트, alias 관계, 훅, CI, 재검증 루프: [validation.md](./validation.md)
 - capability/sample/UI harness 역할: [harness-engineering-notes.md](./harness-engineering-notes.md)
 - shadcn 설치 목록, 현재 사용처, chooser 기준: [shadcn-component-map.md](./shadcn-component-map.md)
 
@@ -19,5 +19,5 @@
 - 훅, CI, smoke, fixture-based sample verification 연결 지점을 찾아야 할 때
 
 ## 검증
-- `pnpm check:quick`: 현재 `check:local` 별칭이다. 저장소 파일을 수정한 모든 턴에서 가장 먼저 실행하는 기본 검사다.
+- `pnpm check:quick`: 저장소 파일을 수정한 모든 턴에서 가장 먼저 실행하는 기본 검사다.
 - `pnpm quality:report`: parser coverage나 sample 품질 지표가 달라질 수 있는 변경 뒤 generated 보고서를 갱신할 때 실행한다.
