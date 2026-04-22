@@ -15,6 +15,14 @@ import { Checkbox } from "../../components/ui/checkbox.js"
 import { Input } from "../../components/ui/input.js"
 import { ScrollArea } from "../../components/ui/scroll-area.js"
 import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select.js"
+import {
   Table,
   TableBody,
   TableCell,
@@ -22,6 +30,7 @@ import {
   TableHeader,
   TableRow,
 } from "../../components/ui/table.js"
+import { cn } from "../../lib/cn.js"
 
 export const CategoryPanel = ({
   scanResult,
@@ -91,20 +100,28 @@ export const CategoryPanel = ({
 
       <CardContent className="panel-body grid gap-5 p-6">
         <div className="grid gap-4 xl:grid-cols-3">
-          <label className="field-card grid min-h-0 gap-2 rounded-2xl px-4 py-4">
-            <span className="text-sm font-semibold text-foreground">카테고리 포함 범위</span>
-            <select
-              id="scope-categoryMode"
+          <div className="field-card grid min-h-0 gap-2 rounded-2xl px-4 py-4">
+            <label htmlFor="scope-categoryMode" className="text-sm font-semibold text-foreground">
+              카테고리 포함 범위
+            </label>
+            <Select
               value={categoryMode}
               disabled={!scanResult}
-              onChange={(event) =>
-                onCategoryModeChange(event.target.value as "selected-and-descendants" | "exact-selected")
+              onValueChange={(value) =>
+                onCategoryModeChange(value as "selected-and-descendants" | "exact-selected")
               }
             >
-              <option value="selected-and-descendants">선택 카테고리 + 하위 카테고리</option>
-              <option value="exact-selected">선택 카테고리만</option>
-            </select>
-          </label>
+              <SelectTrigger id="scope-categoryMode" data-value={categoryMode}>
+                <SelectValue placeholder="카테고리 포함 범위 선택" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="selected-and-descendants">선택 카테고리 + 하위 카테고리</SelectItem>
+                  <SelectItem value="exact-selected">선택 카테고리만</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
 
           <label className="field-card grid min-h-0 gap-2 rounded-2xl px-4 py-4">
             <span className="text-sm font-semibold text-foreground">시작일</span>
@@ -201,13 +218,11 @@ export const CategoryPanel = ({
         ) : (
           <div id="category-list" className="section-card category-list overflow-hidden rounded-2xl">
             <ScrollArea className="h-[min(28rem,52vh)] overflow-hidden">
-              <Table className="min-w-[42rem]">
+              <Table className="min-w-[30rem]">
                 <TableHeader className="sticky top-0 z-10">
                   <TableRow className="hover:bg-transparent">
                     <TableHead className="w-14">선택</TableHead>
                     <TableHead>카테고리</TableHead>
-                    <TableHead>경로</TableHead>
-                    <TableHead className="w-20">깊이</TableHead>
                     <TableHead className="w-24">글 수</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -225,35 +240,40 @@ export const CategoryPanel = ({
                     return (
                       <TableRow
                         key={category.id}
-                        className="category-item last:border-b-0"
+                        className={cn(
+                          "category-item cursor-pointer last:border-b-0",
+                          hasParent && "bg-[color-mix(in_srgb,var(--foreground)_4%,transparent)]",
+                        )}
                         data-category-id={category.id}
+                        data-category-level={hasParent ? "child" : "root"}
+                        onClick={() => onCategoryToggle(category.id, checked !== true)}
                       >
                         <TableCell className="w-14">
                           <Checkbox
                             checked={checked}
                             aria-label={categoryPath}
+                            onClick={(event) => event.stopPropagation()}
                             onCheckedChange={(next) => onCategoryToggle(category.id, next === true)}
                           />
                         </TableCell>
                         <TableCell>
                           <div
-                            className="grid gap-0.5"
+                            className="relative grid gap-0.5"
                             style={{ paddingLeft: indentWidth }}
                           >
                             {hasParent ? (
-                              <span
-                                aria-hidden="true"
-                                className="mb-1 inline-flex items-center"
-                              >
-                                <span className="h-px w-4 bg-border" />
-                              </span>
+                              <>
+                                <span
+                                  aria-hidden="true"
+                                  className="absolute bottom-0 top-0 w-px bg-border"
+                                  data-category-tree-line="true"
+                                  style={{ left: `calc(${indentWidth} - 0.65rem)` }}
+                                />
+                              </>
                             ) : null}
                             <span className="font-semibold text-foreground">{category.name}</span>
-                            <span className="text-sm text-muted-foreground">{categoryPath}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-muted-foreground">{categoryPath}</TableCell>
-                        <TableCell className="text-sm font-medium text-foreground">{category.depth}</TableCell>
                         <TableCell>
                           <Badge className="category-count min-w-10 justify-center rounded-full px-2.5 py-0.5" variant="idle">
                             {category.postCount}

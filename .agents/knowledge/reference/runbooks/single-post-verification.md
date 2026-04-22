@@ -1,16 +1,15 @@
 # Single Post Verification Runbook
 
 ## 목적
-공개 네이버 블로그 글 1건을 브라우저로 확인한 직후 같은 글을 단건 CLI로 변환하고, 결과를 진행 문서에 기록한다.
+공개 네이버 블로그 글 1건을 브라우저로 확인한 직후 같은 글을 단건 CLI로 변환하고, 결과를 같은 작업의 검증 메모에 남긴다.
 
 ## Source Of Truth
 단건 변환은 `scripts/export-single-post.ts`와 `src/modules/exporter/single-post-export.ts`의 동일한 Markdown/export option 규약을 따른다.
 
 ## 관련 코드
-- [../../scripts/export-single-post.ts](../../scripts/export-single-post.ts)
-- [../../scripts/lib/single-post-cli.ts](../../scripts/lib/single-post-cli.ts)
-- [../../src/modules/exporter/single-post-export.ts](../../src/modules/exporter/single-post-export.ts)
-- [../naver-blog-300-audit-progress.md](../naver-blog-300-audit-progress.md)
+- [../../../../scripts/export-single-post.ts](../../../../scripts/export-single-post.ts)
+- [../../../../scripts/lib/single-post-cli.ts](../../../../scripts/lib/single-post-cli.ts)
+- [../../../../src/modules/exporter/single-post-export.ts](../../../../src/modules/exporter/single-post-export.ts)
 
 ## 검증 방법
 이 예시는 `blogId`, `logNo`, `outputDir`, `report`, `manualReviewMarkdownPath`, `metadataCachePath` 경로를 1건 분량으로 보여주는 기준값이다. 같은 블로그를 반복 검증할 때는 `metadataCachePath`를 재사용한다.
@@ -31,7 +30,7 @@ pnpm exec tsx scripts/export-single-post.ts \
 3. 본문 구조, editor version, 눈에 보이는 block type, 예외 여부를 기록한다.
 4. 위 command로 `post.md`, `report.json`, `metadata-cache.json`을 생성한다.
 5. 브라우저에서 본 구조와 `post.md`, `report.json`을 비교한다.
-6. `docs/naver-blog-300-audit-progress.md`의 해당 row를 갱신한다.
+6. 현재 작업 메모나 검증 로그에 결과를 남긴다.
 
 ## What To Record
 - `status`: `candidate`, `reviewed`, `excluded-inaccessible`, `excluded-duplicate`, `followup-needed`

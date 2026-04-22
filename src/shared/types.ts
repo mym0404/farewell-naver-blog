@@ -2,6 +2,8 @@ export type ExportProfile = "gfm"
 
 export type EditorVersion = 2 | 3 | 4
 
+export type ThemePreference = "dark" | "light"
+
 export type CategorySelectionMode = "selected-and-descendants" | "exact-selected"
 
 export type SlugStyle = "kebab" | "snake" | "keep-title"

@@ -1,19 +1,19 @@
 import { Toaster as Sonner, toast, type ToasterProps } from "sonner"
 
-export const Toaster = (props: ToasterProps) => (
+export const Toaster = ({ theme = "dark", ...props }: ToasterProps) => (
   <Sonner
     closeButton
     expand
     position="top-right"
     richColors
+    theme={theme}
     toastOptions={{
       classNames: {
-        toast:
-          "rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-[0_18px_40px_rgba(22,33,50,0.12)]",
+        toast: "rounded-[var(--radius-xl)] border border-border bg-popover text-popover-foreground shadow-[var(--panel-shadow-floating)]",
         title: "text-sm font-semibold",
-        description: "text-sm text-slate-600",
-        actionButton: "rounded-xl",
-        cancelButton: "rounded-xl",
+        description: "text-sm text-muted-foreground",
+        actionButton: "rounded-[var(--radius-md)]",
+        cancelButton: "rounded-[var(--radius-md)]",
       },
     }}
     {...props}

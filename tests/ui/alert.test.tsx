@@ -20,6 +20,5 @@ describe("Alert", () => {
 
     expect(alert).toHaveTextContent("오류")
     expect(alert).toHaveTextContent("설정을 다시 확인하세요.")
-    expect(alert.className).toContain("text-destructive")
   })
 })

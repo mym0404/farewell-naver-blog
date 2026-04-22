@@ -36,7 +36,7 @@
   live HTML을 다시 받아 fixture를 갱신한다. 회귀 검증이 아니라 fixture 관리용이다.
 - Playwright smoke UI
   `pnpm smoke:ui`
-  mock 기반 scan/export/upload 결과 UI 흐름, 복구 Dialog/단계 복귀, contrast, 레이아웃 invariant를 확인한다.
+  mock 기반 scan/export/upload 결과 UI 흐름과 복구 Dialog/단계 복귀를 확인한다.
 - Playwright live upload e2e
   `pnpm test:network:upload`
   실제 네트워크와 외부 업로드 상태를 포함한 검증이다.
@@ -82,7 +82,9 @@
 - capability catalog를 바꿀 때는 `sample-fixture`와 `parser-fixture` 분류를 함께 검토한다. 공개 글을 끝내 확보하지 못한 capability를 억지로 sample gap으로 남기지 않는다.
 - renderer/exporter 결과 변경 뒤에는 위 전부에 `pnpm smoke:ui`, `pnpm test:coverage`를 추가한다.
 - UI/API 변경 뒤에는 먼저 `agent-browser`로 실제 화면을 확인하고, 이미 Playwright smoke로 고정된 흐름이 바뀌었으면 `pnpm smoke:ui`를 함께 돌린다.
+- UI 테스트와 smoke는 CSS class, computed style, query selector 기반 레이아웃 숫자 검증보다 사용자 행동 계약을 우선한다.
+- 스타일 검증이 꼭 필요하면 광범위한 자동 assert 대신 `agent-browser` 같은 실제 브라우저 확인을 우선하고, 자동화에는 접근성/상태/텍스트처럼 제품 계약만 남긴다.
 - export/upload 흐름, 복구 시나리오, 업로더 연동처럼 사용자 경로를 크게 바꾸는 변경 뒤에는 `pnpm smoke:ui`, `pnpm test:network:upload`를 둘 다 실행한다.
 - fixture 자체를 갱신해야 할 때만 `pnpm samples:refresh -- --id <sampleId>`를 실행한다.
 - 실업로드 검증이 필요하면 `pnpm test:network:upload`를 별도로 실행한다. 이 명령은 외부 상태를 만들 수 있으므로 `check:full`에는 포함하지 않는다.
-- docs/knowledge만 변경했을 때는 수정한 링크와 코드 기준점을 수동 점검하고, generated 보고서 축을 건드렸다면 `pnpm quality:report`를 실행한다.
+- knowledge만 변경했을 때는 수정한 링크와 코드 기준점을 수동 점검하고, generated 보고서 축을 건드렸다면 `pnpm quality:report`를 실행한다.

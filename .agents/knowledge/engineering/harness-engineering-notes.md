@@ -14,8 +14,8 @@
 - [../../../scripts/harness/refresh-sample-fixtures.ts](../../../scripts/harness/refresh-sample-fixtures.ts)
 - [../../../scripts/harness/run-ui-smoke.ts](../../../scripts/harness/run-ui-smoke.ts)
 - [../../../scripts/harness/generate-quality-report.ts](../../../scripts/harness/generate-quality-report.ts)
-- [../../../docs/generated/quality-score.md](../../../docs/generated/quality-score.md)
-- [../../../docs/generated/sample-coverage.md](../../../docs/generated/sample-coverage.md)
+- [../reference/generated/quality-score.md](../reference/generated/quality-score.md)
+- [../reference/generated/sample-coverage.md](../reference/generated/sample-coverage.md)
 
 ## 검증 방법
 - `pnpm check:local`: harness와 맞물린 기본 타입·오프라인·parser 계약이 그대로 유지되는지 확인할 때 실행한다.
@@ -34,7 +34,7 @@
 - `run-ui-resume-smoke.ts`
   마지막 `outputDir`의 `manifest.json`을 기준으로 빈 output, export 중간, upload 중간, 실패, 완료 상태가 각 단계로 복구되는지 확인한다.
 - `generate-quality-report.ts`
-  parser block fixture/test hint coverage, `sample-fixture` capability coverage, `parser-fixture` capability 목록을 `docs/generated/quality-score.md`, `docs/generated/sample-coverage.md`로 다시 계산한다.
+  parser block fixture/test hint coverage, `sample-fixture` capability coverage, `parser-fixture` capability 목록을 `.agents/knowledge/reference/generated/quality-score.md`, `.agents/knowledge/reference/generated/sample-coverage.md`로 다시 계산한다.
 
 ## Fixture 운영 규칙
 - sample fixture는 `tests/fixtures/samples/<sampleId>/source.html`, `expected.md` 구조를 사용한다.
@@ -46,7 +46,7 @@
 
 ## Generated Outputs
 - generated 보고서는 현재 커버리지와 gap을 보여 주는 관찰 결과이며 source of truth는 아니다.
-- `docs/generated/ui-review/*` 스크린샷은 Playwright smoke 시나리오 비교 기록이다.
+- `.agents/knowledge/reference/generated/ui-review/*` 스크린샷은 Playwright smoke 시나리오 비교 기록이다.
 - generated 산출물은 수동 편집하지 않고 해당 harness를 다시 실행해 갱신한다.
 
 ## Change Triggers

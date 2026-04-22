@@ -17,9 +17,18 @@ import {
   CardHeader,
   CardTitle,
 } from "../../components/ui/card.js"
+import { Checkbox } from "../../components/ui/checkbox.js"
 import { Input } from "../../components/ui/input.js"
 import { Progress } from "../../components/ui/progress.js"
 import { ScrollArea } from "../../components/ui/scroll-area.js"
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select.js"
 import { Separator } from "../../components/ui/separator.js"
 import {
   Table,
@@ -29,6 +38,7 @@ import {
   TableHeader,
   TableRow,
 } from "../../components/ui/table.js"
+import { ToggleGroup, ToggleGroupItem } from "../../components/ui/toggle-group.js"
 import { cn } from "../../lib/cn.js"
 import {
   buildInitialProviderUiState,
@@ -43,6 +53,7 @@ type JobFilter = "all" | "warnings" | "errors"
 type JobResultsMode = "running" | "upload" | "result"
 
 const INDEX_MARKDOWN_FILE = "index.md"
+const EMPTY_SELECT_VALUE = "__none__"
 
 const getPreferredDefaultProviderKey = (catalog: UploadProviderCatalogResponse) =>
   catalog.providers.find((provider) => provider.key === "github")?.key ??
@@ -555,13 +566,7 @@ export const JobResultsPanel = ({
                       >
                         Provider
                       </label>
-                      <select
-                        id="upload-providerKey"
-                        className="h-10 rounded-xl px-3 text-sm"
-                        aria-describedby="upload-providerKey-description"
-                        value={providerKey}
-                        onChange={(event) => {
-                          const nextProviderKey = event.target.value
+                      <Select value={providerKey} onValueChange={(nextProviderKey) => {
                           setProviderKey(nextProviderKey)
                           setProviderFieldMap((current) =>
                             current[nextProviderKey]
@@ -585,12 +590,23 @@ export const JobResultsPanel = ({
                           )
                         }}
                       >
-                        {uploadProviders.providers.map((provider) => (
-                          <option key={provider.key} value={provider.key}>
-                            {provider.label}
-                          </option>
-                        ))}
-                      </select>
+                        <SelectTrigger
+                          id="upload-providerKey"
+                          data-value={providerKey}
+                          aria-describedby="upload-providerKey-description"
+                        >
+                          <SelectValue placeholder="Provider 선택" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            {uploadProviders.providers.map((provider) => (
+                              <SelectItem key={provider.key} value={provider.key}>
+                                {provider.label}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
                       <p
                         id="upload-providerKey-description"
                         className="text-sm leading-6 text-muted-foreground"
@@ -605,42 +621,40 @@ export const JobResultsPanel = ({
                           <span className="text-sm leading-6 text-muted-foreground">
                             AList는 Token 또는 계정 인증 중 하나만 사용합니다.
                           </span>
-                          <div className="flex flex-wrap gap-3">
-                            <label className="flex items-center gap-2 text-sm text-foreground">
-                              <input
-                                type="radio"
-                                name="upload-alist-auth-mode"
-                                checked={activeProviderUiState.alistAuthMode === "token"}
-                                onChange={() =>
-                                  setProviderUiStateMap((current) => ({
-                                    ...current,
-                                    [providerKey]: {
-                                      ...activeProviderUiState,
-                                      alistAuthMode: "token",
-                                    },
-                                  }))
-                                }
-                              />
+                          <ToggleGroup
+                            type="single"
+                            value={activeProviderUiState.alistAuthMode}
+                            aria-label="Authentication 방식"
+                            className="justify-start"
+                            onValueChange={(nextMode) => {
+                              if (!nextMode) {
+                                return
+                              }
+
+                              setProviderUiStateMap((current) => ({
+                                ...current,
+                                [providerKey]: {
+                                  ...activeProviderUiState,
+                                  alistAuthMode: nextMode as ProviderUiState["alistAuthMode"],
+                                },
+                              }))
+                            }}
+                          >
+                            <ToggleGroupItem
+                              value="token"
+                              className="theme-toggle-item min-w-[6rem]"
+                              aria-label="Token"
+                            >
                               Token
-                            </label>
-                            <label className="flex items-center gap-2 text-sm text-foreground">
-                              <input
-                                type="radio"
-                                name="upload-alist-auth-mode"
-                                checked={activeProviderUiState.alistAuthMode === "account"}
-                                onChange={() =>
-                                  setProviderUiStateMap((current) => ({
-                                    ...current,
-                                    [providerKey]: {
-                                      ...activeProviderUiState,
-                                      alistAuthMode: "account",
-                                    },
-                                  }))
-                                }
-                              />
+                            </ToggleGroupItem>
+                            <ToggleGroupItem
+                              value="account"
+                              className="theme-toggle-item min-w-[10rem]"
+                              aria-label="Username + Password"
+                            >
                               Username + Password
-                            </label>
-                          </div>
+                            </ToggleGroupItem>
+                          </ToggleGroup>
                         </div>
                       ) : null}
                       {activeProviderDefinition.fields.map((field) => {
@@ -663,20 +677,19 @@ export const JobResultsPanel = ({
                               key={`${providerKey}:${field.key}`}
                               className={`subtle-panel flex items-center gap-3 rounded-2xl px-4 py-3 sm:col-span-2 ${rule.disabled ? "opacity-70" : ""}`}
                             >
-                              <input
+                              <Checkbox
                                 id={fieldInputId}
-                                className="size-[1.1rem] shrink-0 accent-primary"
-                                type="checkbox"
                                 checked={activeProviderFields[field.key] === true}
                                 disabled={rule.disabled}
+                                className="shrink-0"
                                 aria-describedby={fieldDescribedBy}
-                                onChange={(event) =>
+                                onCheckedChange={(next) =>
                                   setProviderFieldMap((current) => ({
                                     ...current,
                                     [providerKey]: {
                                       ...(current[providerKey] ??
                                         buildInitialProviderFields(activeProviderDefinition)),
-                                      [field.key]: event.target.checked,
+                                      [field.key]: next === true,
                                     },
                                   }))
                                 }
@@ -720,30 +733,42 @@ export const JobResultsPanel = ({
                               <span id={fieldDescriptionId} className="text-sm leading-6 text-muted-foreground">
                                 {rule.description}
                               </span>
-                              <select
-                                id={fieldInputId}
-                                className="h-10 rounded-xl px-3 text-sm"
-                                value={String(activeProviderFields[field.key] ?? "")}
+                              <Select
+                                value={
+                                  !field.required && String(activeProviderFields[field.key] ?? "") === ""
+                                    ? EMPTY_SELECT_VALUE
+                                    : String(activeProviderFields[field.key] ?? "")
+                                }
                                 disabled={rule.disabled}
-                                aria-describedby={fieldDescribedBy}
-                                onChange={(event) =>
+                                onValueChange={(nextValue) =>
                                   setProviderFieldMap((current) => ({
                                     ...current,
                                     [providerKey]: {
                                       ...(current[providerKey] ??
                                         buildInitialProviderFields(activeProviderDefinition)),
-                                      [field.key]: event.target.value,
+                                      [field.key]: nextValue === EMPTY_SELECT_VALUE ? "" : nextValue,
                                     },
                                   }))
                                 }
                               >
-                                {!field.required ? <option value="">선택 안 함</option> : null}
-                                {(field.options ?? []).map((option) => (
-                                  <option key={`${field.key}:${option.value}`} value={String(option.value)}>
-                                    {option.label}
-                                  </option>
-                                ))}
-                              </select>
+                                <SelectTrigger
+                                  id={fieldInputId}
+                                  data-value={String(activeProviderFields[field.key] ?? "")}
+                                  aria-describedby={fieldDescribedBy}
+                                >
+                                  <SelectValue placeholder={!field.required ? "선택 안 함" : "항목 선택"} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectGroup>
+                                    {!field.required ? <SelectItem value={EMPTY_SELECT_VALUE}>선택 안 함</SelectItem> : null}
+                                    {(field.options ?? []).map((option) => (
+                                      <SelectItem key={`${field.key}:${option.value}`} value={String(option.value)}>
+                                        {option.label}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectGroup>
+                                </SelectContent>
+                              </Select>
                               {rule.disabledReason ? (
                                 <span
                                   id={fieldDisabledReasonId}
@@ -799,18 +824,17 @@ export const JobResultsPanel = ({
                     <div
                       className="subtle-panel flex items-center gap-3 rounded-2xl px-4 py-3"
                     >
-                      <input
+                      <Checkbox
                         id="upload-github-use-jsdelivr"
-                        className="size-[1.1rem] shrink-0 accent-primary"
-                        type="checkbox"
                         checked={githubUseJsDelivr}
+                        className="shrink-0"
                         aria-describedby="upload-github-use-jsdelivr-description"
-                        onChange={(event) =>
+                        onCheckedChange={(next) =>
                           setProviderUiStateMap((current) => ({
                             ...current,
                             [providerKey]: {
                               ...activeProviderUiState,
-                              githubUseJsDelivr: event.target.checked,
+                              githubUseJsDelivr: next === true,
                             },
                           }))
                         }
@@ -919,11 +943,11 @@ export const JobResultsPanel = ({
         ) : null}
 
         {showExportResults ? (
-          <section className="job-results-panel grid gap-4 rounded-[1.5rem] border border-slate-200 bg-slate-50/80 p-4">
+          <section className="job-results-panel subtle-panel grid gap-4 rounded-[1.5rem] p-4">
             <div className="job-results-header grid gap-4 lg:flex lg:items-start lg:justify-between">
               {buildResultsPanelDescription() ? (
                 <div>
-                  <CardDescription className="results-description text-sm leading-7 text-slate-600">
+                  <CardDescription className="results-description text-sm leading-7">
                     {buildResultsPanelDescription()}
                   </CardDescription>
                 </div>
@@ -938,7 +962,7 @@ export const JobResultsPanel = ({
                     key={filter}
                     type="button"
                     variant={activeJobFilter === filter ? "outline" : "ghost"}
-                    className={`job-filter-button min-w-16 rounded-full px-4 ${activeJobFilter === filter ? "is-active border-slate-400 bg-white" : "text-slate-600"}`}
+                    className={`job-filter-button min-w-16 rounded-full px-4 ${activeJobFilter === filter ? "is-active" : ""}`}
                     data-job-filter={filter}
                     onClick={() => onFilterChange(filter)}
                   >
@@ -951,7 +975,7 @@ export const JobResultsPanel = ({
             {jobItems.length === 0 ? (
               <div
                 id="job-file-tree"
-                className="job-file-tree empty grid min-h-28 place-items-center rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-6 text-center text-sm text-slate-500"
+                className="job-file-tree empty-state-surface grid min-h-28 place-items-center rounded-2xl px-4 py-6 text-center text-sm"
               >
                 {activeJobFilter === "all"
                   ? mode === "running"
@@ -962,7 +986,7 @@ export const JobResultsPanel = ({
             ) : (
               <ScrollArea
                 id="job-file-tree"
-                className="job-file-tree job-file-tree-scroll max-h-[min(32rem,62vh)] overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white"
+                className="job-file-tree job-file-tree-scroll section-card max-h-[min(32rem,62vh)] overflow-hidden rounded-[1.5rem]"
               >
                 <Table
                   className={cn(
@@ -1003,9 +1027,9 @@ export const JobResultsPanel = ({
                           className={cn(
                             "last:border-b-0",
                             severity === "warning"
-                              ? "bg-amber-50/20"
+                              ? "bg-[var(--status-ready-bg)]"
                               : severity === "error"
-                                ? "bg-rose-50/20"
+                                ? "bg-[var(--status-error-bg)]"
                                 : "",
                           )}
                           data-upload-row-id={showUploadColumns && hasUploadCandidate ? item.id : undefined}
@@ -1019,7 +1043,7 @@ export const JobResultsPanel = ({
                               data-severity={severity}
                             >
                               <span className="grid min-w-0 gap-0.5">
-                                <strong className="break-words text-[12px] font-semibold leading-5 text-slate-900 sm:text-sm">
+                                <strong className="break-words text-[12px] font-semibold leading-5 text-foreground sm:text-sm">
                                   {pathMeta.fileLabel}
                                 </strong>
                                 {externalPreviewUrl ? (
@@ -1027,7 +1051,7 @@ export const JobResultsPanel = ({
                                     href={externalPreviewUrl}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="inline-flex w-fit items-center gap-1 text-[10px] font-medium text-sky-700 underline underline-offset-2 sm:text-xs"
+                                    className="inline-flex w-fit items-center gap-1 text-[10px] font-medium text-[var(--status-running-fg)] underline underline-offset-2 sm:text-xs"
                                     data-job-item-preview-link
                                     aria-label={`${item.title} 미리보기`}
                                   >
@@ -1035,24 +1059,24 @@ export const JobResultsPanel = ({
                                     <span>미리보기</span>
                                   </a>
                                 ) : null}
-                                <span className="whitespace-normal break-words text-[11px] leading-5 text-slate-500 sm:text-xs">
+                                <span className="whitespace-normal break-words text-[11px] leading-5 text-muted-foreground sm:text-xs">
                                   {item.title}
                                 </span>
                               </span>
                             </div>
                           </TableCell>
-                          <TableCell className="align-top text-[11px] text-slate-600 sm:text-xs">
+                          <TableCell className="align-top text-[11px] text-muted-foreground sm:text-xs">
                             <div className="grid gap-0.5">
                               <span className="whitespace-normal break-words leading-5">
                                 {pathMeta.directoryLabel}
                               </span>
-                              <span className="whitespace-normal break-words text-slate-400">
+                              <span className="whitespace-normal break-words text-muted-foreground/70">
                                 {pathMeta.outputLabel}
                               </span>
                             </div>
                           </TableCell>
                           {showUploadColumns ? (
-                            <TableCell className="align-top text-[11px] text-slate-700 sm:text-xs">
+                            <TableCell className="align-top text-[11px] text-foreground sm:text-xs">
                               {hasUploadCandidate ? (
                                 <div className="grid gap-1">
                                   <span>
@@ -1066,7 +1090,7 @@ export const JobResultsPanel = ({
                                           href={link.url}
                                           target="_blank"
                                           rel="noreferrer"
-                                          className="font-medium text-sky-700 underline underline-offset-2"
+                                          className="font-medium text-[var(--status-running-fg)] underline underline-offset-2"
                                         >
                                           {link.label}
                                         </a>
@@ -1075,7 +1099,7 @@ export const JobResultsPanel = ({
                                   ) : null}
                                 </div>
                               ) : (
-                                <span className="text-slate-400">-</span>
+                                <span className="text-muted-foreground/70">-</span>
                               )}
                             </TableCell>
                           ) : null}
@@ -1093,7 +1117,7 @@ export const JobResultsPanel = ({
                                   {uploadRowStatus.label}
                                 </Badge>
                               ) : (
-                                <span className="text-sm text-slate-400">-</span>
+                                <span className="text-sm text-muted-foreground/70">-</span>
                               )}
                             </TableCell>
                           ) : null}
@@ -1105,7 +1129,7 @@ export const JobResultsPanel = ({
                               {meta.label}
                             </Badge>
                           </TableCell>
-                          <TableCell className="align-top text-[11px] font-medium text-slate-700 sm:text-xs">
+                          <TableCell className="align-top text-[11px] font-medium text-foreground sm:text-xs">
                             {item.warningCount > 0 ? item.warningCount : "0"}
                           </TableCell>
                         </TableRow>
@@ -1118,10 +1142,10 @@ export const JobResultsPanel = ({
           </section>
         ) : null}
 
-        <section className="logs-panel grid gap-4 rounded-[1.5rem] border border-slate-200 bg-slate-50/80 p-4">
+        <section className="logs-panel subtle-panel grid gap-4 rounded-[1.5rem] p-4">
           <div className="logs-header grid gap-3">
             <div>
-              <CardDescription className="results-description text-sm leading-7 text-slate-600">
+              <CardDescription className="results-description text-sm leading-7">
                 작업 로그
               </CardDescription>
             </div>
@@ -1130,24 +1154,24 @@ export const JobResultsPanel = ({
           <ScrollArea
             id="logs"
             ref={logsScrollAreaRef}
-            className="logs-scroll h-[min(28rem,56vh)] overflow-hidden rounded-[1.5rem] border border-slate-800 bg-slate-950"
+            className="logs-scroll log-surface h-[min(28rem,56vh)] overflow-hidden rounded-[1.5rem]"
             aria-live="polite"
           >
-            <div className="logs grid min-h-full gap-1.5 bg-slate-950 px-4 py-4 font-mono text-[0.88rem] text-slate-100">
+            <div className="logs grid min-h-full gap-1.5 px-4 py-4 font-mono text-[0.88rem] text-foreground">
               {(job?.logs ?? []).map((entry, index) => (
                 <div
                   key={`${entry.timestamp}-${index}`}
-                  className="grid gap-0.5 border-b border-slate-800/80 pb-1.5 last:border-b-0 last:pb-0"
+                  className="log-line grid gap-0.5 pb-1.5 last:border-b-0 last:pb-0"
                   data-job-log-entry
                 >
                   <span
-                    className="text-[11px] leading-5 text-slate-500"
+                    className="log-meta text-[11px] leading-5"
                     data-job-log-timestamp
                   >
                     {entry.timestamp}
                   </span>
                   <span
-                    className="whitespace-pre-wrap break-words text-sm leading-6 text-slate-100"
+                    className="whitespace-pre-wrap break-words text-sm leading-6 text-foreground"
                     data-job-log-message
                   >
                     {entry.message}

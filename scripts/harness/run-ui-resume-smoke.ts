@@ -451,6 +451,7 @@ type ResumeScenario = {
     profile: "gfm"
     options: ReturnType<typeof defaultExportOptions>
     lastOutputDir: string
+    themePreference: "dark" | "light"
     resumedJob: ExportJobState | null
     resumeSummary: ExportResumeSummary | null
     resumedScanResult: ScanResult | null
@@ -511,7 +512,7 @@ const waitForDialog = async ({
 
 const closeDialog = async (page: import("playwright").Page) => {
   const dialog = page.getByRole("dialog")
-  await dialog.getByRole("button", { name: "Close" }).first().click()
+  await dialog.getByRole("button", { name: "닫기" }).first().click()
   await dialog.waitFor({ state: "hidden", timeout: responseTimeoutMs })
 }
 
@@ -548,6 +549,7 @@ const createBootstrap = ({
   profile: "gfm" as const,
   options: defaultExportOptions(),
   lastOutputDir,
+  themePreference: "dark" as const,
   resumedJob,
   resumeSummary: resumedJob ? buildResumeSummary(resumedJob) : null,
   resumedScanResult: resumedJob ? resumedScanResult : null,

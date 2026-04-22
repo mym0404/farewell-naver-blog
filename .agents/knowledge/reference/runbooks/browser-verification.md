@@ -14,20 +14,20 @@
 - 같은 시나리오를 반복 회귀나 CI로 고정해야 하면 Playwright harness에 추가하고, 이 문서는 보조 수동 절차로만 유지한다.
 
 ## 관련 코드
-- [../../index.html](../../index.html)
-- [../../src/ui/App.tsx](../../src/ui/App.tsx)
-- [../../src/ui/styles/globals.css](../../src/ui/styles/globals.css)
-- [../../src/ui/features/options/export-options-panel.tsx](../../src/ui/features/options/export-options-panel.tsx)
-- [../../src/ui/features/job-results/job-results-panel.tsx](../../src/ui/features/job-results/job-results-panel.tsx)
-- [../../.agents/knowledge/product/ui-dashboard-design-system.md](../../.agents/knowledge/product/ui-dashboard-design-system.md)
-- [../../src/server/http-server.ts](../../src/server/http-server.ts)
-- [../../scripts/harness/run-ui-smoke.ts](../../scripts/harness/run-ui-smoke.ts)
-- [../../scripts/harness/run-ui-resume-smoke.ts](../../scripts/harness/run-ui-resume-smoke.ts)
+- [../../../../index.html](../../../../index.html)
+- [../../../../src/ui/App.tsx](../../../../src/ui/App.tsx)
+- [../../../../src/ui/styles/globals.css](../../../../src/ui/styles/globals.css)
+- [../../../../src/ui/features/options/export-options-panel.tsx](../../../../src/ui/features/options/export-options-panel.tsx)
+- [../../../../src/ui/features/job-results/job-results-panel.tsx](../../../../src/ui/features/job-results/job-results-panel.tsx)
+- [../../DESIGN.md](../../DESIGN.md)
+- [../../../../src/server/http-server.ts](../../../../src/server/http-server.ts)
+- [../../../../scripts/harness/run-ui-smoke.ts](../../../../scripts/harness/run-ui-smoke.ts)
+- [../../../../scripts/harness/run-ui-resume-smoke.ts](../../../../scripts/harness/run-ui-resume-smoke.ts)
 
 ## 검증 방법
 - `agent-browser`
 - `pnpm smoke:ui`
-- `pnpm smoke:ui -- --capture-dir docs/generated/ui-review/round-01`
+- `pnpm smoke:ui -- --capture-dir .agents/knowledge/reference/generated/ui-review/round-01`
 - `FAREWELL_UPLOAD_E2E=1 FAREWELL_UPLOAD_E2E_GITHUB_TOKEN=... pnpm test:network:upload`
 
 ## Manual Steps

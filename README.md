@@ -89,23 +89,23 @@ output/
   <tbody>
     <tr>
       <td>SE2 이미지 묶음</td>
-      <td><img src="docs/assets/readme/se2-image-group-blog.png" width="260" alt="SE2 이미지 묶음 네이버 블로그 예시"></td>
-      <td><img src="docs/assets/readme/se2-image-group-markdown.png" width="260" alt="SE2 이미지 묶음 마크다운 예시"></td>
+      <td><img src=".agents/knowledge/reference/assets/readme/se2-image-group-blog.png" width="260" alt="SE2 이미지 묶음 네이버 블로그 예시"></td>
+      <td><img src=".agents/knowledge/reference/assets/readme/se2-image-group-markdown.png" width="260" alt="SE2 이미지 묶음 마크다운 예시"></td>
     </tr>
     <tr>
       <td>SE2 코드 블록</td>
-      <td><img src="docs/assets/readme/se2-code-block-blog.png" width="260" alt="SE2 코드 블록 네이버 블로그 예시"></td>
-      <td><img src="docs/assets/readme/se2-code-block-markdown.png" width="260" alt="SE2 코드 블록 마크다운 예시"></td>
+      <td><img src=".agents/knowledge/reference/assets/readme/se2-code-block-blog.png" width="260" alt="SE2 코드 블록 네이버 블로그 예시"></td>
+      <td><img src=".agents/knowledge/reference/assets/readme/se2-code-block-markdown.png" width="260" alt="SE2 코드 블록 마크다운 예시"></td>
     </tr>
     <tr>
       <td>SE3 일반 본문</td>
-      <td><img src="docs/assets/readme/se3-paragraph-blog.png" width="260" alt="SE3 일반 본문 네이버 블로그 예시"></td>
-      <td><img src="docs/assets/readme/se3-paragraph-markdown.png" width="260" alt="SE3 일반 본문 마크다운 예시"></td>
+      <td><img src=".agents/knowledge/reference/assets/readme/se3-paragraph-blog.png" width="260" alt="SE3 일반 본문 네이버 블로그 예시"></td>
+      <td><img src=".agents/knowledge/reference/assets/readme/se3-paragraph-markdown.png" width="260" alt="SE3 일반 본문 마크다운 예시"></td>
     </tr>
     <tr>
       <td>ONE 동영상 + 표</td>
-      <td><img src="docs/assets/readme/se4-video-table-blog.png" width="260" alt="ONE 동영상과 표 네이버 블로그 예시"></td>
-      <td><img src="docs/assets/readme/se4-video-table-markdown.png" width="260" alt="ONE 동영상과 표 마크다운 예시"></td>
+      <td><img src=".agents/knowledge/reference/assets/readme/se4-video-table-blog.png" width="260" alt="ONE 동영상과 표 네이버 블로그 예시"></td>
+      <td><img src=".agents/knowledge/reference/assets/readme/se4-video-table-markdown.png" width="260" alt="ONE 동영상과 표 마크다운 예시"></td>
     </tr>
   </tbody>
 </table>

@@ -29,7 +29,16 @@ import {
   Collapsible,
   CollapsibleContent,
 } from "../../components/ui/collapsible.js"
+import { Checkbox } from "../../components/ui/checkbox.js"
 import { Input } from "../../components/ui/input.js"
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select.js"
 import { cn } from "../../lib/cn.js"
 
 type StructurePreviewTreeNode =
@@ -264,10 +273,10 @@ const StructurePreviewTree = ({
   if (node.kind === "file") {
     return (
       <div
-        className={cn("flex min-h-7 items-center gap-1.5 rounded-md px-1.5 py-1 text-slate-600", depth > 0 && "ml-2")}
+        className={cn("flex min-h-7 items-center gap-1.5 rounded-md px-1.5 py-1 text-muted-foreground", depth > 0 && "ml-2")}
         data-tree-kind="file"
       >
-        <TreeFileIcon className="size-3.5 shrink-0 text-slate-400" />
+        <TreeFileIcon className="size-3.5 shrink-0 text-muted-foreground" />
         <span className="min-w-0 truncate font-mono text-[0.75rem] leading-5">{node.name}</span>
       </div>
     )
@@ -281,11 +290,11 @@ const StructurePreviewTree = ({
           depth > 0 && "ml-2",
         )}
       >
-        <TreeChevronIcon className="size-3.5 shrink-0 rotate-90 text-slate-400" />
-        <TreeFolderIcon className="size-3.5 shrink-0 text-sky-600" />
-        <span className="min-w-0 truncate font-mono text-[0.75rem] leading-5 text-slate-700">{node.name}</span>
+        <TreeChevronIcon className="size-3.5 shrink-0 rotate-90 text-muted-foreground" />
+        <TreeFolderIcon className="size-3.5 shrink-0 text-[var(--status-running-fg)]" />
+        <span className="min-w-0 truncate font-mono text-[0.75rem] leading-5 text-foreground">{node.name}</span>
       </div>
-      <CollapsibleContent className="grid gap-0.5 border-l border-slate-200/80 pl-2.5">
+      <CollapsibleContent className="grid gap-0.5 border-l border-border pl-2.5">
         {node.items.map((child) => (
           <StructurePreviewTree key={`${node.name}:${child.name}`} node={child} depth={depth + 1} />
         ))}
@@ -302,28 +311,76 @@ export type ExportOptionsStep =
   | "links"
   | "diagnostics"
 
+const optionFieldClass = "field-card grid min-h-[7.75rem] gap-2 rounded-2xl px-4 py-4"
+const checkFieldClass = "field-card flex flex-col rounded-2xl px-4 py-4"
+const optionSectionClass = "option-section subtle-panel grid gap-4 rounded-[1.5rem] p-4"
+type SelectOption = {
+  value: string
+  label: string
+}
+
 const OptionField = ({
   optionKey,
+  labelFor,
   label,
   description,
   children,
   disabled = false,
 }: {
   optionKey: string
+  labelFor?: string
   label: string
   description?: string
   children: ReactNode
   disabled?: boolean
 }) => (
-  <label
-    className={`field grid min-h-[7.75rem] gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(22,33,50,0.04)] ${disabled ? "opacity-60" : ""}`}
-    data-option-key={optionKey}
-    aria-disabled={disabled}
-  >
-    <span className="text-sm font-semibold text-slate-900">{label}</span>
+  <div className={cn(optionFieldClass, disabled && "opacity-60")} data-option-key={optionKey} aria-disabled={disabled}>
+    <label htmlFor={labelFor} className="text-sm font-semibold text-foreground">
+      {label}
+    </label>
     {children}
-    {description ? <small className="field-help text-sm leading-6 text-slate-500">{description}</small> : null}
-  </label>
+    {description ? <small className="field-help text-sm leading-6">{description}</small> : null}
+  </div>
+)
+
+const OptionSelectField = <T extends string,>({
+  inputId,
+  value,
+  options,
+  disabled = false,
+  placeholder,
+  describedBy,
+  ariaInvalid = false,
+  onValueChange,
+}: {
+  inputId: string
+  value: T
+  options: SelectOption[]
+  disabled?: boolean
+  placeholder?: string
+  describedBy?: string
+  ariaInvalid?: boolean
+  onValueChange: (value: T) => void
+}) => (
+  <Select value={value} disabled={disabled} onValueChange={(nextValue) => onValueChange(nextValue as T)}>
+    <SelectTrigger
+      id={inputId}
+      data-value={value}
+      aria-describedby={describedBy}
+      aria-invalid={ariaInvalid || undefined}
+    >
+      <SelectValue placeholder={placeholder} />
+    </SelectTrigger>
+    <SelectContent>
+      <SelectGroup>
+        {options.map((option) => (
+          <SelectItem key={`${inputId}:${option.value}`} value={option.value}>
+            {option.label}
+          </SelectItem>
+        ))}
+      </SelectGroup>
+    </SelectContent>
+  </Select>
 )
 
 const CheckField = ({
@@ -346,24 +403,23 @@ const CheckField = ({
   disabled?: boolean
 }) => (
   <label
-    className={`check flex flex-col rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(22,33,50,0.04)] ${compact ? "min-h-0 gap-2" : "min-h-[7.75rem] gap-3"} ${disabled ? "opacity-60" : ""}`}
+    className={cn(checkFieldClass, compact ? "min-h-0 gap-2" : "min-h-[7.75rem] gap-3", disabled && "opacity-60")}
     data-option-key={optionKey}
     aria-disabled={disabled}
   >
     <span className={`check-head flex gap-3 ${compact ? "items-center" : "items-start"}`}>
-      <input
+      <Checkbox
         id={inputId}
-        className="mt-0.5 size-[1.1rem] shrink-0 accent-primary"
-        type="checkbox"
         checked={checked}
         disabled={disabled}
-        onChange={(event) => onChange(event.target.checked)}
+        className="mt-0.5"
+        onCheckedChange={(next) => onChange(next === true)}
       />
       <span className="check-copy grid min-w-0 gap-1">
-        <span className="check-title text-sm font-semibold text-slate-900">{label}</span>
+        <span className="check-title text-sm font-semibold text-foreground">{label}</span>
       </span>
     </span>
-    {description ? <small className="field-help text-sm leading-6 text-slate-500">{description}</small> : null}
+    {description ? <small className="field-help text-sm leading-6">{description}</small> : null}
   </label>
 )
 
@@ -386,10 +442,7 @@ const RadioField = ({
   onChange: () => void
   children?: ReactNode
 }) => (
-  <label
-    className={`check flex flex-col rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(22,33,50,0.04)] ${checked ? "ring-2 ring-blue-100" : ""}`}
-    data-option-key={optionKey}
-  >
+  <label className={cn(checkFieldClass, checked && "shadow-[var(--focus-ring)]")} data-option-key={optionKey}>
     <span className="check-head flex items-start gap-3">
       <input
         id={inputId}
@@ -400,8 +453,8 @@ const RadioField = ({
         onChange={onChange}
       />
       <span className="check-copy grid min-w-0 gap-1">
-        <span className="check-title text-sm font-semibold text-slate-900">{label}</span>
-        {description ? <small className="field-help text-sm leading-6 text-slate-500">{description}</small> : null}
+        <span className="check-title text-sm font-semibold text-foreground">{label}</span>
+        {description ? <small className="field-help text-sm leading-6">{description}</small> : null}
       </span>
     </span>
     {children ? <div className="pt-3">{children}</div> : null}
@@ -417,11 +470,11 @@ const OptionSection = ({
   note: string
   children: ReactNode
 }) => (
-  <section className="option-section grid gap-4 rounded-[1.5rem] border border-slate-200 bg-slate-50/80 p-4">
+  <section className={optionSectionClass}>
     <div className="option-section-header flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div>
-        <h3 className="text-lg font-semibold tracking-[-0.03em] text-slate-900">{title}</h3>
-        <p className="mt-1 text-sm leading-6 text-slate-500">{note}</p>
+        <h3 className="text-lg font-semibold tracking-[-0.03em] text-foreground">{title}</h3>
+        <p className="mt-1 text-sm leading-6 text-muted-foreground">{note}</p>
       </div>
     </div>
     <div className="option-grid grid gap-4 xl:grid-cols-2">{children}</div>
@@ -596,10 +649,10 @@ export const ExportOptionsPanel = ({
   const structureSection = (
     <>
       <div className="control-bar grid">
-        <label className="field control-field grid min-h-0 gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(22,33,50,0.04)]">
-          <span className="text-sm font-semibold text-slate-900">출력 경로</span>
+        <label className="field-card control-field grid min-h-0 gap-2 rounded-2xl px-4 py-4">
+          <span className="text-sm font-semibold text-foreground">출력 경로</span>
           <Input id="outputDir" value={outputDir} required onChange={(event) => onOutputDirChange(event.target.value)} />
-          <small className="field-help text-sm leading-6 text-slate-500">결과를 저장할 위치입니다.</small>
+          <small className="field-help text-sm leading-6">결과를 저장할 위치입니다.</small>
         </label>
       </div>
 
@@ -657,53 +710,57 @@ export const ExportOptionsPanel = ({
           }
         />
 
-        <OptionField optionKey="structure-slugStyle" label="slug 방식" description={description("structure-slugStyle")}>
-          <select
-            id="structure-slugStyle"
-            value={options.structure.slugStyle}
-            onChange={(event) =>
-              onOptionsChange((current) => {
-                const slugStyle = event.target.value as ExportOptions["structure"]["slugStyle"]
-
-                return {
-                  ...current,
-                  structure: {
-                    ...current.structure,
-                    slugStyle,
-                    slugWhitespace: getDefaultSlugWhitespace(slugStyle),
-                  },
-                }
-              })
-            }
-          >
-            <option value="kebab">kebab-case</option>
-            <option value="snake">snake_case</option>
-            <option value="keep-title">원본 제목 유지</option>
-          </select>
-        </OptionField>
-
         <OptionField
-          optionKey="structure-slugWhitespace"
-          label="공백 처리"
-          description={description("structure-slugWhitespace")}
+          optionKey="structure-slugStyle"
+          labelFor="structure-slugStyle"
+          label="slug 방식"
+          description={description("structure-slugStyle")}
         >
-          <select
-            id="structure-slugWhitespace"
-            value={options.structure.slugWhitespace}
-            onChange={(event) =>
+          <OptionSelectField
+            inputId="structure-slugStyle"
+            value={options.structure.slugStyle}
+            options={[
+              { value: "kebab", label: "kebab-case" },
+              { value: "snake", label: "snake_case" },
+              { value: "keep-title", label: "원본 제목 유지" },
+            ]}
+            onValueChange={(slugStyle) =>
               onOptionsChange((current) => ({
                 ...current,
                 structure: {
                   ...current.structure,
-                  slugWhitespace: event.target.value as ExportOptions["structure"]["slugWhitespace"],
+                  slugStyle,
+                  slugWhitespace: getDefaultSlugWhitespace(slugStyle),
                 },
               }))
             }
-          >
-            <option value="dash">-로 바꾸기</option>
-            <option value="underscore">_로 바꾸기</option>
-            <option value="keep-space">공백 유지</option>
-          </select>
+          />
+        </OptionField>
+
+        <OptionField
+          optionKey="structure-slugWhitespace"
+          labelFor="structure-slugWhitespace"
+          label="공백 처리"
+          description={description("structure-slugWhitespace")}
+        >
+          <OptionSelectField
+            inputId="structure-slugWhitespace"
+            value={options.structure.slugWhitespace}
+            options={[
+              { value: "dash", label: "-로 바꾸기" },
+              { value: "underscore", label: "_로 바꾸기" },
+              { value: "keep-space", label: "공백 유지" },
+            ]}
+            onValueChange={(slugWhitespace) =>
+              onOptionsChange((current) => ({
+                ...current,
+                structure: {
+                  ...current.structure,
+                  slugWhitespace,
+                },
+              }))
+            }
+          />
         </OptionField>
 
         <div className="grid gap-4 xl:col-span-2">
@@ -744,8 +801,8 @@ export const ExportOptionsPanel = ({
           >
             {options.structure.postFolderNameMode === "custom-template" ? (
               <div className="grid gap-3 pl-7">
-                <label className="field grid min-h-0 gap-2 rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-4">
-                  <span className="text-sm font-semibold text-slate-900">폴더명 템플릿</span>
+                <label className="subtle-panel field grid min-h-0 gap-2 rounded-2xl px-4 py-4">
+                  <span className="text-sm font-semibold text-foreground">폴더명 템플릿</span>
                   <Input
                     id="structure-postFolderNameCustomTemplate"
                     value={options.structure.postFolderNameCustomTemplate}
@@ -760,41 +817,41 @@ export const ExportOptionsPanel = ({
                       }))
                     }
                   />
-                  <small className="field-help text-sm leading-6 text-slate-500">
-                    결과는 한 폴더 이름으로 정리됩니다. 예: <span className="font-mono text-slate-700">{"{date}"}-{"{category}"}-{"{slug}"}</span>
+                  <small className="field-help text-sm leading-6">
+                    결과는 한 폴더 이름으로 정리됩니다. 예: <span className="font-mono text-foreground">{"{date}"}-{"{category}"}-{"{slug}"}</span>
                   </small>
                 </label>
 
-                <div className="grid gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-4">
+                <div className="field-card grid gap-3 rounded-2xl px-4 py-4">
                   <div className="grid gap-1">
-                    <span className="text-sm font-semibold text-slate-900">실시간 폴더명 예시</span>
-                    <p className="text-sm leading-6 text-slate-500">
+                    <span className="text-sm font-semibold text-foreground">실시간 폴더명 예시</span>
+                    <p className="text-sm leading-6 text-muted-foreground">
                       {structureTemplatePreviewPost.title} 글을 기준으로 바로 보여줍니다.
                     </p>
                   </div>
 
-                  <div className="grid gap-2 text-sm leading-6 text-slate-500">
+                  <div className="grid gap-2 text-sm leading-6 text-muted-foreground">
                     <span>현재 템플릿</span>
-                    <code className="break-all rounded-xl bg-slate-50 px-3 py-2 font-mono text-[0.8125rem] text-slate-700">
+                    <code className="code-surface break-all px-3 py-2 font-mono text-[0.8125rem] text-foreground">
                       {postFolderNameTemplate || "(비어 있음)"}
                     </code>
                   </div>
 
-                  <div className="grid gap-2 text-sm leading-6 text-slate-500">
+                  <div className="grid gap-2 text-sm leading-6 text-muted-foreground">
                     <span>폴더 이름 결과</span>
                     <code
                       id="structure-postFolderNameCustomTemplatePreview"
-                      className="break-all rounded-xl bg-slate-900 px-3 py-2 font-mono text-[0.8125rem] text-slate-100"
+                      className="code-surface-inverse break-all px-3 py-2 font-mono text-[0.8125rem]"
                     >
                       {postFolderNamePreview ?? "템플릿을 입력하면 결과가 여기에서 바로 바뀝니다."}
                     </code>
                   </div>
                 </div>
 
-                <div className="grid gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-4">
+                <div className="field-card grid gap-3 rounded-2xl px-4 py-4">
                   <div className="grid gap-1">
-                    <span className="text-sm font-semibold text-slate-900">사용 가능한 변수</span>
-                    <p className="text-sm leading-6 text-slate-500">
+                    <span className="text-sm font-semibold text-foreground">사용 가능한 변수</span>
+                    <p className="text-sm leading-6 text-muted-foreground">
                       아래 값은 구조 예시 글 하나를 기준으로 바로 계산합니다.
                     </p>
                   </div>
@@ -807,17 +864,17 @@ export const ExportOptionsPanel = ({
                       return (
                         <div
                           key={`structure-${key}`}
-                          className="grid gap-2 rounded-2xl border border-slate-200 bg-slate-50/80 px-3 py-3"
+                          className="subtle-panel grid gap-2 rounded-2xl px-3 py-3"
                         >
                           <div className="flex items-center gap-2">
-                            <span className="rounded-md bg-sky-100 px-1.5 py-0.5 font-mono text-sm text-sky-800">
+                            <span className="rounded-md bg-[var(--status-running-bg)] px-1.5 py-0.5 font-mono text-sm text-[var(--status-running-fg)]">
                               {meta.label}
                             </span>
-                            <span className="text-sm font-medium text-slate-900">{meta.description}</span>
+                            <span className="text-sm font-medium text-foreground">{meta.description}</span>
                           </div>
-                          <div className="grid gap-1 text-sm leading-6 text-slate-500">
+                          <div className="grid gap-1 text-sm leading-6 text-muted-foreground">
                             <span>예시 값</span>
-                            <code className="break-all rounded-xl bg-white px-2 py-1 font-mono text-[0.8125rem] text-slate-700">
+                            <code className="code-surface break-all px-2 py-1 font-mono text-[0.8125rem] text-foreground">
                               {exampleValue}
                             </code>
                           </div>
@@ -833,15 +890,15 @@ export const ExportOptionsPanel = ({
 
         <div
           id="structure-file-tree-preview"
-          className="grid gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(22,33,50,0.04)] xl:col-span-2"
+          className="field-card grid gap-3 rounded-2xl px-4 py-4 xl:col-span-2"
         >
           <div className="grid gap-1">
-            <span className="text-sm font-semibold text-slate-900">예시 파일 트리</span>
-            <p className="text-sm leading-6 text-slate-500">
+            <span className="text-sm font-semibold text-foreground">예시 파일 트리</span>
+            <p className="text-sm leading-6 text-muted-foreground">
               현재 옵션 기준으로 여러 글이 저장되는 예시입니다.
             </p>
           </div>
-          <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-2">
+          <div className="subtle-panel rounded-xl p-2">
             <StructurePreviewTree node={structurePreviewTree} />
           </div>
         </div>
@@ -870,12 +927,16 @@ export const ExportOptionsPanel = ({
           }
         />
         <div
-          className={`frontmatter-state-card flex min-h-0 flex-col justify-between gap-3 rounded-2xl border bg-white px-4 py-4 shadow-[0_12px_30px_rgba(22,33,50,0.04)] sm:flex-row sm:items-start ${frontmatterValidationErrors.length > 0 ? "border-rose-200" : "border-slate-200"}`}
+          className={cn(
+            "frontmatter-state-card field-card flex min-h-0 flex-col justify-between gap-3 rounded-2xl px-4 py-4 sm:flex-row sm:items-start",
+            frontmatterValidationErrors.length > 0 &&
+              "border-[color-mix(in_srgb,var(--status-error-fg)_26%,transparent)] shadow-[var(--panel-shadow-border),0_0_0_1px_color-mix(in_srgb,var(--status-error-fg)_12%,transparent)]",
+          )}
           data-state={frontmatterValidationErrors.length > 0 ? "error" : "default"}
         >
           <div className="frontmatter-state-copy grid min-w-0 gap-2">
-            <span className="frontmatter-state-label text-sm font-semibold text-slate-900">Alias 상태</span>
-            <p className="frontmatter-description text-sm leading-6 text-slate-500">
+            <span className="frontmatter-state-label text-sm font-semibold text-foreground">Alias 상태</span>
+            <p className="frontmatter-description text-sm leading-6">
               {frontmatterValidationErrors.length > 0
                 ? "중복되거나 비어 있는 alias를 먼저 정리해야 내보내기를 진행할 수 있습니다."
                 : "현재 frontmatter alias 구성이 유효합니다."}
@@ -892,7 +953,7 @@ export const ExportOptionsPanel = ({
 
       <Alert
         id="frontmatter-status"
-        className="frontmatter-alert rounded-2xl border-slate-200 bg-white px-4 py-4"
+        className="frontmatter-alert rounded-2xl px-4 py-4"
         data-state={frontmatterValidationErrors.length > 0 ? "error" : "default"}
         variant={frontmatterValidationErrors.length > 0 ? "destructive" : "default"}
       >
@@ -916,45 +977,53 @@ export const ExportOptionsPanel = ({
           return (
             <div
               key={fieldName}
-              className={`frontmatter-row grid content-start gap-4 rounded-2xl border bg-white px-4 py-4 shadow-[0_12px_30px_rgba(22,33,50,0.04)] ${hasError ? "border-rose-200 ring-1 ring-rose-100" : "border-slate-200"}`}
+              className={cn(
+                "frontmatter-row field-card grid content-start gap-4 rounded-2xl px-4 py-4",
+                hasError &&
+                  "border-[color-mix(in_srgb,var(--status-error-fg)_26%,transparent)] shadow-[var(--panel-shadow-border),0_0_0_1px_color-mix(in_srgb,var(--status-error-fg)_12%,transparent)]",
+              )}
               data-frontmatter-field={fieldName}
               data-state={hasError ? "error" : "default"}
             >
               <div className="frontmatter-main grid gap-3">
-                <label className="frontmatter-toggle inline-flex items-start gap-3">
-                  <input
+                <label className="frontmatter-toggle inline-flex items-start gap-3" htmlFor={`frontmatter-field-${fieldName}`}>
+                  <Checkbox
                     id={`frontmatter-field-${fieldName}`}
-                    className="mt-0.5 size-[1.1rem] shrink-0 accent-primary"
-                    type="checkbox"
-                    value={fieldName}
                     checked={fieldEnabled}
-                    onChange={(event) =>
+                    className="mt-0.5"
+                    onCheckedChange={(next) =>
                       onOptionsChange((current) => ({
                         ...current,
                         frontmatter: {
                           ...current.frontmatter,
                           fields: {
                             ...current.frontmatter.fields,
-                            [fieldName]: event.target.checked,
+                            [fieldName]: next === true,
                           },
                         },
                       }))
                     }
                   />
                   <span className="frontmatter-toggle-copy grid gap-1">
-                    <span className="text-sm font-semibold text-slate-900">{fieldMeta.label}</span>
-                    <span className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400">{fieldName}</span>
+                    <span className="text-sm font-semibold text-foreground">{fieldMeta.label}</span>
+                    <span className="wizard-kicker text-xs font-medium">{fieldName}</span>
                   </span>
                 </label>
-                <p className="frontmatter-description text-sm leading-6 text-slate-500">{fieldMeta.description}</p>
+                <p className="frontmatter-description text-sm leading-6">{fieldMeta.description}</p>
               </div>
-              <label className="field frontmatter-alias-field grid min-h-0 gap-2 rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-4">
-                <span className="text-sm font-semibold text-slate-900">내보낼 key alias</span>
+              <label className="field frontmatter-alias-field subtle-panel grid min-h-0 gap-2 rounded-2xl px-4 py-4">
+                <span className="text-sm font-semibold text-foreground">내보낼 key alias</span>
                 <Input
                   data-alias-input="true"
                   data-field-name={fieldName}
                   value={options.frontmatter.aliases[fieldName] ?? ""}
                   placeholder={fieldMeta.defaultAlias}
+                  aria-invalid={hasError || undefined}
+                  className={
+                    hasError
+                      ? "border-[var(--destructive)] shadow-[var(--panel-shadow-border),0_0_0_1px_color-mix(in_srgb,var(--destructive)_18%,transparent)]"
+                      : undefined
+                  }
                   disabled={!options.frontmatter.enabled || !fieldEnabled}
                   onChange={(event) =>
                     onOptionsChange((current) => ({
@@ -979,23 +1048,29 @@ export const ExportOptionsPanel = ({
 
   const markdownSection = (
     <OptionSection title="Markdown 규칙" note="링크, 미디어, 코드, 표">
-      <OptionField optionKey="markdown-linkStyle" label="링크 형식" description={description("markdown-linkStyle")}>
-        <select
-          id="markdown-linkStyle"
+      <OptionField
+        optionKey="markdown-linkStyle"
+        labelFor="markdown-linkStyle"
+        label="링크 형식"
+        description={description("markdown-linkStyle")}
+      >
+        <OptionSelectField
+          inputId="markdown-linkStyle"
           value={options.markdown.linkStyle}
-          onChange={(event) =>
+          options={[
+            { value: "inlined", label: "inline links" },
+            { value: "referenced", label: "reference links" },
+          ]}
+          onValueChange={(linkStyle) =>
             onOptionsChange((current) => ({
               ...current,
               markdown: {
                 ...current.markdown,
-                linkStyle: event.target.value as ExportOptions["markdown"]["linkStyle"],
+                linkStyle,
               },
             }))
           }
-        >
-          <option value="inlined">inline links</option>
-          <option value="referenced">reference links</option>
-        </select>
+        />
       </OptionField>
 
       <OptionField
@@ -1040,25 +1115,27 @@ export const ExportOptionsPanel = ({
 
       <OptionField
         optionKey="markdown-formulaBlockStyle"
+        labelFor="markdown-formulaBlockStyle"
         label="블록 수식 형식"
         description={description("markdown-formulaBlockStyle")}
       >
-        <select
-          id="markdown-formulaBlockStyle"
+        <OptionSelectField
+          inputId="markdown-formulaBlockStyle"
           value={options.markdown.formulaBlockStyle}
-          onChange={(event) =>
+          options={[
+            { value: "wrapper", label: "custom wrapper" },
+            { value: "math-fence", label: "```math fence" },
+          ]}
+          onValueChange={(formulaBlockStyle) =>
             onOptionsChange((current) => ({
               ...current,
               markdown: {
                 ...current.markdown,
-                formulaBlockStyle: event.target.value as ExportOptions["markdown"]["formulaBlockStyle"],
+                formulaBlockStyle,
               },
             }))
           }
-        >
-          <option value="wrapper">custom wrapper</option>
-          <option value="math-fence">```math fence</option>
-        </select>
+        />
       </OptionField>
 
       <OptionField
@@ -1101,110 +1178,124 @@ export const ExportOptionsPanel = ({
         />
       </OptionField>
 
-      <OptionField optionKey="markdown-tableStyle" label="표 형식" description={description("markdown-tableStyle")}>
-        <select
-          id="markdown-tableStyle"
+      <OptionField
+        optionKey="markdown-tableStyle"
+        labelFor="markdown-tableStyle"
+        label="표 형식"
+        description={description("markdown-tableStyle")}
+      >
+        <OptionSelectField
+          inputId="markdown-tableStyle"
           value={options.markdown.tableStyle}
-          onChange={(event) =>
+          options={[{ value: "gfm-or-html", label: "Markdown 우선, 복잡한 표는 best-effort 변환" }]}
+          onValueChange={(tableStyle) =>
             onOptionsChange((current) => ({
               ...current,
               markdown: {
                 ...current.markdown,
-                tableStyle: event.target.value as ExportOptions["markdown"]["tableStyle"],
+                tableStyle,
               },
             }))
           }
-        >
-          <option value="gfm-or-html">Markdown 우선, 복잡한 표는 best-effort 변환</option>
-        </select>
+        />
       </OptionField>
 
-      <OptionField optionKey="markdown-imageStyle" label="이미지 형식" description={description("markdown-imageStyle")}>
-        <select
-          id="markdown-imageStyle"
+      <OptionField
+        optionKey="markdown-imageStyle"
+        labelFor="markdown-imageStyle"
+        label="이미지 형식"
+        description={description("markdown-imageStyle")}
+      >
+        <OptionSelectField
+          inputId="markdown-imageStyle"
           value={options.markdown.imageStyle}
-          onChange={(event) =>
+          options={[
+            { value: "markdown-image", label: "일반 Markdown 이미지" },
+            { value: "linked-image", label: "이미지를 원본 링크로 감싸기" },
+            { value: "source-only", label: "링크만 남기기" },
+          ]}
+          onValueChange={(imageStyle) =>
             onOptionsChange((current) => ({
               ...current,
               markdown: {
                 ...current.markdown,
-                imageStyle: event.target.value as ExportOptions["markdown"]["imageStyle"],
+                imageStyle,
               },
             }))
           }
-        >
-          <option value="markdown-image">일반 Markdown 이미지</option>
-          <option value="linked-image">이미지를 원본 링크로 감싸기</option>
-          <option value="source-only">링크만 남기기</option>
-        </select>
+        />
       </OptionField>
 
       <OptionField
         optionKey="markdown-imageGroupStyle"
+        labelFor="markdown-imageGroupStyle"
         label="이미지 묶음 형식"
         description={description("markdown-imageGroupStyle")}
       >
-        <select
-          id="markdown-imageGroupStyle"
+        <OptionSelectField
+          inputId="markdown-imageGroupStyle"
           value={options.markdown.imageGroupStyle === "html" ? "split-images" : options.markdown.imageGroupStyle}
-          onChange={(event) =>
+          options={[{ value: "split-images", label: "개별 이미지로 분해" }]}
+          onValueChange={(imageGroupStyle) =>
             onOptionsChange((current) => ({
               ...current,
               markdown: {
                 ...current.markdown,
-                imageGroupStyle: event.target.value as ExportOptions["markdown"]["imageGroupStyle"],
+                imageGroupStyle,
               },
             }))
           }
-        >
-          <option value="split-images">개별 이미지로 분해</option>
-        </select>
+        />
       </OptionField>
 
       <OptionField
         optionKey="markdown-dividerStyle"
+        labelFor="markdown-dividerStyle"
         label="구분선 형식"
         description={description("markdown-dividerStyle")}
       >
-        <select
-          id="markdown-dividerStyle"
+        <OptionSelectField
+          inputId="markdown-dividerStyle"
           value={options.markdown.dividerStyle}
-          onChange={(event) =>
+          options={[
+            { value: "dash", label: "---" },
+            { value: "asterisk", label: "***" },
+          ]}
+          onValueChange={(dividerStyle) =>
             onOptionsChange((current) => ({
               ...current,
               markdown: {
                 ...current.markdown,
-                dividerStyle: event.target.value as ExportOptions["markdown"]["dividerStyle"],
+                dividerStyle,
               },
             }))
           }
-        >
-          <option value="dash">---</option>
-          <option value="asterisk">***</option>
-        </select>
+        />
       </OptionField>
 
       <OptionField
         optionKey="markdown-codeFenceStyle"
+        labelFor="markdown-codeFenceStyle"
         label="코드 fence 형식"
         description={description("markdown-codeFenceStyle")}
       >
-        <select
-          id="markdown-codeFenceStyle"
+        <OptionSelectField
+          inputId="markdown-codeFenceStyle"
           value={options.markdown.codeFenceStyle}
-          onChange={(event) =>
+          options={[
+            { value: "backtick", label: "```" },
+            { value: "tilde", label: "~~~" },
+          ]}
+          onValueChange={(codeFenceStyle) =>
             onOptionsChange((current) => ({
               ...current,
               markdown: {
                 ...current.markdown,
-                codeFenceStyle: event.target.value as ExportOptions["markdown"]["codeFenceStyle"],
+                codeFenceStyle,
               },
             }))
           }
-        >
-          <option value="backtick">```</option>
-          <option value="tilde">~~~</option>
-        </select>
+        />
       </OptionField>
 
       <OptionField
@@ -1236,41 +1327,42 @@ export const ExportOptionsPanel = ({
     <OptionSection title="Assets" note="다운로드와 참조 방식">
       <OptionField
         optionKey="assets-imageHandlingMode"
+        labelFor="assets-imageHandlingMode"
         label="이미지 처리 방식"
         description={description("assets-imageHandlingMode")}
       >
-        <select
-          id="assets-imageHandlingMode"
+        <OptionSelectField
+          inputId="assets-imageHandlingMode"
           value={options.assets.imageHandlingMode}
-          onChange={(event) =>
+          options={[
+            { value: "download", label: "다운로드 유지" },
+            { value: "remote", label: "네이버 원본 URL 유지" },
+            { value: "download-and-upload", label: "다운로드 후 Image Upload" },
+          ]}
+          onValueChange={(imageHandlingMode) =>
             onOptionsChange((current) => ({
               ...current,
               assets: {
                 ...current.assets,
-                imageHandlingMode:
-                  event.target.value as ExportOptions["assets"]["imageHandlingMode"],
+                imageHandlingMode,
                 compressionEnabled:
-                  event.target.value === "remote" ? false : current.assets.compressionEnabled,
+                  imageHandlingMode === "remote" ? false : current.assets.compressionEnabled,
                 downloadImages:
-                  event.target.value === "remote"
+                  imageHandlingMode === "remote"
                     ? false
-                    : event.target.value === "download-and-upload"
+                    : imageHandlingMode === "download-and-upload"
                       ? true
                       : current.assets.downloadImages,
                 downloadThumbnails:
-                  event.target.value === "remote"
+                  imageHandlingMode === "remote"
                     ? false
-                    : event.target.value === "download-and-upload"
+                    : imageHandlingMode === "download-and-upload"
                       ? true
                       : current.assets.downloadThumbnails,
               },
             }))
           }
-        >
-          <option value="download">다운로드 유지</option>
-          <option value="remote">네이버 원본 URL 유지</option>
-          <option value="download-and-upload">다운로드 후 Image Upload</option>
-        </select>
+        />
       </OptionField>
 
       <CheckField
@@ -1293,25 +1385,27 @@ export const ExportOptionsPanel = ({
 
       <OptionField
         optionKey="assets-stickerAssetMode"
+        labelFor="assets-stickerAssetMode"
         label="스티커 자산 처리"
         description={description("assets-stickerAssetMode")}
       >
-        <select
-          id="assets-stickerAssetMode"
+        <OptionSelectField
+          inputId="assets-stickerAssetMode"
           value={options.assets.stickerAssetMode}
-          onChange={(event) =>
+          options={[
+            { value: "ignore", label: "무시" },
+            { value: "download-original", label: "원본 자산 다운로드" },
+          ]}
+          onValueChange={(stickerAssetMode) =>
             onOptionsChange((current) => ({
               ...current,
               assets: {
                 ...current.assets,
-                stickerAssetMode: event.target.value as ExportOptions["assets"]["stickerAssetMode"],
+                stickerAssetMode,
               },
             }))
           }
-        >
-          <option value="ignore">무시</option>
-          <option value="download-original">원본 자산 다운로드</option>
-        </select>
+        />
       </OptionField>
 
       <CheckField
@@ -1369,26 +1463,28 @@ export const ExportOptionsPanel = ({
 
       <OptionField
         optionKey="assets-thumbnailSource"
+        labelFor="assets-thumbnailSource"
         label="썸네일 기준"
         description={description("assets-thumbnailSource")}
       >
-        <select
-          id="assets-thumbnailSource"
+        <OptionSelectField
+          inputId="assets-thumbnailSource"
           value={options.assets.thumbnailSource}
-          onChange={(event) =>
+          options={[
+            { value: "post-list-first", label: "글 목록 대표 썸네일 사용" },
+            { value: "first-body-image", label: "본문 첫 이미지 사용" },
+            { value: "none", label: "썸네일 값 저장 안 함" },
+          ]}
+          onValueChange={(thumbnailSource) =>
             onOptionsChange((current) => ({
               ...current,
               assets: {
                 ...current.assets,
-                thumbnailSource: event.target.value as ExportOptions["assets"]["thumbnailSource"],
+                thumbnailSource,
               },
             }))
           }
-        >
-          <option value="post-list-first">글 목록 대표 썸네일 사용</option>
-          <option value="first-body-image">본문 첫 이미지 사용</option>
-          <option value="none">썸네일 값 저장 안 함</option>
-        </select>
+        />
       </OptionField>
     </OptionSection>
   )
@@ -1433,8 +1529,8 @@ export const ExportOptionsPanel = ({
         >
           {options.links.sameBlogPostMode === "custom-url" ? (
             <div className="grid gap-3 pl-7">
-              <label className="field grid min-h-0 gap-2 rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-4">
-                <span className="text-sm font-semibold text-slate-900">URL 템플릿</span>
+              <label className="field subtle-panel grid min-h-0 gap-2 rounded-2xl px-4 py-4">
+                <span className="text-sm font-semibold text-foreground">URL 템플릿</span>
                 <Input
                   id="links-sameBlogPostCustomUrlTemplate"
                   value={options.links.sameBlogPostCustomUrlTemplate}
@@ -1449,43 +1545,43 @@ export const ExportOptionsPanel = ({
                     }))
                   }
                 />
-                <small className="field-help text-sm leading-6 text-slate-500">
-                  지원 변수만 치환됩니다. 예: <span className="font-mono text-slate-700">https://myblog/{"{category}"}/{"{title}"}</span>
+                <small className="field-help text-sm leading-6">
+                  지원 변수만 치환됩니다. 예: <span className="font-mono text-foreground">https://myblog/{"{category}"}/{"{title}"}</span>
                 </small>
               </label>
 
-              <div className="grid gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-4">
+              <div className="field-card grid gap-3 rounded-2xl px-4 py-4">
                 <div className="grid gap-1">
-                  <span className="text-sm font-semibold text-slate-900">실시간 변환 예시</span>
-                  <p className="text-sm leading-6 text-slate-500">
+                  <span className="text-sm font-semibold text-foreground">실시간 변환 예시</span>
+                  <p className="text-sm leading-6 text-muted-foreground">
                     {linkTemplatePreviewPost
                       ? `${linkTemplatePreviewPost.title} 글을 기준으로 바로 보여줍니다.`
                       : "선택 범위에 글이 있으면 여기에서 실제 변환 결과를 바로 보여줍니다."}
                   </p>
                 </div>
 
-                <div className="grid gap-2 text-sm leading-6 text-slate-500">
+                <div className="grid gap-2 text-sm leading-6 text-muted-foreground">
                   <span>현재 템플릿</span>
-                  <code className="break-all rounded-xl bg-slate-50 px-3 py-2 font-mono text-[0.8125rem] text-slate-700">
+                  <code className="code-surface break-all px-3 py-2 font-mono text-[0.8125rem] text-foreground">
                     {customUrlTemplate || "(비어 있음)"}
                   </code>
                 </div>
 
-                <div className="grid gap-2 text-sm leading-6 text-slate-500">
+                <div className="grid gap-2 text-sm leading-6 text-muted-foreground">
                   <span>변환 결과</span>
                   <code
                     id="links-sameBlogPostCustomUrlPreview"
-                    className="break-all rounded-xl bg-slate-900 px-3 py-2 font-mono text-[0.8125rem] text-slate-100"
+                    className="code-surface-inverse break-all px-3 py-2 font-mono text-[0.8125rem]"
                   >
                     {customUrlPreview ?? "템플릿을 입력하면 결과가 여기에서 바로 바뀝니다."}
                   </code>
                 </div>
               </div>
 
-              <div className="grid gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-4">
+              <div className="field-card grid gap-3 rounded-2xl px-4 py-4">
                 <div className="grid gap-1">
-                  <span className="text-sm font-semibold text-slate-900">사용 가능한 변수</span>
-                  <p className="text-sm leading-6 text-slate-500">
+                  <span className="text-sm font-semibold text-foreground">사용 가능한 변수</span>
+                  <p className="text-sm leading-6 text-muted-foreground">
                     아래 값은 현재 선택 범위 안의 글 하나를 예시로 바로 계산합니다.
                   </p>
                 </div>
@@ -1498,17 +1594,17 @@ export const ExportOptionsPanel = ({
                     return (
                       <div
                         key={key}
-                        className="grid gap-2 rounded-2xl border border-slate-200 bg-slate-50/80 px-3 py-3"
+                        className="subtle-panel grid gap-2 rounded-2xl px-3 py-3"
                       >
                         <div className="flex items-center gap-2">
-                          <span className="rounded-md bg-sky-100 px-1.5 py-0.5 font-mono text-sm text-sky-800">
+                          <Badge variant="outline" className="w-fit rounded-md font-mono text-xs">
                             {meta.label}
-                          </span>
-                          <span className="text-sm font-medium text-slate-900">{meta.description}</span>
+                          </Badge>
+                          <span className="text-sm font-medium text-foreground">{meta.description}</span>
                         </div>
-                        <div className="grid gap-1 text-sm leading-6 text-slate-500">
+                        <div className="grid gap-1 text-sm leading-6 text-muted-foreground">
                           <span>예시 값</span>
-                          <code className="break-all rounded-xl bg-white px-2 py-1 font-mono text-[0.8125rem] text-slate-700">
+                          <code className="code-surface break-all px-2 py-1 font-mono text-[0.8125rem] text-foreground">
                             {exampleValue}
                           </code>
                         </div>
@@ -1546,28 +1642,29 @@ export const ExportOptionsPanel = ({
     <OptionSection title="진단" note="경고와 실패 처리 기준">
       <OptionField
         optionKey="assets-downloadFailureMode"
+        labelFor="assets-downloadFailureMode"
         label="이미지 다운로드 실패 처리"
         description={description("assets-downloadFailureMode")}
         disabled={options.assets.imageHandlingMode === "remote"}
       >
-        <select
-          id="assets-downloadFailureMode"
+        <OptionSelectField
+          inputId="assets-downloadFailureMode"
           value={options.assets.downloadFailureMode}
           disabled={options.assets.imageHandlingMode === "remote"}
-          onChange={(event) =>
+          options={[
+            { value: "warn-and-use-source", label: "경고 후 원본 URL 유지" },
+            { value: "warn-and-omit", label: "경고 후 이미지 생략" },
+          ]}
+          onValueChange={(downloadFailureMode) =>
             onOptionsChange((current) => ({
               ...current,
               assets: {
                 ...current.assets,
-                downloadFailureMode:
-                  event.target.value as ExportOptions["assets"]["downloadFailureMode"],
+                downloadFailureMode,
               },
             }))
           }
-        >
-          <option value="warn-and-use-source">경고 후 원본 URL 유지</option>
-          <option value="warn-and-omit">경고 후 이미지 생략</option>
-        </select>
+        />
       </OptionField>
     </OptionSection>
   )
@@ -1583,15 +1680,16 @@ export const ExportOptionsPanel = ({
 
   return (
     <Card
-      className="board-card overflow-hidden border-white/80 bg-white/90 shadow-[0_24px_60px_rgba(22,33,50,0.08)] backdrop-blur"
+      variant="panel"
+      className="board-card overflow-hidden"
       id="export-panel"
     >
-      <CardHeader className="panel-header gap-4 border-b border-slate-200/70 bg-white/70 p-6">
+      <CardHeader className="panel-header gap-4 p-6">
         <div className="panel-heading space-y-2">
-          <CardTitle className="section-title text-2xl font-semibold tracking-[-0.04em] text-slate-900">
+          <CardTitle className="section-title text-2xl">
             {stepMeta[step].title}
           </CardTitle>
-          <CardDescription className="panel-description max-w-3xl text-sm leading-7 text-slate-600">
+          <CardDescription className="panel-description max-w-3xl text-sm leading-7">
             {stepMeta[step].description}
           </CardDescription>
         </div>

@@ -6,6 +6,7 @@ import type {
   FrontmatterFieldName,
   OptionDescriptionMap,
   ScanResult,
+  ThemePreference,
   UploadProviderCatalogResponse,
 } from "../../shared/types.js"
 
@@ -13,6 +14,7 @@ export type ExportBootstrapResponse = {
   profile: "gfm"
   options: ExportOptions
   lastOutputDir: string
+  themePreference: ThemePreference
   resumedJob: ExportJobState | null
   resumeSummary: ExportResumeSummary | null
   resumedScanResult: ScanResult | null

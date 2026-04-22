@@ -11,13 +11,7 @@ categoryPath:
 editorVersion: 4
 visibility: public
 thumbnail: https://mblogthumb-phinf.pstatic.net/MjAyNDA3MTNfMjk5/MDAxNzIwODQ3NjY3OTE4.Kz7fHr5z0nKd4RCms8SuM8shdSdXn0FrA3P4ebGcPQAg.z8SI0didzxBNQw-N7K2WHzKSjAeis5_KurpilM37-jQg.PNG/%BA%CE%BE%C8_%B0%A1%BA%BC%B8%B8%C7%D1%B0%F7_%282%29.png?type=w800
-warnings:
-  - 스티커 asset 옵션이 ignore라서 본문에서 스티커를 생략했습니다.
 ---
-
-## Export Diagnostics
-
-> ⚠️ Warning: 스티커 asset 옵션이 ignore라서 본문에서 스티커를 생략했습니다.
 
 🌈
 

@@ -4,7 +4,7 @@
 - 도메인 엔티티와 상태 전이: [domain.md](./domain.md)
 - 사용자 흐름과 출력 규약: [product-outline.md](./product-outline.md)
 - 실샘플 대표성과 선택 규칙: [sample-corpus.md](./sample-corpus.md)
-- 대시보드 UI 규약과 회귀 기준: [ui-dashboard-design-system.md](./ui-dashboard-design-system.md)
+- 대시보드 UI 규약과 회귀 기준: [../DESIGN.md](../DESIGN.md)
 
 ## 대표 기준점
 - scan/export/upload API: [../../../src/server/http-server.ts](../../../src/server/http-server.ts)

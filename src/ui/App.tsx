@@ -2,7 +2,9 @@ import {
   RiArrowRightLine,
   RiDownload2Line,
   RiLoader4Line,
+  RiMoonClearLine,
   RiRadarLine,
+  RiSunLine,
 } from "@remixicon/react"
 import { useEffect, useMemo, useRef, useState } from "react"
 
@@ -282,6 +284,9 @@ export const App = () => {
   const [scanStatus, setScanStatus] = useState(
     "블로그를 아직 스캔하지 않았습니다.",
   )
+  const [scanStatusTone, setScanStatusTone] = useState<"default" | "error">(
+    "default",
+  )
   const [categoryStatus, setCategoryStatus] = useState(
     "스캔 후 카테고리를 선택할 수 있습니다.",
   )
@@ -308,6 +313,14 @@ export const App = () => {
   const hasLoadedDefaultsRef = useRef(false)
   const latestPersistedOptionsRef = useRef(sanitizePersistedExportOptions(fallbackDefaults.options))
   const latestThemePreferenceRef = useRef<ThemePreference>(fallbackDefaults.themePreference)
+  const setNeutralScanStatus = (message: string) => {
+    setScanStatus(message)
+    setScanStatusTone("default")
+  }
+  const setErrorScanStatus = (message: string) => {
+    setScanStatus(message)
+    setScanStatusTone("error")
+  }
 
   const applyBootstrapState = (nextDefaults: ExportBootstrapResponse) => {
     setDefaults(nextDefaults)
@@ -324,11 +337,11 @@ export const App = () => {
       setScanCache({
         [nextDefaults.resumedScanResult.blogId]: nextDefaults.resumedScanResult,
       })
-      setScanStatus(`${nextDefaults.resumedScanResult.blogId} 스캔 결과 재개`)
+      setNeutralScanStatus(`${nextDefaults.resumedScanResult.blogId} 스캔 결과 재개`)
       setCategoryStatus("이전 작업 상태를 복구했습니다.")
     } else {
       setScanCache({})
-      setScanStatus("블로그를 아직 스캔하지 않았습니다.")
+      setNeutralScanStatus("블로그를 아직 스캔하지 않았습니다.")
       setCategoryStatus("스캔 후 카테고리를 선택할 수 있습니다.")
     }
 
@@ -468,7 +481,7 @@ export const App = () => {
         })
         hasLoadedDefaultsRef.current = true
         applyBootstrapState(fallbackDefaults)
-        setScanStatus(error instanceof Error ? error.message : String(error))
+        setErrorScanStatus(error instanceof Error ? error.message : String(error))
       }
     }
 
@@ -614,12 +627,12 @@ export const App = () => {
     forceRefresh?: boolean
   } = {}) => {
     if (!currentScanTarget) {
-      setScanStatus("블로그 ID 또는 URL을 입력하세요.")
+      setErrorScanStatus("블로그 ID 또는 URL을 입력하세요.")
       return false
     }
 
     if (activeScanResult && !forceRefresh) {
-      setScanStatus(`${activeScanResult.blogId} 스캔 결과를 재사용합니다.`)
+      setNeutralScanStatus(`${activeScanResult.blogId} 스캔 결과를 재사용합니다.`)
       setCategoryStatus("내보낼 카테고리를 선택하세요.")
       setCategorySearch("")
       setOptions((current) => ({
@@ -637,7 +650,7 @@ export const App = () => {
     }
 
     setScanPending(true)
-    setScanStatus(forceRefresh ? "캐시를 무효화하고 카테고리를 다시 불러오는 중입니다." : "카테고리를 스캔하는 중입니다.")
+    setNeutralScanStatus(forceRefresh ? "캐시를 무효화하고 카테고리를 다시 불러오는 중입니다." : "카테고리를 스캔하는 중입니다.")
     setCategoryStatus("카테고리를 불러오는 중입니다.")
 
     if (forceRefresh) {
@@ -658,7 +671,7 @@ export const App = () => {
         ...current,
         [currentScanTarget]: nextScanResult,
       }))
-      setScanStatus(`${nextScanResult.blogId} 스캔 완료`)
+      setNeutralScanStatus(`${nextScanResult.blogId} 스캔 완료`)
       setCategoryStatus("내보낼 카테고리를 선택하세요.")
       setCategorySearch("")
       setOptions((current) => ({
@@ -676,7 +689,7 @@ export const App = () => {
       return true
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      setScanStatus(message)
+      setErrorScanStatus(message)
       setCategoryStatus("스캔에 실패했습니다. 다시 시도하세요.")
       toast.error("카테고리 스캔에 실패했습니다.", {
         description: message,
@@ -692,12 +705,12 @@ export const App = () => {
     setSetupStep("blog-input")
 
     if (value.trim() && scanCache[value.trim()]) {
-      setScanStatus("캐시된 카테고리를 다시 사용할 수 있습니다.")
+      setNeutralScanStatus("캐시된 카테고리를 다시 사용할 수 있습니다.")
       setCategoryStatus("내보낼 카테고리를 선택하세요.")
       return
     }
 
-    setScanStatus(
+    setNeutralScanStatus(
       value.trim()
         ? "블로그가 바뀌었습니다. 다음 단계에서 다시 스캔합니다."
         : "블로그를 아직 스캔하지 않았습니다.",
@@ -1040,10 +1053,22 @@ export const App = () => {
                 placeholder="mym0404 또는 https://blog.naver.com/..."
                 disabled={scanPending}
                 value={blogIdOrUrl}
+                aria-invalid={scanStatusTone === "error" || undefined}
+                className={
+                  scanStatusTone === "error"
+                    ? "border-[var(--destructive)] shadow-[var(--panel-shadow-border),0_0_0_1px_color-mix(in_srgb,var(--destructive)_18%,transparent)]"
+                    : undefined
+                }
                 onChange={(event) => handleBlogInputChange(event.target.value)}
               />
             </label>
-            <p id="scan-status" className="scan-status-note text-sm leading-7">
+            <p
+              id="scan-status"
+              className={cn(
+                "scan-status-note text-sm leading-7",
+                scanStatusTone === "error" && "danger-copy",
+              )}
+            >
               {scanStatus}
             </p>
           </CardContent>
@@ -1178,6 +1203,7 @@ export const App = () => {
               <div className="flex flex-wrap items-center justify-start gap-3 lg:justify-end">
                 <ToggleGroup
                   className="theme-toggle rounded-full p-1"
+                  aria-label="테마 선택"
                   value={themePreference}
                   onValueChange={(value) => {
                     if (value === "dark" || value === "light") {
@@ -1185,11 +1211,23 @@ export const App = () => {
                     }
                   }}
                 >
-                  <ToggleGroupItem className="theme-toggle-item px-3 text-xs font-medium" value="dark">
-                    다크
+                  <ToggleGroupItem
+                    aria-label="다크"
+                    className="theme-toggle-item size-8 p-0"
+                    title="다크"
+                    value="dark"
+                  >
+                    <RiMoonClearLine data-theme-icon aria-hidden="true" />
+                    <span className="sr-only">다크</span>
                   </ToggleGroupItem>
-                  <ToggleGroupItem className="theme-toggle-item px-3 text-xs font-medium" value="light">
-                    라이트
+                  <ToggleGroupItem
+                    aria-label="라이트"
+                    className="theme-toggle-item size-8 p-0"
+                    title="라이트"
+                    value="light"
+                  >
+                    <RiSunLine data-theme-icon aria-hidden="true" />
+                    <span className="sr-only">라이트</span>
                   </ToggleGroupItem>
                 </ToggleGroup>
                 <Badge

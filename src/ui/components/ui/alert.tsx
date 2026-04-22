@@ -4,12 +4,13 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "../../lib/cn.js"
 
 const alertVariants = cva(
-  "relative w-full rounded-lg border px-4 py-3 text-sm [&>p]:leading-relaxed",
+  "relative w-full rounded-[var(--radius-lg)] border px-4 py-3 text-sm [&>p]:leading-relaxed",
   {
     variants: {
       variant: {
-        default: "bg-background text-foreground",
-        destructive: "border-destructive/50 text-destructive dark:border-destructive",
+        default: "border-border bg-card text-foreground shadow-[var(--panel-shadow-border)]",
+        destructive:
+          "border-[color-mix(in_srgb,var(--destructive)_28%,transparent)] bg-[var(--status-error-bg)] text-[var(--status-error-fg)] shadow-[var(--panel-shadow-border)]",
       },
     },
     defaultVariants: {

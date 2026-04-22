@@ -23,6 +23,24 @@ const buildJsonResponse = (body: unknown, status = 200) =>
     },
   })
 
+const selectOption = async ({
+  user,
+  trigger,
+  value,
+}: {
+  user: ReturnType<typeof userEvent.setup>
+  trigger: HTMLElement
+  value: string
+}) => {
+  await user.click(trigger)
+
+  await waitFor(() => {
+    expect(document.querySelector(`[data-slot="select-item"][data-value="${value}"]`)).not.toBeNull()
+  })
+
+  await user.click(document.querySelector(`[data-slot="select-item"][data-value="${value}"]`) as HTMLElement)
+}
+
 const buildPostSummary = (logNo: number, categoryId: number, categoryName: string) => ({
   blogId: "mym0404",
   logNo: String(logNo),
@@ -509,6 +527,18 @@ beforeEach(() => {
     configurable: true,
     value: vi.fn(),
   })
+  Object.defineProperty(HTMLElement.prototype, "hasPointerCapture", {
+    configurable: true,
+    value: vi.fn(() => false),
+  })
+  Object.defineProperty(HTMLElement.prototype, "setPointerCapture", {
+    configurable: true,
+    value: vi.fn(),
+  })
+  Object.defineProperty(HTMLElement.prototype, "releasePointerCapture", {
+    configurable: true,
+    value: vi.fn(),
+  })
 })
 
 describe("App", () => {
@@ -600,6 +630,69 @@ describe("App", () => {
     expect(screen.getByPlaceholderText("title")).toHaveValue("postTitle")
   })
 
+  it("renders the category table without separate path and depth columns", async () => {
+    const fetchMock = vi.fn<typeof fetch>(async (input) => {
+      const url = typeof input === "string" ? input : input.toString()
+      const bootstrapResponse = getBootstrapResponse(url)
+
+      if (bootstrapResponse) {
+        return bootstrapResponse
+      }
+
+      if (url.endsWith("/api/scan")) {
+        return buildJsonResponse(scanResult)
+      }
+
+      throw new Error(`unexpected fetch: ${url}`)
+    })
+
+    vi.stubGlobal("fetch", fetchMock)
+
+    const user = renderApp()
+
+    await user.type(screen.getByLabelText("블로그 ID 또는 URL"), "mym0404")
+    await user.click(screen.getByRole("button", { name: "카테고리 불러오기" }))
+
+    const table = await screen.findByRole("table")
+
+    expect(within(table).getByRole("columnheader", { name: "선택" })).toBeInTheDocument()
+    expect(within(table).getByRole("columnheader", { name: "카테고리" })).toBeInTheDocument()
+    expect(within(table).getByRole("columnheader", { name: "글 수" })).toBeInTheDocument()
+    expect(within(table).queryByRole("columnheader", { name: "경로" })).not.toBeInTheDocument()
+    expect(within(table).queryByRole("columnheader", { name: "깊이" })).not.toBeInTheDocument()
+  })
+
+  it("marks the blog input and status copy as errors when the scan request fails", async () => {
+    const fetchMock = vi.fn<typeof fetch>(async (input) => {
+      const url = typeof input === "string" ? input : input.toString()
+      const bootstrapResponse = getBootstrapResponse(url)
+
+      if (bootstrapResponse) {
+        return bootstrapResponse
+      }
+
+      if (url.endsWith("/api/scan")) {
+        return buildJsonResponse({ error: "API 요청 실패: 404 Not Found" }, 404)
+      }
+
+      throw new Error(`unexpected fetch: ${url}`)
+    })
+
+    vi.stubGlobal("fetch", fetchMock)
+
+    const user = renderApp()
+
+    await user.type(screen.getByLabelText("블로그 ID 또는 URL"), "23213213213")
+    await user.click(screen.getByRole("button", { name: "카테고리 불러오기" }))
+
+    await waitFor(() => {
+      expect(document.querySelector("#scan-status")?.textContent).toContain("API 요청 실패: 404 Not Found")
+    })
+
+    expect(screen.getByLabelText("블로그 ID 또는 URL")).toHaveAttribute("aria-invalid", "true")
+    expect(document.querySelector('[data-step-view="blog-input"]')).not.toBeNull()
+  })
+
   it("opens a resume dialog and restores the last running step from bootstrap", async () => {
     const resumedJob: ExportJobState = {
       ...completedJob,
@@ -664,7 +757,7 @@ describe("App", () => {
       within(dialog).getByText((_, element) => element?.textContent === "출력 경로 ./resume-output"),
     ).toBeInTheDocument()
     expect(document.querySelector('[data-step-view="running"]')).not.toBeNull()
-    await user.click(within(dialog).getAllByRole("button", { name: "Close" })[0]!)
+    await user.click(within(dialog).getAllByRole("button", { name: "닫기" })[0]!)
     expect(screen.getByRole("button", { name: "남은 작업 계속" })).toBeInTheDocument()
   })
 
@@ -914,23 +1007,19 @@ describe("App", () => {
 
     expect(document.querySelector("#job-file-tree table")).not.toBeNull()
     expect(document.querySelector('[data-job-log-timestamp]')?.textContent).toBe("2026-04-11T04:00:00.000Z")
-    expect(document.querySelector('[data-job-log-timestamp]')?.className).toContain("text-[11px]")
     expect(document.querySelector('[data-job-log-message]')?.textContent).toContain("작업을 큐에 등록했습니다.")
-    expect(document.querySelector('[data-job-log-message]')?.className).toContain("whitespace-pre-wrap")
     expect((document.querySelector('#logs [data-slot="scroll-area-viewport"]') as HTMLElement | null)?.scrollTop).toBe(240)
 
     const errorFilterButton = document.querySelector('[data-job-filter="errors"]') as HTMLButtonElement
     expect(errorFilterButton).not.toBeNull()
     await user.click(errorFilterButton)
-    expect(errorFilterButton).toHaveClass("is-active")
 
     const allFilterButton = document.querySelector('[data-job-filter="all"]') as HTMLButtonElement
     expect(allFilterButton).not.toBeNull()
     await user.click(allFilterButton)
     const item = document.querySelector('[data-job-item-id="posts/NestJS/test.md"]') as HTMLElement
-  expect(item).not.toBeNull()
-  expect(item.className).toContain("whitespace-normal")
-  expect(document.querySelector('[role="dialog"]')).toBeNull()
+    expect(item).not.toBeNull()
+    expect(document.querySelector('[role="dialog"]')).toBeNull()
   })
 
   it("scrolls to the top when moving to the next setup step", async () => {
@@ -1143,7 +1232,6 @@ describe("App", () => {
       expect(document.querySelector('[data-step-view="upload"]')).not.toBeNull()
       expect(document.querySelector("#upload-targets-table")).toBeNull()
       expect(document.querySelector("#upload-progress")?.getAttribute("aria-valuenow")).toBe("0")
-      expect(document.querySelector("#job-file-tree")?.className).toContain("max-h-[min(32rem,62vh)]")
       expect(document.querySelector('#job-file-tree [data-upload-row-id="NestJS/2026-04-11-1/index.md"]')?.getAttribute("data-upload-row-status")).toBe("pending")
       expect(document.querySelector('#job-file-tree [data-upload-row-id="React/2026-04-12-2/index.md"]')?.getAttribute("data-upload-row-status")).toBe("pending")
       expect(document.querySelector("#upload-form")).not.toBeNull()
@@ -1281,7 +1369,11 @@ describe("App", () => {
 
     await user.type(screen.getByLabelText(/^Repository\b/), "owner/name")
     await user.click(screen.getByRole("checkbox", { name: /jsDelivr CDN 사용/i }))
-    await user.selectOptions(document.querySelector("#upload-providerKey") as HTMLSelectElement, "tcyun")
+    await selectOption({
+      user,
+      trigger: document.querySelector("#upload-providerKey") as HTMLElement,
+      value: "tcyun",
+    })
 
     await waitFor(() => {
       expect(screen.queryByLabelText(/^Repository\b/)).toBeNull()
@@ -1291,20 +1383,32 @@ describe("App", () => {
       expect(screen.getByRole("checkbox", { name: /Slim/i })).toBeInTheDocument()
     })
 
-    expect(screen.getByLabelText(/^Permission\b/)).toHaveValue("0")
+    expect(screen.getByLabelText(/^Permission\b/)).toHaveAttribute("data-value", "0")
     await user.type(screen.getByLabelText(/^App ID\b/), "app-123")
-    await user.selectOptions(screen.getByLabelText(/^Permission\b/), "1")
+    await selectOption({
+      user,
+      trigger: screen.getByLabelText(/^Permission\b/),
+      value: "1",
+    })
     await user.clear(screen.getByLabelText(/^Port\b/))
     await user.type(screen.getByLabelText(/^Port\b/), "2443")
     await user.click(screen.getByRole("checkbox", { name: /Slim/i }))
 
-    await user.selectOptions(document.querySelector("#upload-providerKey") as HTMLSelectElement, "github")
+    await selectOption({
+      user,
+      trigger: document.querySelector("#upload-providerKey") as HTMLElement,
+      value: "github",
+    })
     expect(screen.getByLabelText(/^Repository\b/)).toHaveValue("owner/name")
     expect(screen.getByRole("checkbox", { name: /jsDelivr CDN 사용/i })).toBeChecked()
 
-    await user.selectOptions(document.querySelector("#upload-providerKey") as HTMLSelectElement, "tcyun")
+    await selectOption({
+      user,
+      trigger: document.querySelector("#upload-providerKey") as HTMLElement,
+      value: "tcyun",
+    })
     expect(screen.getByLabelText(/^App ID\b/)).toHaveValue("app-123")
-    expect(screen.getByLabelText(/^Permission\b/)).toHaveValue("1")
+    expect(screen.getByLabelText(/^Permission\b/)).toHaveAttribute("data-value", "1")
     expect(screen.getByLabelText(/^Port\b/)).toHaveValue(2443)
     expect(screen.getByRole("checkbox", { name: /Slim/i })).toBeChecked()
 

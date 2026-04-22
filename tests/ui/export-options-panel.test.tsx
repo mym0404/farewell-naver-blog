@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { userEvent } from "@testing-library/user-event"
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import "@testing-library/jest-dom/vitest"
 
@@ -17,6 +17,35 @@ import { ExportOptionsPanel } from "../../src/ui/features/options/export-options
 
 afterEach(() => {
   cleanup()
+  vi.unstubAllGlobals()
+  vi.restoreAllMocks()
+})
+
+beforeEach(() => {
+  vi.stubGlobal(
+    "ResizeObserver",
+    class ResizeObserverMock {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    },
+  )
+  Object.defineProperty(HTMLElement.prototype, "hasPointerCapture", {
+    configurable: true,
+    value: vi.fn(() => false),
+  })
+  Object.defineProperty(HTMLElement.prototype, "setPointerCapture", {
+    configurable: true,
+    value: vi.fn(),
+  })
+  Object.defineProperty(HTMLElement.prototype, "releasePointerCapture", {
+    configurable: true,
+    value: vi.fn(),
+  })
+  Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+    configurable: true,
+    value: vi.fn(),
+  })
 })
 
 const query = <T extends HTMLElement>(selector: string) => {
@@ -27,6 +56,24 @@ const query = <T extends HTMLElement>(selector: string) => {
   }
 
   return element as T
+}
+
+const selectOption = async ({
+  user,
+  trigger,
+  value,
+}: {
+  user: ReturnType<typeof userEvent.setup>
+  trigger: string
+  value: string
+}) => {
+  await user.click(query<HTMLElement>(trigger))
+
+  await waitFor(() => {
+    expect(document.querySelector(`[data-slot="select-item"][data-value="${value}"]`)).not.toBeNull()
+  })
+
+  await user.click(query<HTMLElement>(`[data-slot="select-item"][data-value="${value}"]`))
 }
 
 describe("ExportOptionsPanel", () => {
@@ -63,8 +110,8 @@ describe("ExportOptionsPanel", () => {
     await user.click(query<HTMLInputElement>("#structure-groupByCategory"))
     await user.click(query<HTMLInputElement>("#structure-includeDateInPostFolderName"))
     await user.click(query<HTMLInputElement>("#structure-includeLogNoInPostFolderName"))
-    await user.selectOptions(query<HTMLSelectElement>("#structure-slugStyle"), "keep-title")
-    await user.selectOptions(query<HTMLSelectElement>("#structure-slugWhitespace"), "keep-space")
+    await selectOption({ user, trigger: "#structure-slugStyle", value: "keep-title" })
+    await selectOption({ user, trigger: "#structure-slugWhitespace", value: "keep-space" })
     await user.click(query<HTMLInputElement>("#structure-postFolderNameMode-custom-template"))
 
     cleanup()
@@ -84,13 +131,17 @@ describe("ExportOptionsPanel", () => {
     )
 
     await user.click(query<HTMLInputElement>("#frontmatter-enabled"))
-    await user.click(query<HTMLInputElement>('[data-frontmatter-field="title"] input[type="checkbox"]'))
+    await user.click(query<HTMLElement>("#frontmatter-field-title"))
     fireEvent.change(query<HTMLInputElement>('[data-frontmatter-field="title"] [data-alias-input="true"]'), {
       target: {
         value: "headline",
       },
     })
     expect(query<HTMLElement>("#frontmatter-status").textContent).toMatch(/같은 alias "shared"/)
+    expect(query<HTMLElement>('[data-frontmatter-field="title"] [data-alias-input="true"]')).toHaveAttribute(
+      "aria-invalid",
+      "true",
+    )
 
     cleanup()
 
@@ -108,7 +159,7 @@ describe("ExportOptionsPanel", () => {
       />,
     )
 
-    await user.selectOptions(query<HTMLSelectElement>("#markdown-linkStyle"), "referenced")
+    await selectOption({ user, trigger: "#markdown-linkStyle", value: "referenced" })
     fireEvent.change(query<HTMLInputElement>("#markdown-formulaInlineWrapperOpen"), {
       target: {
         value: "\\(",
@@ -119,7 +170,7 @@ describe("ExportOptionsPanel", () => {
         value: "\\)",
       },
     })
-    await user.selectOptions(query<HTMLSelectElement>("#markdown-formulaBlockStyle"), "math-fence")
+    await selectOption({ user, trigger: "#markdown-formulaBlockStyle", value: "math-fence" })
     fireEvent.change(query<HTMLInputElement>("#markdown-formulaBlockWrapperOpen"), {
       target: {
         value: "```math",
@@ -130,9 +181,9 @@ describe("ExportOptionsPanel", () => {
         value: "```",
       },
     })
-    await user.selectOptions(query<HTMLSelectElement>("#markdown-imageStyle"), "linked-image")
-    await user.selectOptions(query<HTMLSelectElement>("#markdown-dividerStyle"), "asterisk")
-    await user.selectOptions(query<HTMLSelectElement>("#markdown-codeFenceStyle"), "tilde")
+    await selectOption({ user, trigger: "#markdown-imageStyle", value: "linked-image" })
+    await selectOption({ user, trigger: "#markdown-dividerStyle", value: "asterisk" })
+    await selectOption({ user, trigger: "#markdown-codeFenceStyle", value: "tilde" })
     fireEvent.change(query<HTMLInputElement>("#markdown-headingLevelOffset"), {
       target: {
         value: "2",
@@ -155,12 +206,12 @@ describe("ExportOptionsPanel", () => {
       />,
     )
 
-    await user.selectOptions(query<HTMLSelectElement>("#assets-imageHandlingMode"), "download-and-upload")
+    await selectOption({ user, trigger: "#assets-imageHandlingMode", value: "download-and-upload" })
     await user.click(query<HTMLInputElement>("#assets-compressionEnabled"))
-    await user.selectOptions(query<HTMLSelectElement>("#assets-imageHandlingMode"), "remote")
-    await user.selectOptions(query<HTMLSelectElement>("#assets-stickerAssetMode"), "download-original")
+    await selectOption({ user, trigger: "#assets-imageHandlingMode", value: "remote" })
+    await selectOption({ user, trigger: "#assets-stickerAssetMode", value: "download-original" })
     await user.click(query<HTMLInputElement>("#assets-includeImageCaptions"))
-    await user.selectOptions(query<HTMLSelectElement>("#assets-thumbnailSource"), "none")
+    await selectOption({ user, trigger: "#assets-thumbnailSource", value: "none" })
 
     cleanup()
 
@@ -259,25 +310,6 @@ describe("ExportOptionsPanel", () => {
     expect(Object.hasOwn(latestOptions.assets, "imageContentMode")).toBe(false)
   })
 
-  it("keeps the multi-column frontmatter grid in the frontmatter step", () => {
-    render(
-      <ExportOptionsPanel
-        step="frontmatter"
-        outputDir="./output"
-        options={defaultExportOptions()}
-        optionDescriptions={optionDescriptions}
-        frontmatterFieldOrder={frontmatterFieldOrder}
-        frontmatterFieldMeta={frontmatterFieldMeta}
-        frontmatterValidationErrors={[]}
-        onOutputDirChange={vi.fn()}
-        onOptionsChange={vi.fn()}
-      />,
-    )
-
-    expect(query<HTMLElement>("#frontmatter-fields").className).toContain("md:grid-cols-2")
-    expect(query<HTMLElement>("#frontmatter-fields").className).toContain("2xl:grid-cols-3")
-  })
-
   it("shows an always-expanded file tree preview in the structure step", () => {
     const options = defaultExportOptions()
 
@@ -307,7 +339,6 @@ describe("ExportOptionsPanel", () => {
     expect(preview.textContent).toContain("public")
     expect(preview.textContent).toContain("manifest.json")
     expect(preview.textContent).toContain("b7d3f1-cover.jpg")
-    expect(document.querySelector('[data-tree-kind="file"]')?.className).toContain("min-h-7")
   })
 
   it("updates the structure preview when the folder rule changes", () => {
@@ -420,10 +451,10 @@ describe("ExportOptionsPanel", () => {
     expect(query<HTMLInputElement>("#assets-downloadImages")).toBeDisabled()
     expect(query<HTMLInputElement>("#assets-downloadThumbnails")).toBeDisabled()
     expect(document.querySelector("#assets-imageContentMode")).toBeNull()
-    expect(query<HTMLSelectElement>("#assets-imageHandlingMode").value).toBe("remote")
-    expect(query<HTMLSelectElement>("#assets-stickerAssetMode")).not.toBeDisabled()
+    expect(query<HTMLElement>("#assets-imageHandlingMode")).toHaveAttribute("data-value", "remote")
+    expect(query<HTMLElement>("#assets-stickerAssetMode")).not.toBeDisabled()
     expect(query<HTMLInputElement>("#assets-includeImageCaptions")).not.toBeDisabled()
-    expect(query<HTMLSelectElement>("#assets-thumbnailSource")).not.toBeDisabled()
+    expect(query<HTMLElement>("#assets-thumbnailSource")).not.toBeDisabled()
     expect(screen.queryByLabelText("uploaderKey")).not.toBeInTheDocument()
     expect(screen.queryByLabelText("uploaderConfigJson")).not.toBeInTheDocument()
   })
@@ -448,7 +479,7 @@ describe("ExportOptionsPanel", () => {
       />,
     )
 
-    await user.selectOptions(query<HTMLSelectElement>("#assets-downloadFailureMode"), "warn-and-omit")
+    await selectOption({ user, trigger: "#assets-downloadFailureMode", value: "warn-and-omit" })
 
     expect(latestOptions.assets.downloadFailureMode).toBe("warn-and-omit")
   })

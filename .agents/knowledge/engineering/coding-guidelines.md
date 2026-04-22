@@ -20,10 +20,11 @@
 - parser 범위를 넓힐 때는 `src/shared/parser-capabilities.ts`, 샘플 corpus, 테스트를 함께 맞춘다.
 - exporter나 renderer 규약을 바꾸면 `manifest`, Markdown 출력, export spec, smoke 흐름이 같이 맞아야 한다.
 - UI 변경은 정적 DOM id와 smoke selector 계약을 함부로 깨지 않도록 주의한다.
+- UI 테스트는 className, computed style, query selector 기반 CSS 검증을 기본값으로 두지 않는다. 실제 사용자 행동, 접근성 상태, 서버 계약이 바뀌는지만 본다.
 - 단건 검증이 필요하면 `scripts/export-single-post.ts`로 실제 공개 글 하나를 다시 확인한다.
 
 ## Documentation Discipline
 - evergreen 지식은 `.agents/knowledge/`가 기준이다.
-- `docs/runbooks/`는 반복 가능한 운영 절차, `docs/generated/`는 harness 산출물, `docs/plans/active/`는 활성 작업 메모다.
+- `.agents/knowledge/reference/runbooks/`는 반복 가능한 운영 절차, `.agents/knowledge/reference/generated/`는 harness 산출물이다.
 - 코드 동작이 바뀌면 knowledge와 관련 docs를 같이 갱신한다.
 - `README.md`는 사용자 진입, `CONTRIBUTING.md`는 기여자 진입 문서로 유지한다.

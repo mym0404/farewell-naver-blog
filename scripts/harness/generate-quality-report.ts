@@ -5,15 +5,17 @@ const run = async () => {
   const generated = await buildGeneratedDocs()
 
   await writeUtf8({
-    targetPath: repoPath("docs", "generated", "quality-score.md"),
+    targetPath: repoPath(".agents", "knowledge", "reference", "generated", "quality-score.md"),
     content: generated.qualityScore,
   })
   await writeUtf8({
-    targetPath: repoPath("docs", "generated", "sample-coverage.md"),
+    targetPath: repoPath(".agents", "knowledge", "reference", "generated", "sample-coverage.md"),
     content: generated.sampleCoverage,
   })
 
-  console.log("quality:report updated docs/generated/quality-score.md and docs/generated/sample-coverage.md")
+  console.log(
+    "quality:report updated .agents/knowledge/reference/generated/quality-score.md and .agents/knowledge/reference/generated/sample-coverage.md",
+  )
 }
 
 void run().catch((error) => {

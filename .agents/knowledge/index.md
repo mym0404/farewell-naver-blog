@@ -4,13 +4,14 @@
 - 스택, 검증 명령, 구현 규칙: [engineering/index.md](./engineering/index.md)
 - 모듈 경계, 파이프라인, parser 지원 범위: [architecture/index.md](./architecture/index.md)
 - 도메인 제약, 사용자 흐름, UI 규약: [product/index.md](./product/index.md)
+- 디자인 가이드, 컴포넌트 규칙, 색상 토큰: [DESIGN.md](./DESIGN.md)
+- runbook, generated 보고서, README 자산: [reference/index.md](./reference/index.md)
 
 ## 문서 지도
 - `.agents/knowledge/`: 반복해서 참조해야 하는 evergreen 저장소 지식
+- `.agents/knowledge/reference/`: runbook, generated 보고서, README 이미지처럼 깊게 보는 참고 자료
 - `.cache/`: 카테고리 스캔 캐시와 export UI 설정 같은 영속 로컬 상태 저장 위치
-- `docs/runbooks/`: 브라우저 검증, 단건 검증 같은 운영 절차
-- `docs/generated/`: harness가 다시 만드는 품질 보고서와 UI 스크린샷
-- `docs/plans/active/`: 진행 중 작업 메모
+- `.agents/plans/`: 진행 중 작업 메모와 실행 증거
 - `README.md`, `CONTRIBUTING.md`: 사용자와 기여자용 진입 문서
 
 ## 대표 코드 기준점
@@ -33,4 +34,4 @@
 1. 사용자 지시와 루트 [../../AGENTS.md](../../AGENTS.md)
 2. 실제 코드, 설정, 스크립트, 테스트
 3. 이 knowledge 문서
-4. `docs/` 아래 runbook, 계획, generated 산출물
+4. `.agents/knowledge/reference/`, `README.md`, `.agents/plans/`

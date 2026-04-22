@@ -139,6 +139,19 @@ const startServer = async (server: ReturnType<typeof createHttpServer>) => {
   return `http://127.0.0.1:${address.port}`
 }
 
+const chooseSelectOption = async ({
+  page,
+  trigger,
+  value,
+}: {
+  page: import("playwright").Page
+  trigger: string
+  value: string
+}) => {
+  await page.click(trigger)
+  await page.locator(`[data-slot="select-item"][data-value="${value}"]`).click()
+}
+
 const waitForStepView = async ({
   page,
   step,
@@ -530,7 +543,11 @@ const run = async () => {
       )
     }
 
-    await page.selectOption("#scope-categoryMode", "exact-selected")
+    await chooseSelectOption({
+      page,
+      trigger: "#scope-categoryMode",
+      value: "exact-selected",
+    })
     await page.fill("#scope-dateFrom", scopedDate)
     await page.fill("#scope-dateTo", scopedDate)
     await page.click("#clear-all-categories")
@@ -568,7 +585,11 @@ const run = async () => {
       })
     }
 
-    await page.selectOption("#assets-imageHandlingMode", "download-and-upload")
+    await chooseSelectOption({
+      page,
+      trigger: "#assets-imageHandlingMode",
+      value: "download-and-upload",
+    })
     await clickWizardButton({
       page,
       label: "Link 처리",

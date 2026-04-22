@@ -416,14 +416,6 @@ export const renderMarkdownPost = async ({
   const getRenderableImageSource = (image: ImageData) => {
     if (image.mediaKind === "sticker") {
       if (options.assets.stickerAssetMode === "ignore") {
-        const message = "스티커 asset 옵션이 ignore라서 본문에서 스티커를 생략했습니다."
-
-        warnings.push(message)
-        diagnostics.push({
-          level: "warning",
-          message,
-        })
-
         return null
       }
 

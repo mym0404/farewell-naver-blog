@@ -235,7 +235,7 @@ describe("renderMarkdownPost", () => {
     expect(rendered.markdown).toContain("**파이썬 웹 프로그래밍**  \n작가  \n김석훈")
   })
 
-  it("ignores stickers by default and surfaces diagnostics in markdown", async () => {
+  it("ignores stickers by default without adding diagnostics", async () => {
     const rendered = await renderMarkdownPost({
       post,
       category,
@@ -274,9 +274,14 @@ describe("renderMarkdownPost", () => {
     expect(rendered.markdown).toContain("## Export Diagnostics")
     expect(rendered.markdown).toContain("> ⚠️ Warning: parser warning")
     expect(rendered.markdown).toContain("> ⚠️ Warning: review warning")
-    expect(rendered.markdown).toContain("스티커 asset 옵션이 ignore라서 본문에서 스티커를 생략했습니다.")
     expect(rendered.markdown).toContain("> **raw** text")
     expect(rendered.markdown).not.toContain("sticker-original.gif")
+    expect(rendered.markdown).not.toContain("스티커 asset 옵션이 ignore라서 본문에서 스티커를 생략했습니다.")
+    expect(rendered.warnings).toEqual([
+      "parser warning",
+      "review warning",
+      "raw HTML 블록을 생략했습니다: fallback",
+    ])
   })
 
   it("renders frontmatter keys with configured aliases", async () => {

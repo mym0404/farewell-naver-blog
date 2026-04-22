@@ -43,7 +43,7 @@ const ScrollBar = React.forwardRef<
   >
     <ScrollAreaPrimitive.ScrollAreaThumb
       data-slot="scroll-area-thumb"
-      className="relative flex-1 rounded-full bg-border"
+      className="relative flex-1 rounded-full bg-[color-mix(in_srgb,var(--foreground)_20%,transparent)]"
     />
   </ScrollAreaPrimitive.ScrollAreaScrollbar>
 ))
