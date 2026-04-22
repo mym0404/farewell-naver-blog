@@ -35,9 +35,17 @@ import type {
   ExportManifest,
   ExportRequest,
   ScanResult,
+  ThemePreference,
   UploadProviderValue,
 } from "../shared/types.js"
-import { extractBlogId, recreateDir, resolveRepoPath, toErrorMessage } from "../shared/utils.js"
+import {
+  extractBlogId,
+  isAbortOperationError,
+  recreateDir,
+  resolveRepoPath,
+  throwIfAborted,
+  toErrorMessage,
+} from "../shared/utils.js"
 import {
   buildResumableExportManifest,
   readExportManifest,
@@ -58,6 +66,7 @@ const legacyScanCachePath = path.join(legacyOutputsRoot, "scan-cache.json")
 const defaultSettingsPath = path.join(cacheRoot, "export-ui-settings.json")
 const legacySettingsPath = resolveRepoPath("export-ui-settings.json")
 const defaultOutputDir = "./output"
+const defaultThemePreference: ThemePreference = "dark"
 
 const contentTypes: Record<string, string> = {
   ".css": "text/css; charset=utf-8",
@@ -255,6 +264,7 @@ const readPersistedUiState = async (settingsPath: string) => {
     const parsed = JSON.parse(raw) as {
       options?: PartialExportOptions
       lastOutputDir?: string
+      themePreference?: ThemePreference
     }
 
     return {
@@ -269,11 +279,17 @@ const readPersistedUiState = async (settingsPath: string) => {
         isPlainObject(parsed) && typeof parsed.lastOutputDir === "string" && parsed.lastOutputDir.trim()
           ? parsed.lastOutputDir.trim()
           : defaultOutputDir,
+      themePreference:
+        isPlainObject(parsed) &&
+        (parsed.themePreference === "dark" || parsed.themePreference === "light")
+          ? parsed.themePreference
+          : defaultThemePreference,
     }
   } catch (error) {
     return {
       options: defaultExportOptions(),
       lastOutputDir: defaultOutputDir,
+      themePreference: defaultThemePreference,
     }
   }
 }
@@ -286,6 +302,7 @@ const writePersistedUiState = async ({
   input: {
     options?: PartialExportOptions
     lastOutputDir?: string
+    themePreference?: ThemePreference
   }
 }) => {
   const current = await readPersistedUiState(settingsPath)
@@ -294,10 +311,11 @@ const writePersistedUiState = async ({
   await writeFile(
     settingsPath,
     JSON.stringify(
-      {
-        options: sanitizePersistedExportOptions(input.options ?? current.options),
-        lastOutputDir: input.lastOutputDir ?? current.lastOutputDir,
-      },
+        {
+          options: sanitizePersistedExportOptions(input.options ?? current.options),
+          lastOutputDir: input.lastOutputDir ?? current.lastOutputDir,
+          themePreference: input.themePreference ?? current.themePreference,
+        },
       null,
       2,
     ),
@@ -504,6 +522,13 @@ export const createHttpServer = ({
   let scanCachePromise: Promise<Record<string, ScanResult>> | null = null
   const jobScanResults = new Map<string, ScanResult | null>()
   const manifestPersistQueue = new Map<string, Promise<void>>()
+  const activeJobTasks = new Map<
+    string,
+    {
+      controller: AbortController
+      promise: Promise<void>
+    }
+  >()
 
   const ensureViteDevServer = () => {
     if (!viteDevServerPromise) {
@@ -549,6 +574,42 @@ export const createHttpServer = ({
       scans: next,
     })
     scanCachePromise = Promise.resolve(next)
+  }
+
+  const startTrackedJobTask = ({
+    jobId,
+    run,
+  }: {
+    jobId: string
+    run: (signal: AbortSignal) => Promise<void>
+  }) => {
+    const controller = new AbortController()
+    const promise = run(controller.signal).finally(() => {
+      if (activeJobTasks.get(jobId)?.controller === controller) {
+        activeJobTasks.delete(jobId)
+      }
+    })
+
+    activeJobTasks.set(jobId, {
+      controller,
+      promise,
+    })
+
+    return promise
+  }
+
+  const abortActiveJobTask = async (jobId: string) => {
+    const activeTask = activeJobTasks.get(jobId)
+
+    if (!activeTask) {
+      return
+    }
+
+    activeTask.controller.abort()
+
+    try {
+      await activeTask.promise
+    } catch {}
   }
 
   const hydrateJobFromManifest = (manifest: ExportManifest) => {
@@ -633,6 +694,7 @@ export const createHttpServer = ({
       profile: "gfm" as const,
       options: persistedUiState.options,
       lastOutputDir: persistedUiState.lastOutputDir,
+      themePreference: persistedUiState.themePreference,
       resumedJob: resumed?.job ?? null,
       resumeSummary: resumed?.summary ?? null,
       resumedScanResult: resumed?.scanResult ?? null,
@@ -724,11 +786,13 @@ export const createHttpServer = ({
     request,
     cachedScanResult,
     resume,
+    signal,
   }: {
     jobId: string
     request: ExportRequest
     cachedScanResult?: ScanResult | null
     resume?: boolean
+    signal?: AbortSignal
   }) => {
     if (resume) {
       jobStore.resume(jobId)
@@ -748,6 +812,7 @@ export const createHttpServer = ({
             }
           : null,
         writeManifestFile: false,
+        abortSignal: signal,
         onLog: (message) => {
           jobStore.appendLog(jobId, message)
           scheduleJobManifestPersist(jobId)
@@ -762,11 +827,14 @@ export const createHttpServer = ({
         },
       })
       const manifest = await exporter.run()
+      throwIfAborted(signal)
 
       jobStore.completeExport(jobId, manifest)
       await persistJobManifest(jobId)
     } catch (error) {
-      const message = toErrorMessage(error)
+      const message = isAbortOperationError(error)
+        ? "작업이 초기화되어 중단되었습니다."
+        : toErrorMessage(error)
       jobStore.appendLog(jobId, message)
       jobStore.fail(jobId, message)
       await persistJobManifest(jobId)
@@ -806,10 +874,12 @@ export const createHttpServer = ({
     jobId,
     uploadedLocalPaths,
     uploadResults,
+    signal,
   }: {
     jobId: string
     uploadedLocalPaths: Set<string>
     uploadResults: ImageUploadResult[]
+    signal?: AbortSignal
   }) => {
     const job = jobStore.get(jobId)
 
@@ -843,6 +913,7 @@ export const createHttpServer = ({
     const rewrittenAt = new Date().toISOString()
 
     for (const { post, item } of readyPosts) {
+      throwIfAborted(signal)
       jobStore.appendLog(jobId, `문서 치환 시작: ${post.outputPath}`)
 
       try {
@@ -853,6 +924,7 @@ export const createHttpServer = ({
           uploadResults,
           rewrittenAt,
         })
+        throwIfAborted(signal)
 
         job.items = job.items.map((currentItem) =>
           currentItem.outputPath === rewrittenEntry.item.outputPath ? rewrittenEntry.item : currentItem,
@@ -875,8 +947,13 @@ export const createHttpServer = ({
           outputDir: job.request.outputDir,
           manifest: job.manifest,
         })
+        throwIfAborted(signal)
         jobStore.appendLog(jobId, `문서 치환 완료: ${post.outputPath}`)
       } catch (error) {
+        if (isAbortOperationError(error)) {
+          throw error
+        }
+
         throw new Error(`Document rewrite failed for ${post.outputPath}: ${toErrorMessage(error)}`)
       }
     }
@@ -886,10 +963,12 @@ export const createHttpServer = ({
     jobId,
     uploaderKey,
     uploaderConfig,
+    signal,
   }: {
     jobId: string
     uploaderKey: string
     uploaderConfig: Record<string, unknown>
+    signal?: AbortSignal
   }) => {
     const job = jobStore.get(jobId)
 
@@ -914,6 +993,7 @@ export const createHttpServer = ({
         jobId,
         uploadedLocalPaths,
         uploadResults,
+        signal,
       })
 
       const phaseResults = await uploadPhaseRunner({
@@ -921,6 +1001,7 @@ export const createHttpServer = ({
         candidates,
         uploaderKey,
         uploaderConfig,
+        abortSignal: signal,
         onProgress: ({ lastCompletedLocalPath }) => {
           if (lastCompletedLocalPath) {
             uploadedLocalPaths.add(lastCompletedLocalPath)
@@ -952,6 +1033,7 @@ export const createHttpServer = ({
             jobId,
             uploadedLocalPaths,
             uploadResults,
+            signal,
           })
           await persistJobManifest(jobId)
         },
@@ -976,8 +1058,10 @@ export const createHttpServer = ({
         jobId,
         uploadedLocalPaths,
         uploadResults,
+        signal,
       })
       await persistJobManifest(jobId)
+      throwIfAborted(signal)
 
       const completedJob = jobStore.get(jobId)
 
@@ -1000,6 +1084,7 @@ export const createHttpServer = ({
         outputDir: completedJob.request.outputDir,
         manifest: completedManifest,
       })
+      throwIfAborted(signal)
       jobStore.completeUpload(jobId, {
         manifest: completedManifest,
         items: completedJob.items,
@@ -1019,14 +1104,16 @@ export const createHttpServer = ({
         await persistJobManifest(jobId)
       }
 
-      const message = sanitizeUploadError({
-        error,
-        providerFields: Object.fromEntries(
-          Object.entries(uploaderConfig).flatMap(([key, value]) =>
-            typeof value === "string" ? [[key, value]] : [],
-          ),
-        ),
-      })
+      const message = isAbortOperationError(error)
+        ? "작업이 초기화되어 중단되었습니다."
+        : sanitizeUploadError({
+            error,
+            providerFields: Object.fromEntries(
+              Object.entries(uploaderConfig).flatMap(([key, value]) =>
+                typeof value === "string" ? [[key, value]] : [],
+              ),
+            ),
+          })
 
       jobStore.appendLog(jobId, message)
       jobStore.failUpload(jobId, message)
@@ -1071,14 +1158,21 @@ export const createHttpServer = ({
 
         const payload = await parseJsonBody<{
           options?: unknown
+          themePreference?: unknown
         }>(request)
 
-        if (!isPlainObject(payload) || !isPlainObject(payload.options)) {
+        if (
+          !isPlainObject(payload) ||
+          !isPlainObject(payload.options) ||
+          (payload.themePreference !== undefined &&
+            payload.themePreference !== "dark" &&
+            payload.themePreference !== "light")
+        ) {
           sendJson({
             response,
             statusCode: 400,
             body: {
-              error: "options 객체는 필수입니다.",
+              error: "options 객체와 themePreference 값이 올바른지 확인하세요.",
             },
           })
           return
@@ -1092,6 +1186,10 @@ export const createHttpServer = ({
             settingsPath,
             input: {
               options: sanitizedOptions,
+              themePreference:
+                payload.themePreference === "dark" || payload.themePreference === "light"
+                  ? payload.themePreference
+                  : undefined,
             },
           })
         } catch (error) {
@@ -1140,17 +1238,9 @@ export const createHttpServer = ({
 
         const outputDir = payload.outputDir.trim()
         const jobId = typeof payload.jobId === "string" && payload.jobId.trim() ? payload.jobId.trim() : null
-        const job = jobId ? jobStore.get(jobId) : null
 
-        if (job && !job.resumeAvailable && (job.status === "running" || job.status === "uploading")) {
-          sendJson({
-            response,
-            statusCode: 409,
-            body: {
-              error: "진행 중인 작업은 초기화할 수 없습니다.",
-            },
-          })
-          return
+        if (jobId) {
+          await abortActiveJobTask(jobId)
         }
 
         await rm(resolveRepoPath(outputDir), { recursive: true, force: true })
@@ -1298,10 +1388,15 @@ export const createHttpServer = ({
         jobScanResults.set(job.id, payload.scanResult ?? null)
 
         jobStore.appendLog(job.id, "작업을 큐에 등록했습니다.")
-        void runExport({
+        void startTrackedJobTask({
           jobId: job.id,
-          request: exportRequest,
-          cachedScanResult: payload.scanResult ?? null,
+          run: (signal) =>
+            runExport({
+              jobId: job.id,
+              request: exportRequest,
+              cachedScanResult: payload.scanResult ?? null,
+              signal,
+            }),
         })
 
         sendJson({
@@ -1341,11 +1436,16 @@ export const createHttpServer = ({
           return
         }
 
-        void runExport({
+        void startTrackedJobTask({
           jobId: job.id,
-          request: job.request,
-          cachedScanResult: jobScanResults.get(job.id) ?? null,
-          resume: true,
+          run: (signal) =>
+            runExport({
+              jobId: job.id,
+              request: job.request,
+              cachedScanResult: jobScanResults.get(job.id) ?? null,
+              resume: true,
+              signal,
+            }),
         })
 
         sendJson({
@@ -1453,10 +1553,15 @@ export const createHttpServer = ({
           providerFields,
         })
 
-        void runUploadForJob({
+        void startTrackedJobTask({
           jobId: job.id,
-          uploaderKey: providerKey,
-          uploaderConfig,
+          run: (signal) =>
+            runUploadForJob({
+              jobId: job.id,
+              uploaderKey: providerKey,
+              uploaderConfig,
+              signal,
+            }),
         })
 
         sendJson({

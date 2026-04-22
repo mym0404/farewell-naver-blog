@@ -13,8 +13,10 @@ import type {
 import {
   ensureDir,
   extractBlogId,
+  isAbortOperationError,
   mapConcurrent,
   resolveRepoPath,
+  throwIfAborted,
   toErrorMessage,
 } from "../../shared/utils.js"
 import { NaverBlogFetcher } from "../blog-fetcher/naver-blog-fetcher.js"
@@ -66,6 +68,7 @@ export class NaverBlogExporter {
   readonly cachedScanResult: ScanResult | null
   readonly resumeState: ExportResumeState | null
   readonly writeManifestFile: boolean
+  readonly abortSignal: AbortSignal | null
 
   constructor({
     request,
@@ -75,6 +78,7 @@ export class NaverBlogExporter {
     cachedScanResult,
     resumeState,
     writeManifestFile,
+    abortSignal,
   }: {
     request: ExportRequest
     onLog: (message: string) => void
@@ -88,6 +92,7 @@ export class NaverBlogExporter {
     cachedScanResult?: ScanResult | null
     resumeState?: ExportResumeState | null
     writeManifestFile?: boolean
+    abortSignal?: AbortSignal | null
   }) {
     this.request = request
     this.onLog = onLog
@@ -96,9 +101,12 @@ export class NaverBlogExporter {
     this.cachedScanResult = cachedScanResult ?? null
     this.resumeState = resumeState ?? null
     this.writeManifestFile = writeManifestFile ?? true
+    this.abortSignal = abortSignal ?? null
   }
 
   async run() {
+    throwIfAborted(this.abortSignal)
+
     const blogId = extractBlogId(this.request.blogIdOrUrl)
     const outputDir = resolveRepoPath(this.request.outputDir)
     const options = cloneExportOptions(this.request.options)
@@ -129,6 +137,8 @@ export class NaverBlogExporter {
         ]
       : await Promise.all([fetcher.scanBlog(), fetcher.getAllPosts()])
 
+    throwIfAborted(this.abortSignal)
+
     if (reusableScanResult) {
       this.onLog(`이전 스캔 결과 재사용: categories=${scan.categories.length}, posts=${posts.length}`)
     }
@@ -140,6 +150,7 @@ export class NaverBlogExporter {
     })
 
     await ensureDir(outputDir)
+    throwIfAborted(this.abortSignal)
     this.onLog(`출력 디렉터리 준비 완료: ${outputDir}`)
 
     const manifest: ExportManifest = this.resumeState?.manifest
@@ -250,6 +261,8 @@ export class NaverBlogExporter {
       items: pendingPosts,
       concurrency: postExportConcurrency,
       mapper: async (post, index) => {
+        throwIfAborted(this.abortSignal)
+
         const category = getCategoryForPost({
           categories: categoryMap,
           categoryId: post.categoryId,
@@ -271,6 +284,7 @@ export class NaverBlogExporter {
             targets: postLinkTargets,
           })
           const html = await fetcher.fetchPostHtml(post.logNo)
+          throwIfAborted(this.abortSignal)
           const parsedPost = parsePostHtml({
             html,
             sourceUrl: post.source,
@@ -291,7 +305,9 @@ export class NaverBlogExporter {
             resolveLinkUrl,
           })
 
+          throwIfAborted(this.abortSignal)
           await ensureDir(path.dirname(markdownFilePath))
+          throwIfAborted(this.abortSignal)
           await writeFile(markdownFilePath, rendered.markdown, "utf8")
           const assetPaths = rendered.assetRecords
             .map((asset) => asset.relativePath)
@@ -361,6 +377,10 @@ export class NaverBlogExporter {
 	            uploadEligible: upload.eligible,
           })
         } catch (error) {
+          if (isAbortOperationError(error)) {
+            throw error
+          }
+
           const manifestEntry = {
             logNo: post.logNo,
             title: post.title,
@@ -446,6 +466,7 @@ export class NaverBlogExporter {
     manifest.finishedAt = new Date().toISOString()
 
     if (this.writeManifestFile) {
+      throwIfAborted(this.abortSignal)
       await writeFile(
         path.join(outputDir, "manifest.json"),
         JSON.stringify(manifest, null, 2),

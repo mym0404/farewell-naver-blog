@@ -14,6 +14,7 @@ import type {
   UploadProviderCatalogResponse,
   UploadProviderValue,
 } from "../src/shared/types.js"
+import { AbortOperationError } from "../src/shared/utils.js"
 import { createHttpServer } from "../src/server/http-server.js"
 
 let activeServer: ReturnType<typeof createHttpServer> | null = null
@@ -678,13 +679,81 @@ describe("http server", () => {
 
       expect(response.status).toBe(200)
       expect(body.lastOutputDir).toBe("./output")
-      expect(body.resumedJob).toBeNull()
+      expect(body.resumedJob?.request.outputDir).not.toBe(outputDir)
       await expect(access(outputDir)).rejects.toMatchObject({ code: "ENOENT" })
 
       const saved = JSON.parse(await readFile(settingsPath, "utf8")) as {
         lastOutputDir: string
       }
       expect(saved.lastOutputDir).toBe("./output")
+    } finally {
+      await rm(rootDir, { recursive: true, force: true })
+    }
+  })
+
+  it("cancels an active export job before resetting output", async () => {
+    const rootDir = await mkdtemp(path.join(tmpdir(), "export-reset-active-"))
+    const settingsPath = path.join(rootDir, "export-ui-settings.json")
+    const outputDir = path.join(rootDir, "output")
+    let signalSeen = false
+    let resolveStarted = () => {}
+    const started = new Promise<void>((resolve) => {
+      resolveStarted = resolve
+    })
+
+    vi.spyOn(NaverBlogExporter.prototype, "run").mockImplementation(async function (
+      this: NaverBlogExporter,
+    ) {
+      resolveStarted()
+
+      while (!this.abortSignal?.aborted) {
+        await new Promise((resolve) => setTimeout(resolve, 5))
+      }
+
+      signalSeen = true
+      throw new AbortOperationError()
+    })
+
+    try {
+      activeServer = createTestHttpServer({
+        settingsPath,
+      })
+      const baseUrl = await startServer(activeServer)
+
+      const exportResponse = await fetch(`${baseUrl}/api/export`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          blogIdOrUrl: "https://blog.naver.com/mym0404",
+          outputDir,
+          options: defaultExportOptions(),
+        }),
+      })
+      const exportBody = (await exportResponse.json()) as {
+        jobId: string
+      }
+
+      await started
+
+      const resetResponse = await fetch(`${baseUrl}/api/export-reset`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          outputDir,
+          jobId: exportBody.jobId,
+        }),
+      })
+
+      expect(resetResponse.status).toBe(200)
+      expect(signalSeen).toBe(true)
+      await expect(access(outputDir)).rejects.toMatchObject({ code: "ENOENT" })
+
+      const jobResponse = await fetch(`${baseUrl}/api/export/${exportBody.jobId}`)
+      expect(jobResponse.status).toBe(404)
     } finally {
       await rm(rootDir, { recursive: true, force: true })
     }
@@ -872,6 +941,11 @@ describe("http server", () => {
           successCount: 3,
         })
       }
+      await waitForJob({
+        baseUrl,
+        jobId: "job-resume",
+        accept: (job) => job.status === "completed",
+      })
       await vi.waitFor(() => {
         expect(exporterRunSpy).toHaveBeenCalledTimes(1)
       })
@@ -1690,6 +1764,108 @@ describe("http server", () => {
     expect(uploadPhaseRunner).toHaveBeenCalledTimes(2)
     expect(completedJob.upload.status).toBe("upload-completed")
     expect(JSON.stringify(completedJob)).not.toContain("ghp_retry_fixed")
+  })
+
+  it("cancels an active upload job before resetting output", async () => {
+    const rootDir = await mkdtemp(path.join(tmpdir(), "upload-reset-active-"))
+    const settingsPath = path.join(rootDir, "export-ui-settings.json")
+    const outputDir = path.join(rootDir, "output")
+    let signalSeen = false
+    let resolveStarted = () => {}
+    const started = new Promise<void>((resolve) => {
+      resolveStarted = resolve
+    })
+    const uploadPhaseRunner = vi.fn(
+      async ({
+        abortSignal,
+      }: {
+        abortSignal?: AbortSignal | null
+      }) => {
+        resolveStarted()
+
+        while (!abortSignal?.aborted) {
+          await new Promise((resolve) => setTimeout(resolve, 5))
+        }
+
+        signalSeen = true
+        throw new AbortOperationError()
+      },
+    )
+
+    mockFetcher({
+      html: uploadHtml,
+      thumbnailUrl: "https://example.com/thumb.png",
+    })
+
+    try {
+      activeServer = createTestHttpServer({
+        settingsPath,
+        uploadPhaseRunner,
+      })
+      const baseUrl = await startServer(activeServer)
+      const options = defaultExportOptions()
+
+      options.assets.imageHandlingMode = "download-and-upload"
+
+      const exportResponse = await fetch(`${baseUrl}/api/export`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          blogIdOrUrl: "https://blog.naver.com/mym0404",
+          outputDir,
+          options,
+        }),
+      })
+      const exportBody = (await exportResponse.json()) as {
+        jobId: string
+      }
+
+      await waitForJob({
+        baseUrl,
+        jobId: exportBody.jobId,
+        accept: (job) => job.status === "upload-ready",
+      })
+
+      const uploadResponse = await fetch(`${baseUrl}/api/export/${exportBody.jobId}/upload`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          origin: baseUrl,
+          "x-requested-with": "XMLHttpRequest",
+        },
+        body: JSON.stringify(
+          createUploadPayload({
+            repo: "owner/name",
+            token: "ghp_test_upload_token",
+          }),
+        ),
+      })
+
+      expect(uploadResponse.status).toBe(202)
+      await started
+
+      const resetResponse = await fetch(`${baseUrl}/api/export-reset`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          outputDir,
+          jobId: exportBody.jobId,
+        }),
+      })
+
+      expect(resetResponse.status).toBe(200)
+      expect(signalSeen).toBe(true)
+      await expect(access(outputDir)).rejects.toMatchObject({ code: "ENOENT" })
+
+      const jobResponse = await fetch(`${baseUrl}/api/export/${exportBody.jobId}`)
+      expect(jobResponse.status).toBe(404)
+    } finally {
+      await rm(rootDir, { recursive: true, force: true })
+    }
   })
 
   it("exposes nonzero uploadedCount while the job is still uploading", async () => {

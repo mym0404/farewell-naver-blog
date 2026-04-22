@@ -2,6 +2,7 @@ import os from "node:os"
 import path from "node:path"
 
 import type { UploadCandidate } from "../../shared/types.js"
+import { throwIfAborted } from "../../shared/utils.js"
 import { dedupeUploadCandidatesByLocalPath } from "./upload-candidate-utils.js"
 
 type RuntimeUploadResponse = {
@@ -40,6 +41,7 @@ export type RunImageUploadPhaseInput = {
   candidates: UploadCandidate[]
   uploaderKey: string
   uploaderConfig: Record<string, unknown>
+  abortSignal?: AbortSignal | null
   onAssetStart?: (candidate: UploadCandidate) => void | Promise<void>
   onAssetUploaded?: (input: {
     result: ImageUploadResult
@@ -61,6 +63,8 @@ export const runImageUploadPhase = async (
   input: RunImageUploadPhaseInput,
   createClient: () => Promise<RuntimeUploaderClient> = createRuntimeClient,
 ): Promise<ImageUploadResult[]> => {
+  throwIfAborted(input.abortSignal)
+
   const dedupedCandidates = dedupeUploadCandidatesByLocalPath(input.candidates)
   const client = await createClient()
 
@@ -76,10 +80,13 @@ export const runImageUploadPhase = async (
   })
 
   for (const candidate of dedupedCandidates) {
+    throwIfAborted(input.abortSignal)
     await input.onAssetStart?.(candidate)
+    throwIfAborted(input.abortSignal)
 
     const filePath = path.join(input.outputDir, candidate.localPath)
     const uploaded = await client.upload([filePath])
+    throwIfAborted(input.abortSignal)
 
     if (uploaded instanceof Error) {
       throw new ImageUploadPhaseError(`Image upload failed for ${candidate.localPath}.`, uploadedResults)
