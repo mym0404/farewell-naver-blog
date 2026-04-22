@@ -43,7 +43,7 @@ export const ToggleGroupItem = ({
   return (
     <button
       type="button"
-      className={cn(className)}
+      className={cn("inline-flex items-center justify-center leading-none", className)}
       data-state={isActive ? "on" : "off"}
       onClick={() => context.onValueChange?.(value)}
       {...props}

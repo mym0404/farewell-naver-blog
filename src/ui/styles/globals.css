@@ -199,6 +199,7 @@ body,
 
 html {
   scroll-behavior: smooth;
+  scrollbar-gutter: stable;
   background: var(--background);
 }
 
@@ -370,6 +371,7 @@ pre,
 }
 
 .theme-toggle-item [data-theme-icon] {
+  display: block;
   inline-size: 1rem;
   block-size: 1rem;
 }
