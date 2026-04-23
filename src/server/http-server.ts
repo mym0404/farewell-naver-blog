@@ -4,8 +4,7 @@ import {
   type Server as HttpServer,
   type ServerResponse,
 } from "node:http"
-import { execFile } from "node:child_process"
-import { access, mkdir, readFile, rm, writeFile } from "node:fs/promises"
+import { access, readFile, rm, writeFile } from "node:fs/promises"
 import path from "node:path"
 import type { ViteDevServer } from "vite"
 
@@ -31,15 +30,20 @@ import {
   sanitizePersistedExportOptions,
   type PartialExportOptions,
 } from "../shared/export-options.js"
+import { DEFAULT_OUTPUT_DIR } from "../shared/export-defaults.js"
+import { isUploadActionableJob, JOB_STATUSES, UPLOAD_STATUSES } from "../shared/export-job-state.js"
+import { UPLOAD_PROVIDER_KEYS } from "../shared/upload-provider-keys.js"
 import type {
   ExportJobItem,
   ExportJobState,
   ExportManifest,
   ExportManifestScanResult,
   ExportRequest,
+  ScanCacheMap,
   ScanResult,
   ThemePreference,
-  UploadProviderValue,
+  UploadProviderFields,
+  UploadRuntimeConfig,
 } from "../shared/types.js"
 import {
   extractBlogId,
@@ -55,11 +59,33 @@ import {
   writeExportManifest,
 } from "./export-job-manifest.js"
 import { createCoalescedTaskRunner } from "./coalesced-task-runner.js"
+import {
+  hasJsonContentType,
+  isPlainObject,
+  parseJsonBody,
+  readBody,
+  sendFile,
+  sendJson,
+  sendText,
+} from "./http-response.js"
 import { JobStore } from "./job-store.js"
 import {
   createImageUploadProviderSource,
   type UploadProviderSource,
 } from "./image-upload-provider-source.js"
+import {
+  isPathInsideRoot,
+  isSameOriginUploadRequest,
+  isTemporaryResumeOutputDir,
+  openLocalPathWithSystem,
+  resolveLocalOutputTargetPath,
+} from "./local-file-service.js"
+import {
+  readPersistedUiState,
+  readScanCacheFile,
+  writePersistedUiState,
+  writeScanCacheFile,
+} from "./local-state-repository.js"
 
 const builtClientRoot = resolveRepoPath("dist/client")
 const devIndexPath = resolveRepoPath("index.html")
@@ -69,20 +95,8 @@ const defaultScanCachePath = path.join(cacheRoot, "scan-cache.json")
 const legacyScanCachePath = path.join(legacyOutputsRoot, "scan-cache.json")
 const defaultSettingsPath = path.join(cacheRoot, "export-ui-settings.json")
 const legacySettingsPath = resolveRepoPath("export-ui-settings.json")
-const defaultOutputDir = "./output"
+const defaultOutputDir = DEFAULT_OUTPUT_DIR
 const defaultThemePreference: ThemePreference = "dark"
-
-const contentTypes: Record<string, string> = {
-  ".css": "text/css; charset=utf-8",
-  ".html": "text/html; charset=utf-8",
-  ".ico": "image/x-icon",
-  ".js": "text/javascript; charset=utf-8",
-  ".json": "application/json; charset=utf-8",
-  ".png": "image/png",
-  ".svg": "image/svg+xml; charset=utf-8",
-  ".woff": "font/woff",
-  ".woff2": "font/woff2",
-}
 
 const fileExists = async (filePath: string) => {
   try {
@@ -90,28 +104,6 @@ const fileExists = async (filePath: string) => {
     return true
   } catch {
     return false
-  }
-}
-
-const readFileWithFallback = async ({
-  filePath,
-  legacyFilePath,
-}: {
-  filePath: string
-  legacyFilePath?: string
-}) => {
-  try {
-    return await readFile(filePath, "utf8")
-  } catch (error) {
-    if (
-      (error as NodeJS.ErrnoException).code === "ENOENT" &&
-      legacyFilePath &&
-      legacyFilePath !== filePath
-    ) {
-      return readFile(legacyFilePath, "utf8")
-    }
-
-    throw error
   }
 }
 
@@ -135,277 +127,17 @@ const getJobActivityTimestamp = (job: ExportJobState) =>
     ...job.items.map((item) => toTimestamp(item.updatedAt)),
   )
 
-const readBody = async (request: IncomingMessage) => {
-  const chunks: Buffer[] = []
-
-  for await (const chunk of request) {
-    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
-  }
-
-  return Buffer.concat(chunks).toString("utf8")
-}
-
-const sendJson = ({
-  response,
-  statusCode,
-  body,
-}: {
-  response: ServerResponse
-  statusCode: number
-  body: unknown
-}) => {
-  response.writeHead(statusCode, {
-    "content-type": "application/json; charset=utf-8",
-  })
-  response.end(JSON.stringify(body))
-}
-
-const sendText = ({
-  response,
-  statusCode,
-  body,
-}: {
-  response: ServerResponse
-  statusCode: number
-  body: string
-}) => {
-  response.writeHead(statusCode, {
-    "content-type": "text/plain; charset=utf-8",
-  })
-  response.end(body)
-}
-
-const sendFile = async ({
-  response,
-  filePath,
-}: {
-  response: ServerResponse
-  filePath: string
-}) => {
-  const extension = path.extname(filePath)
-  const content = await readFile(filePath)
-
-  response.writeHead(200, {
-    "content-type": contentTypes[extension] ?? "text/plain; charset=utf-8",
-  })
-  response.end(content)
-}
-
-const parseJsonBody = async <T>(request: IncomingMessage) => JSON.parse(await readBody(request)) as T
-
-const hasJsonContentType = (request: IncomingMessage) =>
-  request.headers["content-type"]?.toLowerCase().startsWith("application/json") ?? false
-
-const isPlainObject = (value: unknown): value is Record<string, unknown> =>
-  Boolean(value) && typeof value === "object" && !Array.isArray(value)
-
-const isSameOriginUploadRequest = (request: IncomingMessage) => {
-  if (request.headers["x-requested-with"] !== "XMLHttpRequest") {
-    return false
-  }
-
-  const originHeader = request.headers.origin
-  const hostHeader = request.headers.host
-
-  if (!originHeader || !hostHeader) {
-    return false
-  }
-
-  try {
-    return new URL(originHeader).host === hostHeader
-  } catch {
-    return false
-  }
-}
-
-const isPathInsideRoot = ({
-  rootPath,
-  targetPath,
-}: {
-  rootPath: string
-  targetPath: string
-}) => {
-  const relativePath = path.relative(rootPath, targetPath)
-
-  return relativePath === "" || (!relativePath.startsWith("..") && !path.isAbsolute(relativePath))
-}
-
-const resolveLocalOutputTargetPath = ({
-  outputDir,
-  outputPath,
-}: {
-  outputDir: string
-  outputPath: string
-}) => {
-  const outputRoot = resolveRepoPath(outputDir.trim())
-  const targetPath = path.resolve(outputRoot, outputPath.trim())
-
-  return {
-    outputRoot,
-    targetPath,
-  }
-}
-
-const isTemporaryResumeOutputDir = (outputDir: string) => {
-  const trimmedOutputDir = outputDir.trim()
-
-  if (!trimmedOutputDir) {
-    return false
-  }
-
-  const resolvedOutputDir = path.resolve(trimmedOutputDir)
-
-  return (
-    isPathInsideRoot({
-      rootPath: "/tmp",
-      targetPath: resolvedOutputDir,
-    }) ||
-    isPathInsideRoot({
-      rootPath: "/private/tmp",
-      targetPath: resolvedOutputDir,
-    })
-  )
-}
-
-const openLocalPathWithSystem = async (targetPath: string) => {
-  await new Promise<void>((resolve, reject) => {
-    const [command, args]: [string, string[]] =
-      process.platform === "darwin"
-        ? ["open", [targetPath]]
-        : process.platform === "win32"
-          ? ["cmd", ["/c", "start", "", targetPath]]
-          : ["xdg-open", [targetPath]]
-
-    execFile(command, args, (error) => {
-      if (error) {
-        reject(error)
-        return
-      }
-
-      resolve()
-    })
-  })
-}
-
-const readScanCacheFile = async (scanCachePath: string) => {
-  try {
-    const raw = await readFileWithFallback({
-      filePath: scanCachePath,
-      legacyFilePath: scanCachePath === defaultScanCachePath ? legacyScanCachePath : undefined,
-    })
-    const parsed = JSON.parse(raw) as {
-      scans?: Record<string, ScanResult>
-    }
-
-    return parsed.scans && typeof parsed.scans === "object" ? parsed.scans : {}
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-      return {}
-    }
-
-    throw error
-  }
-}
-
-const writeScanCacheFile = async ({
-  scanCachePath,
-  scans,
-}: {
-  scanCachePath: string
-  scans: Record<string, ScanResult>
-}) => {
-  await mkdir(path.dirname(scanCachePath), { recursive: true })
-  await writeFile(
-    scanCachePath,
-    JSON.stringify(
-      {
-        scans,
-      },
-      null,
-      2,
-    ),
-    "utf8",
-  )
-}
-
-const readPersistedUiState = async (settingsPath: string) => {
-  try {
-    const raw = await readFileWithFallback({
-      filePath: settingsPath,
-      legacyFilePath: settingsPath === defaultSettingsPath ? legacySettingsPath : undefined,
-    })
-    const parsed = JSON.parse(raw) as {
-      options?: PartialExportOptions
-      lastOutputDir?: string
-      themePreference?: ThemePreference
-    }
-
-    return {
-      options: cloneExportOptions(
-        sanitizePersistedExportOptions(
-          isPlainObject(parsed) && isPlainObject(parsed.options)
-            ? (parsed.options as PartialExportOptions)
-            : undefined,
-        ),
-      ),
-      lastOutputDir:
-        isPlainObject(parsed) && typeof parsed.lastOutputDir === "string" && parsed.lastOutputDir.trim()
-          ? parsed.lastOutputDir.trim()
-          : defaultOutputDir,
-      themePreference:
-        isPlainObject(parsed) &&
-        (parsed.themePreference === "dark" || parsed.themePreference === "light")
-          ? parsed.themePreference
-          : defaultThemePreference,
-    }
-  } catch (error) {
-    return {
-      options: defaultExportOptions(),
-      lastOutputDir: defaultOutputDir,
-      themePreference: defaultThemePreference,
-    }
-  }
-}
-
-const writePersistedUiState = async ({
-  settingsPath,
-  input,
-}: {
-  settingsPath: string
-  input: {
-    options?: PartialExportOptions
-    lastOutputDir?: string
-    themePreference?: ThemePreference
-  }
-}) => {
-  const current = await readPersistedUiState(settingsPath)
-
-  await mkdir(path.dirname(settingsPath), { recursive: true })
-  await writeFile(
-    settingsPath,
-    JSON.stringify(
-        {
-          options: sanitizePersistedExportOptions(input.options ?? current.options),
-          lastOutputDir: input.lastOutputDir ?? current.lastOutputDir,
-          themePreference: input.themePreference ?? current.themePreference,
-        },
-      null,
-      2,
-    ),
-    "utf8",
-  )
-}
 
 const normalizeUploaderConfig = ({
   uploaderKey,
   providerFields,
 }: {
   uploaderKey: string
-  providerFields: Record<string, UploadProviderValue>
+  providerFields: UploadProviderFields
 }) =>
   Object.fromEntries(
     Object.entries(providerFields).flatMap(([key, value]) => {
-      if (uploaderKey === "github" && key === "path" && typeof value === "string") {
+      if (uploaderKey === UPLOAD_PROVIDER_KEYS.GITHUB && key === "path" && typeof value === "string") {
         const normalizedPath = value
           .split("/")
           .map((segment) => segment.trim())
@@ -424,7 +156,7 @@ const sanitizeUploadError = ({
   providerFields,
 }: {
   error: unknown
-  providerFields: Record<string, UploadProviderValue>
+  providerFields: UploadProviderFields
 }) => {
   const rawMessage = toErrorMessage(error).replace(/\s+/g, " ").trim()
 
@@ -462,7 +194,7 @@ const resolveResumedScanResult = ({
   manifestCategories: ScanResult["categories"]
   manifestTotalPosts: number
   manifestScanResult: ExportManifestScanResult | null
-  cachedScans: Record<string, ScanResult>
+  cachedScans: ScanCacheMap
 }) => {
   const blogId = manifestScanResult?.blogId ?? manifestBlogId
   const totalPostCount = manifestScanResult?.totalPostCount || manifestTotalPosts
@@ -519,7 +251,7 @@ const syncManifestUploadProgress = ({
 
   manifest.upload = {
     ...manifest.upload,
-    status: "uploading",
+    status: UPLOAD_STATUSES.UPLOADING,
     uploadedCount: uploadedLocalPaths.size,
     failedCount: 0,
     terminalReason: null,
@@ -591,7 +323,7 @@ const syncJobUploadProgress = ({
 
   jobStore.updateUpload(jobId, {
     ...job.upload,
-    status: "uploading",
+    status: UPLOAD_STATUSES.UPLOADING,
     uploadedCount: uploadedLocalPaths.size,
     failedCount: 0,
     terminalReason: null,
@@ -628,7 +360,7 @@ export const createHttpServer = ({
   const isDevelopment = process.env.NODE_ENV === "development"
   let httpServer: HttpServer
   let viteDevServerPromise: Promise<ViteDevServer> | null = null
-  let scanCachePromise: Promise<Record<string, ScanResult>> | null = null
+  let scanCachePromise: Promise<ScanCacheMap> | null = null
   const jobScanResults = new Map<string, ScanResult | null>()
   const activeJobTasks = new Map<
     string,
@@ -658,7 +390,10 @@ export const createHttpServer = ({
 
   const ensureScanCache = () => {
     if (!scanCachePromise) {
-      scanCachePromise = readScanCacheFile(scanCachePath)
+      scanCachePromise = readScanCacheFile({
+        scanCachePath,
+        legacyScanCachePath: scanCachePath === defaultScanCachePath ? legacyScanCachePath : undefined,
+      })
     }
 
     return scanCachePromise
@@ -776,7 +511,7 @@ export const createHttpServer = ({
     cachedScans,
   }: {
     outputDir: string
-    cachedScans: Record<string, ScanResult>
+    cachedScans: ScanCacheMap
   }) => {
     if (isTemporaryResumeOutputDir(outputDir)) {
       return null
@@ -812,7 +547,12 @@ export const createHttpServer = ({
   }
 
   const buildBootstrapResponse = async () => {
-    const persistedUiState = await readPersistedUiState(settingsPath)
+    const persistedUiState = await readPersistedUiState({
+      settingsPath,
+      legacySettingsPath: settingsPath === defaultSettingsPath ? legacySettingsPath : undefined,
+      defaultOutputDir,
+      defaultThemePreference,
+    })
     const cachedScans = await ensureScanCache()
     const resumed = await loadResumedJob({
       outputDir: persistedUiState.lastOutputDir,
@@ -852,6 +592,9 @@ export const createHttpServer = ({
         input: {
           lastOutputDir: outputDir,
         },
+        legacySettingsPath: settingsPath === defaultSettingsPath ? legacySettingsPath : undefined,
+        defaultOutputDir,
+        defaultThemePreference,
       })
     }
 
@@ -1091,7 +834,7 @@ export const createHttpServer = ({
           ...job.manifest,
           upload: {
             ...job.manifest.upload,
-            status: "uploading",
+            status: UPLOAD_STATUSES.UPLOADING,
             uploadedCount: uploadedLocalPaths.size,
             failedCount: 0,
             terminalReason: null,
@@ -1125,7 +868,7 @@ export const createHttpServer = ({
   }: {
     jobId: string
     uploaderKey: string
-    uploaderConfig: Record<string, unknown>
+    uploaderConfig: UploadRuntimeConfig
     signal?: AbortSignal
   }) => {
     const job = jobStore.get(jobId)
@@ -1231,7 +974,7 @@ export const createHttpServer = ({
         ...completedJob.manifest,
         upload: {
           ...completedJob.manifest.upload,
-          status: "upload-completed" as const,
+          status: UPLOAD_STATUSES.UPLOAD_COMPLETED,
           uploadedCount: completedJob.manifest.upload.candidateCount,
           failedCount: 0,
           terminalReason: null,
@@ -1349,6 +1092,9 @@ export const createHttpServer = ({
                   ? payload.themePreference
                   : undefined,
             },
+            legacySettingsPath: settingsPath === defaultSettingsPath ? legacySettingsPath : undefined,
+            defaultOutputDir,
+            defaultThemePreference,
           })
         } catch (error) {
           sendJson({
@@ -1413,6 +1159,9 @@ export const createHttpServer = ({
           input: {
             lastOutputDir: defaultOutputDir,
           },
+          legacySettingsPath: settingsPath === defaultSettingsPath ? legacySettingsPath : undefined,
+          defaultOutputDir,
+          defaultThemePreference,
         })
 
         sendJson({
@@ -1802,6 +1551,9 @@ export const createHttpServer = ({
           input: {
             lastOutputDir: exportRequest.outputDir,
           },
+          legacySettingsPath: settingsPath === defaultSettingsPath ? legacySettingsPath : undefined,
+          defaultOutputDir,
+          defaultThemePreference,
         })
 
         const job = jobStore.create(exportRequest)
@@ -1845,7 +1597,7 @@ export const createHttpServer = ({
           return
         }
 
-        if (job.status !== "running" || !job.resumeAvailable) {
+        if (job.status !== JOB_STATUSES.RUNNING || !job.resumeAvailable) {
           sendJson({
             response,
             statusCode: 409,
@@ -1873,7 +1625,7 @@ export const createHttpServer = ({
           statusCode: 202,
           body: {
             jobId: job.id,
-            status: "running",
+            status: JOB_STATUSES.RUNNING,
           },
         })
         return
@@ -1917,11 +1669,7 @@ export const createHttpServer = ({
           return
         }
 
-        if (
-          job.status !== "upload-ready" &&
-          job.status !== "upload-failed" &&
-          !(job.status === "uploading" && job.resumeAvailable)
-        ) {
+        if (!isUploadActionableJob(job)) {
           sendJson({
             response,
             statusCode: 409,
@@ -1989,7 +1737,7 @@ export const createHttpServer = ({
           statusCode: 202,
           body: {
             jobId: job.id,
-            status: "uploading",
+            status: JOB_STATUSES.UPLOADING,
           },
         })
         return

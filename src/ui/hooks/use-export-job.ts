@@ -5,23 +5,16 @@ import type {
   ExportJobState,
   ExportOptions,
   ScanResult,
-  UploadProviderValue,
+  UploadProviderFields,
 } from "../../shared/types.js"
+import { isTerminalJobStatus, JOB_STATUSES, UPLOAD_STATUSES } from "../../shared/export-job-state.js"
 
 import { fetchJson, postJson, postUploadJson } from "../lib/api.js"
 
 type UploadProviderInput = {
   providerKey: string
-  providerFields: Record<string, UploadProviderValue>
+  providerFields: UploadProviderFields
 }
-
-const terminalStatuses = new Set([
-  "completed",
-  "upload-completed",
-  "upload-failed",
-  "failed",
-])
-const fastPollingStatuses = new Set(["uploading"])
 const defaultJobPollingConfig: ExportJobPollingConfig = {
   defaultPollMs: 1000,
   fastPollMs: 250,
@@ -83,7 +76,7 @@ export const useExportJob = () => {
     restartPollingRef.current = false
 
     const scheduleNextLoad = (status: ExportJobState["status"] | null | undefined) => {
-      const nextDelay = fastPollingStatuses.has(status ?? "")
+      const nextDelay = status === JOB_STATUSES.UPLOADING
         ? activeJobPollingConfig.fastPollMs
         : activeJobPollingConfig.defaultPollMs
 
@@ -102,7 +95,7 @@ export const useExportJob = () => {
       displayedJobRef.current = nextJob
       setJob(nextJob)
 
-      if (terminalStatuses.has(nextJob.status) || nextJob.resumeAvailable) {
+      if (isTerminalJobStatus(nextJob.status) || nextJob.resumeAvailable) {
         if (timeoutId !== null) {
           window.clearTimeout(timeoutId)
         }
@@ -170,10 +163,10 @@ export const useExportJob = () => {
       current
         ? {
             ...current,
-            status: "uploading",
+            status: JOB_STATUSES.UPLOADING,
             upload: {
               ...current.upload,
-              status: "uploading",
+              status: UPLOAD_STATUSES.UPLOADING,
             },
           }
         : current,
@@ -182,11 +175,11 @@ export const useExportJob = () => {
       previousJob
         ? {
             ...previousJob,
-            status: "uploading",
+            status: JOB_STATUSES.UPLOADING,
             resumeAvailable: false,
             upload: {
               ...previousJob.upload,
-              status: "uploading",
+              status: UPLOAD_STATUSES.UPLOADING,
             },
           }
         : previousJob
@@ -210,8 +203,8 @@ export const useExportJob = () => {
         setJob(nextJob)
 
         const shouldKeepBurstPolling =
-          nextJob.status === "upload-ready" ||
-          (nextJob.status === "uploading" &&
+          nextJob.status === JOB_STATUSES.UPLOAD_READY ||
+          (nextJob.status === JOB_STATUSES.UPLOADING &&
             nextJob.upload.uploadedCount <= 0 &&
             nextJob.upload.candidateCount > 0)
 

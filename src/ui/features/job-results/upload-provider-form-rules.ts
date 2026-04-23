@@ -1,10 +1,12 @@
 import type {
   UploadProviderDefinition,
   UploadProviderFieldDefinition,
+  UploadProviderFields,
   UploadProviderValue,
 } from "../../../shared/types.js"
+import { UPLOAD_PROVIDER_KEYS } from "../../../shared/upload-provider-keys.js"
 
-export type ProviderFormState = Record<string, string | boolean>
+export type ProviderFormState = UploadProviderFields
 
 export type ProviderUiState = {
   alistAuthMode: "token" | "account"
@@ -23,7 +25,7 @@ export const buildInitialProviderUiState = (): ProviderUiState => ({
   githubUseJsDelivr: false,
 })
 
-const isFilledTextValue = (value: string | boolean | undefined) =>
+const isFilledTextValue = (value: string | number | boolean | undefined) =>
   typeof value === "string" && value.trim().length > 0
 
 export const getUploadProviderFieldRule = ({
@@ -44,7 +46,11 @@ export const getUploadProviderFieldRule = ({
     required: field.required,
   }
 
-  if (providerKey === "github" && field.key === "customUrl" && providerUiState.githubUseJsDelivr) {
+  if (
+    providerKey === UPLOAD_PROVIDER_KEYS.GITHUB &&
+    field.key === "customUrl" &&
+    providerUiState.githubUseJsDelivr
+  ) {
     return {
       ...baseRule,
       disabled: true,
@@ -52,7 +58,7 @@ export const getUploadProviderFieldRule = ({
     }
   }
 
-  if (providerKey === "alistplist") {
+  if (providerKey === UPLOAD_PROVIDER_KEYS.ALIST) {
     if (field.key === "token") {
       return {
         ...baseRule,
@@ -79,7 +85,7 @@ export const getUploadProviderFieldRule = ({
   }
 
   if (
-    providerKey === "aws-s3-plist" &&
+    providerKey === UPLOAD_PROVIDER_KEYS.AWS_S3 &&
     field.key === "disableBucketPrefixToURL" &&
     providerFields.pathStyleAccess !== true
   ) {
@@ -91,7 +97,7 @@ export const getUploadProviderFieldRule = ({
   }
 
   if (
-    providerKey === "lskyplist" &&
+    providerKey === UPLOAD_PROVIDER_KEYS.LSKY &&
     field.key === "albumId" &&
     String(providerFields.version ?? "").trim() !== "V2"
   ) {
@@ -103,7 +109,7 @@ export const getUploadProviderFieldRule = ({
   }
 
   if (
-    providerKey === "sftpplist" &&
+    providerKey === UPLOAD_PROVIDER_KEYS.SFTP &&
     field.key === "passphrase" &&
     !isFilledTextValue(providerFields.privateKey)
   ) {

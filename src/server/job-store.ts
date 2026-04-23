@@ -6,6 +6,7 @@ import type {
   ExportManifest,
   ExportRequest,
 } from "../shared/types.js"
+import { JOB_STATUSES, UPLOAD_STATUSES } from "../shared/export-job-state.js"
 
 const getJobItemId = ({
   outputPath,
@@ -79,7 +80,7 @@ export class JobStore {
     const state: ExportJobState = {
       id,
       request,
-      status: "queued",
+      status: JOB_STATUSES.QUEUED,
       resumeAvailable: false,
       logs: [],
       createdAt: new Date().toISOString(),
@@ -92,7 +93,7 @@ export class JobStore {
         warnings: 0,
       },
       upload: {
-        status: "not-requested",
+        status: UPLOAD_STATUSES.NOT_REQUESTED,
         eligiblePostCount: 0,
         candidateCount: 0,
         uploadedCount: 0,
@@ -118,7 +119,8 @@ export class JobStore {
       id: manifest.job.id,
       request: manifest.job.request,
       status: manifest.job.status,
-      resumeAvailable: manifest.job.status === "running" || manifest.job.status === "uploading",
+      resumeAvailable:
+        manifest.job.status === JOB_STATUSES.RUNNING || manifest.job.status === JOB_STATUSES.UPLOADING,
       logs: [],
       createdAt: manifest.job.createdAt,
       startedAt: manifest.job.startedAt,
@@ -145,7 +147,7 @@ export class JobStore {
 
   start(id: string) {
     const job = this.mustGet(id)
-    job.status = "running"
+    job.status = JOB_STATUSES.RUNNING
     job.resumeAvailable = false
     job.startedAt = new Date().toISOString()
   }
@@ -204,13 +206,13 @@ export class JobStore {
     job.upload = manifest.upload
     job.items = job.items.length > 0 ? job.items : manifest.posts.map((post) => buildJobItemFromPost(post, new Date().toISOString()))
 
-    if (manifest.upload.status === "upload-ready") {
-      job.status = "upload-ready"
+    if (manifest.upload.status === UPLOAD_STATUSES.UPLOAD_READY) {
+      job.status = JOB_STATUSES.UPLOAD_READY
       job.finishedAt = null
       return
     }
 
-    job.status = "completed"
+    job.status = JOB_STATUSES.COMPLETED
     job.finishedAt = new Date().toISOString()
   }
 
@@ -218,12 +220,12 @@ export class JobStore {
     const job = this.mustGet(id)
     const updatedAt = new Date().toISOString()
 
-    job.status = "uploading"
+    job.status = JOB_STATUSES.UPLOADING
     job.resumeAvailable = false
     job.error = null
     job.upload = {
       ...job.upload,
-      status: "uploading",
+      status: UPLOAD_STATUSES.UPLOADING,
       uploadedCount: initialUploadedLocalPaths.size,
       failedCount: 0,
       terminalReason: null,
@@ -254,7 +256,7 @@ export class JobStore {
     if (job.manifest) {
       job.manifest.upload = {
         ...job.manifest.upload,
-        status: "uploading",
+        status: UPLOAD_STATUSES.UPLOADING,
         uploadedCount: initialUploadedLocalPaths.size,
         failedCount: 0,
         terminalReason: null,
@@ -274,7 +276,7 @@ export class JobStore {
   completeUpload(id: string, input: { manifest: ExportManifest; items: ExportJobItem[] }) {
     const job = this.mustGet(id)
 
-    job.status = "upload-completed"
+    job.status = JOB_STATUSES.UPLOAD_COMPLETED
     job.resumeAvailable = false
     job.finishedAt = new Date().toISOString()
     job.manifest = input.manifest
@@ -286,13 +288,13 @@ export class JobStore {
     const job = this.mustGet(id)
     const updatedAt = new Date().toISOString()
 
-    job.status = "upload-failed"
+    job.status = JOB_STATUSES.UPLOAD_FAILED
     job.resumeAvailable = false
     job.finishedAt = new Date().toISOString()
     job.error = error
     job.upload = {
       ...job.upload,
-      status: "upload-failed",
+      status: UPLOAD_STATUSES.UPLOAD_FAILED,
       failedCount: job.upload.candidateCount - job.upload.uploadedCount,
       terminalReason: null,
     }
@@ -313,7 +315,7 @@ export class JobStore {
     if (job.manifest) {
       job.manifest.upload = {
         ...job.manifest.upload,
-        status: "upload-failed",
+        status: UPLOAD_STATUSES.UPLOAD_FAILED,
         uploadedCount: job.upload.uploadedCount,
         failedCount: job.upload.failedCount,
         terminalReason: null,
@@ -327,7 +329,7 @@ export class JobStore {
 
   fail(id: string, error: string) {
     const job = this.mustGet(id)
-    job.status = "failed"
+    job.status = JOB_STATUSES.FAILED
     job.resumeAvailable = false
     job.finishedAt = new Date().toISOString()
     job.error = error

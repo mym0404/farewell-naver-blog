@@ -7,6 +7,7 @@ import type {
   ExportOptions,
   ImageData,
   ParsedPost,
+  UnknownRecord,
   VideoData,
 } from "../../shared/types.js"
 import { compactMarkdownText, compactText, normalizeAssetUrl, unique } from "../../shared/utils.js"
@@ -18,7 +19,7 @@ const parseJsonAttribute = (value: string | undefined) => {
   }
 
   try {
-    return JSON.parse(value) as Record<string, unknown>
+    return JSON.parse(value) as UnknownRecord
   } catch {
     return null
   }
@@ -124,7 +125,7 @@ const parsePlacesMapBlock = ({
   moduleData,
 }: {
   $component: ReturnType<CheerioAPI>
-  moduleData: Record<string, unknown> | null
+  moduleData: UnknownRecord | null
 }): Extract<AstBlock, { type: "linkCard" }>[] => {
   const data = (moduleData?.data ?? {}) as {
     places?: Array<{
@@ -358,7 +359,7 @@ const parseFormulaBlock = ({
   warnings,
 }: {
   $component: ReturnType<CheerioAPI>
-  moduleData: Record<string, unknown>
+  moduleData: UnknownRecord
   warnings: string[]
 }) => {
   const data = (moduleData.data ?? {}) as {
@@ -457,7 +458,7 @@ const parseLinkCardBlock = ($component: ReturnType<CheerioAPI>) => {
 const parseOembedBlock = ({
   moduleData,
 }: {
-  moduleData: Record<string, unknown>
+  moduleData: UnknownRecord
 }) => {
   const data = (moduleData.data ?? {}) as {
     html?: string
@@ -493,7 +494,7 @@ const parseVideoBlock = ({
   moduleData,
   sourceUrl,
 }: {
-  moduleData: Record<string, unknown>
+  moduleData: UnknownRecord
   sourceUrl: string
 }) => {
   const data = (moduleData.data ?? {}) as {

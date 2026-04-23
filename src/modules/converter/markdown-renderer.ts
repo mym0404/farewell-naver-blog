@@ -10,6 +10,7 @@ import type {
   ExportOptions,
   FrontmatterFieldName,
   ImageData,
+  UnknownRecord,
   ParsedPost,
   PostSummary,
 } from "../../shared/types.js"
@@ -68,7 +69,7 @@ const buildFrontmatter = ({
   aliases: Record<FrontmatterFieldName, string>
   values: Record<FrontmatterFieldName, unknown>
 }) => {
-  const frontmatter: Record<string, unknown> = {}
+  const frontmatter: UnknownRecord = {}
 
   for (const [key, enabled] of Object.entries(fields) as Array<[FrontmatterFieldName, boolean]>) {
     if (!enabled) {
