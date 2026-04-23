@@ -1,5 +1,5 @@
-import { Alert, AlertDescription, AlertTitle } from "./ui/alert.js"
-import { Button } from "./ui/button.js"
+import { Alert, AlertDescription, AlertTitle } from "../../components/ui/alert.js"
+import { Button } from "../../components/ui/button.js"
 import {
   Dialog,
   DialogContent,
@@ -7,8 +7,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "./ui/dialog.js"
-import type { ResumeDialogState } from "../app-helpers.js"
+} from "../../components/ui/dialog.js"
+import type { ResumeDialogState } from "./resume-state.js"
 
 export const ResumeDialogPanel = ({
   resumeDialog,
@@ -32,9 +32,7 @@ export const ResumeDialogPanel = ({
     >
       <DialogHeader>
         <DialogTitle>
-          {resumeDialog?.source === "before-scan"
-            ? "진행 중인 작업이 있습니다."
-            : "이전 작업을 다시 불러왔습니다."}
+          {resumeDialog?.source === "before-scan" ? "진행 중인 작업이 있습니다." : "이전 작업을 다시 불러왔습니다."}
         </DialogTitle>
         <DialogDescription>
           {resumeDialog?.source === "before-scan"

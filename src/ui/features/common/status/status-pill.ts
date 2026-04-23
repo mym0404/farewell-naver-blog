@@ -1,5 +1,5 @@
-import { cn } from "./cn.js"
-import { JOB_STATUSES } from "../../shared/export-job-state.js"
+import { JOB_STATUSES } from "../../../../shared/export-job-state.js"
+import { cn } from "../../../lib/cn.js"
 
 export const getStatusPillClassName = (status: string | undefined) =>
   cn(
@@ -8,8 +8,7 @@ export const getStatusPillClassName = (status: string | undefined) =>
       ? "status-pill--success"
       : status === JOB_STATUSES.UPLOAD_READY
         ? "status-pill--ready"
-        :
-            status === JOB_STATUSES.RUNNING ||
+        : status === JOB_STATUSES.RUNNING ||
             status === JOB_STATUSES.QUEUED ||
             status === "success" ||
             status === JOB_STATUSES.UPLOADING

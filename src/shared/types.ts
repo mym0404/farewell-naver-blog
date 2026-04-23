@@ -65,6 +65,7 @@ export type ImageHandlingMode = "download" | "remote" | "download-and-upload"
 export type AssetDownloadFailureMode =
   | "warn-and-use-source"
   | "use-source"
+  | "omit"
   | "warn-and-omit"
 
 export type ThumbnailSource = "post-list-first" | "first-body-image" | "none"

@@ -1,16 +1,8 @@
-import {
-  RiArrowRightLine,
-  RiDownload2Line,
-  RiLoader4Line,
-  RiMoonClearLine,
-  RiRadarLine,
-  RiSunLine,
-} from "@remixicon/react"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { RiLoader4Line } from "@remixicon/react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import {
   defaultExportOptions,
-  type PartialExportOptions,
   frontmatterFieldMeta,
   frontmatterFieldOrder,
   optionDescriptions,
@@ -19,68 +11,57 @@ import {
 } from "../shared/export-options.js"
 import { filterPostsByScope } from "../shared/export-scope.js"
 import type {
-  ExportJobState,
   ExportOptions,
-  ExportResumeSummary,
   ScanCacheMap,
   ScanResult,
   ThemePreference,
-  UploadProviderCatalogResponse,
   UploadProviderFields,
 } from "../shared/types.js"
-import { JOB_STATUSES, UPLOAD_STATUSES } from "../shared/export-job-state.js"
-
-import { Badge } from "./components/ui/badge.js"
-import { Button } from "./components/ui/button.js"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "./components/ui/card.js"
-import { Input } from "./components/ui/input.js"
-import { ResumeDialogPanel } from "./components/resume-dialog-panel.js"
-import { WizardDock } from "./components/wizard-dock.js"
-import { WizardHeader } from "./components/wizard-header.js"
+import { Card, CardContent } from "./components/ui/card.js"
 import { Toaster, toast } from "./components/ui/sonner.js"
-import { ToggleGroup, ToggleGroupItem } from "./components/ui/toggle-group.js"
+import { BlogInputPanel } from "./features/scan/blog-input-panel.js"
 import { toggleCategorySelection } from "./features/scan/category-selection.js"
 import { CategoryPanel } from "./features/scan/category-panel.js"
 import {
-  ExportOptionsPanel,
-  type ExportOptionsStep,
-} from "./features/options/export-options-panel.js"
-import { JobResultsPanel } from "./features/job-results/job-results-panel.js"
-import { setExportJobPollingConfig, useExportJob } from "./hooks/use-export-job.js"
-import type {
-  ExportBootstrapResponse,
-  ExportResumeLookupResponse,
-} from "./lib/api.js"
-import { fetchJson, postJson, postJsonNoContent } from "./lib/api.js"
-import { cn } from "./lib/cn.js"
-import {
-  buildSummaryCards,
-  defaultOutputDir,
   defaultCategoryStatus,
-  defaultScanLoadingStatus,
+  defaultOutputDir,
   defaultScanStatus,
-  forceScanLoadingStatus,
-  getHeaderStatus,
-  getNextButtonLabel,
-  getPersistedUiStateSignature,
   normalizeOutputDir,
-  readyCategoryStatus,
-  resolveScopedCategoryIds,
-  resolveWizardStep,
   restoredCategoryFallbackStatus,
   restoredCategoryStatus,
   restoredScanStatus,
-  resumeLookupErrorStatus,
-  shouldLoadUploadProviders,
-  type ResumeDialogState,
-} from "./app-helpers.js"
-import { getStatusPillClassName } from "./lib/status-pill.js"
+} from "./features/scan/scan-status.js"
+import { ExportOptionsPanel } from "./features/options/export-options-panel.js"
+import { JobResultsPanel } from "./features/job-results/job-results-panel.js"
+import { shouldLoadUploadProviders } from "./features/job-results/export-job-fallback.js"
+import { setExportJobPollingConfig, useExportJob } from "./features/job-results/use-export-job.js"
+import { useJobNotifications } from "./features/job-results/use-job-notifications.js"
+import { ResumeDialogPanel } from "./features/resume/resume-dialog-panel.js"
+import type { ResumeDialogState } from "./features/resume/resume-state.js"
+import { useBeforeUnloadWarning } from "./features/common/hooks/use-before-unload-warning.js"
+import { useBootstrapDefaults } from "./features/common/hooks/use-bootstrap-defaults.js"
+import { useBrandMarkScroll } from "./features/common/hooks/use-brand-mark-scroll.js"
+import { useExportSettingsSync } from "./features/common/hooks/use-export-settings-sync.js"
+import { useStepScroll } from "./features/common/hooks/use-step-scroll.js"
+import { useThemePreference } from "./features/common/hooks/use-theme-preference.js"
+import { useWizardActions } from "./features/common/hooks/use-wizard-actions.js"
+import {
+  buildSummaryCards,
+  getHeaderStatus,
+  getNextButtonLabel,
+  getPersistedUiStateSignature,
+  NextActionIcon,
+  optionStepMap,
+  resolveWizardStep,
+  setupSteps,
+  stepMeta,
+  type SetupStep,
+  type WizardStep,
+} from "./features/common/shell/wizard-flow.js"
+import { WizardDock } from "./features/common/shell/wizard-dock.js"
+import { WizardHeader } from "./features/common/shell/wizard-header.js"
+import type { ExportBootstrapResponse } from "./lib/api.js"
+import { cn } from "./lib/cn.js"
 import { useUploadProvidersCatalog } from "./features/job-results/use-upload-providers-catalog.js"
 
 const fallbackDefaults: ExportBootstrapResponse = {
@@ -96,149 +77,6 @@ const fallbackDefaults: ExportBootstrapResponse = {
   optionDescriptions,
 }
 
-const exportSettingsSaveDelayMs = 300
-
-const setupSteps = [
-  "blog-input",
-  "category-selection",
-  "structure-options",
-  "frontmatter-options",
-  "markdown-options",
-  "assets-options",
-  "links-options",
-  "diagnostics-options",
-] as const
-
-type SetupStep = (typeof setupSteps)[number]
-type WizardStep = SetupStep | "running" | "upload" | "result"
-
-const NextActionIcon = ({
-  setupStep,
-  scanPending,
-  submitting,
-}: {
-  setupStep: SetupStep
-  scanPending: boolean
-  submitting: boolean
-}) => {
-  if (setupStep === "blog-input") {
-    return scanPending ? (
-      <RiLoader4Line className="size-4 motion-safe:animate-spin" aria-hidden="true" />
-    ) : (
-      <RiRadarLine className="size-4" aria-hidden="true" />
-    )
-  }
-
-  if (setupStep === "diagnostics-options") {
-    return submitting ? (
-      <RiLoader4Line className="size-4 motion-safe:animate-spin" aria-hidden="true" />
-    ) : (
-      <RiDownload2Line className="size-4" aria-hidden="true" />
-    )
-  }
-
-  return <RiArrowRightLine className="size-4" aria-hidden="true" />
-}
-
-const optionStepMap: Record<Extract<SetupStep, `${string}-options`>, ExportOptionsStep> = {
-  "structure-options": "structure",
-  "frontmatter-options": "frontmatter",
-  "markdown-options": "markdown",
-  "assets-options": "assets",
-  "links-options": "links",
-  "diagnostics-options": "diagnostics",
-}
-
-const stepMeta: Record<
-  WizardStep,
-  {
-    title: string
-    description: string
-  }
-> = {
-  "blog-input": {
-    title: "블로그 입력",
-    description: "블로그 ID와 출력 경로를 정한 뒤 카테고리를 불러옵니다.",
-  },
-  "category-selection": {
-    title: "카테고리 선택",
-    description: "내보낼 카테고리와 범위 조건을 정합니다.",
-  },
-  "structure-options": {
-    title: "구조 설정",
-    description: "폴더 구조와 파일 이름 규칙을 정합니다.",
-  },
-  "frontmatter-options": {
-    title: "Frontmatter 설정",
-    description: "메타데이터 필드와 alias를 정리합니다.",
-  },
-  "markdown-options": {
-    title: "Markdown 설정",
-    description: "본문 렌더링 규칙을 정합니다.",
-  },
-  "assets-options": {
-    title: "Assets 설정",
-    description: "이미지 다운로드와 업로드 전략을 정합니다.",
-  },
-  "links-options": {
-    title: "Link 처리",
-    description: "같은 블로그 안의 다른 글 링크를 어떻게 바꿀지 정합니다.",
-  },
-  "diagnostics-options": {
-    title: "진단 설정",
-    description: "경고와 실패 처리 방식을 정합니다.",
-  },
-  running: {
-    title: "실행 중",
-    description: "",
-  },
-  upload: {
-    title: "Image Upload",
-    description: "",
-  },
-  result: {
-    title: "결과",
-    description: "",
-  },
-}
-
-const createErrorJobState = (
-  error: string,
-  request: { blogIdOrUrl: string; outputDir: string; options: ExportOptions },
-) =>
-  ({
-    id: "failed-local",
-    request: {
-      blogIdOrUrl: request.blogIdOrUrl,
-      outputDir: request.outputDir,
-      profile: "gfm",
-      options: request.options,
-    },
-    status: JOB_STATUSES.FAILED,
-    resumeAvailable: false,
-    logs: [],
-    createdAt: new Date().toISOString(),
-    startedAt: new Date().toISOString(),
-    finishedAt: new Date().toISOString(),
-    progress: {
-      total: 0,
-      completed: 0,
-      failed: 0,
-      warnings: 0,
-    },
-    upload: {
-      status: UPLOAD_STATUSES.NOT_REQUESTED,
-      eligiblePostCount: 0,
-      candidateCount: 0,
-      uploadedCount: 0,
-      failedCount: 0,
-      terminalReason: null,
-    },
-    items: [],
-    manifest: null,
-    error,
-  }) satisfies ExportJobState
-
 export const App = () => {
   const [defaults, setDefaults] = useState(fallbackDefaults)
   const [bootstrapping, setBootstrapping] = useState(true)
@@ -248,61 +86,45 @@ export const App = () => {
   const [outputDir, setOutputDir] = useState(defaultOutputDir)
   const [resumeDialog, setResumeDialog] = useState<ResumeDialogState | null>(null)
   const [scanCache, setScanCache] = useState<ScanCacheMap>({})
-  const [themePreference, setThemePreference] = useState<ThemePreference>(
-    fallbackDefaults.themePreference,
-  )
-  const [options, setOptions] = useState<ExportOptions>(
-    fallbackDefaults.options,
-  )
-  const [scanStatus, setScanStatus] = useState(
-    defaultScanStatus,
-  )
-  const [scanStatusTone, setScanStatusTone] = useState<"default" | "error">(
-    "default",
-  )
-  const [categoryStatus, setCategoryStatus] = useState(
-    defaultCategoryStatus,
-  )
+  const [themePreference, setThemePreference] = useState<ThemePreference>(fallbackDefaults.themePreference)
+  const [options, setOptions] = useState<ExportOptions>(fallbackDefaults.options)
+  const [scanStatus, setScanStatus] = useState(defaultScanStatus)
+  const [scanStatusTone, setScanStatusTone] = useState<"default" | "error">("default")
+  const [categoryStatus, setCategoryStatus] = useState(defaultCategoryStatus)
   const [categorySearch, setCategorySearch] = useState("")
   const [scanPending, setScanPending] = useState(false)
   const [setupStep, setSetupStep] = useState<SetupStep>("blog-input")
-  const [activeJobFilter, setActiveJobFilter] = useState<
-    "all" | "warnings" | "errors"
-  >("all")
-  const {
-    job,
-    submitting,
-    uploadSubmitting,
-    hydrateJob,
-    resumeJob,
-    setJob,
-    startJob,
-    startUpload,
-  } = useExportJob()
+  const [activeJobFilter, setActiveJobFilter] = useState<"all" | "warnings" | "errors">("all")
+  const { job, submitting, uploadSubmitting, hydrateJob, resumeJob, setJob, startJob, startUpload } = useExportJob()
+
   const lastNotifiedJobKeyRef = useRef<string | null>(null)
   const stepViewRef = useRef<HTMLElement | null>(null)
-  const previousStepRef = useRef<WizardStep | null>(null)
+  const previousStepRef = useRef<string | null>(null)
   const persistedUiStateSignatureRef = useRef<string | null>(null)
   const hasLoadedDefaultsRef = useRef(false)
+  const hasUserInteractedRef = useRef(false)
   const latestPersistedOptionsRef = useRef(sanitizePersistedExportOptions(fallbackDefaults.options))
   const latestThemePreferenceRef = useRef<ThemePreference>(fallbackDefaults.themePreference)
-  const setNeutralScanStatus = (message: string) => {
+
+  const setNeutralScanStatus = useCallback((message: string) => {
     setScanStatus(message)
     setScanStatusTone("default")
-  }
-  const setErrorScanStatus = (message: string) => {
+  }, [])
+
+  const setErrorScanStatus = useCallback((message: string) => {
     setScanStatus(message)
     setScanStatusTone("error")
-  }
-  const applyResumedState = ({
+  }, [])
+
+  const applyResumedState = useCallback(({
     source,
     resumedJob,
     resumeSummary,
     resumedScanResult,
   }: {
     source: ResumeDialogState["source"]
-    resumedJob: ExportJobState
-    resumeSummary: ExportResumeSummary
+    resumedJob: NonNullable<ExportBootstrapResponse["resumedJob"]>
+    resumeSummary: NonNullable<ExportBootstrapResponse["resumeSummary"]>
     resumedScanResult: ScanResult | null
   }) => {
     setDefaults((current) => ({
@@ -345,13 +167,18 @@ export const App = () => {
           }
         : null,
     )
-  }
+  }, [hydrateJob])
 
-  const applyBootstrapState = (nextDefaults: ExportBootstrapResponse) => {
+  const applyBootstrapState = useCallback((nextDefaults: ExportBootstrapResponse) => {
     setDefaults(nextDefaults)
+    setThemePreference(nextDefaults.themePreference)
+
+    if (hasUserInteractedRef.current && !nextDefaults.resumedJob && !nextDefaults.resumedScanResult) {
+      return
+    }
+
     setOptions(nextDefaults.resumedJob?.request.options ?? nextDefaults.options)
     setOutputDir(normalizeOutputDir(nextDefaults.resumedJob?.request.outputDir ?? nextDefaults.lastOutputDir))
-    setThemePreference(nextDefaults.themePreference)
     setBlogIdOrUrl(nextDefaults.resumedJob?.request.blogIdOrUrl ?? "")
     setCategorySearch("")
     setSetupStep("blog-input")
@@ -383,14 +210,14 @@ export const App = () => {
     lastNotifiedJobKeyRef.current = null
     hydrateJob(null)
     setResumeDialog(null)
-  }
+  }, [applyResumedState, hydrateJob])
 
+  const currentScanTarget = blogIdOrUrl.trim()
+  const activeScanResult = currentScanTarget ? scanCache[currentScanTarget] ?? null : null
   const frontmatterValidationErrors = useMemo(
     () => validateFrontmatterAliases(options.frontmatter),
     [options.frontmatter],
   )
-  const currentScanTarget = blogIdOrUrl.trim()
-  const activeScanResult = currentScanTarget ? scanCache[currentScanTarget] ?? null : null
   const scopedPosts = useMemo(() => {
     if (!activeScanResult?.posts) {
       return []
@@ -404,18 +231,13 @@ export const App = () => {
   }, [activeScanResult, options])
   const scopedPostCount = activeScanResult?.posts ? scopedPosts.length : activeScanResult?.totalPostCount ?? 0
   const linkTemplatePreviewPost = scopedPosts[0] ?? activeScanResult?.posts?.[0] ?? null
-
   const selectedCategoryIds = options.scope.categoryIds
   const selectedCount = activeScanResult ? selectedCategoryIds.length : 0
   const exportDisabled = !activeScanResult || frontmatterValidationErrors.length > 0
   const setupStepIndex = setupSteps.indexOf(setupStep)
   const persistedOptions = useMemo(() => sanitizePersistedExportOptions(options), [options])
   const persistedUiStateSignature = useMemo(
-    () =>
-      JSON.stringify({
-        options: persistedOptions,
-        themePreference,
-      }),
+    () => getPersistedUiStateSignature({ options: persistedOptions, themePreference }),
     [persistedOptions, themePreference],
   )
   const outputDirBaseline = normalizeOutputDir(defaults.resumedJob?.request.outputDir ?? defaults.lastOutputDir)
@@ -425,7 +247,6 @@ export const App = () => {
       normalizeOutputDir(outputDir) !== outputDirBaseline ||
       activeScanResult !== null ||
       Boolean(job))
-
   const currentStep = useMemo(
     () =>
       resolveWizardStep({
@@ -436,625 +257,111 @@ export const App = () => {
       }) as WizardStep,
     [job?.status, setupStep, submitting, uploadSubmitting],
   )
-
   const isSetupStep = currentStep === setupStep
+
   const { uploadProviders, uploadProviderError } = useUploadProvidersCatalog({
     jobId: job?.id,
     shouldLoad: shouldLoadUploadProviders(job),
   })
 
-  useEffect(() => {
-    const root = document.documentElement
-    root.classList.remove("dark", "light")
-    root.classList.add(themePreference)
-    root.style.colorScheme = themePreference
-    latestThemePreferenceRef.current = themePreference
-  }, [themePreference])
-
-  useEffect(() => {
-    const root = document.documentElement
-    let frameId = 0
-
-    const updateBrandMarkScale = () => {
-      frameId = 0
-
-      const scrollRange = Math.max(window.innerHeight * 0.75, 320)
-      const progress = Math.min(window.scrollY / scrollRange, 1)
-      const nextScale = 1.04 - progress * 0.12
-
-      root.style.setProperty("--brand-mark-scroll-scale", nextScale.toFixed(3))
-    }
-
-    const requestScaleUpdate = () => {
-      if (frameId !== 0) {
-        return
-      }
-
-      frameId = window.requestAnimationFrame(updateBrandMarkScale)
-    }
-
-    requestScaleUpdate()
-    window.addEventListener("scroll", requestScaleUpdate, { passive: true })
-    window.addEventListener("resize", requestScaleUpdate)
-
-    return () => {
-      if (frameId !== 0) {
-        window.cancelAnimationFrame(frameId)
-      }
-
-      window.removeEventListener("scroll", requestScaleUpdate)
-      window.removeEventListener("resize", requestScaleUpdate)
-      root.style.removeProperty("--brand-mark-scroll-scale")
-    }
-  }, [])
-
-  useEffect(() => {
-    const previousStep = previousStepRef.current
-    previousStepRef.current = currentStep
-
-    if (!isSetupStep || previousStep === null || previousStep === currentStep) {
-      return
-    }
-
-    window.scrollTo({ top: 0, left: 0, behavior: "smooth" })
-    stepViewRef.current?.scrollIntoView({
-      block: "start",
-      behavior: "smooth",
-    })
-  }, [currentStep, isSetupStep])
-
-  useEffect(() => {
-    let cancelled = false
-
-    const loadDefaults = async () => {
-      try {
-        const nextDefaults = await fetchJson<ExportBootstrapResponse>("/api/export-defaults")
-
-        if (cancelled) {
-          return
-        }
-
-        const nextPersistedOptions = sanitizePersistedExportOptions(nextDefaults.options)
-
-        latestPersistedOptionsRef.current = nextPersistedOptions
-        latestThemePreferenceRef.current = nextDefaults.themePreference
-        setExportJobPollingConfig(nextDefaults.jobPolling)
-        persistedUiStateSignatureRef.current = getPersistedUiStateSignature({
-          options: nextDefaults.options,
-          themePreference: nextDefaults.themePreference,
-        })
-        hasLoadedDefaultsRef.current = true
-        applyBootstrapState(nextDefaults)
-        setBootstrapping(false)
-      } catch (error) {
-        if (cancelled) {
-          return
-        }
-
-        const nextPersistedOptions = sanitizePersistedExportOptions(fallbackDefaults.options)
-
-        latestPersistedOptionsRef.current = nextPersistedOptions
-        latestThemePreferenceRef.current = fallbackDefaults.themePreference
-        setExportJobPollingConfig(fallbackDefaults.jobPolling)
-        persistedUiStateSignatureRef.current = getPersistedUiStateSignature({
-          options: fallbackDefaults.options,
-          themePreference: fallbackDefaults.themePreference,
-        })
-        hasLoadedDefaultsRef.current = true
-        applyBootstrapState(fallbackDefaults)
-        setErrorScanStatus(error instanceof Error ? error.message : String(error))
-        setBootstrapping(false)
-      }
-    }
-
-    void loadDefaults()
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
+  useThemePreference(themePreference)
+  useBrandMarkScroll()
+  useStepScroll({
+    currentStep,
+    isSetupStep,
+    previousStepRef,
+    stepViewRef,
+  })
+  useBootstrapDefaults({
+    fallbackDefaults,
+    applyBootstrapState,
+    setBootstrapping,
+    setErrorScanStatus,
+    setExportJobPollingConfig,
+    hasLoadedDefaultsRef,
+    latestPersistedOptionsRef,
+    latestThemePreferenceRef,
+    persistedUiStateSignatureRef,
+  })
+  useExportSettingsSync({
+    hasLoadedDefaultsRef,
+    persistedUiStateSignature,
+    persistedUiStateSignatureRef,
+    latestPersistedOptionsRef,
+    latestThemePreferenceRef,
+  })
+  useJobNotifications({
+    job,
+    lastNotifiedJobKeyRef,
+  })
+  useBeforeUnloadWarning(shouldWarnBeforeUnload)
 
   useEffect(() => {
     latestPersistedOptionsRef.current = persistedOptions
   }, [persistedOptions])
 
   useEffect(() => {
-    if (!hasLoadedDefaultsRef.current) {
-      return
-    }
+    latestThemePreferenceRef.current = themePreference
+  }, [themePreference])
 
-    if (persistedUiStateSignature === persistedUiStateSignatureRef.current) {
-      return
-    }
-
-    let cancelled = false
-    const timeoutId = window.setTimeout(() => {
-      const nextThemePreference = latestThemePreferenceRef.current
-      const nextOptions = latestPersistedOptionsRef.current
-      const nextPersistedSignature = getPersistedUiStateSignature({
-        options: nextOptions,
-        themePreference: nextThemePreference,
-      })
-
-      void postJsonNoContent("/api/export-settings", {
-        options: nextOptions,
-        themePreference: nextThemePreference,
-      })
-        .then(() => {
-          if (cancelled) {
-            return
-          }
-
-          persistedUiStateSignatureRef.current = nextPersistedSignature
-        })
-        .catch(() => {})
-    }, exportSettingsSaveDelayMs)
-
-    return () => {
-      cancelled = true
-      window.clearTimeout(timeoutId)
-    }
-  }, [persistedUiStateSignature])
-
-  useEffect(() => {
-    if (!job) {
-      lastNotifiedJobKeyRef.current = null
-      return
-    }
-
-    const notificationKey = `${job.id}:${job.status}:${job.finishedAt ?? ""}`
-
-    if (lastNotifiedJobKeyRef.current === notificationKey) {
-      return
-    }
-
-    lastNotifiedJobKeyRef.current = notificationKey
-
-    if (job.status === JOB_STATUSES.UPLOAD_READY) {
-      toast("내보내기가 끝났습니다. Image Upload를 시작할 수 있습니다.", {
-        description: `업로드 대상 ${job.upload.candidateCount}개`,
-      })
-      return
-    }
-
-    if (job.status === JOB_STATUSES.COMPLETED) {
-      toast.success("내보내기가 완료되었습니다.", {
-        description: `완료 ${job.progress.completed}개, 실패 ${job.progress.failed}개`,
-      })
-      return
-    }
-
-    if (job.status === JOB_STATUSES.UPLOAD_COMPLETED) {
-      toast.success("Image Upload까지 완료되었습니다.", {
-        description: `업로드 ${job.upload.uploadedCount}개`,
-      })
-      return
-    }
-
-    if (job.status === JOB_STATUSES.UPLOAD_FAILED) {
-      toast.error("Image Upload에 실패했습니다.", {
-        description: job.error ?? "로그를 확인하세요.",
-      })
-      return
-    }
-
-    if (job.status === JOB_STATUSES.FAILED) {
-      toast.error("내보내기 작업이 실패했습니다.", {
-        description: job.error ?? "로그를 확인하세요.",
-      })
-    }
-  }, [job])
-
-  useEffect(() => {
-    if (!shouldWarnBeforeUnload) {
-      return
-    }
-
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      event.preventDefault()
-      event.returnValue = ""
-    }
-
-    window.addEventListener("beforeunload", handleBeforeUnload)
-
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload)
-    }
-  }, [shouldWarnBeforeUnload])
-
-  const updateOptions = (
-    updater: (current: ExportOptions) => ExportOptions,
-  ) => {
+  const updateOptions = useCallback((updater: (current: ExportOptions) => ExportOptions) => {
+    hasUserInteractedRef.current = true
     setOptions((current) => updater(current))
-  }
+  }, [])
 
-  const ensureScanResult = async ({
-    forceRefresh = false,
-    skipResumeLookup = false,
-  }: {
-    forceRefresh?: boolean
-    skipResumeLookup?: boolean
-  } = {}) => {
-    if (!currentScanTarget) {
-      setErrorScanStatus("블로그 ID 또는 URL을 입력하세요.")
-      return false
-    }
-
-    const normalizedOutputDir = normalizeOutputDir(outputDir)
-
-    if (!forceRefresh && !skipResumeLookup) {
-      setScanPending(true)
-      setNeutralScanStatus("기존 작업 상태를 확인하는 중입니다.")
-      setCategoryStatus("출력 경로의 manifest.json 상태를 확인하는 중입니다.")
-
-      try {
-        const resumed = await postJson<ExportResumeLookupResponse>("/api/export-resume/lookup", {
-          outputDir: normalizedOutputDir,
-        })
-        const nextResumeDialog =
-          resumed.resumedJob && resumed.resumeSummary
-            ? {
-                source: "before-scan" as const,
-                resumedJob: resumed.resumedJob,
-                resumeSummary: resumed.resumeSummary,
-                resumedScanResult: resumed.resumedScanResult,
-              }
-            : null
-
-        if (nextResumeDialog) {
-          setResumeDialog(nextResumeDialog)
-          setNeutralScanStatus("이 경로에서 이어서 불러올 작업을 찾았습니다.")
-          setCategoryStatus("작업 초기화 또는 불러오기 중 하나를 선택하세요.")
-          return false
-        }
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error)
-        setErrorScanStatus(message)
-        setCategoryStatus(resumeLookupErrorStatus)
-        toast.error("작업 상태 확인에 실패했습니다.", {
-          description: message,
-        })
-        return false
-      } finally {
-        setScanPending(false)
-      }
-    }
-
-    if (activeScanResult && !forceRefresh) {
-      setNeutralScanStatus(`${activeScanResult.blogId} 스캔 결과를 재사용합니다.`)
-      setCategoryStatus(readyCategoryStatus)
-      setCategorySearch("")
-      setOptions((current) => ({
-        ...current,
-        scope: {
-          ...current.scope,
-          categoryIds: resolveScopedCategoryIds({
-            categories: activeScanResult.categories,
-            currentCategoryIds: current.scope.categoryIds,
-          }),
-        },
-      }))
-      setSetupStep("category-selection")
-      return true
-    }
-
-    setScanPending(true)
-    setNeutralScanStatus(forceRefresh ? forceScanLoadingStatus : defaultScanLoadingStatus)
-    setCategoryStatus("카테고리를 불러오는 중입니다.")
-
-    if (forceRefresh) {
-      setScanCache((current) => {
-        const next = { ...current }
-        delete next[currentScanTarget]
-        return next
-      })
-    }
-
-    try {
-      const nextScanResult = await postJson<ScanResult>("/api/scan", {
-        blogIdOrUrl: currentScanTarget,
-        forceRefresh,
-      })
-
-      setScanCache((current) => ({
-        ...current,
-        [currentScanTarget]: nextScanResult,
-      }))
-      setNeutralScanStatus(`${nextScanResult.blogId} 스캔 완료`)
-      setCategoryStatus(readyCategoryStatus)
-      setCategorySearch("")
-      setOptions((current) => ({
-        ...current,
-        scope: {
-          ...current.scope,
-          categoryIds: nextScanResult.categories.map((category) => category.id),
-        },
-      }))
-      setSetupStep("category-selection")
-      toast.success("카테고리 스캔이 완료되었습니다.", {
-        description: `${nextScanResult.totalPostCount}개 글과 ${nextScanResult.categories.length}개 카테고리를 불러왔습니다.`,
-      })
-
-      return true
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-      setErrorScanStatus(message)
-      setCategoryStatus("스캔에 실패했습니다. 다시 시도하세요.")
-      toast.error("카테고리 스캔에 실패했습니다.", {
-        description: message,
-      })
-      return false
-    } finally {
-      setScanPending(false)
-    }
-  }
-
-  const handleBlogInputChange = (value: string) => {
-    setBlogIdOrUrl(value)
-    setSetupStep("blog-input")
-
-    if (value.trim() && scanCache[value.trim()]) {
-      setNeutralScanStatus("캐시된 카테고리를 다시 사용할 수 있습니다.")
-      setCategoryStatus(readyCategoryStatus)
-      return
-    }
-
-    setNeutralScanStatus(
-      value.trim()
-        ? "블로그가 바뀌었습니다. 다음 단계에서 다시 스캔합니다."
-        : defaultScanStatus,
-    )
-    setCategoryStatus(defaultCategoryStatus)
-    setCategorySearch("")
-    setOptions((current) => ({
-      ...current,
-      scope: {
-        ...current.scope,
-        categoryIds: [],
-      },
-    }))
-  }
-
-  const handleOutputDirBlur = () => {
-    setOutputDir((current) => normalizeOutputDir(current))
-  }
-
-  const handleCategoryToggle = (categoryId: number, checked: boolean) => {
-    if (!activeScanResult) {
-      return
-    }
-
-    updateOptions((current) => {
-      return {
-        ...current,
-        scope: {
-          ...current.scope,
-          categoryIds: toggleCategorySelection({
-            categories: activeScanResult.categories,
-            selectedIds: current.scope.categoryIds,
-            categoryId,
-            checked,
-          }),
-        },
-      }
-    })
-  }
-
-  const handleSelectAllCategories = () => {
-    if (!activeScanResult) {
-      return
-    }
-
-    updateOptions((current) => ({
-      ...current,
-      scope: {
-        ...current.scope,
-        categoryIds: activeScanResult.categories.map((category) => category.id),
-      },
-    }))
-    toast("카테고리를 전체 선택했습니다.", {
-      description: `${activeScanResult.totalPostCount}개 글이 선택 범위에 포함됩니다.`,
-    })
-  }
-
-  const handleClearAllCategories = () => {
-    updateOptions((current) => ({
-      ...current,
-      scope: {
-        ...current.scope,
-        categoryIds: [],
-      },
-    }))
-    toast("카테고리 선택을 모두 해제했습니다.", {
-      description: "선택 범위가 비워졌습니다.",
-    })
-  }
-
-  const handleSubmit = async () => {
-    if (!activeScanResult) {
-      setCategoryStatus("먼저 스캔을 완료해야 합니다.")
-      return
-    }
-
-    if (frontmatterValidationErrors.length > 0) {
-      setSetupStep("frontmatter-options")
-      setCategoryStatus("Frontmatter alias 오류를 먼저 해결해야 합니다.")
-      return
-    }
-
-    setActiveJobFilter("all")
-
-    try {
-      const jobId = await startJob({
-        blogIdOrUrl: currentScanTarget,
-        outputDir: normalizeOutputDir(outputDir),
-        options,
-        scanResult: activeScanResult,
-      })
-      toast.success("내보내기 작업을 등록했습니다.", {
-        description: `${scopedPostCount}개 글을 처리합니다. 작업 ID ${jobId}`,
-      })
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-      setJob(
-        createErrorJobState(message, {
-          blogIdOrUrl: currentScanTarget,
-          outputDir: normalizeOutputDir(outputDir),
-          options,
-        }),
-      )
-      toast.error("내보내기 작업 등록에 실패했습니다.", {
-        description: message,
-      })
-    }
-  }
-
-  const handleUpload = async ({
-    providerKey,
-    providerFields,
-  }: {
-    providerKey: string
-    providerFields: UploadProviderFields
-  }) => {
-    try {
-      await startUpload({
-        providerKey,
-        providerFields,
-      })
-      toast("Image Upload를 시작했습니다.", {
-        description: "현재 단계에서 진행률을 확인할 수 있습니다.",
-      })
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-      toast.error("Image Upload를 시작하지 못했습니다.", {
-        description: message,
-      })
-    }
-  }
-
-  const handleRestoreResume = async () => {
-    if (!resumeDialog) {
-      return
-    }
-
-    if (resumeDialog.source === "bootstrap") {
-      setResumeDialog(null)
-      return
-    }
-
-    setRestoringResume(true)
-
-    try {
-      const restored = await postJson<ExportResumeLookupResponse>("/api/export-resume/restore", {
-        outputDir: resumeDialog.resumeSummary.outputDir,
-      })
-
-      if (!restored.resumedJob || !restored.resumeSummary) {
-        throw new Error("불러올 수 있는 작업 상태를 찾지 못했습니다.")
-      }
-
-      applyResumedState({
-        source: "before-scan",
-        resumedJob: restored.resumedJob,
-        resumeSummary: restored.resumeSummary,
-        resumedScanResult: restored.resumedScanResult,
-      })
-      toast.success("이전 작업을 다시 불러왔습니다.", {
-        description: `${restored.resumeSummary.outputDir} 작업 상태를 복구했습니다.`,
-      })
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-      toast.error("이전 작업을 불러오지 못했습니다.", {
-        description: message,
-      })
-    } finally {
-      setRestoringResume(false)
-    }
-  }
-
-  const handleResumeExport = async () => {
-    try {
-      await resumeJob()
-      toast("남은 내보내기를 다시 시작했습니다.", {
-        description: "이전 진행 상태를 이어서 처리합니다.",
-      })
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-      toast.error("내보내기를 다시 시작하지 못했습니다.", {
-        description: message,
-      })
-    }
-  }
-
-  const handleResetResume = async () => {
-    if (!resumeDialog) {
-      return
-    }
-
-    setResettingResume(true)
-
-    try {
-      const nextDefaults = await postJson<ExportBootstrapResponse>("/api/export-reset", {
-        outputDir: resumeDialog.resumeSummary.outputDir,
-        jobId: resumeDialog.resumedJob.id,
-      })
-
-      if (resumeDialog.source === "bootstrap") {
-        const nextPersistedOptions = sanitizePersistedExportOptions(nextDefaults.options)
-
-        latestPersistedOptionsRef.current = nextPersistedOptions
-        latestThemePreferenceRef.current = nextDefaults.themePreference
-        persistedUiStateSignatureRef.current = getPersistedUiStateSignature({
-          options: nextDefaults.options,
-          themePreference: nextDefaults.themePreference,
-        })
-        applyBootstrapState(nextDefaults)
-      } else {
-        setResumeDialog(null)
-        hydrateJob(null)
-        await ensureScanResult({
-          skipResumeLookup: true,
-        })
-      }
-
-      toast.success("이전 작업을 초기화했습니다.", {
-        description: `${resumeDialog.resumeSummary.outputDir} 작업내역을 삭제했습니다.`,
-      })
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-      toast.error("작업 초기화에 실패했습니다.", {
-        description: message,
-      })
-    } finally {
-      setResettingResume(false)
-    }
-  }
-
-  const goToPreviousStep = () => {
-    if (!isSetupStep || setupStepIndex <= 0) {
-      return
-    }
-
-    setSetupStep(setupSteps[setupStepIndex - 1])
-  }
-
-  const goToNextStep = async () => {
-    if (!isSetupStep) {
-      return
-    }
-
-    if (setupStep === "blog-input") {
-      await ensureScanResult()
-      return
-    }
-
-    if (setupStep === "diagnostics-options") {
-      await handleSubmit()
-      return
-    }
-
-    setSetupStep(setupSteps[setupStepIndex + 1] ?? setupStep)
-  }
+  const {
+    ensureScanResult,
+    handleBlogInputChange,
+    handleOutputDirChange,
+    handleOutputDirBlur,
+    handleCategoryToggle,
+    handleSelectAllCategories,
+    handleClearAllCategories,
+    handleUpload,
+    handleRestoreResume,
+    handleResumeExport,
+    handleResetResume,
+    goToPreviousStep,
+    goToNextStep,
+  } = useWizardActions({
+    isSetupStep,
+    setupStep,
+    setupStepIndex,
+    currentScanTarget,
+    outputDir,
+    outputDirBaseline,
+    activeScanResult,
+    scanCache,
+    scopedPostCount,
+    options,
+    resumeDialog,
+    frontmatterValidationErrors,
+    updateOptions,
+    startJob,
+    startUpload,
+    resumeJob,
+    hydrateJob,
+    applyResumedState,
+    applyBootstrapState,
+    setJob,
+    setResumeDialog,
+    setScanCache,
+    setScanPending,
+    setCategoryStatus,
+    setCategorySearch,
+    setSetupStep,
+    setActiveJobFilter,
+    setResettingResume,
+    setRestoringResume,
+    setBlogIdOrUrl,
+    setOutputDir,
+    setNeutralScanStatus,
+    setErrorScanStatus,
+    setOptions,
+    latestPersistedOptionsRef,
+    latestThemePreferenceRef,
+    persistedUiStateSignatureRef,
+  })
 
   const summaryCards = buildSummaryCards({
     currentStep,
@@ -1062,7 +369,7 @@ export const App = () => {
     scopedPostCount,
     activeCategoryCount: activeScanResult?.categories.length ?? 0,
     selectedCount,
-    outputDir,
+    outputDir: normalizeOutputDir(outputDir),
   })
   const headerStatus = getHeaderStatus({
     job,
@@ -1074,6 +381,14 @@ export const App = () => {
     scanPending,
     submitting,
   })
+  const nextDisabled =
+    setupStep === "blog-input"
+      ? currentScanTarget.length === 0 || scanPending
+      : setupStep === "category-selection"
+        ? !activeScanResult || selectedCount === 0
+        : setupStep === "diagnostics-options"
+          ? exportDisabled || submitting
+          : !activeScanResult
 
   const renderCurrentStep = () => {
     if (currentStep === "running" || currentStep === "upload" || currentStep === "result") {
@@ -1095,60 +410,16 @@ export const App = () => {
 
     if (currentStep === "blog-input") {
       return (
-        <Card variant="panel" className="hero-panel overflow-hidden">
-          <CardHeader className="panel-header gap-4 p-6">
-            <div className="space-y-2">
-              <CardTitle className="section-title text-2xl">
-                블로그 ID 또는 URL
-              </CardTitle>
-              <CardDescription className="panel-description max-w-3xl text-sm leading-7">
-                네이버 블로그 ID나 주소와 결과를 저장할 경로를 먼저 정합니다.
-              </CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent className="grid gap-4 p-6">
-            <label className="grid gap-2">
-              <span className="text-sm font-semibold text-foreground">
-                블로그 ID 또는 URL
-              </span>
-              <Input
-                id="blogIdOrUrl"
-                placeholder="mym0404 또는 https://blog.naver.com/..."
-                disabled={scanPending}
-                value={blogIdOrUrl}
-                aria-invalid={scanStatusTone === "error" || undefined}
-                className={
-                  scanStatusTone === "error"
-                    ? "border-[var(--destructive)] shadow-[var(--panel-shadow-border),0_0_0_1px_color-mix(in_srgb,var(--destructive)_18%,transparent)]"
-                    : undefined
-                }
-                onChange={(event) => handleBlogInputChange(event.target.value)}
-              />
-            </label>
-            <label className="grid gap-2">
-              <span className="text-sm font-semibold text-foreground">출력 경로</span>
-              <Input
-                id="outputDir"
-                value={outputDir}
-                required
-                onChange={(event) => setOutputDir(event.target.value)}
-                onBlur={handleOutputDirBlur}
-              />
-              <small className="text-sm leading-6 text-muted-foreground">
-                결과를 저장할 위치입니다.
-              </small>
-            </label>
-            <p
-              id="scan-status"
-              className={cn(
-                "scan-status-note text-sm leading-7",
-                scanStatusTone === "error" && "danger-copy",
-              )}
-            >
-              {scanStatus}
-            </p>
-          </CardContent>
-        </Card>
+        <BlogInputPanel
+          blogIdOrUrl={blogIdOrUrl}
+          outputDir={outputDir}
+          scanPending={scanPending}
+          scanStatus={scanStatus}
+          scanStatusTone={scanStatusTone}
+          onBlogIdOrUrlChange={handleBlogInputChange}
+          onOutputDirChange={handleOutputDirChange}
+          onOutputDirBlur={handleOutputDirBlur}
+        />
       )
     }
 
@@ -1210,7 +481,7 @@ export const App = () => {
         frontmatterFieldMeta={defaults.frontmatterFieldMeta}
         frontmatterValidationErrors={frontmatterValidationErrors}
         linkTemplatePreviewPost={linkTemplatePreviewPost}
-        onOutputDirChange={setOutputDir}
+        onOutputDirChange={handleOutputDirChange}
         onOptionsChange={updateOptions}
       />
     )
@@ -1229,11 +500,7 @@ export const App = () => {
         onRestore={() => void handleRestoreResume()}
       />
 
-      <div
-        id="dashboard-backdrop"
-        className="shell-backdrop pointer-events-none fixed inset-0 -z-10"
-        aria-hidden="true"
-      />
+      <div id="dashboard-backdrop" className="shell-backdrop pointer-events-none fixed inset-0 -z-10" aria-hidden="true" />
       <div className="dashboard-brand-mark pointer-events-none fixed inset-x-0 z-0" aria-hidden="true">
         <img src="/brand/logo.svg" alt="" />
       </div>
@@ -1243,11 +510,7 @@ export const App = () => {
           <div className="absolute inset-0 bg-background/78 backdrop-blur-[6px]" aria-hidden="true" />
           <Card variant="panel" className="relative w-full max-w-xl overflow-hidden">
             <CardContent className="grid gap-4 px-6 py-8 sm:px-8 sm:py-10">
-              <div
-                className="grid justify-items-center gap-4 text-center"
-                role="status"
-                aria-live="polite"
-              >
+              <div className="grid justify-items-center gap-4 text-center" role="status" aria-live="polite">
                 <span className="inline-flex size-12 items-center justify-center rounded-full border border-border bg-secondary text-foreground shadow-[var(--panel-shadow-border)]">
                   <RiLoader4Line className="size-5 motion-safe:animate-spin" aria-hidden="true" />
                 </span>
@@ -1271,7 +534,6 @@ export const App = () => {
           setupStepIndex={setupStepIndex}
           setupStepCount={setupSteps.length}
           title={stepMeta[currentStep].title}
-          description={stepMeta[currentStep].description}
           themePreference={themePreference}
           headerStatus={headerStatus}
           summaryCards={summaryCards}
@@ -1280,10 +542,7 @@ export const App = () => {
 
         <section
           ref={stepViewRef}
-          className={cn(
-            "grid gap-4",
-            isSetupStep ? "pb-28 sm:pb-32" : "",
-          )}
+          className={cn("grid gap-4", isSetupStep ? "pb-28 sm:pb-32" : "")}
           data-step-view={currentStep}
         >
           {renderCurrentStep()}
@@ -1297,6 +556,7 @@ export const App = () => {
         currentScanTarget={currentScanTarget}
         scanPending={scanPending}
         exportDisabled={exportDisabled}
+        nextDisabled={nextDisabled}
         submitting={submitting}
         nextButtonLabel={nextButtonLabel}
         nextActionIcon={

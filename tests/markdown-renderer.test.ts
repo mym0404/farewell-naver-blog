@@ -534,4 +534,74 @@ describe("renderMarkdownPost", () => {
       "자산 다운로드 실패: https://example.com/failing-image.png (network timeout)",
     )
   })
+
+  it("keeps source url without warnings when asset download fails and the asset option disables warnings", async () => {
+    const options = defaultExportOptions()
+
+    options.assets.downloadFailureMode = "use-source"
+
+    const rendered = await renderMarkdownPost({
+      post,
+      category,
+      parsedPost: {
+        ...parsedPost,
+        blocks: [
+          {
+            type: "image",
+            image: {
+              sourceUrl: "https://example.com/failing-image.png",
+              originalSourceUrl: null,
+              alt: "broken",
+              caption: "caption",
+              mediaKind: "image",
+            },
+          },
+        ],
+      },
+      markdownFilePath: testMarkdownFilePath,
+      reviewedWarnings: [],
+      options,
+      resolveAsset: async () => {
+        throw new Error("network timeout")
+      },
+    })
+
+    expect(rendered.markdown).toContain("![broken](https://example.com/failing-image.png)")
+    expect(rendered.warnings).toEqual([])
+  })
+
+  it("omits images without warnings when asset download fails and the asset option disables warnings", async () => {
+    const options = defaultExportOptions()
+
+    options.assets.downloadFailureMode = "omit"
+
+    const rendered = await renderMarkdownPost({
+      post,
+      category,
+      parsedPost: {
+        ...parsedPost,
+        blocks: [
+          {
+            type: "image",
+            image: {
+              sourceUrl: "https://example.com/failing-image.png",
+              originalSourceUrl: null,
+              alt: "broken",
+              caption: "caption",
+              mediaKind: "image",
+            },
+          },
+        ],
+      },
+      markdownFilePath: testMarkdownFilePath,
+      reviewedWarnings: [],
+      options,
+      resolveAsset: async () => {
+        throw new Error("network timeout")
+      },
+    })
+
+    expect(rendered.markdown).not.toContain("![broken](")
+    expect(rendered.warnings).toEqual([])
+  })
 })

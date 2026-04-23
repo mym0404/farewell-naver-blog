@@ -42,9 +42,9 @@
 - upload runner: `src/modules/exporter/image-upload-phase.ts`
 - output rewrite after upload: `src/modules/exporter/image-upload-rewriter.ts`
 - HTTP API: `src/server/http-server.ts`
-- UI shell: `index.html`, `src/ui/App.tsx`, `src/ui/styles/globals.css`, `src/ui/features/*`
+- UI shell: `index.html`, `src/ui/App.tsx`, `src/ui/features/common/*`, `src/ui/styles/globals.css`, `src/ui/features/*`
 - results/upload surface: `src/ui/features/job-results/job-results-panel.tsx`
-- upload polling hook: `src/ui/hooks/use-export-job.ts`
+- upload polling hook: `src/ui/features/job-results/use-export-job.ts`
 - progress primitive: `src/ui/components/ui/progress.tsx`
 
 ## Upload Progress Flow

@@ -5,9 +5,12 @@
 
 ## 시작점
 - UI 셸과 단계 전환: [../../src/ui/App.tsx](../../src/ui/App.tsx)
+- 공용 shell/status/hook: [../../src/ui/features/common](../../src/ui/features/common)
 - 전역 토큰과 helper surface: [../../src/ui/styles/globals.css](../../src/ui/styles/globals.css)
 - 브랜드/소셜 정적 자산: [../../public/brand](../../public/brand)
 - shadcn chooser와 현재 사용처: [./engineering/shadcn-component-map.md](./engineering/shadcn-component-map.md)
+- 복구 dialog와 상태: [../../src/ui/features/resume](../../src/ui/features/resume)
+- 블로그 입력/스캔 상태: [../../src/ui/features/scan](../../src/ui/features/scan)
 - 옵션 패널: [../../src/ui/features/options/export-options-panel.tsx](../../src/ui/features/options/export-options-panel.tsx)
 - 결과/업로드 패널: [../../src/ui/features/job-results/job-results-panel.tsx](../../src/ui/features/job-results/job-results-panel.tsx)
 - 카테고리 패널: [../../src/ui/features/scan/category-panel.tsx](../../src/ui/features/scan/category-panel.tsx)
@@ -16,6 +19,8 @@
 ## Source Of Truth
 - theme source of truth는 `globals.css`다.
 - primitive의 look은 `src/ui/components/ui/*`가 맡고, feature 파일은 layout과 composition 위주로 유지한다.
+- UI 공용 shell, status, app-level hook은 `src/ui/features/common/*` 아래에서 관리한다.
+- scan/resume/job-results 로직은 각 feature 폴더 안에서 소유하고, `App.tsx`는 최상위 composition에 집중한다.
 - `src/ui/components/ui/*` 아래 shadcn CLI 생성 컴포넌트는 웬만하면 직접 고치지 않는다. 먼저 feature 조합, token, helper class, shadcn 문서 확인으로 해결하고, 공통 primitive 자체를 바꿔야 할 때만 수정한다.
 - 로고, favicon, OG image, 그 원본 preview처럼 번들링이 필요 없는 브랜드 자산은 `src`가 아니라 `public/brand/`에 둔다.
 - shadcn component를 다룰 때는 먼저 `npx shadcn@latest info --json`, `npx shadcn@latest docs <component>`로 현재 프로젝트 기준과 API를 확인한다.
@@ -27,6 +32,7 @@
 - 기본 테마는 `dark`, 보조 테마는 `light`다.
 - 전체 인상은 Vercel식 dark-first utility다.
 - 과한 장식보다 typography, contrast, shadow-as-border, spacing rhythm으로 밀도를 만든다.
+- 옵션 화면은 기본적으로 compact density를 유지하고, 한 옵션 안에 card를 중첩하지 않는다.
 - 대시보드 구조는 single-column wizard를 유지한다.
 - card, form, table, log는 모두 같은 semantic token 위에서 보이게 한다.
 - accent는 장식이 아니라 상태에만 쓴다.
@@ -76,7 +82,9 @@
 
 ## Feature 규칙
 - feature 파일은 `layout + composition` 역할만 맡는다.
+- 상단 wizard header는 단계명만 보여주고, 반복 설명 문구는 각 단계에서 다시 복제하지 않는다.
 - form control은 feature 파일 안에서 raw color utility로 꾸미지 않고 `Input`, `Select`, `Checkbox`, `ToggleGroup` 조합으로 끝내는 것을 기본값으로 본다.
+- 옵션 행은 가능한 한 짧은 높이와 얕은 padding을 유지하고, 설명은 꼭 필요한 문장만 둔다.
 - 가능한 helper class:
   - `board-card`
   - `panel-header`
@@ -106,6 +114,7 @@
 - 업로드 상태 badge는 `대기`, `부분 완료`, `완료`, `실패`를 soft badge로 유지한다.
 - floating bottom dock는 유지하되, full-width footer처럼 보이지 않고 떠 있는 command dock처럼 보여야 한다.
 - theme toggle은 상단 shell에서만 제공하고, 각 step 안에 중복 배치하지 않는다.
+- theme toggle은 좁은 화면에서도 오른쪽 상단에 고정된 한 줄 배치를 유지한다.
 
 ## 접근성 및 모션
 - contrast target은 normal text 기준 4.5:1 이상을 유지한다.

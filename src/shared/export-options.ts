@@ -143,7 +143,7 @@ export const optionDescriptions: OptionDescriptionMap = {
   "markdown-linkStyle": "일반 링크를 inline 형식으로 쓸지 reference 형식으로 분리할지 정합니다.",
   "assets-imageHandlingMode": "이미지를 로컬로 유지할지, 원본 URL을 유지할지, 내보낸 뒤 업로드까지 이어갈지 정합니다.",
   "assets-compressionEnabled": "다운로드한 로컬 이미지 파일에 안전한 압축을 적용할지 정합니다.",
-  "assets-downloadFailureMode": "이미지 다운로드가 실패했을 때 경고 후 원본 URL 유지, 경고 없이 원본 URL 유지, 이미지 생략 중에서 정합니다.",
+  "assets-downloadFailureMode": "이미지 다운로드가 실패했을 때 경고 후 원본 URL 유지, 경고 없이 원본 URL 유지, 경고 후 이미지 생략, 경고 없이 이미지 생략 중에서 정합니다.",
   "assets-stickerAssetMode": "네이버 스티커를 기본적으로 무시할지, 원본 자산 URL로 내려받아 본문에 포함할지 정합니다.",
   "assets-downloadImages": "본문 이미지 파일을 실제로 다운로드할지 정합니다.",
   "assets-downloadThumbnails": "썸네일과 비디오 썸네일 파일을 실제로 다운로드할지 정합니다.",

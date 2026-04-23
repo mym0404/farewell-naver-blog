@@ -70,7 +70,7 @@ import {
   type JobResultsMode,
 } from "./job-results-helpers.js"
 import { useUploadProviderForm } from "./use-upload-provider-form.js"
-import { getStatusPillClassName } from "../../lib/status-pill.js"
+import { getStatusPillClassName } from "../common/status/status-pill.js"
 
 const CompactMetrics = ({
   items,

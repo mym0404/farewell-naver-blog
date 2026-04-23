@@ -16,6 +16,10 @@
 ## 관련 코드
 - [../../../../index.html](../../../../index.html)
 - [../../../../src/ui/App.tsx](../../../../src/ui/App.tsx)
+- [../../../../src/ui/features/common/shell/wizard-header.tsx](../../../../src/ui/features/common/shell/wizard-header.tsx)
+- [../../../../src/ui/features/common/shell/wizard-dock.tsx](../../../../src/ui/features/common/shell/wizard-dock.tsx)
+- [../../../../src/ui/features/scan/blog-input-panel.tsx](../../../../src/ui/features/scan/blog-input-panel.tsx)
+- [../../../../src/ui/features/resume/resume-dialog-panel.tsx](../../../../src/ui/features/resume/resume-dialog-panel.tsx)
 - [../../../../src/ui/styles/globals.css](../../../../src/ui/styles/globals.css)
 - [../../../../src/ui/features/options/export-options-panel.tsx](../../../../src/ui/features/options/export-options-panel.tsx)
 - [../../../../src/ui/features/job-results/job-results-panel.tsx](../../../../src/ui/features/job-results/job-results-panel.tsx)

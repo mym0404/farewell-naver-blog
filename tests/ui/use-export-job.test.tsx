@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { defaultExportOptions } from "../../src/shared/export-options.js"
 import type { ExportJobState, ScanResult } from "../../src/shared/types.js"
-import { useExportJob } from "../../src/ui/hooks/use-export-job.js"
+import { useExportJob } from "../../src/ui/features/job-results/use-export-job.js"
 import { fetchJson, postJson, postUploadJson } from "../../src/ui/lib/api.js"
 import { createTestPath } from "../helpers/test-paths.js"
 

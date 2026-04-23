@@ -175,14 +175,22 @@ export const renderMarkdownPost = async ({
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       const warning = `자산 다운로드 실패: ${sourceUrl} (${message})`
+      const shouldWarn =
+        options.assets.downloadFailureMode === "warn-and-use-source" ||
+        options.assets.downloadFailureMode === "warn-and-omit"
 
-      warnings.push(warning)
-      diagnostics.push({
-        level: "warning",
-        message: warning,
-      })
+      if (shouldWarn) {
+        warnings.push(warning)
+        diagnostics.push({
+          level: "warning",
+          message: warning,
+        })
+      }
 
-      return options.assets.downloadFailureMode === "warn-and-omit" ? null : sourceUrl
+      return options.assets.downloadFailureMode === "warn-and-omit" ||
+        options.assets.downloadFailureMode === "omit"
+        ? null
+        : sourceUrl
     }
   }
 

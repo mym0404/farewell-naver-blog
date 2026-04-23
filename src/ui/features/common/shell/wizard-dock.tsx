@@ -1,4 +1,6 @@
-import { Button } from "./ui/button.js"
+import type { ReactNode } from "react"
+
+import { Button } from "../../../components/ui/button.js"
 
 export const WizardDock = ({
   isSetupStep,
@@ -7,6 +9,7 @@ export const WizardDock = ({
   currentScanTarget,
   scanPending,
   exportDisabled,
+  nextDisabled,
   submitting,
   nextButtonLabel,
   nextActionIcon,
@@ -20,9 +23,10 @@ export const WizardDock = ({
   currentScanTarget: string
   scanPending: boolean
   exportDisabled: boolean
+  nextDisabled: boolean
   submitting: boolean
   nextButtonLabel: string
-  nextActionIcon: import("react").ReactNode
+  nextActionIcon: ReactNode
   onPrevious: () => void
   onForceScan: () => void
   onNext: () => void
@@ -48,9 +52,9 @@ export const WizardDock = ({
               variant="surface"
               className="h-10 rounded-xl px-4"
               title="캐시 무효화"
-              disabled={!currentScanTarget || scanPending}
-              onClick={onForceScan}
-            >
+            disabled={!currentScanTarget || scanPending}
+            onClick={onForceScan}
+          >
               강제로 불러오기
             </Button>
           ) : null}
@@ -66,11 +70,9 @@ export const WizardDock = ({
             }
             className="h-10 rounded-xl px-4"
             disabled={
-              setupStep === "blog-input"
-                ? scanPending
-                : setupStep === "diagnostics-options"
-                  ? exportDisabled || submitting
-                  : false
+              setupStep === "diagnostics-options"
+                ? exportDisabled || submitting || nextDisabled
+                : nextDisabled
             }
             onClick={onNext}
           >

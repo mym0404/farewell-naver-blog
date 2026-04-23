@@ -379,6 +379,7 @@ pre,
 }
 
 .theme-toggle {
+  flex-wrap: nowrap;
   border: 1px solid var(--border);
   background: color-mix(in srgb, var(--muted) 72%, transparent);
   box-shadow: var(--panel-shadow-border);

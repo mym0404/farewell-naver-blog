@@ -48,6 +48,7 @@ import {
   SelectValue,
 } from "../../components/ui/select.js"
 import { cn } from "../../lib/cn.js"
+import { exportOptionsStepMeta, type ExportOptionsStep } from "./export-options-steps.js"
 
 type StructurePreviewTreeNode =
   | {
@@ -315,17 +316,9 @@ const StructurePreviewTree = ({
   )
 }
 
-export type ExportOptionsStep =
-  | "structure"
-  | "frontmatter"
-  | "markdown"
-  | "assets"
-  | "links"
-  | "diagnostics"
-
-const optionFieldClass = "field-card grid min-h-[7.75rem] content-start gap-2 self-start rounded-2xl px-4 py-4"
-const checkFieldClass = "field-card flex flex-col rounded-2xl px-4 py-4"
-const optionSectionClass = "option-section subtle-panel grid gap-4 rounded-[1.5rem] p-4"
+const optionFieldClass = "field-card grid min-h-[6.25rem] content-start gap-1.5 self-start rounded-2xl px-3 py-3"
+const checkFieldClass = "field-card flex flex-col rounded-2xl px-3 py-3"
+const optionSectionClass = "option-section subtle-panel grid gap-3 rounded-[1.35rem] p-3.5"
 type SelectOption = {
   value: string
   label: string
@@ -351,7 +344,7 @@ const OptionField = ({
       {label}
     </label>
     {children}
-    {description ? <small className="field-help text-sm leading-6">{description}</small> : null}
+    {description ? <small className="field-help text-[13px] leading-5">{description}</small> : null}
   </div>
 )
 
@@ -426,7 +419,7 @@ const CheckField = ({
         <span className="check-title text-sm font-semibold text-foreground">{label}</span>
       </span>
     </span>
-    {description ? <small className="field-help text-sm leading-6">{description}</small> : null}
+    {description ? <small className="field-help text-[13px] leading-5">{description}</small> : null}
   </label>
 )
 
@@ -461,7 +454,7 @@ const RadioField = ({
       />
       <span className="check-copy grid min-w-0 gap-1">
         <span className="check-title text-sm font-semibold text-foreground">{label}</span>
-        {description ? <small className="field-help text-sm leading-6">{description}</small> : null}
+        {description ? <small className="field-help text-[13px] leading-5">{description}</small> : null}
       </span>
     </span>
     {children ? <div className="pt-3">{children}</div> : null}
@@ -478,13 +471,13 @@ const OptionSection = ({
   children: ReactNode
 }) => (
   <section className={optionSectionClass}>
-    <div className="option-section-header flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <div className="option-section-header flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
       <div>
         <h3 className="text-lg font-semibold tracking-[-0.03em] text-foreground">{title}</h3>
-        <p className="mt-1 text-sm leading-6 text-muted-foreground">{note}</p>
+        <p className="mt-0.5 text-[13px] leading-5 text-muted-foreground">{note}</p>
       </div>
     </div>
-    <div className="option-grid grid items-start gap-4 xl:grid-cols-2">{children}</div>
+    <div className="option-grid grid items-start gap-3 xl:grid-cols-2">{children}</div>
   </section>
 )
 
@@ -660,39 +653,6 @@ const BlockOutputCard = ({
       </CardContent>
     </Card>
   )
-}
-
-const stepMeta: Record<
-  ExportOptionsStep,
-  {
-    title: string
-    description: string
-  }
-> = {
-  structure: {
-    title: "구조 설정",
-    description: "출력 경로와 폴더 이름 규칙을 정합니다.",
-  },
-  frontmatter: {
-    title: "Frontmatter 설정",
-    description: "메타데이터 필드와 alias를 정리합니다.",
-  },
-  markdown: {
-    title: "Markdown 설정",
-    description: "링크 스타일과 블록별 출력 결과를 정합니다.",
-  },
-  assets: {
-    title: "Assets 설정",
-    description: "이미지 다운로드와 업로드 전략을 정합니다.",
-  },
-  links: {
-    title: "Link 처리",
-    description: "같은 블로그 안의 다른 글 링크를 어떻게 바꿀지 정합니다.",
-  },
-  diagnostics: {
-    title: "진단 설정",
-    description: "경고와 실패 처리 방식을 정합니다.",
-  },
 }
 
 const linkTemplateVariableMeta: Record<
@@ -1081,7 +1041,7 @@ export const ExportOptionsPanel = ({
 
   const frontmatterSection = (
     <OptionSection title="Frontmatter" note="메타데이터 블록">
-      <div className="frontmatter-toolbar grid gap-3 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
+        <div className="frontmatter-toolbar grid gap-3 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
         <CheckField
           inputId="frontmatter-enabled"
           optionKey="frontmatter-enabled"
@@ -1124,19 +1084,17 @@ export const ExportOptionsPanel = ({
         </div>
       </div>
 
-      <Alert
-        id="frontmatter-status"
-        className="frontmatter-alert rounded-2xl px-4 py-4"
-        data-state={frontmatterValidationErrors.length > 0 ? "error" : "default"}
-        variant={frontmatterValidationErrors.length > 0 ? "destructive" : "default"}
-      >
-        <AlertTitle>Frontmatter alias</AlertTitle>
-        <AlertDescription>
-          {frontmatterValidationErrors.length > 0
-            ? frontmatterValidationErrors.join(" ")
-            : "각 필드의 설명과 내보낼 key alias를 여기서 조정합니다."}
-        </AlertDescription>
-      </Alert>
+      {frontmatterValidationErrors.length > 0 ? (
+        <Alert
+          id="frontmatter-status"
+          className="frontmatter-alert rounded-2xl px-4 py-4"
+          data-state="error"
+          variant="destructive"
+        >
+          <AlertTitle>Frontmatter alias</AlertTitle>
+          <AlertDescription>{frontmatterValidationErrors.join(" ")}</AlertDescription>
+        </Alert>
+      ) : null}
 
       <div
         id="frontmatter-fields"
@@ -1151,7 +1109,7 @@ export const ExportOptionsPanel = ({
             <div
               key={fieldName}
               className={cn(
-                "frontmatter-row field-card grid content-start gap-4 rounded-2xl px-4 py-4",
+                "frontmatter-row field-card grid content-start gap-3 rounded-2xl px-3 py-3",
                 hasError &&
                   "border-[color-mix(in_srgb,var(--status-error-fg)_26%,transparent)] shadow-[var(--panel-shadow-border),0_0_0_1px_color-mix(in_srgb,var(--status-error-fg)_12%,transparent)]",
               )}
@@ -1177,14 +1135,13 @@ export const ExportOptionsPanel = ({
                       }))
                     }
                   />
-                  <span className="frontmatter-toggle-copy grid gap-1">
+                  <span className="frontmatter-toggle-copy grid gap-0.5">
                     <span className="text-sm font-semibold text-foreground">{fieldMeta.label}</span>
-                    <span className="wizard-kicker text-xs font-medium">{fieldName}</span>
                   </span>
                 </label>
-                <p className="frontmatter-description text-sm leading-6">{fieldMeta.description}</p>
+                <p className="frontmatter-description text-[13px] leading-5">{fieldMeta.description}</p>
               </div>
-              <label className="field frontmatter-alias-field subtle-panel grid min-h-0 gap-2 rounded-2xl px-4 py-4">
+              <label className="field frontmatter-alias-field grid min-h-0 gap-1.5">
                 <span className="text-sm font-semibold text-foreground">내보낼 key alias</span>
                 <Input
                   data-alias-input="true"
@@ -1613,7 +1570,9 @@ export const ExportOptionsPanel = ({
           disabled={options.assets.imageHandlingMode === "remote"}
           options={[
             { value: "warn-and-use-source", label: "경고 후 원본 URL 유지" },
+            { value: "use-source", label: "경고 없이 원본 URL 유지" },
             { value: "warn-and-omit", label: "경고 후 이미지 생략" },
+            { value: "omit", label: "경고 없이 이미지 생략" },
           ]}
           onValueChange={(downloadFailureMode) =>
             onOptionsChange((current) => ({
@@ -1644,18 +1603,7 @@ export const ExportOptionsPanel = ({
       className="board-card overflow-hidden"
       id="export-panel"
     >
-      <CardHeader className="panel-header gap-4 p-6">
-        <div className="panel-heading space-y-2">
-          <CardTitle className="section-title text-2xl">
-            {stepMeta[step].title}
-          </CardTitle>
-          <CardDescription className="panel-description max-w-3xl text-sm leading-7">
-            {stepMeta[step].description}
-          </CardDescription>
-        </div>
-      </CardHeader>
-
-      <CardContent className="panel-body grid gap-5 p-6">
+      <CardContent className="panel-body grid gap-4 p-5">
         <div id="export-form" className="form-stack grid gap-5">
           {contentByStep[step]}
         </div>

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 import type {
   ExportJobPollingConfig,
@@ -6,21 +6,22 @@ import type {
   ExportOptions,
   ScanResult,
   UploadProviderFields,
-} from "../../shared/types.js"
-import { isTerminalJobStatus, JOB_STATUSES, UPLOAD_STATUSES } from "../../shared/export-job-state.js"
-
-import { fetchJson, postJson, postUploadJson } from "../lib/api.js"
+} from "../../../shared/types.js"
+import { isTerminalJobStatus, JOB_STATUSES, UPLOAD_STATUSES } from "../../../shared/export-job-state.js"
+import { fetchJson, postJson, postUploadJson } from "../../lib/api.js"
 
 type UploadProviderInput = {
   providerKey: string
   providerFields: UploadProviderFields
 }
+
 const defaultJobPollingConfig: ExportJobPollingConfig = {
   defaultPollMs: 1000,
   fastPollMs: 250,
   uploadBurstPollMs: 200,
   uploadBurstAttempts: 12,
 }
+
 let activeJobPollingConfig = defaultJobPollingConfig
 
 const normalizePositiveInteger = (value: unknown, fallback: number) => {
@@ -70,8 +71,7 @@ export const useExportJob = () => {
 
     let cancelled = false
     let timeoutId: number | null = null
-    const shouldLoadImmediately =
-      !restartPollingRef.current && !displayedJobRef.current?.resumeAvailable
+    const shouldLoadImmediately = !restartPollingRef.current && !displayedJobRef.current?.resumeAvailable
 
     restartPollingRef.current = false
 
@@ -119,7 +119,7 @@ export const useExportJob = () => {
     }
   }, [jobId, pollVersion])
 
-  const startJob = async ({
+  const startJob = useCallback(async ({
     blogIdOrUrl,
     outputDir,
     options,
@@ -148,9 +148,9 @@ export const useExportJob = () => {
     } finally {
       setSubmitting(false)
     }
-  }
+  }, [])
 
-  const startUpload = async ({ providerKey, providerFields }: UploadProviderInput) => {
+  const startUpload = useCallback(async ({ providerKey, providerFields }: UploadProviderInput) => {
     if (!jobId) {
       throw new Error("업로드할 작업이 없습니다.")
     }
@@ -171,27 +171,23 @@ export const useExportJob = () => {
           }
         : current,
     )
-    displayedJobRef.current =
-      previousJob
-        ? {
-            ...previousJob,
-            status: JOB_STATUSES.UPLOADING,
-            resumeAvailable: false,
-            upload: {
-              ...previousJob.upload,
-              status: UPLOAD_STATUSES.UPLOADING,
-            },
-          }
-        : previousJob
+    displayedJobRef.current = previousJob
+      ? {
+          ...previousJob,
+          status: JOB_STATUSES.UPLOADING,
+          resumeAvailable: false,
+          upload: {
+            ...previousJob.upload,
+            status: UPLOAD_STATUSES.UPLOADING,
+          },
+        }
+      : previousJob
 
     try {
-      const response = await postUploadJson<{ jobId: string; status: string }>(
-        `/api/export/${jobId}/upload`,
-        {
-          providerKey,
-          providerFields,
-        },
-      )
+      const response = await postUploadJson<{ jobId: string; status: string }>(`/api/export/${jobId}/upload`, {
+        providerKey,
+        providerFields,
+      })
       uploadAccepted = true
       restartPollingRef.current = true
       setPollVersion((current) => current + 1)
@@ -225,21 +221,20 @@ export const useExportJob = () => {
     } finally {
       setUploadSubmitting(false)
     }
-  }
+  }, [job, jobId])
 
-  const resumeJob = async () => {
+  const resumeJob = useCallback(async () => {
     if (!jobId) {
       throw new Error("재개할 작업이 없습니다.")
     }
 
     const previousJob = displayedJobRef.current
-    const resumedJob =
-      previousJob
-        ? {
-            ...previousJob,
-            resumeAvailable: false,
-          }
-        : previousJob
+    const resumedJob = previousJob
+      ? {
+          ...previousJob,
+          resumeAvailable: false,
+        }
+      : previousJob
 
     setSubmitting(true)
     displayedJobRef.current = resumedJob
@@ -253,13 +248,13 @@ export const useExportJob = () => {
     } finally {
       setSubmitting(false)
     }
-  }
+  }, [jobId])
 
-  const hydrateJob = (nextJob: ExportJobState | null) => {
+  const hydrateJob = useCallback((nextJob: ExportJobState | null) => {
     displayedJobRef.current = nextJob
     setJob(nextJob)
     setJobId(nextJob?.id ?? null)
-  }
+  }, [])
 
   return {
     job,

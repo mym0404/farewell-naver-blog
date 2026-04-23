@@ -13,7 +13,7 @@
 - upload 단계는 `src/server/http-server.ts`에서 `startUpload -> runPicGoUploadPhase -> rewriteUploadedAssets -> completeUpload`만 묶고 중간 증분 갱신이 없다.
 - `src/server/job-store.ts`에는 `updateUpload()`가 이미 있지만 실제 upload 경로에서 호출되지 않는다.
 - `src/modules/exporter/picgo-upload-phase.ts`는 PicGo에 파일 배열 전체를 한 번 넘기고 최종 결과 배열을 마지막에만 받는다.
-- `src/ui/hooks/use-export-job.ts`는 이미 1초 polling을 하고 있어 transport 추가 없이도 서버 state만 자주 갱신하면 UI가 따라온다.
+- `src/ui/features/job-results/use-export-job.ts`는 이미 1초 polling을 하고 있어 transport 추가 없이도 서버 state만 자주 갱신하면 UI가 따라온다.
 - `src/ui/features/job-results/job-results-panel.tsx`는 업로드 패널과 대상 테이블을 이미 갖고 있지만 progress bar가 없고, 행 상태도 전역 job 상태만 따라간다.
 - 같은 파일의 결과 리스트는 `ScrollArea + max-h` 패턴을 이미 쓰고 있어 업로드 테이블에 같은 house pattern을 재사용할 수 있다.
 - `.agents/knowledge/product/ui-dashboard-design-system.md`와 현재 UI 구현은 upload form이 `upload-ready`, `upload-failed`에서만 보이고 `uploading`, `upload-completed`에서는 숨는 계약을 이미 갖고 있다. 이번 bundle은 그 기존 동작을 보존하고 regression으로 고정한다.
@@ -77,7 +77,7 @@
   - upload same-job orchestration, polling API, progress update 결합 지점
 - `src/server/job-store.ts`
   - upload 중간 집계와 item-level count를 보관하는 상태 저장소
-- `src/ui/hooks/use-export-job.ts`
+- `src/ui/features/job-results/use-export-job.ts`
   - `/api/export/:id` polling loop
 - `src/ui/features/job-results/job-results-panel.tsx`
   - 실행/업로드/결과 패널, progress bar, upload table, row status surface

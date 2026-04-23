@@ -44,6 +44,6 @@
 - `src/modules`: fetcher, parser, reviewer, converter, exporter
 - `src/server`: job store와 HTTP API
 - `src/shared`: 타입, 옵션, parser capability, sample corpus, 유틸
-- `src/ui`: React 앱, feature 컴포넌트, hook, shadcn 기반 UI 조합
+- `src/ui`: React 앱 셸, `features/common` 공용 shell/hook/status, feature별 UI 조합, shadcn primitive
 - `tests`: unit, integration, smoke 보조 테스트
 - `docs`: 사용자 문서와 generated 보고서

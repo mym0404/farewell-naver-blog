@@ -596,6 +596,14 @@ describe("ExportOptionsPanel", () => {
     await selectOption({ user, trigger: "#assets-downloadFailureMode", value: "warn-and-omit" })
 
     expect(latestOptions.assets.downloadFailureMode).toBe("warn-and-omit")
+
+    await selectOption({ user, trigger: "#assets-downloadFailureMode", value: "use-source" })
+
+    expect(latestOptions.assets.downloadFailureMode).toBe("use-source")
+
+    await selectOption({ user, trigger: "#assets-downloadFailureMode", value: "omit" })
+
+    expect(latestOptions.assets.downloadFailureMode).toBe("omit")
   })
 
   it("shows the custom template input only for custom-url mode in the links step", async () => {

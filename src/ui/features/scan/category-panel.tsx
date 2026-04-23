@@ -87,7 +87,7 @@ export const CategoryPanel = ({
       className="board-card overflow-hidden"
       id="category-panel"
     >
-      <CardHeader className="panel-header gap-4 p-6 sm:flex sm:items-start sm:justify-between">
+      <CardHeader className="panel-header gap-3 p-5 sm:flex sm:items-start sm:justify-between">
         <div className="panel-heading space-y-2">
           <CardTitle className="section-title text-2xl">
             카테고리 선택
@@ -98,9 +98,9 @@ export const CategoryPanel = ({
         </CardDescription>
       </CardHeader>
 
-      <CardContent className="panel-body grid gap-5 p-6">
+      <CardContent className="panel-body grid gap-4 p-5">
         <div className="grid gap-4 xl:grid-cols-3">
-          <div className="field-card grid min-h-0 gap-2 rounded-2xl px-4 py-4">
+          <div className="field-card grid min-h-0 gap-1.5 rounded-2xl px-3 py-3">
             <label htmlFor="scope-categoryMode" className="text-sm font-semibold text-foreground">
               카테고리 포함 범위
             </label>
@@ -123,7 +123,7 @@ export const CategoryPanel = ({
             </Select>
           </div>
 
-          <label className="field-card grid min-h-0 gap-2 rounded-2xl px-4 py-4">
+          <label className="field-card grid min-h-0 gap-1.5 rounded-2xl px-3 py-3">
             <span className="text-sm font-semibold text-foreground">시작일</span>
             <Input
               id="scope-dateFrom"
@@ -134,7 +134,7 @@ export const CategoryPanel = ({
             />
           </label>
 
-          <label className="field-card grid min-h-0 gap-2 rounded-2xl px-4 py-4">
+          <label className="field-card grid min-h-0 gap-1.5 rounded-2xl px-3 py-3">
             <span className="text-sm font-semibold text-foreground">종료일</span>
             <Input
               id="scope-dateTo"
@@ -158,7 +158,7 @@ export const CategoryPanel = ({
             />
           </label>
 
-          <div className="toolbar-actions flex flex-wrap items-center gap-3">
+          <div className="toolbar-actions flex flex-wrap items-center gap-2.5">
             <Button
               type="button"
               variant="surface"
@@ -248,13 +248,16 @@ export const CategoryPanel = ({
                         data-category-level={hasParent ? "child" : "root"}
                         onClick={() => onCategoryToggle(category.id, checked !== true)}
                       >
-                        <TableCell className="w-14">
-                          <Checkbox
-                            checked={checked}
-                            aria-label={categoryPath}
-                            onClick={(event) => event.stopPropagation()}
-                            onCheckedChange={(next) => onCategoryToggle(category.id, next === true)}
-                          />
+                        <TableCell className="w-14 py-0">
+                          <div className="flex h-11 items-center">
+                            <Checkbox
+                              checked={checked}
+                              aria-label={categoryPath}
+                              className="flex-none"
+                              onClick={(event) => event.stopPropagation()}
+                              onCheckedChange={(next) => onCategoryToggle(category.id, next === true)}
+                            />
+                          </div>
                         </TableCell>
                         <TableCell>
                           <div
