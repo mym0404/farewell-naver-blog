@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react"
 
-import type { UploadProviderCatalogResponse } from "../../shared/types.js"
-import type { UploadProvidersResponse } from "../lib/api.js"
-import { fetchJson } from "../lib/api.js"
+import type { UploadProviderCatalogResponse } from "../../../shared/types.js"
+import type { UploadProvidersResponse } from "../../lib/api.js"
+import { fetchJson } from "../../lib/api.js"
 
-const fallbackUploadProviders: UploadProviderCatalogResponse = {
+const emptyUploadProviders: UploadProviderCatalogResponse = {
   defaultProviderKey: null,
   providers: [],
 }
@@ -18,11 +18,11 @@ export const useUploadProvidersCatalog = ({
   jobId: string | undefined
   shouldLoad: boolean
 }) => {
-  const [uploadProviders, setUploadProviders] = useState(fallbackUploadProviders)
+  const [uploadProviders, setUploadProviders] = useState(emptyUploadProviders)
   const [uploadProviderError, setUploadProviderError] = useState<string | null>(null)
 
   useEffect(() => {
-    setUploadProviders(fallbackUploadProviders)
+    setUploadProviders(emptyUploadProviders)
     setUploadProviderError(null)
   }, [jobId])
 
@@ -33,7 +33,7 @@ export const useUploadProvidersCatalog = ({
 
     let cancelled = false
 
-    const loadUploadProviders = async () => {
+    const loadCatalog = async () => {
       try {
         const nextCatalog = await fetchJson<UploadProvidersResponse>("/api/upload-providers")
 
@@ -48,12 +48,12 @@ export const useUploadProvidersCatalog = ({
           return
         }
 
-        setUploadProviders(fallbackUploadProviders)
+        setUploadProviders(emptyUploadProviders)
         setUploadProviderError(uploadProviderLoadErrorMessage)
       }
     }
 
-    void loadUploadProviders()
+    void loadCatalog()
 
     return () => {
       cancelled = true

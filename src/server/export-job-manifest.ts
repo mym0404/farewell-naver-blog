@@ -7,10 +7,10 @@ import type {
   ExportJobState,
   ExportManifest,
   ExportManifestScanResult,
-  ExportResumePhase,
   PostManifestEntry,
   ScanResult,
 } from "../shared/types.js"
+import { resolveExportResumePhase } from "../shared/export-job-state.js"
 import { extractBlogId, resolveRepoPath } from "../shared/utils.js"
 
 const manifestFileName = "manifest.json"
@@ -38,17 +38,6 @@ const buildPostManifestEntryFromItem = (item: ExportJobItem): PostManifestEntry 
   error: item.error,
 })
 
-const buildPersistedScanResult = (scanResult: ScanResult | null): ExportManifestScanResult | null => {
-  if (!scanResult) {
-    return null
-  }
-
-  return {
-    blogId: scanResult.blogId,
-    totalPostCount: scanResult.totalPostCount,
-  }
-}
-
 const mergeManifestPosts = ({
   manifest,
   items,
@@ -71,27 +60,6 @@ const mergeManifestPosts = ({
       editorVersion: item.editorVersion ?? existingPost?.editorVersion ?? null,
     } satisfies PostManifestEntry
   })
-}
-
-const resolveExportResumePhase = (status: ExportJobState["status"]): ExportResumePhase => {
-  if (status === "upload-ready") {
-    return "upload-ready"
-  }
-
-  if (status === "uploading") {
-    return "uploading"
-  }
-
-  if (
-    status === "completed" ||
-    status === "upload-completed" ||
-    status === "upload-failed" ||
-    status === "failed"
-  ) {
-    return "result"
-  }
-
-  return "export"
 }
 
 const buildFallbackManifest = ({
@@ -144,7 +112,12 @@ export const buildResumableExportManifest = ({
     job,
     scanResult,
   })
-  const persistedScanResult = buildPersistedScanResult(scanResult)
+  const persistedScanResult = scanResult
+    ? ({
+        blogId: scanResult.blogId,
+        totalPostCount: scanResult.totalPostCount,
+      } satisfies ExportManifestScanResult)
+    : null
   const mergedPosts = mergeManifestPosts({
     manifest: baseManifest,
     items: job.items,

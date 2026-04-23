@@ -22,11 +22,13 @@ import type {
   ExportJobState,
   ExportOptions,
   ExportResumeSummary,
+  ScanCacheMap,
   ScanResult,
   ThemePreference,
   UploadProviderCatalogResponse,
-  UploadProviderValue,
+  UploadProviderFields,
 } from "../shared/types.js"
+import { JOB_STATUSES, UPLOAD_STATUSES } from "../shared/export-job-state.js"
 
 import { Badge } from "./components/ui/badge.js"
 import { Button } from "./components/ui/button.js"
@@ -59,19 +61,27 @@ import { fetchJson, postJson, postJsonNoContent } from "./lib/api.js"
 import { cn } from "./lib/cn.js"
 import {
   buildSummaryCards,
-  createResumeDialogState,
   defaultOutputDir,
+  defaultCategoryStatus,
+  defaultScanLoadingStatus,
+  defaultScanStatus,
+  forceScanLoadingStatus,
   getHeaderStatus,
   getNextButtonLabel,
   getPersistedUiStateSignature,
   normalizeOutputDir,
+  readyCategoryStatus,
   resolveScopedCategoryIds,
   resolveWizardStep,
+  restoredCategoryFallbackStatus,
+  restoredCategoryStatus,
+  restoredScanStatus,
+  resumeLookupErrorStatus,
   shouldLoadUploadProviders,
   type ResumeDialogState,
 } from "./app-helpers.js"
 import { getStatusPillClassName } from "./lib/status-pill.js"
-import { useUploadProvidersCatalog } from "./hooks/use-upload-providers-catalog.js"
+import { useUploadProvidersCatalog } from "./features/job-results/use-upload-providers-catalog.js"
 
 const fallbackDefaults: ExportBootstrapResponse = {
   profile: "gfm",
@@ -204,7 +214,7 @@ const createErrorJobState = (
       profile: "gfm",
       options: request.options,
     },
-    status: "failed",
+    status: JOB_STATUSES.FAILED,
     resumeAvailable: false,
     logs: [],
     createdAt: new Date().toISOString(),
@@ -217,7 +227,7 @@ const createErrorJobState = (
       warnings: 0,
     },
     upload: {
-      status: "not-requested",
+      status: UPLOAD_STATUSES.NOT_REQUESTED,
       eligiblePostCount: 0,
       candidateCount: 0,
       uploadedCount: 0,
@@ -237,7 +247,7 @@ export const App = () => {
   const [blogIdOrUrl, setBlogIdOrUrl] = useState("")
   const [outputDir, setOutputDir] = useState(defaultOutputDir)
   const [resumeDialog, setResumeDialog] = useState<ResumeDialogState | null>(null)
-  const [scanCache, setScanCache] = useState<Record<string, ScanResult>>({})
+  const [scanCache, setScanCache] = useState<ScanCacheMap>({})
   const [themePreference, setThemePreference] = useState<ThemePreference>(
     fallbackDefaults.themePreference,
   )
@@ -245,13 +255,13 @@ export const App = () => {
     fallbackDefaults.options,
   )
   const [scanStatus, setScanStatus] = useState(
-    "블로그를 아직 스캔하지 않았습니다.",
+    defaultScanStatus,
   )
   const [scanStatusTone, setScanStatusTone] = useState<"default" | "error">(
     "default",
   )
   const [categoryStatus, setCategoryStatus] = useState(
-    "스캔 후 카테고리를 선택할 수 있습니다.",
+    defaultCategoryStatus,
   )
   const [categorySearch, setCategorySearch] = useState("")
   const [scanPending, setScanPending] = useState(false)
@@ -316,23 +326,23 @@ export const App = () => {
         [resumedScanResult.blogId]: resumedScanResult,
       }))
       setNeutralScanStatus(`${resumedScanResult.blogId} 스캔 결과 재개`)
-      setCategoryStatus("이전 작업 상태를 복구했습니다.")
+      setCategoryStatus(restoredCategoryStatus)
     } else {
       setScanCache({})
-      setNeutralScanStatus("이전 작업 상태를 복구했습니다.")
-      setCategoryStatus("복구된 작업 상태를 확인하세요.")
+      setNeutralScanStatus(restoredScanStatus)
+      setCategoryStatus(restoredCategoryFallbackStatus)
     }
 
     lastNotifiedJobKeyRef.current = `${resumedJob.id}:${resumedJob.status}:${resumedJob.finishedAt ?? ""}`
     hydrateJob(resumedJob)
     setResumeDialog(
       source === "bootstrap"
-        ? createResumeDialogState({
+        ? {
             source,
             resumedJob,
             resumeSummary,
             resumedScanResult,
-          })
+          }
         : null,
     )
   }
@@ -353,11 +363,11 @@ export const App = () => {
         [nextDefaults.resumedScanResult.blogId]: nextDefaults.resumedScanResult,
       })
       setNeutralScanStatus(`${nextDefaults.resumedScanResult.blogId} 스캔 결과 재개`)
-      setCategoryStatus("이전 작업 상태를 복구했습니다.")
+      setCategoryStatus(restoredCategoryStatus)
     } else {
       setScanCache({})
-      setNeutralScanStatus("블로그를 아직 스캔하지 않았습니다.")
-      setCategoryStatus("스캔 후 카테고리를 선택할 수 있습니다.")
+      setNeutralScanStatus(defaultScanStatus)
+      setCategoryStatus(defaultCategoryStatus)
     }
 
     if (nextDefaults.resumedJob && nextDefaults.resumeSummary) {
@@ -600,35 +610,35 @@ export const App = () => {
 
     lastNotifiedJobKeyRef.current = notificationKey
 
-    if (job.status === "upload-ready") {
+    if (job.status === JOB_STATUSES.UPLOAD_READY) {
       toast("내보내기가 끝났습니다. Image Upload를 시작할 수 있습니다.", {
         description: `업로드 대상 ${job.upload.candidateCount}개`,
       })
       return
     }
 
-    if (job.status === "completed") {
+    if (job.status === JOB_STATUSES.COMPLETED) {
       toast.success("내보내기가 완료되었습니다.", {
         description: `완료 ${job.progress.completed}개, 실패 ${job.progress.failed}개`,
       })
       return
     }
 
-    if (job.status === "upload-completed") {
+    if (job.status === JOB_STATUSES.UPLOAD_COMPLETED) {
       toast.success("Image Upload까지 완료되었습니다.", {
         description: `업로드 ${job.upload.uploadedCount}개`,
       })
       return
     }
 
-    if (job.status === "upload-failed") {
+    if (job.status === JOB_STATUSES.UPLOAD_FAILED) {
       toast.error("Image Upload에 실패했습니다.", {
         description: job.error ?? "로그를 확인하세요.",
       })
       return
     }
 
-    if (job.status === "failed") {
+    if (job.status === JOB_STATUSES.FAILED) {
       toast.error("내보내기 작업이 실패했습니다.", {
         description: job.error ?? "로그를 확인하세요.",
       })
@@ -681,12 +691,15 @@ export const App = () => {
         const resumed = await postJson<ExportResumeLookupResponse>("/api/export-resume/lookup", {
           outputDir: normalizedOutputDir,
         })
-        const nextResumeDialog = createResumeDialogState({
-          source: "before-scan",
-          resumedJob: resumed.resumedJob,
-          resumeSummary: resumed.resumeSummary,
-          resumedScanResult: resumed.resumedScanResult,
-        })
+        const nextResumeDialog =
+          resumed.resumedJob && resumed.resumeSummary
+            ? {
+                source: "before-scan" as const,
+                resumedJob: resumed.resumedJob,
+                resumeSummary: resumed.resumeSummary,
+                resumedScanResult: resumed.resumedScanResult,
+              }
+            : null
 
         if (nextResumeDialog) {
           setResumeDialog(nextResumeDialog)
@@ -697,7 +710,7 @@ export const App = () => {
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
         setErrorScanStatus(message)
-        setCategoryStatus("작업 상태 확인에 실패했습니다. 다시 시도하세요.")
+        setCategoryStatus(resumeLookupErrorStatus)
         toast.error("작업 상태 확인에 실패했습니다.", {
           description: message,
         })
@@ -709,7 +722,7 @@ export const App = () => {
 
     if (activeScanResult && !forceRefresh) {
       setNeutralScanStatus(`${activeScanResult.blogId} 스캔 결과를 재사용합니다.`)
-      setCategoryStatus("내보낼 카테고리를 선택하세요.")
+      setCategoryStatus(readyCategoryStatus)
       setCategorySearch("")
       setOptions((current) => ({
         ...current,
@@ -726,7 +739,7 @@ export const App = () => {
     }
 
     setScanPending(true)
-    setNeutralScanStatus(forceRefresh ? "캐시를 무효화하고 카테고리를 다시 불러오는 중입니다." : "카테고리를 스캔하는 중입니다.")
+    setNeutralScanStatus(forceRefresh ? forceScanLoadingStatus : defaultScanLoadingStatus)
     setCategoryStatus("카테고리를 불러오는 중입니다.")
 
     if (forceRefresh) {
@@ -748,7 +761,7 @@ export const App = () => {
         [currentScanTarget]: nextScanResult,
       }))
       setNeutralScanStatus(`${nextScanResult.blogId} 스캔 완료`)
-      setCategoryStatus("내보낼 카테고리를 선택하세요.")
+      setCategoryStatus(readyCategoryStatus)
       setCategorySearch("")
       setOptions((current) => ({
         ...current,
@@ -782,16 +795,16 @@ export const App = () => {
 
     if (value.trim() && scanCache[value.trim()]) {
       setNeutralScanStatus("캐시된 카테고리를 다시 사용할 수 있습니다.")
-      setCategoryStatus("내보낼 카테고리를 선택하세요.")
+      setCategoryStatus(readyCategoryStatus)
       return
     }
 
     setNeutralScanStatus(
       value.trim()
         ? "블로그가 바뀌었습니다. 다음 단계에서 다시 스캔합니다."
-        : "블로그를 아직 스캔하지 않았습니다.",
+        : defaultScanStatus,
     )
-    setCategoryStatus("스캔이 끝나면 카테고리를 선택할 수 있습니다.")
+    setCategoryStatus(defaultCategoryStatus)
     setCategorySearch("")
     setOptions((current) => ({
       ...current,
@@ -901,7 +914,7 @@ export const App = () => {
     providerFields,
   }: {
     providerKey: string
-    providerFields: Record<string, UploadProviderValue>
+    providerFields: UploadProviderFields
   }) => {
     try {
       await startUpload({

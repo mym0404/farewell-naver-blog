@@ -30,15 +30,20 @@ import {
   sanitizePersistedExportOptions,
   type PartialExportOptions,
 } from "../shared/export-options.js"
+import { DEFAULT_OUTPUT_DIR } from "../shared/export-defaults.js"
+import { isUploadActionableJob, JOB_STATUSES, UPLOAD_STATUSES } from "../shared/export-job-state.js"
+import { UPLOAD_PROVIDER_KEYS } from "../shared/upload-provider-keys.js"
 import type {
   ExportJobItem,
   ExportJobState,
   ExportManifest,
   ExportManifestScanResult,
   ExportRequest,
+  ScanCacheMap,
   ScanResult,
   ThemePreference,
-  UploadProviderValue,
+  UploadProviderFields,
+  UploadRuntimeConfig,
 } from "../shared/types.js"
 import {
   extractBlogId,
@@ -90,7 +95,7 @@ const defaultScanCachePath = path.join(cacheRoot, "scan-cache.json")
 const legacyScanCachePath = path.join(legacyOutputsRoot, "scan-cache.json")
 const defaultSettingsPath = path.join(cacheRoot, "export-ui-settings.json")
 const legacySettingsPath = resolveRepoPath("export-ui-settings.json")
-const defaultOutputDir = "./output"
+const defaultOutputDir = DEFAULT_OUTPUT_DIR
 const defaultThemePreference: ThemePreference = "dark"
 
 const fileExists = async (filePath: string) => {
@@ -128,11 +133,11 @@ const normalizeUploaderConfig = ({
   providerFields,
 }: {
   uploaderKey: string
-  providerFields: Record<string, UploadProviderValue>
+  providerFields: UploadProviderFields
 }) =>
   Object.fromEntries(
     Object.entries(providerFields).flatMap(([key, value]) => {
-      if (uploaderKey === "github" && key === "path" && typeof value === "string") {
+      if (uploaderKey === UPLOAD_PROVIDER_KEYS.GITHUB && key === "path" && typeof value === "string") {
         const normalizedPath = value
           .split("/")
           .map((segment) => segment.trim())
@@ -151,7 +156,7 @@ const sanitizeUploadError = ({
   providerFields,
 }: {
   error: unknown
-  providerFields: Record<string, UploadProviderValue>
+  providerFields: UploadProviderFields
 }) => {
   const rawMessage = toErrorMessage(error).replace(/\s+/g, " ").trim()
 
@@ -189,7 +194,7 @@ const resolveResumedScanResult = ({
   manifestCategories: ScanResult["categories"]
   manifestTotalPosts: number
   manifestScanResult: ExportManifestScanResult | null
-  cachedScans: Record<string, ScanResult>
+  cachedScans: ScanCacheMap
 }) => {
   const blogId = manifestScanResult?.blogId ?? manifestBlogId
   const totalPostCount = manifestScanResult?.totalPostCount || manifestTotalPosts
@@ -246,7 +251,7 @@ const syncManifestUploadProgress = ({
 
   manifest.upload = {
     ...manifest.upload,
-    status: "uploading",
+    status: UPLOAD_STATUSES.UPLOADING,
     uploadedCount: uploadedLocalPaths.size,
     failedCount: 0,
     terminalReason: null,
@@ -318,7 +323,7 @@ const syncJobUploadProgress = ({
 
   jobStore.updateUpload(jobId, {
     ...job.upload,
-    status: "uploading",
+    status: UPLOAD_STATUSES.UPLOADING,
     uploadedCount: uploadedLocalPaths.size,
     failedCount: 0,
     terminalReason: null,
@@ -355,7 +360,7 @@ export const createHttpServer = ({
   const isDevelopment = process.env.NODE_ENV === "development"
   let httpServer: HttpServer
   let viteDevServerPromise: Promise<ViteDevServer> | null = null
-  let scanCachePromise: Promise<Record<string, ScanResult>> | null = null
+  let scanCachePromise: Promise<ScanCacheMap> | null = null
   const jobScanResults = new Map<string, ScanResult | null>()
   const activeJobTasks = new Map<
     string,
@@ -506,7 +511,7 @@ export const createHttpServer = ({
     cachedScans,
   }: {
     outputDir: string
-    cachedScans: Record<string, ScanResult>
+    cachedScans: ScanCacheMap
   }) => {
     if (isTemporaryResumeOutputDir(outputDir)) {
       return null
@@ -829,7 +834,7 @@ export const createHttpServer = ({
           ...job.manifest,
           upload: {
             ...job.manifest.upload,
-            status: "uploading",
+            status: UPLOAD_STATUSES.UPLOADING,
             uploadedCount: uploadedLocalPaths.size,
             failedCount: 0,
             terminalReason: null,
@@ -863,7 +868,7 @@ export const createHttpServer = ({
   }: {
     jobId: string
     uploaderKey: string
-    uploaderConfig: Record<string, unknown>
+    uploaderConfig: UploadRuntimeConfig
     signal?: AbortSignal
   }) => {
     const job = jobStore.get(jobId)
@@ -969,7 +974,7 @@ export const createHttpServer = ({
         ...completedJob.manifest,
         upload: {
           ...completedJob.manifest.upload,
-          status: "upload-completed" as const,
+          status: UPLOAD_STATUSES.UPLOAD_COMPLETED,
           uploadedCount: completedJob.manifest.upload.candidateCount,
           failedCount: 0,
           terminalReason: null,
@@ -1592,7 +1597,7 @@ export const createHttpServer = ({
           return
         }
 
-        if (job.status !== "running" || !job.resumeAvailable) {
+        if (job.status !== JOB_STATUSES.RUNNING || !job.resumeAvailable) {
           sendJson({
             response,
             statusCode: 409,
@@ -1620,7 +1625,7 @@ export const createHttpServer = ({
           statusCode: 202,
           body: {
             jobId: job.id,
-            status: "running",
+            status: JOB_STATUSES.RUNNING,
           },
         })
         return
@@ -1664,11 +1669,7 @@ export const createHttpServer = ({
           return
         }
 
-        if (
-          job.status !== "upload-ready" &&
-          job.status !== "upload-failed" &&
-          !(job.status === "uploading" && job.resumeAvailable)
-        ) {
+        if (!isUploadActionableJob(job)) {
           sendJson({
             response,
             statusCode: 409,
@@ -1736,7 +1737,7 @@ export const createHttpServer = ({
           statusCode: 202,
           body: {
             jobId: job.id,
-            status: "uploading",
+            status: JOB_STATUSES.UPLOADING,
           },
         })
         return

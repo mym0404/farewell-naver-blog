@@ -1,15 +1,20 @@
 import { cn } from "./cn.js"
+import { JOB_STATUSES } from "../../shared/export-job-state.js"
 
 export const getStatusPillClassName = (status: string | undefined) =>
   cn(
     "status-pill rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]",
-    status === "completed" || status === "upload-completed" || status === "ready"
+    status === JOB_STATUSES.COMPLETED || status === JOB_STATUSES.UPLOAD_COMPLETED || status === "ready"
       ? "status-pill--success"
-      : status === "upload-ready"
+      : status === JOB_STATUSES.UPLOAD_READY
         ? "status-pill--ready"
-        : status === "running" || status === "queued" || status === "success" || status === "uploading"
+        :
+            status === JOB_STATUSES.RUNNING ||
+            status === JOB_STATUSES.QUEUED ||
+            status === "success" ||
+            status === JOB_STATUSES.UPLOADING
           ? "status-pill--running"
-          : status === "failed" || status === "upload-failed"
+          : status === JOB_STATUSES.FAILED || status === JOB_STATUSES.UPLOAD_FAILED
             ? "status-pill--error"
             : "status-pill--idle",
   )

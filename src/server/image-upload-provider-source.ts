@@ -2,9 +2,11 @@ import os from "node:os"
 import path from "node:path"
 
 import type {
+  UnknownRecord,
   UploadProviderCatalogResponse,
   UploadProviderDefinition,
   UploadProviderFieldDefinition,
+  UploadProviderFields,
   UploadProviderOptionValue,
   UploadProviderValue,
 } from "../shared/types.js"
@@ -446,7 +448,7 @@ export type UploadProviderSource = {
   normalizeProviderFields: (
     providerKey: string,
     value: unknown,
-  ) => Promise<Record<string, UploadProviderValue> | null>
+  ) => Promise<UploadProviderFields | null>
 }
 
 const hasAscii = (value: string) => /[A-Za-z]/.test(value)
@@ -884,7 +886,7 @@ export const createImageUploadProviderSource = (): UploadProviderSource => {
     const entries: Array<readonly [string, UploadProviderValue]> = []
 
     for (const field of provider.fields) {
-      const rawValue = (value as Record<string, unknown>)[field.key]
+      const rawValue = (value as UnknownRecord)[field.key]
 
       if (rawValue === undefined || rawValue === null) {
         continue

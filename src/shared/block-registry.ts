@@ -24,247 +24,223 @@ const se2ParserTestFilePaths = ["tests/parser/se2-parser.test.ts"]
 const se3ParserTestFilePaths = ["tests/parser/se3-parser.test.ts"]
 const se4ParserTestFilePaths = ["tests/parser/se4-parser.test.ts"]
 
-const createCapabilityEntry = ({
-  editorVersion,
-  blockType,
-  fallbackPolicy,
-  verificationMode,
-  sampleIds,
-  testFilePaths,
-}: {
-  editorVersion: EditorVersion
-  blockType: BlockType
-  fallbackPolicy: ParserFallbackPolicy
-  verificationMode: ParserCapabilityVerificationMode
-  sampleIds: string[]
-  testFilePaths: string[]
-}) =>
-  ({
-    editorVersion,
-    blockType,
-    fallbackPolicy,
-    verificationMode,
-    sampleIds,
-    testFilePaths,
-  }) satisfies ParserCapabilityCatalogEntry
-
 export const parserCapabilityCatalog: ParserCapabilityCatalogEntry[] = [
-  createCapabilityEntry({
+  {
     editorVersion: 2,
     blockType: "paragraph",
     fallbackPolicy: "best-effort",
     verificationMode: "sample-fixture",
     sampleIds: ["se2-legacy", "se2-code-image-autolayout", "se2-table-rawhtml-navigation"],
     testFilePaths: se2ParserTestFilePaths,
-  }),
-  createCapabilityEntry({
+  },
+  {
     editorVersion: 3,
     blockType: "paragraph",
     fallbackPolicy: "best-effort",
     verificationMode: "sample-fixture",
     sampleIds: ["se3-legacy", "se3-quote-imagegroup-note9", "se3-quote-table-vita"],
     testFilePaths: se3ParserTestFilePaths,
-  }),
-  createCapabilityEntry({
+  },
+  {
     editorVersion: 4,
     blockType: "paragraph",
     fallbackPolicy: "best-effort",
     verificationMode: "sample-fixture",
     sampleIds: ["se4-formula-code-linkcard", "se4-heading-itinerary", "se4-image-group"],
     testFilePaths: se4ParserTestFilePaths,
-  }),
-  createCapabilityEntry({
+  },
+  {
     editorVersion: 2,
     blockType: "heading",
     fallbackPolicy: "markdown-paragraph",
     verificationMode: "parser-fixture",
     sampleIds: [],
     testFilePaths: se2ParserTestFilePaths,
-  }),
-  createCapabilityEntry({
+  },
+  {
     editorVersion: 4,
     blockType: "heading",
     fallbackPolicy: "markdown-paragraph",
     verificationMode: "sample-fixture",
     sampleIds: ["se4-heading-itinerary"],
     testFilePaths: se4ParserTestFilePaths,
-  }),
-  createCapabilityEntry({
+  },
+  {
     editorVersion: 2,
     blockType: "quote",
     fallbackPolicy: "markdown-paragraph",
     verificationMode: "parser-fixture",
     sampleIds: [],
     testFilePaths: se2ParserTestFilePaths,
-  }),
-  createCapabilityEntry({
+  },
+  {
     editorVersion: 3,
     blockType: "quote",
     fallbackPolicy: "markdown-paragraph",
     verificationMode: "sample-fixture",
     sampleIds: ["se3-quote-imagegroup-note9", "se3-quote-table-vita"],
     testFilePaths: se3ParserTestFilePaths,
-  }),
-  createCapabilityEntry({
+  },
+  {
     editorVersion: 4,
     blockType: "quote",
     fallbackPolicy: "markdown-paragraph",
     verificationMode: "sample-fixture",
     sampleIds: ["se4-quote-formula-code"],
     testFilePaths: se4ParserTestFilePaths,
-  }),
-  createCapabilityEntry({
+  },
+  {
     editorVersion: 2,
     blockType: "divider",
     fallbackPolicy: "structured",
     verificationMode: "parser-fixture",
     sampleIds: [],
     testFilePaths: se2ParserTestFilePaths,
-  }),
-  createCapabilityEntry({
+  },
+  {
     editorVersion: 4,
     blockType: "divider",
     fallbackPolicy: "structured",
     verificationMode: "sample-fixture",
     sampleIds: ["se4-formula-code-linkcard", "se4-image-group", "se4-heading-itinerary"],
     testFilePaths: se4ParserTestFilePaths,
-  }),
-  createCapabilityEntry({
+  },
+  {
     editorVersion: 2,
     blockType: "code",
     fallbackPolicy: "markdown-paragraph",
     verificationMode: "sample-fixture",
     sampleIds: ["se2-code-image-autolayout"],
     testFilePaths: se2ParserTestFilePaths,
-  }),
-  createCapabilityEntry({
+  },
+  {
     editorVersion: 3,
     blockType: "code",
     fallbackPolicy: "markdown-paragraph",
     verificationMode: "parser-fixture",
     sampleIds: [],
     testFilePaths: se3ParserTestFilePaths,
-  }),
-  createCapabilityEntry({
+  },
+  {
     editorVersion: 4,
     blockType: "code",
     fallbackPolicy: "markdown-paragraph",
     verificationMode: "sample-fixture",
     sampleIds: ["se4-formula-code-linkcard", "se4-quote-formula-code"],
     testFilePaths: se4ParserTestFilePaths,
-  }),
-  createCapabilityEntry({
+  },
+  {
     editorVersion: 4,
     blockType: "formula",
     fallbackPolicy: "skip",
     verificationMode: "sample-fixture",
     sampleIds: ["se4-formula-code-linkcard", "se4-quote-formula-code"],
     testFilePaths: se4ParserTestFilePaths,
-  }),
-  createCapabilityEntry({
+  },
+  {
     editorVersion: 2,
     blockType: "image",
     fallbackPolicy: "markdown-paragraph",
     verificationMode: "sample-fixture",
     sampleIds: ["se2-code-image-autolayout", "se2-table-rawhtml-navigation"],
     testFilePaths: se2ParserTestFilePaths,
-  }),
-  createCapabilityEntry({
+  },
+  {
     editorVersion: 3,
     blockType: "image",
     fallbackPolicy: "markdown-paragraph",
     verificationMode: "sample-fixture",
     sampleIds: ["se3-quote-imagegroup-note9", "se3-quote-table-vita"],
     testFilePaths: se3ParserTestFilePaths,
-  }),
-  createCapabilityEntry({
+  },
+  {
     editorVersion: 4,
     blockType: "image",
     fallbackPolicy: "markdown-paragraph",
     verificationMode: "sample-fixture",
     sampleIds: ["se4-video-table", "se4-image-legacy-link", "se4-quote-formula-code", "se4-heading-itinerary"],
     testFilePaths: se4ParserTestFilePaths,
-  }),
-  createCapabilityEntry({
+  },
+  {
     editorVersion: 2,
     blockType: "imageGroup",
     fallbackPolicy: "markdown-paragraph",
     verificationMode: "sample-fixture",
     sampleIds: ["se2-thumburl-image-group"],
     testFilePaths: se2ParserTestFilePaths,
-  }),
-  createCapabilityEntry({
+  },
+  {
     editorVersion: 3,
     blockType: "imageGroup",
     fallbackPolicy: "markdown-paragraph",
     verificationMode: "sample-fixture",
     sampleIds: ["se3-quote-imagegroup-note9"],
     testFilePaths: se3ParserTestFilePaths,
-  }),
-  createCapabilityEntry({
+  },
+  {
     editorVersion: 4,
     blockType: "imageGroup",
     fallbackPolicy: "markdown-paragraph",
     verificationMode: "sample-fixture",
     sampleIds: ["se4-image-group", "se4-heading-itinerary"],
     testFilePaths: se4ParserTestFilePaths,
-  }),
-  createCapabilityEntry({
+  },
+  {
     editorVersion: 4,
     blockType: "video",
     fallbackPolicy: "skip",
     verificationMode: "sample-fixture",
     sampleIds: ["se4-video-table"],
     testFilePaths: se4ParserTestFilePaths,
-  }),
-  createCapabilityEntry({
+  },
+  {
     editorVersion: 4,
     blockType: "linkCard",
     fallbackPolicy: "markdown-paragraph",
     verificationMode: "sample-fixture",
     sampleIds: ["se4-formula-code-linkcard", "se4-quote-formula-code", "se4-heading-itinerary"],
     testFilePaths: se4ParserTestFilePaths,
-  }),
-  createCapabilityEntry({
+  },
+  {
     editorVersion: 2,
     blockType: "table",
     fallbackPolicy: "raw-html",
     verificationMode: "sample-fixture",
     sampleIds: ["se2-table-rawhtml-navigation"],
     testFilePaths: se2ParserTestFilePaths,
-  }),
-  createCapabilityEntry({
+  },
+  {
     editorVersion: 3,
     blockType: "table",
     fallbackPolicy: "raw-html",
     verificationMode: "sample-fixture",
     sampleIds: ["se3-quote-table-vita"],
     testFilePaths: se3ParserTestFilePaths,
-  }),
-  createCapabilityEntry({
+  },
+  {
     editorVersion: 4,
     blockType: "table",
     fallbackPolicy: "raw-html",
     verificationMode: "sample-fixture",
     sampleIds: ["se4-video-table", "se4-heading-itinerary"],
     testFilePaths: se4ParserTestFilePaths,
-  }),
-  createCapabilityEntry({
+  },
+  {
     editorVersion: 2,
     blockType: "rawHtml",
     fallbackPolicy: "raw-html",
     verificationMode: "sample-fixture",
     sampleIds: ["se2-table-rawhtml-navigation"],
     testFilePaths: se2ParserTestFilePaths,
-  }),
-  createCapabilityEntry({
+  },
+  {
     editorVersion: 4,
     blockType: "rawHtml",
     fallbackPolicy: "raw-html",
     verificationMode: "parser-fixture",
     sampleIds: [],
     testFilePaths: se4ParserTestFilePaths,
-  }),
+  },
 ]
 
 type BlockOutputParamDefinition = {

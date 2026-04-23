@@ -7,8 +7,19 @@ import type {
 } from "../shared/types.js"
 import type { PartialExportOptions } from "../shared/export-options.js"
 import { sanitizePersistedExportOptions } from "../shared/export-options.js"
+import { DEFAULT_OUTPUT_DIR } from "../shared/export-defaults.js"
+import { isUploadActionableJob, JOB_STATUSES } from "../shared/export-job-state.js"
 
-export const defaultOutputDir = "./output"
+export const defaultOutputDir = DEFAULT_OUTPUT_DIR
+export const defaultScanStatus = "블로그를 아직 스캔하지 않았습니다."
+export const defaultCategoryStatus = "스캔 후 카테고리를 선택할 수 있습니다."
+export const restoredScanStatus = "이전 작업 상태를 복구했습니다."
+export const restoredCategoryStatus = "이전 작업 상태를 복구했습니다."
+export const restoredCategoryFallbackStatus = "복구된 작업 상태를 확인하세요."
+export const readyCategoryStatus = "내보낼 카테고리를 선택하세요."
+export const resumeLookupErrorStatus = "작업 상태 확인에 실패했습니다. 다시 시도하세요."
+export const defaultScanLoadingStatus = "카테고리를 스캔하는 중입니다."
+export const forceScanLoadingStatus = "캐시를 무효화하고 카테고리를 다시 불러오는 중입니다."
 
 export const normalizeOutputDir = (value: string) => value.trim() || defaultOutputDir
 
@@ -31,29 +42,6 @@ export type ResumeDialogState = {
   resumedScanResult: ScanResult | null
 }
 
-export const createResumeDialogState = ({
-  source,
-  resumedJob,
-  resumeSummary,
-  resumedScanResult,
-}: {
-  source: ResumeDialogState["source"]
-  resumedJob: ExportJobState | null
-  resumeSummary: ExportResumeSummary | null
-  resumedScanResult: ScanResult | null
-}) => {
-  if (!resumedJob || !resumeSummary) {
-    return null
-  }
-
-  return {
-    source,
-    resumedJob,
-    resumeSummary,
-    resumedScanResult,
-  } satisfies ResumeDialogState
-}
-
 export const resolveScopedCategoryIds = ({
   categories,
   currentCategoryIds,
@@ -70,12 +58,7 @@ export const resolveScopedCategoryIds = ({
     : categories.map((category) => category.id)
 }
 
-export const shouldLoadUploadProviders = (job: ExportJobState | null) =>
-  Boolean(
-    job?.status === "upload-ready" ||
-      job?.status === "upload-failed" ||
-      (job?.status === "uploading" && job.resumeAvailable),
-  )
+export const shouldLoadUploadProviders = (job: ExportJobState | null) => isUploadActionableJob(job)
 
 export const resolveWizardStep = ({
   setupStep,
@@ -94,14 +77,18 @@ export const resolveWizardStep = ({
 
   if (
     uploadSubmitting ||
-    jobStatus === "upload-ready" ||
-    jobStatus === "uploading" ||
-    jobStatus === "upload-failed"
+    jobStatus === JOB_STATUSES.UPLOAD_READY ||
+    jobStatus === JOB_STATUSES.UPLOADING ||
+    jobStatus === JOB_STATUSES.UPLOAD_FAILED
   ) {
     return "upload"
   }
 
-  if (jobStatus === "completed" || jobStatus === "failed" || jobStatus === "upload-completed") {
+  if (
+    jobStatus === JOB_STATUSES.COMPLETED ||
+    jobStatus === JOB_STATUSES.FAILED ||
+    jobStatus === JOB_STATUSES.UPLOAD_COMPLETED
+  ) {
     return "result"
   }
 

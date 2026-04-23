@@ -7,7 +7,7 @@ import {
   sanitizePersistedExportOptions,
   type PartialExportOptions,
 } from "../shared/export-options.js"
-import type { ScanResult, ThemePreference } from "../shared/types.js"
+import type { ScanCacheMap, ThemePreference } from "../shared/types.js"
 
 const readFileWithFallback = async ({
   filePath,
@@ -44,7 +44,7 @@ export const readScanCacheFile = async ({
       legacyFilePath: legacyScanCachePath,
     })
     const parsed = JSON.parse(raw) as {
-      scans?: Record<string, ScanResult>
+      scans?: ScanCacheMap
     }
 
     return parsed.scans && typeof parsed.scans === "object" ? parsed.scans : {}
@@ -62,7 +62,7 @@ export const writeScanCacheFile = async ({
   scans,
 }: {
   scanCachePath: string
-  scans: Record<string, ScanResult>
+  scans: ScanCacheMap
 }) => {
   await mkdir(path.dirname(scanCachePath), { recursive: true })
   await writeFile(

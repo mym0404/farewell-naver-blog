@@ -4,9 +4,10 @@ import { useEffect, useRef, useState } from "react"
 import type {
   ExportJobState,
   UploadProviderCatalogResponse,
-  UploadProviderValue,
+  UploadProviderFields,
 } from "../../../shared/types.js"
 import { EMPTY_SELECT_VALUE, UPLOAD_PROVIDER_KEYS } from "../../../shared/upload-provider-keys.js"
+import { isUploadActionableJob, JOB_STATUSES } from "../../../shared/export-job-state.js"
 
 import { Badge } from "../../components/ui/badge.js"
 import { Button, buttonVariants } from "../../components/ui/button.js"
@@ -139,7 +140,7 @@ export const JobResultsPanel = ({
   onResumeExport: () => Promise<void> | void
   onUploadStart: (input: {
     providerKey: string
-    providerFields: Record<string, UploadProviderValue>
+    providerFields: UploadProviderFields
   }) => Promise<void> | void
 }) => {
   const logsScrollAreaRef = useRef<HTMLDivElement | null>(null)
@@ -197,13 +198,9 @@ export const JobResultsPanel = ({
   const showUploadColumns = shouldShowUploadColumns(job)
   const showUploadPanel =
     (mode === "upload" || mode === "result") && (job?.upload.candidateCount ?? 0) > 0
-  const showUploadForm =
-    mode === "upload" &&
-    (job?.status === "upload-ready" ||
-      job?.status === "upload-failed" ||
-      (job?.status === "uploading" && job.resumeAvailable))
+  const showUploadForm = mode === "upload" && isUploadActionableJob(job)
   const showResumeExportButton =
-    mode === "running" && job?.status === "running" && job.resumeAvailable
+    mode === "running" && job?.status === JOB_STATUSES.RUNNING && job.resumeAvailable
   const showExportSummary = mode === "upload" || mode === "result"
   const showExportResults = mode === "running" || mode === "upload" || mode === "result"
   const latestLogSignature = (() => {
@@ -708,7 +705,7 @@ export const JobResultsPanel = ({
                     >
                       {uploadSubmitting
                         ? "업로드 시작 중..."
-                        : job?.status === "uploading" && job.resumeAvailable
+                        : job?.status === JOB_STATUSES.UPLOADING && job.resumeAvailable
                           ? "남은 업로드 계속"
                           : "업로드 시작"}
                     </Button>
@@ -723,7 +720,7 @@ export const JobResultsPanel = ({
               </p>
             ) : null}
 
-            {job?.status === "upload-failed" && job.error ? (
+            {job?.status === JOB_STATUSES.UPLOAD_FAILED && job.error ? (
               <p className="danger-copy text-sm leading-7">{job.error}</p>
             ) : null}
           </section>
@@ -742,7 +739,7 @@ export const JobResultsPanel = ({
               className="field-card rounded-2xl px-4 py-3"
             />
 
-            {job?.status === "failed" && job.error ? (
+            {job?.status === JOB_STATUSES.FAILED && job.error ? (
               <p className="danger-copy text-sm leading-7">{job.error}</p>
             ) : null}
 

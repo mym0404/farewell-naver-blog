@@ -2,6 +2,7 @@ import path from "node:path"
 import { writeFile } from "node:fs/promises"
 
 import { cloneExportOptions } from "../../shared/export-options.js"
+import { UPLOAD_STATUSES } from "../../shared/export-job-state.js"
 import { filterPostsByScope } from "../../shared/export-scope.js"
 import type {
   ExportManifest,
@@ -98,7 +99,7 @@ const createInitialManifest = ({
         failureCount: 0,
         warningCount: 0,
         upload: {
-          status: uploadEnabled ? "upload-ready" : "not-requested",
+          status: uploadEnabled ? UPLOAD_STATUSES.UPLOAD_READY : UPLOAD_STATUSES.NOT_REQUESTED,
           eligiblePostCount: 0,
           candidateCount: 0,
           uploadedCount: 0,
@@ -538,7 +539,7 @@ export class NaverBlogExporter {
     manifest.upload = uploadEnabled
       ? progressState.uploadCandidateMap.size > 0
         ? {
-            status: "upload-ready",
+            status: UPLOAD_STATUSES.UPLOAD_READY,
             eligiblePostCount: progressState.uploadEligiblePostCount,
             candidateCount: progressState.uploadCandidateMap.size,
             uploadedCount: 0,
@@ -546,7 +547,7 @@ export class NaverBlogExporter {
             terminalReason: null,
           }
         : {
-            status: "skipped",
+            status: UPLOAD_STATUSES.SKIPPED,
             eligiblePostCount: 0,
             candidateCount: 0,
             uploadedCount: 0,
@@ -554,7 +555,7 @@ export class NaverBlogExporter {
             terminalReason: "skipped-no-candidates",
           }
       : {
-          status: "not-requested",
+          status: UPLOAD_STATUSES.NOT_REQUESTED,
           eligiblePostCount: 0,
           candidateCount: 0,
           uploadedCount: 0,

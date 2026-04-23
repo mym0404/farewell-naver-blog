@@ -74,8 +74,11 @@ export type StickerAssetMode = "ignore" | "download-original"
 export type SameBlogPostLinkMode = "keep-source" | "custom-url" | "relative-filepath"
 
 export type OptionDescriptionMap = Record<string, string>
+export type UnknownRecord = Record<string, unknown>
 
 export type UploadProviderValue = string | number | boolean
+export type UploadProviderFields = Record<string, UploadProviderValue>
+export type UploadRuntimeConfig = UnknownRecord
 
 export type UploadProviderInputType = "text" | "password" | "number" | "select" | "checkbox"
 
@@ -120,14 +123,16 @@ export type UploadTerminalReason = "skipped-no-candidates"
 
 export type UploadRewriteStatus = "pending" | "completed" | "failed"
 
+export type UploadStatus =
+  | "not-requested"
+  | "upload-ready"
+  | "uploading"
+  | "upload-completed"
+  | "upload-failed"
+  | "skipped"
+
 export type UploadSummary = {
-  status:
-    | "not-requested"
-    | "upload-ready"
-    | "uploading"
-    | "upload-completed"
-    | "upload-failed"
-    | "skipped"
+  status: UploadStatus
   eligiblePostCount: number
   candidateCount: number
   uploadedCount: number
@@ -398,6 +403,8 @@ export type ScanResult = {
   categories: CategoryInfo[]
   posts?: PostSummary[]
 }
+
+export type ScanCacheMap = Record<string, ScanResult>
 
 export type ExportJobState = {
   id: string

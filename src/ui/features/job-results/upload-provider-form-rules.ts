@@ -1,11 +1,12 @@
 import type {
   UploadProviderDefinition,
   UploadProviderFieldDefinition,
+  UploadProviderFields,
   UploadProviderValue,
 } from "../../../shared/types.js"
 import { UPLOAD_PROVIDER_KEYS } from "../../../shared/upload-provider-keys.js"
 
-export type ProviderFormState = Record<string, string | number | boolean>
+export type ProviderFormState = UploadProviderFields
 
 export type ProviderUiState = {
   alistAuthMode: "token" | "account"

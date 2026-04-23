@@ -1,6 +1,7 @@
 import path from "node:path"
 import { readFile } from "node:fs/promises"
 import type { IncomingMessage, ServerResponse } from "node:http"
+import type { UnknownRecord } from "../shared/types.js"
 
 const contentTypes: Record<string, string> = {
   ".css": "text/css; charset=utf-8",
@@ -75,5 +76,5 @@ export const parseJsonBody = async <T>(request: IncomingMessage) => JSON.parse(a
 export const hasJsonContentType = (request: IncomingMessage) =>
   request.headers["content-type"]?.toLowerCase().startsWith("application/json") ?? false
 
-export const isPlainObject = (value: unknown): value is Record<string, unknown> =>
+export const isPlainObject = (value: unknown): value is UnknownRecord =>
   Boolean(value) && typeof value === "object" && !Array.isArray(value)
