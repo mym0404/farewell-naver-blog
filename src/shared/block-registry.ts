@@ -1,6 +1,7 @@
 import type {
   AstBlock,
   BlockOutputSelection,
+  BlockOutputSelectionByType,
   BlockType,
   EditorVersion,
   ParserCapability,
@@ -96,6 +97,14 @@ export const parserCapabilityCatalog: ParserCapabilityCatalogEntry[] = [
     verificationMode: "parser-fixture",
     sampleIds: [],
     testFilePaths: se2ParserTestFilePaths,
+  },
+  {
+    editorVersion: 3,
+    blockType: "divider",
+    fallbackPolicy: "structured",
+    verificationMode: "sample-fixture",
+    sampleIds: ["se3-quote-table-vita"],
+    testFilePaths: se3ParserTestFilePaths,
   },
   {
     editorVersion: 4,
@@ -229,8 +238,8 @@ export const parserCapabilityCatalog: ParserCapabilityCatalogEntry[] = [
     editorVersion: 2,
     blockType: "rawHtml",
     fallbackPolicy: "raw-html",
-    verificationMode: "sample-fixture",
-    sampleIds: ["se2-table-rawhtml-navigation"],
+    verificationMode: "parser-fixture",
+    sampleIds: [],
     testFilePaths: se2ParserTestFilePaths,
   },
   {
@@ -298,7 +307,9 @@ export const blockOutputFamilyOrder: BlockType[] = [
   "rawHtml",
 ]
 
-export const defaultBlockOutputSelections: Record<BlockType, BlockOutputSelection> = {
+export const defaultBlockOutputSelections: {
+  [Key in BlockType]: BlockOutputSelection<Key>
+} = {
   paragraph: { variant: "markdown-paragraph" },
   heading: {
     variant: "markdown-heading",
@@ -571,7 +582,7 @@ const mergeBlockOutputSelection = ({
 }: {
   baseSelection: BlockOutputSelection
   nextSelection?: BlockOutputSelection
-}): BlockOutputSelection => {
+}) => {
   const params = {
     ...(baseSelection.params ?? {}),
     ...(nextSelection?.params ?? {}),
@@ -596,9 +607,9 @@ const mergeFormulaBlockOutputSelection = ({
   baseSelection,
   nextSelection,
 }: {
-  baseSelection: BlockOutputSelection
-  nextSelection?: BlockOutputSelection
-}): BlockOutputSelection => {
+  baseSelection: BlockOutputSelection<"formula">
+  nextSelection?: BlockOutputSelection<"formula">
+}) => {
   const baseParams = normalizeFormulaWrapperParams({
     params: baseSelection.params,
   })
@@ -625,45 +636,57 @@ const mergeFormulaBlockOutputSelection = ({
   }
 }
 
-export const resolveBlockOutputSelection = ({
+export const resolveBlockOutputSelection = <Block extends BlockType>({
   blockType,
   capabilityId,
   blockOutputs,
 }: {
-  blockType: BlockType
+  blockType: Block
   capabilityId?: ParserCapabilityId
   blockOutputs?: {
-    defaults?: Partial<Record<BlockType, BlockOutputSelection>>
+    defaults?: Partial<{ [Key in BlockType]: BlockOutputSelection<Key> }>
     overrides?: Partial<Record<ParserCapabilityId, BlockOutputSelection>>
   }
-}) => {
-  const baseSelection = blockType === "formula"
-    ? mergeFormulaBlockOutputSelection({
-        baseSelection: defaultBlockOutputSelections[blockType],
-        nextSelection: blockOutputs?.defaults?.[blockType],
-      })
-    : mergeBlockOutputSelection({
-        baseSelection: defaultBlockOutputSelections[blockType],
-        nextSelection: blockOutputs?.defaults?.[blockType],
-      })
+}): BlockOutputSelectionByType[Block] => {
+  if (blockType === "formula") {
+    const baseSelection = mergeFormulaBlockOutputSelection({
+      baseSelection: defaultBlockOutputSelections.formula,
+      nextSelection: blockOutputs?.defaults?.formula,
+    })
+
+    if (!capabilityId) {
+      return baseSelection as BlockOutputSelectionByType[Block]
+    }
+
+    const overrideSelection = blockOutputs?.overrides?.[capabilityId]
+
+    if (!overrideSelection) {
+      return baseSelection as BlockOutputSelectionByType[Block]
+    }
+
+    return mergeFormulaBlockOutputSelection({
+      baseSelection,
+      nextSelection: overrideSelection as BlockOutputSelection<"formula">,
+    }) as BlockOutputSelectionByType[Block]
+  }
+
+  const baseSelection = mergeBlockOutputSelection({
+    baseSelection: defaultBlockOutputSelections[blockType],
+    nextSelection: blockOutputs?.defaults?.[blockType] as BlockOutputSelection<Block> | undefined,
+  })
 
   if (!capabilityId) {
-    return baseSelection
+    return baseSelection as BlockOutputSelectionByType[Block]
   }
 
   const overrideSelection = blockOutputs?.overrides?.[capabilityId]
 
   if (!overrideSelection) {
-    return baseSelection
+    return baseSelection as BlockOutputSelectionByType[Block]
   }
 
-  return blockType === "formula"
-    ? mergeFormulaBlockOutputSelection({
-        baseSelection,
-        nextSelection: overrideSelection,
-      })
-    : mergeBlockOutputSelection({
-        baseSelection,
-        nextSelection: overrideSelection,
-      })
+  return mergeBlockOutputSelection({
+    baseSelection,
+    nextSelection: overrideSelection as BlockOutputSelection<Block>,
+  }) as BlockOutputSelectionByType[Block]
 }

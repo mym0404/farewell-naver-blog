@@ -174,6 +174,7 @@ describe("ExportOptionsPanel", () => {
       },
     })
     await selectOption({ user, trigger: "#blockOutputs-overrides-se4-formula-variant", value: "math-fence" })
+    await user.click(query<HTMLInputElement>("#unsupportedBlockCases-se3-oglink-og_bSize-title-link-only"))
 
     cleanup()
 
@@ -280,6 +281,7 @@ describe("ExportOptionsPanel", () => {
     expect(latestOptions.blockOutputs.defaults.code?.variant).toBe("tilde-fence")
     expect(latestOptions.blockOutputs.defaults.heading?.params?.levelOffset).toBe(2)
     expect(latestOptions.blockOutputs.overrides["se4-formula"]?.variant).toBe("math-fence")
+    expect(latestOptions.unsupportedBlockCases["se3-oglink-og_bSize"].candidateId).toBe("title-link-only")
     expect(latestOptions.assets.imageHandlingMode).toBe("remote")
     expect(latestOptions.assets.compressionEnabled).toBe(false)
     expect(latestOptions.assets.stickerAssetMode).toBe("download-original")
@@ -294,6 +296,7 @@ describe("ExportOptionsPanel", () => {
 
   it("shows an always-expanded file tree preview in the structure step", () => {
     const options = defaultExportOptions()
+    let latestOptions = options
 
     render(
       <ExportOptionsPanel
@@ -305,7 +308,9 @@ describe("ExportOptionsPanel", () => {
         frontmatterFieldMeta={frontmatterFieldMeta}
         frontmatterValidationErrors={[]}
         onOutputDirChange={vi.fn()}
-        onOptionsChange={vi.fn()}
+        onOptionsChange={(updater) => {
+          latestOptions = updater(latestOptions)
+        }}
       />,
     )
 
@@ -325,6 +330,7 @@ describe("ExportOptionsPanel", () => {
 
   it("updates the structure preview when the folder rule changes", () => {
     const options = defaultExportOptions()
+    let latestOptions = options
 
     options.structure.groupByCategory = false
     options.structure.includeLogNoInPostFolderName = true
@@ -342,7 +348,9 @@ describe("ExportOptionsPanel", () => {
         frontmatterFieldMeta={frontmatterFieldMeta}
         frontmatterValidationErrors={[]}
         onOutputDirChange={vi.fn()}
-        onOptionsChange={vi.fn()}
+        onOptionsChange={(updater) => {
+          latestOptions = updater(latestOptions)
+        }}
       />,
     )
 
@@ -449,7 +457,9 @@ describe("ExportOptionsPanel", () => {
         frontmatterFieldMeta={frontmatterFieldMeta}
         frontmatterValidationErrors={[]}
         onOutputDirChange={vi.fn()}
-        onOptionsChange={vi.fn()}
+        onOptionsChange={(updater) => {
+          latestOptions = updater(latestOptions)
+        }}
       />,
     )
 
@@ -540,6 +550,94 @@ describe("ExportOptionsPanel", () => {
 
     expect(preview).toContain("## Export Diagnostics")
     expect(preview).toContain("raw HTML 블록을 생략했습니다")
+  })
+
+  it("shows multiple candidates for each unsupported representative case and updates the preview", async () => {
+    const user = userEvent.setup()
+    let latestOptions = defaultExportOptions()
+
+    render(
+      <ExportOptionsPanel
+        step="markdown"
+        outputDir={testOutputDir}
+        options={latestOptions}
+        optionDescriptions={optionDescriptions}
+        frontmatterFieldOrder={frontmatterFieldOrder}
+        frontmatterFieldMeta={frontmatterFieldMeta}
+        frontmatterValidationErrors={[]}
+        onOutputDirChange={vi.fn()}
+        onOptionsChange={(updater) => {
+          latestOptions = updater(latestOptions)
+        }}
+      />,
+    )
+
+    const ogCard = query<HTMLElement>('[data-unsupported-block-card="se3-oglink-og_bSize"]')
+
+    expect(screen.getByText("대표 사례 선택 확정이 필요합니다.")).toBeInTheDocument()
+    expect(screen.getByText("0 / 4건 확정")).toBeInTheDocument()
+    expect(ogCard.textContent).toContain("썸네일 포함 HTML 카드")
+    expect(ogCard.textContent).toContain("썸네일 + 제목 링크 + 설명")
+    expect(ogCard.textContent).toContain("제목 링크만 유지")
+    expect(ogCard.textContent).toContain("선택 필요")
+    expect(ogCard.querySelectorAll('input[type="radio"]').length).toBe(3)
+    expect(ogCard.querySelector("pre")?.textContent).toContain('<a data-naver-block="se3-oglink"')
+
+    await user.click(query<HTMLInputElement>("#unsupportedBlockCases-se3-oglink-og_bSize-markdown-image-summary"))
+    await user.click(query<HTMLButtonElement>('[data-unsupported-block-confirm="se3-oglink-og_bSize"]'))
+
+    cleanup()
+
+    render(
+      <ExportOptionsPanel
+        step="markdown"
+        outputDir={testOutputDir}
+        options={latestOptions}
+        optionDescriptions={optionDescriptions}
+        frontmatterFieldOrder={frontmatterFieldOrder}
+        frontmatterFieldMeta={frontmatterFieldMeta}
+        frontmatterValidationErrors={[]}
+        onOutputDirChange={vi.fn()}
+        onOptionsChange={(updater) => {
+          latestOptions = updater(latestOptions)
+        }}
+      />,
+    )
+
+    const rerenderedOgCard = query<HTMLElement>('[data-unsupported-block-card="se3-oglink-og_bSize"]')
+
+    expect(latestOptions.unsupportedBlockCases["se3-oglink-og_bSize"].candidateId).toBe("markdown-image-summary")
+    expect(latestOptions.unsupportedBlockCases["se3-oglink-og_bSize"].confirmed).toBe(true)
+    expect(rerenderedOgCard.textContent).toContain("확정됨")
+    expect(rerenderedOgCard.querySelector("pre")?.textContent).toContain("../../public/")
+    expect(rerenderedOgCard.querySelector("pre")?.textContent).toContain("blog.naver.com")
+    expect(rerenderedOgCard.querySelector("pre")?.textContent).toContain("\\[Review PS Vita Part1\\]")
+
+    await user.click(query<HTMLInputElement>("#unsupportedBlockCases-se3-oglink-og_bSize-title-link-only"))
+
+    cleanup()
+
+    render(
+      <ExportOptionsPanel
+        step="markdown"
+        outputDir={testOutputDir}
+        options={latestOptions}
+        optionDescriptions={optionDescriptions}
+        frontmatterFieldOrder={frontmatterFieldOrder}
+        frontmatterFieldMeta={frontmatterFieldMeta}
+        frontmatterValidationErrors={[]}
+        onOutputDirChange={vi.fn()}
+        onOptionsChange={vi.fn()}
+      />,
+    )
+
+    const resetOgCard = query<HTMLElement>('[data-unsupported-block-card="se3-oglink-og_bSize"]')
+
+    expect(latestOptions.unsupportedBlockCases["se3-oglink-og_bSize"].candidateId).toBe("title-link-only")
+    expect(latestOptions.unsupportedBlockCases["se3-oglink-og_bSize"].confirmed).toBe(false)
+    expect(screen.getByText("대표 사례 선택 확정이 필요합니다.")).toBeInTheDocument()
+    expect(screen.getByText("0 / 4건 확정")).toBeInTheDocument()
+    expect(resetOgCard.textContent).toContain("선택 필요")
   })
 
   it("keeps upload credentials out of the assets step and disables local-only controls in remote mode", () => {

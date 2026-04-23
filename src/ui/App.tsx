@@ -10,6 +10,7 @@ import {
   validateFrontmatterAliases,
 } from "../shared/export-options.js"
 import { filterPostsByScope } from "../shared/export-scope.js"
+import { getUnsupportedBlockCaseConfirmationSummary } from "../shared/unsupported-block-cases.js"
 import type {
   ExportOptions,
   ScanCacheMap,
@@ -218,6 +219,13 @@ export const App = () => {
     () => validateFrontmatterAliases(options.frontmatter),
     [options.frontmatter],
   )
+  const unsupportedBlockCaseSummary = useMemo(
+    () =>
+      getUnsupportedBlockCaseConfirmationSummary({
+        unsupportedBlockCases: options.unsupportedBlockCases,
+      }),
+    [options.unsupportedBlockCases],
+  )
   const scopedPosts = useMemo(() => {
     if (!activeScanResult?.posts) {
       return []
@@ -233,7 +241,10 @@ export const App = () => {
   const linkTemplatePreviewPost = scopedPosts[0] ?? activeScanResult?.posts?.[0] ?? null
   const selectedCategoryIds = options.scope.categoryIds
   const selectedCount = activeScanResult ? selectedCategoryIds.length : 0
-  const exportDisabled = !activeScanResult || frontmatterValidationErrors.length > 0
+  const exportDisabled =
+    !activeScanResult ||
+    frontmatterValidationErrors.length > 0 ||
+    unsupportedBlockCaseSummary.unconfirmedCaseIds.length > 0
   const setupStepIndex = setupSteps.indexOf(setupStep)
   const persistedOptions = useMemo(() => sanitizePersistedExportOptions(options), [options])
   const persistedUiStateSignature = useMemo(
@@ -386,6 +397,8 @@ export const App = () => {
       ? currentScanTarget.length === 0 || scanPending
       : setupStep === "category-selection"
         ? !activeScanResult || selectedCount === 0
+        : setupStep === "markdown-options"
+          ? !activeScanResult || unsupportedBlockCaseSummary.unconfirmedCaseIds.length > 0
         : setupStep === "diagnostics-options"
           ? exportDisabled || submitting
           : !activeScanResult

@@ -1,16 +1,18 @@
 import path from "node:path"
 
 import { renderMarkdownPost } from "../../../src/modules/converter/markdown-renderer.js"
+import { normalizeUnsupportedBlocks } from "../../../src/modules/converter/unsupported-block-normalizer.js"
 import { parsePostHtml } from "../../../src/modules/parser/post-parser.js"
 import { reviewParsedPost } from "../../../src/modules/reviewer/post-reviewer.js"
 import { defaultExportOptions } from "../../../src/shared/export-options.js"
-import { getParserCapabilityId } from "../../../src/shared/parser-capabilities.js"
+import { getParserCapabilityLookupIds } from "../../../src/shared/parser-capabilities.js"
 import type {
   CategoryInfo,
   ExportOptions,
   PostSummary,
   SampleCorpusEntry,
 } from "../../../src/shared/types.js"
+import { unique } from "../../../src/shared/utils.js"
 import { ensureHarnessDir, readUtf8, repoPath, writeUtf8 } from "./paths.js"
 
 export const getSampleFixtureDir = (sampleId: string) =>
@@ -68,9 +70,13 @@ export const renderSampleFixture = async ({
 }) => {
   const options = createSampleVerificationOptions()
   const markdownFilePath = path.join(await ensureHarnessDir("samples"), `${sample.id}.md`)
-  const parsedPost = parsePostHtml({
+  const parsedPostBeforeNormalization = parsePostHtml({
     html,
     sourceUrl: sample.post.source,
+    options,
+  })
+  const parsedPost = normalizeUnsupportedBlocks({
+    parsedPost: parsedPostBeforeNormalization,
     options,
   })
   const review = reviewParsedPost(parsedPost)
@@ -93,21 +99,26 @@ export const renderSampleFixture = async ({
       uploadCandidate: null,
     }),
   })
-  const observedCapabilityIds = Array.from(
-    new Set(
-      parsedPost.blocks.map((block) =>
-        getParserCapabilityId({
-          editorVersion: parsedPost.editorVersion,
-          blockType: block.type,
-        }),
-      ),
-    ),
-  )
+  const observedCapabilityLookupIds = unique([
+    ...getParserCapabilityLookupIds({
+      editorVersion: parsedPostBeforeNormalization.editorVersion,
+      blocks: parsedPostBeforeNormalization.blocks,
+      warnings: parsedPostBeforeNormalization.warnings,
+      unsupportedBlocks: parsedPostBeforeNormalization.unsupportedBlocks,
+    }),
+    ...getParserCapabilityLookupIds({
+      editorVersion: parsedPost.editorVersion,
+      blocks: parsedPost.blocks,
+      warnings: parsedPost.warnings,
+      unsupportedBlocks: parsedPost.unsupportedBlocks,
+    }),
+  ])
 
   return {
     parsedPost,
+    reviewWarnings: review.warnings,
     rendered,
-    observedCapabilityIds,
+    observedCapabilityLookupIds,
     normalizedMarkdown: normalizeMarkdownFixture(rendered.markdown),
   }
 }

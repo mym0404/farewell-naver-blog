@@ -1,4 +1,7 @@
-import { getParserCapabilityId } from "./parser-capabilities.js"
+import {
+  getParserCapabilityId,
+  getUnsupportedBlockCaseCapabilityLookupId,
+} from "./parser-capabilities.js"
 import type { SampleCorpusEntry } from "./types.js"
 
 export const sampleCorpus: SampleCorpusEntry[] = [
@@ -7,7 +10,7 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     blogId: "mym0404",
     logNo: "221302086471",
     editorVersion: 4,
-    expectedCapabilityIds: [
+    expectedCapabilityLookupIds: [
       getParserCapabilityId({ editorVersion: 4, blockType: "image" }),
       getParserCapabilityId({ editorVersion: 4, blockType: "video" }),
       getParserCapabilityId({ editorVersion: 4, blockType: "table" }),
@@ -30,7 +33,7 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     blogId: "mym0404",
     logNo: "223034929697",
     editorVersion: 4,
-    expectedCapabilityIds: [
+    expectedCapabilityLookupIds: [
       getParserCapabilityId({ editorVersion: 4, blockType: "linkCard" }),
       getParserCapabilityId({ editorVersion: 4, blockType: "image" }),
       getParserCapabilityId({ editorVersion: 4, blockType: "divider" }),
@@ -56,7 +59,7 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     blogId: "mym0404",
     logNo: "224056819985",
     editorVersion: 4,
-    expectedCapabilityIds: [
+    expectedCapabilityLookupIds: [
       getParserCapabilityId({ editorVersion: 4, blockType: "paragraph" }),
       getParserCapabilityId({ editorVersion: 4, blockType: "divider" }),
       getParserCapabilityId({ editorVersion: 4, blockType: "imageGroup" }),
@@ -79,7 +82,7 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     blogId: "goyamee",
     logNo: "223511986798",
     editorVersion: 4,
-    expectedCapabilityIds: [
+    expectedCapabilityLookupIds: [
       getParserCapabilityId({ editorVersion: 4, blockType: "paragraph" }),
       getParserCapabilityId({ editorVersion: 4, blockType: "image" }),
       getParserCapabilityId({ editorVersion: 4, blockType: "heading" }),
@@ -106,7 +109,7 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     blogId: "mym0404",
     logNo: "221589718939",
     editorVersion: 4,
-    expectedCapabilityIds: [
+    expectedCapabilityLookupIds: [
       getParserCapabilityId({ editorVersion: 4, blockType: "paragraph" }),
       getParserCapabilityId({ editorVersion: 4, blockType: "image" }),
     ],
@@ -128,7 +131,7 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     blogId: "mym0404",
     logNo: "222619228134",
     editorVersion: 4,
-    expectedCapabilityIds: [
+    expectedCapabilityLookupIds: [
       getParserCapabilityId({ editorVersion: 4, blockType: "linkCard" }),
       getParserCapabilityId({ editorVersion: 4, blockType: "image" }),
       getParserCapabilityId({ editorVersion: 4, blockType: "divider" }),
@@ -155,7 +158,7 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     blogId: "mym0404",
     logNo: "220496669802",
     editorVersion: 2,
-    expectedCapabilityIds: [getParserCapabilityId({ editorVersion: 2, blockType: "paragraph" })],
+    expectedCapabilityLookupIds: [getParserCapabilityId({ editorVersion: 2, blockType: "paragraph" })],
     post: {
       title: "2015년 10월 1일 오후 6시 33분에 저장한 글입니다.",
       publishedAt: "2015-10-01T18:33:19+09:00",
@@ -173,7 +176,7 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     blogId: "mym0404",
     logNo: "221504285266",
     editorVersion: 2,
-    expectedCapabilityIds: [
+    expectedCapabilityLookupIds: [
       getParserCapabilityId({ editorVersion: 2, blockType: "paragraph" }),
       getParserCapabilityId({ editorVersion: 2, blockType: "image" }),
       getParserCapabilityId({ editorVersion: 2, blockType: "code" }),
@@ -195,11 +198,11 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     blogId: "mym0404",
     logNo: "221459172607",
     editorVersion: 2,
-    expectedCapabilityIds: [
+    expectedCapabilityLookupIds: [
       getParserCapabilityId({ editorVersion: 2, blockType: "paragraph" }),
       getParserCapabilityId({ editorVersion: 2, blockType: "image" }),
       getParserCapabilityId({ editorVersion: 2, blockType: "table" }),
-      getParserCapabilityId({ editorVersion: 2, blockType: "rawHtml" }),
+      getUnsupportedBlockCaseCapabilityLookupId("se2-inline-gif-video"),
     ],
     post: {
       title: "[Android] Android Architecture Component(AAC) #5-1 : Navigation - Basic",
@@ -211,15 +214,17 @@ export const sampleCorpus: SampleCorpusEntry[] = [
         "https://mblogthumb-phinf.pstatic.net/MjAxOTAyMDZfMTA0/MDAxNTQ5NDA2MzAxNjMx.yvJrtmBJP1HOloCZfCfI_oo4xxnZbqhEtct2h4sbWpAg.RY6DIb_lok5SJBDO-1pmxfY_z9zpLdab7jhCsp4cphIg.PNG.mym0404/1.png?type=w800",
       source: "https://blog.naver.com/mym0404/221459172607",
     },
-    description: "SE2 table과 rawHtml fallback이 같이 나오는 실제 본문을 검증한다.",
-    notes: ["테이블 구조화와 rawHtml fallback warning이 함께 재현되는 대표 샘플이다."],
+    description: "SE2 table과 인라인 GIF video 사례 해소가 함께 반영된 실제 본문을 검증한다.",
+    notes: [
+      "테이블 구조화와 `case:se2-inline-gif-video` 기준 출력을 함께 확인하는 대표 샘플이다.",
+    ],
   },
   {
     id: "se2-thumburl-image-group",
     blogId: "mym0404",
     logNo: "221425068566",
     editorVersion: 2,
-    expectedCapabilityIds: [
+    expectedCapabilityLookupIds: [
       getParserCapabilityId({ editorVersion: 2, blockType: "imageGroup" }),
       getParserCapabilityId({ editorVersion: 2, blockType: "paragraph" }),
     ],
@@ -241,7 +246,7 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     blogId: "mym0404",
     logNo: "221236891086",
     editorVersion: 3,
-    expectedCapabilityIds: [getParserCapabilityId({ editorVersion: 3, blockType: "paragraph" })],
+    expectedCapabilityLookupIds: [getParserCapabilityId({ editorVersion: 3, blockType: "paragraph" })],
     post: {
       title: "3월 25일 일요일",
       publishedAt: "2018-03-25T14:38:01+09:00",
@@ -259,7 +264,7 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     blogId: "sekishin",
     logNo: "221405258251",
     editorVersion: 3,
-    expectedCapabilityIds: [
+    expectedCapabilityLookupIds: [
       getParserCapabilityId({ editorVersion: 3, blockType: "paragraph" }),
       getParserCapabilityId({ editorVersion: 3, blockType: "image" }),
       getParserCapabilityId({ editorVersion: 3, blockType: "quote" }),
@@ -283,11 +288,15 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     blogId: "sekishin",
     logNo: "221290869775",
     editorVersion: 3,
-    expectedCapabilityIds: [
+    expectedCapabilityLookupIds: [
       getParserCapabilityId({ editorVersion: 3, blockType: "paragraph" }),
+      getParserCapabilityId({ editorVersion: 3, blockType: "divider" }),
       getParserCapabilityId({ editorVersion: 3, blockType: "image" }),
       getParserCapabilityId({ editorVersion: 3, blockType: "quote" }),
       getParserCapabilityId({ editorVersion: 3, blockType: "table" }),
+      getUnsupportedBlockCaseCapabilityLookupId("se3-horizontal-line-default"),
+      getUnsupportedBlockCaseCapabilityLookupId("se3-horizontal-line-line5"),
+      getUnsupportedBlockCaseCapabilityLookupId("se3-oglink-og_bSize"),
     ],
     post: {
       title: "[Review PS Vita Game] 건담 브레이커 3 브레이크 에디션 (Gundam Breaker 3 BREAK EDITION)",
@@ -299,7 +308,9 @@ export const sampleCorpus: SampleCorpusEntry[] = [
         "https://mblogthumb-phinf.pstatic.net/MjAxODA2MDNfMjI1/MDAxNTI4MDM0NTQwNTg5.ERq5Wa-BGkly6OymiT-ruEFUigr43NXjjd25J1hXNxkg.yrCSnvvU0niyVKTC8_BINfqjLWi0g4QZoDashAlpHVgg.JPEG.is02019/2017-11-18-210621.jpg?type=w800",
       source: "https://blog.naver.com/sekishin/221290869775",
     },
-    description: "SE3 table과 quote가 같이 등장하는 게임 리뷰 글을 검증한다.",
-    notes: ["SE3 table 구조화와 quote 파싱을 동시에 확인하는 대표 샘플이다."],
+    description: "SE3 table, quote와 대표 사례 3건의 해소 출력이 함께 반영된 게임 리뷰 글을 검증한다.",
+    notes: [
+      "SE3 table 구조화, quote 파싱, `case:se3-horizontal-line-default`, `case:se3-horizontal-line-line5`, `case:se3-oglink-og_bSize` 기준 출력을 함께 확인하는 대표 샘플이다.",
+    ],
   },
 ]

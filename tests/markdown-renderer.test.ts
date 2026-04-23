@@ -463,6 +463,61 @@ describe("renderMarkdownPost", () => {
     expect(rendered.markdown).toContain("> ❌ Error: raw HTML 블록을 생략했습니다: iframe-only")
   })
 
+  it("renders html fragments and block-level output overrides without fallback diagnostics", async () => {
+    const rendered = await renderMarkdownPost({
+      post,
+      category,
+      parsedPost: {
+        ...parsedPost,
+        warnings: [],
+        blocks: [
+          {
+            type: "image",
+            image: {
+              sourceUrl: "https://example.com/poster.png",
+              originalSourceUrl: "https://example.com/original.mp4",
+              alt: "gif poster",
+              caption: null,
+              mediaKind: "image",
+            },
+            outputSelection: {
+              variant: "linked-image",
+            },
+          },
+          {
+            type: "divider",
+            outputSelection: {
+              variant: "asterisk-rule",
+            },
+          },
+          {
+            type: "htmlFragment",
+            html: '<a href="https://blog.naver.com/mym0404/223034929697"><img src="https://example.com/card.png" alt=""><strong>카드 제목</strong></a>',
+          },
+        ],
+      },
+      markdownFilePath: testMarkdownFilePath,
+      reviewedWarnings: [],
+      options: defaultExportOptions(),
+      resolveAsset: async ({ kind, sourceUrl }) =>
+        createAssetRecord({
+          kind,
+          sourceUrl,
+          relativePath: publicImagePath,
+        }),
+      resolveLinkUrl: (url) =>
+        url === "https://blog.naver.com/mym0404/223034929697" ? "../linked-post" : url,
+    })
+
+    expect(rendered.markdown).toContain(`[![gif poster](${publicImagePath})](https://example.com/original.mp4)`)
+    expect(rendered.markdown).toContain("***")
+    expect(rendered.markdown).toContain(
+      `<a href="../linked-post"><img src="${publicImagePath}" alt=""><strong>카드 제목</strong></a>`,
+    )
+    expect(rendered.markdown).not.toContain("## Export Diagnostics")
+    expect(rendered.warnings).toEqual([])
+  })
+
   it("keeps description only for non-preview link cards without duplicating bare urls", async () => {
     const rendered = await renderMarkdownPost({
       post,

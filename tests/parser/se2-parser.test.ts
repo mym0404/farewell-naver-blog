@@ -6,6 +6,7 @@ import { defaultExportOptions } from "../../src/shared/export-options.js"
 
 const parserOptions = {
   markdown: defaultExportOptions().markdown,
+  unsupportedBlockCases: defaultExportOptions().unsupportedBlockCases,
 }
 
 const createSe2Html = (content: string) => `<div id="viewTypeSelector">${content}</div>`
@@ -370,6 +371,47 @@ console.log(oldSchool)
       },
     ])
     expect(parsed.warnings).toContain("SE2 블록을 해석하지 못해 raw HTML로 남겼습니다: <section>")
+  })
+
+  it("captures inline gif video fallback blocks as structured unsupported cases", () => {
+    const parsed = parseSe2Fixture(`
+      <p>
+        <video
+          src="https://mblogvideo-phinf.pstatic.net/sample.gif?type=mp4w800"
+          class="fx _postImage _gifmp4"
+          data-gif-url="https://mblogthumb-phinf.pstatic.net/sample.gif?type=w210"
+        ></video>&nbsp;
+      </p>
+    `)
+
+    expect(parsed.blocks).toEqual([
+      {
+        type: "image",
+        image: {
+          sourceUrl: "https://mblogthumb-phinf.pstatic.net/sample.gif?type=w210",
+          originalSourceUrl: "https://mblogvideo-phinf.pstatic.net/sample.gif?type=mp4w800",
+          alt: "",
+          caption: null,
+          mediaKind: "image",
+        },
+        outputSelection: {
+          variant: "linked-image",
+        },
+      },
+    ])
+    expect(parsed.warnings).toEqual([])
+    expect(parsed.unsupportedBlocks).toEqual([
+      {
+        caseId: "se2-inline-gif-video",
+        blockIndex: 0,
+        blockCount: 1,
+        warningText: "SE2 블록을 해석하지 못해 raw HTML로 남겼습니다: <p>",
+        data: {
+          sourceUrl: "https://mblogvideo-phinf.pstatic.net/sample.gif?type=mp4w800",
+          posterUrl: "https://mblogthumb-phinf.pstatic.net/sample.gif?type=w210",
+        },
+      },
+    ])
   })
 
   it("skips empty styled spacer paragraphs instead of keeping rawHtml", () => {

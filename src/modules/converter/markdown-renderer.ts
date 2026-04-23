@@ -6,6 +6,7 @@ import { convertHtmlToMarkdown } from "./html-fragment-converter.js"
 import type {
   AssetRecord,
   AstBlock,
+  BlockOutputSelection,
   CategoryInfo,
   ExportOptions,
   FrontmatterFieldName,
@@ -219,7 +220,13 @@ export const renderMarkdownPost = async ({
     return image.sourceUrl
   }
 
-  const renderImageBlock = async ({ image }: { image: ImageData }) => {
+  const renderImageWithSelection = async ({
+    image,
+    selection,
+  }: {
+    image: ImageData
+    selection: BlockOutputSelection<"image">
+  }) => {
     const renderableSourceUrl = getRenderableImageSource(image)
 
     if (!renderableSourceUrl) {
@@ -236,25 +243,58 @@ export const renderMarkdownPost = async ({
     }
 
     maybeRecordBodyThumbnail(assetPath)
-
-    const imageSelection = resolveBlockOutputSelection({
-      blockType: "image",
-      capabilityId: getParserCapabilityId({
-        editorVersion: parsedPost.editorVersion,
-        blockType: "image",
-      }),
-      blockOutputs: options.blockOutputs,
-    })
     return renderImageBlockMarkdown({
       image: {
         ...image,
-        originalSourceUrl: renderableSourceUrl,
+        originalSourceUrl: image.originalSourceUrl ?? renderableSourceUrl,
       },
       assetPath,
-      selection: imageSelection,
+      selection,
       formatLink: linkFormatter.formatLink,
       includeImageCaptions: options.assets.includeImageCaptions,
     })
+  }
+
+  const renderHtmlFragmentBlock = async (block: Extract<AstBlock, { type: "htmlFragment" }>) => {
+    const $ = load(`<div data-render-root="html-fragment">${block.html}</div>`)
+    const fragmentRoot = $('[data-render-root="html-fragment"]').first()
+
+    for (const node of fragmentRoot.find("img").toArray()) {
+      const image = $(node)
+      const sourceUrl = image.attr("src")?.trim()
+
+      if (!sourceUrl) {
+        continue
+      }
+
+      const assetPath = await resolveAssetPath({
+        kind: "image",
+        sourceUrl,
+      })
+
+      if (!assetPath) {
+        image.remove()
+        continue
+      }
+
+      maybeRecordBodyThumbnail(assetPath)
+      image.attr("src", assetPath)
+    }
+
+    if (resolveLinkUrl) {
+      for (const node of fragmentRoot.find("a[href]").toArray()) {
+        const anchor = $(node)
+        const href = anchor.attr("href")?.trim()
+
+        if (!href) {
+          continue
+        }
+
+        anchor.attr("href", resolveLinkUrl(href))
+      }
+    }
+
+    return fragmentRoot.html()?.trim() ?? ""
   }
 
   const renderVideoBlock = async (block: Extract<AstBlock, { type: "video" }>) => {
@@ -297,15 +337,10 @@ export const renderMarkdownPost = async ({
   }
 
   for (const block of parsedPost.blocks) {
-    const capabilityId = getParserCapabilityId({
-      editorVersion: parsedPost.editorVersion,
-      blockType: block.type,
-    })
-    const selection = resolveBlockOutputSelection({
-      blockType: block.type,
-      capabilityId,
-      blockOutputs: options.blockOutputs,
-    })
+    if (block.type === "htmlFragment") {
+      sections.push(await renderHtmlFragmentBlock(block))
+      continue
+    }
 
     if (block.type === "paragraph") {
       sections.push(renderParagraph(block.text))
@@ -313,6 +348,14 @@ export const renderMarkdownPost = async ({
     }
 
     if (block.type === "heading") {
+      const selection = resolveBlockOutputSelection({
+        blockType: "heading",
+        capabilityId: getParserCapabilityId({
+          editorVersion: parsedPost.editorVersion,
+          blockType: "heading",
+        }),
+        blockOutputs: options.blockOutputs,
+      })
       const adjustedLevel = Math.min(
         Math.max(block.level + getHeadingLevelOffset(selection), 1),
         6,
@@ -328,11 +371,27 @@ export const renderMarkdownPost = async ({
     }
 
     if (block.type === "divider") {
-      sections.push(getDividerMarker(selection))
+      const selection = resolveBlockOutputSelection({
+        blockType: "divider",
+        capabilityId: getParserCapabilityId({
+          editorVersion: parsedPost.editorVersion,
+          blockType: "divider",
+        }),
+        blockOutputs: options.blockOutputs,
+      })
+      sections.push(getDividerMarker(block.outputSelection ?? selection))
       continue
     }
 
     if (block.type === "code") {
+      const selection = resolveBlockOutputSelection({
+        blockType: "code",
+        capabilityId: getParserCapabilityId({
+          editorVersion: parsedPost.editorVersion,
+          blockType: "code",
+        }),
+        blockOutputs: options.blockOutputs,
+      })
       sections.push(
         renderCodeBlock({
           language: block.language,
@@ -344,6 +403,14 @@ export const renderMarkdownPost = async ({
     }
 
     if (block.type === "formula") {
+      const selection = resolveBlockOutputSelection({
+        blockType: "formula",
+        capabilityId: getParserCapabilityId({
+          editorVersion: parsedPost.editorVersion,
+          blockType: "formula",
+        }),
+        blockOutputs: options.blockOutputs,
+      })
       sections.push(
         renderFormula({
           formula: block.formula,
@@ -355,15 +422,41 @@ export const renderMarkdownPost = async ({
     }
 
     if (block.type === "image") {
-      sections.push(await renderImageBlock({ image: block.image }))
+      const selection = resolveBlockOutputSelection({
+        blockType: "image",
+        capabilityId: getParserCapabilityId({
+          editorVersion: parsedPost.editorVersion,
+          blockType: "image",
+        }),
+        blockOutputs: options.blockOutputs,
+      })
+      sections.push(
+        await renderImageWithSelection({
+          image: block.image,
+          selection: block.outputSelection ?? selection,
+        }),
+      )
       continue
     }
 
     if (block.type === "imageGroup") {
       const groupSections: string[] = []
+      const imageSelection = resolveBlockOutputSelection({
+        blockType: "image",
+        capabilityId: getParserCapabilityId({
+          editorVersion: parsedPost.editorVersion,
+          blockType: "image",
+        }),
+        blockOutputs: options.blockOutputs,
+      })
 
       for (const image of block.images) {
-        groupSections.push(await renderImageBlock({ image }))
+        groupSections.push(
+          await renderImageWithSelection({
+            image,
+            selection: imageSelection,
+          }),
+        )
       }
 
       sections.push(groupSections.join("\n\n"))
@@ -391,6 +484,14 @@ export const renderMarkdownPost = async ({
     }
 
     if (block.type === "rawHtml") {
+      const selection = resolveBlockOutputSelection({
+        blockType: "rawHtml",
+        capabilityId: getParserCapabilityId({
+          editorVersion: parsedPost.editorVersion,
+          blockType: "rawHtml",
+        }),
+        blockOutputs: options.blockOutputs,
+      })
       const extractedText = extractFallbackText({
         html: block.html,
         htmlConversionOptions,

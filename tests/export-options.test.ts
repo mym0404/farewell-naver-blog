@@ -32,6 +32,10 @@ describe("export options", () => {
     expect(options.markdown.linkStyle).toBe("inlined")
     expect(options.blockOutputs.defaults.formula?.params?.inlineWrapper).toBe("$")
     expect(options.blockOutputs.defaults.formula?.params?.blockWrapper).toBe("$$")
+    expect(options.unsupportedBlockCases["se2-inline-gif-video"].candidateId).toBe("linked-poster-image")
+    expect(options.unsupportedBlockCases["se2-inline-gif-video"].confirmed).toBe(false)
+    expect(options.unsupportedBlockCases["se3-horizontal-line-line5"].candidateId).toBe("html-line5-hr")
+    expect(options.unsupportedBlockCases["se3-oglink-og_bSize"].candidateId).toBe("rich-html-card")
     expect(options.structure.groupByCategory).toBe(true)
     expect(options.structure.includeDateInPostFolderName).toBe(true)
     expect(options.structure.includeLogNoInPostFolderName).toBe(false)
@@ -93,6 +97,28 @@ describe("export options", () => {
     expect(options.blockOutputs.overrides["se4-formula"]?.variant).toBe("wrapper")
     expect(options.blockOutputs.overrides["se4-formula"]?.params?.inlineWrapper).toBe("\\(...\\)")
     expect(options.blockOutputs.overrides["se4-formula"]?.params?.blockWrapper).toBe("\\[...\\]")
+  })
+
+  it("merges unsupported block representative-case selections and ignores invalid candidates", () => {
+    const options = cloneExportOptions(
+      JSON.parse(`{
+        "unsupportedBlockCases": {
+          "se2-inline-gif-video": {
+            "candidateId": "poster-image-only",
+            "confirmed": true
+          },
+          "se3-oglink-og_bSize": {
+            "candidateId": "not-a-real-candidate",
+            "confirmed": true
+          }
+        }
+      }`),
+    )
+
+    expect(options.unsupportedBlockCases["se2-inline-gif-video"].candidateId).toBe("poster-image-only")
+    expect(options.unsupportedBlockCases["se2-inline-gif-video"].confirmed).toBe(true)
+    expect(options.unsupportedBlockCases["se3-oglink-og_bSize"].candidateId).toBe("rich-html-card")
+    expect(options.unsupportedBlockCases["se3-oglink-og_bSize"].confirmed).toBe(false)
   })
 
   it("normalizes legacy formula open/close params into wrapper params", () => {
@@ -196,6 +222,24 @@ describe("export options", () => {
       slugWhitespace: "dash",
       postFolderNameMode: "custom-template",
       postFolderNameCustomTemplate: "{date}-{slug}",
+    })
+  })
+
+  it("keeps unsupported block case selections in persisted options", () => {
+    const sanitized = sanitizePersistedExportOptions({
+      unsupportedBlockCases: {
+        "se3-horizontal-line-default": {
+          candidateId: "html-default-hr",
+          confirmed: true,
+        },
+      },
+    })
+
+    expect(sanitized.unsupportedBlockCases).toEqual({
+      "se3-horizontal-line-default": {
+        candidateId: "html-default-hr",
+        confirmed: true,
+      },
     })
   })
 

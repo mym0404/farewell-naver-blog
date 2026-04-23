@@ -11,19 +11,7 @@ categoryPath:
 editorVersion: 2
 visibility: public
 thumbnail: https://mblogthumb-phinf.pstatic.net/MjAxOTAyMDZfMTA0/MDAxNTQ5NDA2MzAxNjMx.yvJrtmBJP1HOloCZfCfI_oo4xxnZbqhEtct2h4sbWpAg.RY6DIb_lok5SJBDO-1pmxfY_z9zpLdab7jhCsp4cphIg.PNG.mym0404/1.png?type=w800
-warnings:
-  - "SE2 블록을 해석하지 못해 raw HTML로 남겼습니다: <p>"
-  - raw HTML fallback 블록 1개가 포함됩니다.
-  - "raw HTML 블록을 생략했습니다: se2:p"
 ---
-
-## Export Diagnostics
-
-> ⚠️ Warning: SE2 블록을 해석하지 못해 raw HTML로 남겼습니다: <p>
-
-> ⚠️ Warning: raw HTML fallback 블록 1개가 포함됩니다.
-
-> ❌ Error: raw HTML 블록을 생략했습니다: se2:p
 
 **\[AAC의 Navigation Component의 필요성\]**
 
@@ -322,6 +310,8 @@ stackoverflow.com
 | --- | --- |
 
 결과물을 보자!
+
+[![](https://mblogthumb-phinf.pstatic.net/MjAxOTAyMDZfMTUz/MDAxNTQ5NDEzOTc5ODQy.dIfNXspKNS2I29ivFYqiUMxLCDJV17xWrtjut7p5etEg.Cwrfu83gmXKmtAz3wIAi-nOGgZtmy9FmvNu6zdDEg_Eg.GIF.mym0404/123.gif?type=w210)](https://mblogvideo-phinf.pstatic.net/MjAxOTAyMDZfMTUz/MDAxNTQ5NDEzOTc5ODQy.dIfNXspKNS2I29ivFYqiUMxLCDJV17xWrtjut7p5etEg.Cwrfu83gmXKmtAz3wIAi-nOGgZtmy9FmvNu6zdDEg_Eg.GIF.mym0404/123.gif?type=mp4w800)
 
 \----------
 

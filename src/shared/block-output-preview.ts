@@ -1,7 +1,9 @@
 import type {
   AstBlock,
   BlockOutputSelection,
+  DividerBlockOutputSelection,
   ExportOptions,
+  ImageBlockOutputSelection,
 } from "./types.js"
 import {
   composeRawHtmlPreview,
@@ -99,6 +101,153 @@ const renderRawHtmlPreview = ({
   })
 }
 
+const getPreviewSelection = ({
+  block,
+  fallbackSelection,
+}: {
+  block: AstBlock
+  fallbackSelection?: BlockOutputSelection
+}) => {
+  if ("outputSelection" in block && block.outputSelection) {
+    return block.outputSelection
+  }
+
+  return fallbackSelection
+}
+
+const getImagePreviewSelection = ({
+  block,
+  fallbackSelection,
+}: {
+  block: Extract<AstBlock, { type: "image" }>
+  fallbackSelection?: BlockOutputSelection
+}) => {
+  const selection = getPreviewSelection({
+    block,
+    fallbackSelection,
+  })
+
+  if (!selection) {
+    throw new Error("image preview selection is missing")
+  }
+
+  return selection as ImageBlockOutputSelection
+}
+
+const getDividerPreviewSelection = ({
+  block,
+  fallbackSelection,
+}: {
+  block: Extract<AstBlock, { type: "divider" }>
+  fallbackSelection?: BlockOutputSelection
+}) => {
+  const selection = getPreviewSelection({
+    block,
+    fallbackSelection,
+  })
+
+  if (!selection) {
+    throw new Error("divider preview selection is missing")
+  }
+
+  return selection as DividerBlockOutputSelection
+}
+
+const renderResolvedPreviewBlock = ({
+  block,
+  fallbackSelection,
+  includeImageCaptions,
+  imageHandlingMode,
+  linkFormatter,
+}: {
+  block: AstBlock
+  fallbackSelection?: BlockOutputSelection
+  includeImageCaptions: boolean
+  imageHandlingMode: ExportOptions["assets"]["imageHandlingMode"]
+  linkFormatter: ReturnType<typeof createLinkFormatter>
+}) => {
+  if (block.type === "paragraph") {
+    return renderParagraph(block.text)
+  }
+
+  if (block.type === "divider") {
+    return getDividerMarker(
+      getDividerPreviewSelection({
+        block,
+        fallbackSelection,
+      }),
+    )
+  }
+
+  if (block.type === "image") {
+    return renderImageBlockMarkdown({
+      image: block.image,
+      assetPath: getPreviewImageReference({
+        sourceUrl: block.image.sourceUrl,
+        imageHandlingMode,
+      }),
+      selection: getImagePreviewSelection({
+        block,
+        fallbackSelection,
+      }),
+      formatLink: linkFormatter.formatLink,
+      includeImageCaptions,
+    })
+  }
+
+  if (block.type === "video") {
+    return linkFormatter.formatLink({
+      label: block.video.title || block.video.sourceUrl,
+      url: block.video.sourceUrl,
+    })
+  }
+
+  if (block.type === "linkCard") {
+    return renderLinkCardBlock({
+      block,
+      formatLink: linkFormatter.formatLink,
+    })
+  }
+
+  if (block.type === "htmlFragment") {
+    return block.html
+  }
+
+  throw new Error(`unsupported preview block type: ${block.type}`)
+}
+
+export const renderResolvedBlocksPreview = ({
+  blocks,
+  linkStyle,
+  includeImageCaptions,
+  imageHandlingMode,
+}: {
+  blocks: AstBlock[]
+  linkStyle: ExportOptions["markdown"]["linkStyle"]
+  includeImageCaptions: boolean
+  imageHandlingMode: ExportOptions["assets"]["imageHandlingMode"]
+}) => {
+  const linkFormatter = createLinkFormatter({
+    style: linkStyle,
+  })
+  const body = blocks
+    .map((block) =>
+      renderResolvedPreviewBlock({
+        block,
+        includeImageCaptions,
+        imageHandlingMode,
+        linkFormatter,
+      }),
+    )
+    .filter(Boolean)
+    .join("\n\n")
+
+  return composeSnippetWithReferences({
+    body,
+    linkFormatter,
+  })
+}
+
 export const renderBlockOutputPreview = ({
   block,
   selection,
@@ -121,8 +270,9 @@ export const renderBlockOutputPreview = ({
   }
 
   if (block.type === "heading") {
+    const headingSelection = selection as BlockOutputSelection<"heading">
     const adjustedLevel = Math.min(
-      Math.max(block.level + getHeadingLevelOffset(selection), 1),
+      Math.max(block.level + getHeadingLevelOffset(headingSelection), 1),
       6,
     )
 
@@ -134,7 +284,12 @@ export const renderBlockOutputPreview = ({
   }
 
   if (block.type === "divider") {
-    return getDividerMarker(selection)
+    return getDividerMarker(
+      getDividerPreviewSelection({
+        block,
+        fallbackSelection: selection,
+      }),
+    )
   }
 
   if (block.type === "code") {
@@ -146,10 +301,12 @@ export const renderBlockOutputPreview = ({
   }
 
   if (block.type === "formula") {
+    const formulaSelection = selection as BlockOutputSelection<"formula">
+
     return renderFormula({
       formula: block.formula,
       display: block.display,
-      selection,
+      selection: formulaSelection,
     })
   }
 
@@ -161,7 +318,10 @@ export const renderBlockOutputPreview = ({
           sourceUrl: block.image.sourceUrl,
           imageHandlingMode,
         }),
-        selection,
+        selection: getImagePreviewSelection({
+          block,
+          fallbackSelection: selection,
+        }),
         formatLink: linkFormatter.formatLink,
         includeImageCaptions,
       }),
@@ -170,6 +330,8 @@ export const renderBlockOutputPreview = ({
   }
 
   if (block.type === "imageGroup") {
+    const imageSelection = selection as BlockOutputSelection<"image">
+
     return composeSnippetWithReferences({
       body: block.images
         .map((image) =>
@@ -179,7 +341,7 @@ export const renderBlockOutputPreview = ({
               sourceUrl: image.sourceUrl,
               imageHandlingMode,
             }),
-            selection,
+            selection: imageSelection,
             formatLink: linkFormatter.formatLink,
             includeImageCaptions,
           }),
@@ -210,7 +372,13 @@ export const renderBlockOutputPreview = ({
   }
 
   if (block.type === "table") {
-    return selection.variant === "html-only" ? block.html : renderGfmTable(block)
+    const tableSelection = selection as BlockOutputSelection<"table">
+
+    return tableSelection.variant === "html-only" ? block.html : renderGfmTable(block)
+  }
+
+  if (block.type === "htmlFragment") {
+    return block.html
   }
 
   return renderRawHtmlPreview({

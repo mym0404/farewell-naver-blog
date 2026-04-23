@@ -2,7 +2,12 @@ import type { AnyNode } from "domhandler"
 import type { CheerioAPI } from "cheerio"
 
 import { convertHtmlToMarkdown, sanitizeHtmlFragment } from "../converter/html-fragment-converter.js"
-import type { AstBlock, ExportOptions, ImageData, ParsedPost } from "../../shared/types.js"
+import type { AstBlock, ExportOptions, ImageData, ParsedPost, UnsupportedBlockInstance } from "../../shared/types.js"
+import {
+  getUnsupportedBlockCaseDefinition,
+  resolveUnsupportedBlockCaseSelection,
+} from "../../shared/unsupported-block-cases.js"
+import { buildUnsupportedBlockCaseBlocks } from "../../shared/unsupported-block-resolution.js"
 import { compactText, normalizeAssetUrl, unique } from "../../shared/utils.js"
 import { parseHtmlTable } from "./table-parser.js"
 
@@ -262,6 +267,48 @@ const parseColorScripterCodeBlock = ({
   } satisfies AstBlock
 }
 
+const parseInlineGifVideoUnsupportedBlock = ({
+  element,
+}: {
+  element: ReturnType<CheerioAPI>
+}) => {
+  if (!element.is("p")) {
+    return null
+  }
+
+  const video = element.children("video.fx._postImage._gifmp4[data-gif-url]").first()
+
+  if (video.length === 0) {
+    return null
+  }
+
+  const textWithoutVideo = compactText(
+    element
+      .clone()
+      .children("video")
+      .remove()
+      .end()
+      .text(),
+  )
+
+  if (textWithoutVideo) {
+    return null
+  }
+
+  const sourceUrl = normalizeAssetUrl(video.attr("src") ?? "")
+
+  if (!sourceUrl) {
+    return null
+  }
+
+  const posterUrl = normalizeAssetUrl(video.attr("data-gif-url") ?? "") || null
+
+  return {
+    sourceUrl,
+    posterUrl,
+  } satisfies UnsupportedBlockInstance<"se2-inline-gif-video">["data"]
+}
+
 export const parseSe2Post = ({
   $,
   tags,
@@ -269,12 +316,13 @@ export const parseSe2Post = ({
 }: {
   $: CheerioAPI
   tags: string[]
-  options: Pick<ExportOptions, "markdown"> & {
+  options: Pick<ExportOptions, "markdown" | "unsupportedBlockCases"> & {
     resolveLinkUrl?: (url: string) => string
   }
 }) => {
   const warnings: string[] = []
   const blocks: AstBlock[] = []
+  const unsupportedBlocks: UnsupportedBlockInstance[] = []
   const container = $("#viewTypeSelector").first()
 
   const appendBlocksFromNode = (node: AnyNode) => {
@@ -393,6 +441,59 @@ export const parseSe2Post = ({
       return
     }
 
+    const inlineGifVideo = parseInlineGifVideoUnsupportedBlock({
+      element,
+    })
+
+    if (inlineGifVideo) {
+      const warningText = getUnsupportedBlockCaseDefinition("se2-inline-gif-video")!.warningText
+      const blockIndex = blocks.length
+      const resolvedBlocks = buildUnsupportedBlockCaseBlocks({
+        unsupportedBlock: {
+          caseId: "se2-inline-gif-video",
+          blockIndex,
+          warningText,
+          data: inlineGifVideo,
+        },
+        candidateId: resolveUnsupportedBlockCaseSelection({
+          caseId: "se2-inline-gif-video",
+          unsupportedBlockCases: options.unsupportedBlockCases,
+        }).candidateId,
+      })
+
+      if (resolvedBlocks.length > 0) {
+        blocks.push(...resolvedBlocks)
+        unsupportedBlocks.push({
+          caseId: "se2-inline-gif-video",
+          blockIndex,
+          blockCount: resolvedBlocks.length,
+          warningText,
+          data: inlineGifVideo,
+        })
+        return
+      }
+
+      const html = sanitizeHtmlFragment($.html(element) ?? "")
+
+      if (!html) {
+        return
+      }
+
+      warnings.push(warningText)
+      blocks.push({
+        type: "rawHtml",
+        html,
+        reason: `se2:${tagName}`,
+      })
+      unsupportedBlocks.push({
+        caseId: "se2-inline-gif-video",
+        blockIndex,
+        warningText,
+        data: inlineGifVideo,
+      })
+      return
+    }
+
     if (standaloneImages.length === 1) {
       blocks.push({ type: "image", image: standaloneImages[0] })
       return
@@ -452,6 +553,7 @@ export const parseSe2Post = ({
     editorVersion: 2,
     tags: unique(tags),
     blocks,
+    unsupportedBlocks,
     warnings: unique(warnings),
     videos,
   } satisfies ParsedPost

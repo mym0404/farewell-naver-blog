@@ -8,6 +8,7 @@ import { defaultExportOptions } from "../../src/shared/export-options.js"
 
 const parserOptions = {
   markdown: defaultExportOptions().markdown,
+  unsupportedBlockCases: defaultExportOptions().unsupportedBlockCases,
 }
 
 describe("post-parser routing", () => {

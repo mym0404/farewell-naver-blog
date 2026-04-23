@@ -5,11 +5,21 @@ import {
 } from "../../src/shared/block-registry.js"
 import { defaultExportOptions } from "../../src/shared/export-options.js"
 import { parserCapabilities } from "../../src/shared/parser-capabilities.js"
-import type { ExportOptions, ParserCapabilityId } from "../../src/shared/types.js"
+import {
+  getUnsupportedBlockCaseDefinition,
+  unsupportedBlockCaseIds,
+} from "../../src/shared/unsupported-block-cases.js"
+import type {
+  BlockOutputSelection,
+  ExportOptions,
+  ParserCapabilityId,
+  UnsupportedBlockCaseId,
+  UnsupportedBlockCaseSelection,
+} from "../../src/shared/types.js"
 
 const entrypoint = "pnpm exec tsx scripts/export-single-post.ts"
 
-const allowedTopLevelOptionKeys = ["scope", "structure", "frontmatter", "markdown", "blockOutputs", "assets", "links"] as const
+const allowedTopLevelOptionKeys = ["scope", "structure", "frontmatter", "markdown", "blockOutputs", "unsupportedBlockCases", "assets", "links"] as const
 const allowedScopeKeys = ["categoryIds", "categoryMode", "dateFrom", "dateTo"] as const
 const allowedStructureKeys = [
   "groupByCategory",
@@ -339,7 +349,7 @@ const validateMarkdownOptions = (value: unknown, optionsPath: string) => {
   return markdown
 }
 
-const validateBlockOutputSelection = ({
+const validateBlockOutputSelection = <BlockType extends keyof ExportOptions["blockOutputs"]["defaults"]>({
   value,
   context,
   optionsPath,
@@ -348,7 +358,7 @@ const validateBlockOutputSelection = ({
   value: unknown
   context: string
   optionsPath: string
-  blockType: keyof ExportOptions["blockOutputs"]["defaults"]
+  blockType: BlockType
 }) => {
   assertPlainObject(value, context, optionsPath)
   assertAllowedKeys(value, ["variant", "params"], context, optionsPath)
@@ -372,7 +382,7 @@ const validateBlockOutputSelection = ({
       )
     }
 
-    nextSelection.variant = variant
+    nextSelection.variant = variant as BlockOutputSelection<BlockType>["variant"]
   }
 
   if ("params" in value) {
@@ -406,7 +416,31 @@ const validateBlockOutputSelection = ({
     }
   }
 
-  return nextSelection
+  return nextSelection as BlockOutputSelection<BlockType>
+}
+
+const assignBlockOutputDefault = <BlockType extends keyof ExportOptions["blockOutputs"]["defaults"]>({
+  defaults,
+  blockType,
+  selection,
+}: {
+  defaults: ExportOptions["blockOutputs"]["defaults"]
+  blockType: BlockType
+  selection: BlockOutputSelection<BlockType>
+}) => {
+  defaults[blockType] = selection
+}
+
+const assignBlockOutputOverride = <CapabilityId extends ParserCapabilityId>({
+  overrides,
+  capabilityId,
+  selection,
+}: {
+  overrides: ExportOptions["blockOutputs"]["overrides"]
+  capabilityId: CapabilityId
+  selection: ExportOptions["blockOutputs"]["overrides"][CapabilityId]
+}) => {
+  overrides[capabilityId] = selection
 }
 
 const validateBlockOutputsOptions = (value: unknown, optionsPath: string) => {
@@ -420,17 +454,21 @@ const validateBlockOutputsOptions = (value: unknown, optionsPath: string) => {
     assertPlainObject(defaultsValue, "blockOutputs.defaults", optionsPath)
     assertAllowedKeys(defaultsValue, blockOutputFamilyOrder, "blockOutputs.defaults", optionsPath)
 
-    const nextDefaults = {
+    const nextDefaults: ExportOptions["blockOutputs"]["defaults"] = {
       ...blockOutputs.defaults,
     }
 
     for (const blockType of blockOutputFamilyOrder) {
       if (blockType in defaultsValue) {
-        nextDefaults[blockType] = validateBlockOutputSelection({
-          value: defaultsValue[blockType],
-          context: `blockOutputs.defaults.${blockType}`,
-          optionsPath,
+        assignBlockOutputDefault({
+          defaults: nextDefaults,
           blockType,
+          selection: validateBlockOutputSelection({
+            value: defaultsValue[blockType],
+            context: `blockOutputs.defaults.${blockType}`,
+            optionsPath,
+            blockType,
+          }),
         })
       }
     }
@@ -448,7 +486,7 @@ const validateBlockOutputsOptions = (value: unknown, optionsPath: string) => {
       optionsPath,
     )
 
-    const nextOverrides = {
+    const nextOverrides: ExportOptions["blockOutputs"]["overrides"] = {
       ...blockOutputs.overrides,
     }
 
@@ -458,11 +496,15 @@ const validateBlockOutputsOptions = (value: unknown, optionsPath: string) => {
         parserCapabilityBlockTypeMap.get(typedCapabilityId) ??
         failOptions(optionsPath, `blockOutputs.overrides.${capabilityId} references unknown capability`)
 
-      nextOverrides[typedCapabilityId] = validateBlockOutputSelection({
-        value: selection,
-        context: `blockOutputs.overrides.${capabilityId}`,
-        optionsPath,
-        blockType,
+      assignBlockOutputOverride({
+        overrides: nextOverrides,
+        capabilityId: typedCapabilityId,
+        selection: validateBlockOutputSelection({
+          value: selection,
+          context: `blockOutputs.overrides.${capabilityId}`,
+          optionsPath,
+          blockType,
+        }) as ExportOptions["blockOutputs"]["overrides"][typeof typedCapabilityId],
       })
     }
 
@@ -523,6 +565,77 @@ const validateAssetsOptions = (value: unknown, optionsPath: string) => {
   return assets
 }
 
+const validateUnsupportedBlockCaseSelection = <CaseId extends UnsupportedBlockCaseId>({
+  caseId,
+  caseValue,
+  optionsPath,
+}: {
+  caseId: CaseId
+  caseValue: Record<string, unknown>
+  optionsPath: string
+}): UnsupportedBlockCaseSelection<CaseId> => {
+  assertAllowedKeys(
+    caseValue,
+    ["candidateId", "confirmed"],
+    `unsupportedBlockCases.${caseId}`,
+    optionsPath,
+  )
+
+  const candidateId = caseValue.candidateId
+  assertString(candidateId, `unsupportedBlockCases.${caseId}.candidateId`, optionsPath)
+
+  const definition =
+    getUnsupportedBlockCaseDefinition(caseId) ??
+    failOptions(optionsPath, `unsupportedBlockCases.${caseId} references unknown case`)
+
+  if (!definition.candidates.some((candidate) => candidate.id === candidateId)) {
+    failOptions(
+      optionsPath,
+      `unsupportedBlockCases.${caseId}.candidateId must be one of: ${definition.candidates.map((candidate) => candidate.id).join(", ")}`,
+    )
+  }
+
+  let confirmed = false
+  if ("confirmed" in caseValue) {
+    const confirmedValue = caseValue.confirmed
+    assertBoolean(confirmedValue, `unsupportedBlockCases.${caseId}.confirmed`, optionsPath)
+    confirmed = confirmedValue
+  }
+
+  return {
+    candidateId: candidateId as UnsupportedBlockCaseSelection<CaseId>["candidateId"],
+    confirmed,
+  } as UnsupportedBlockCaseSelection<CaseId>
+}
+
+const validateUnsupportedBlockCasesOptions = (value: unknown, optionsPath: string) => {
+  assertPlainObject(value, "unsupportedBlockCases", optionsPath)
+  assertAllowedKeys(
+    value,
+    unsupportedBlockCaseIds,
+    "unsupportedBlockCases",
+    optionsPath,
+  )
+
+  const unsupportedBlockCases = defaultExportOptions().unsupportedBlockCases
+
+  for (const caseId of unsupportedBlockCaseIds) {
+    if (!(caseId in value)) {
+      continue
+    }
+
+    const caseValue = value[caseId]
+    assertPlainObject(caseValue, `unsupportedBlockCases.${caseId}`, optionsPath)
+    unsupportedBlockCases[caseId] = validateUnsupportedBlockCaseSelection({
+      caseId,
+      caseValue,
+      optionsPath,
+    }) as never
+  }
+
+  return unsupportedBlockCases
+}
+
 const validateLinksOptions = (value: unknown, optionsPath: string) => {
   assertPlainObject(value, "links", optionsPath)
   assertAllowedKeys(value, allowedLinksKeys, "links", optionsPath)
@@ -568,6 +681,13 @@ const validateSinglePostOptionsJson = (value: unknown, optionsPath: string): Exp
 
   if ("blockOutputs" in value) {
     options.blockOutputs = validateBlockOutputsOptions(value.blockOutputs, optionsPath)
+  }
+
+  if ("unsupportedBlockCases" in value) {
+    options.unsupportedBlockCases = validateUnsupportedBlockCasesOptions(
+      value.unsupportedBlockCases,
+      optionsPath,
+    )
   }
 
   if ("assets" in value) {

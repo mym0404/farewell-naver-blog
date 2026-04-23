@@ -1,7 +1,11 @@
 import path from "node:path"
 
-import { parserCapabilities } from "../../../src/shared/parser-capabilities.js"
+import {
+  getUnsupportedBlockCaseCapabilityLookupId,
+  parserCapabilities,
+} from "../../../src/shared/parser-capabilities.js"
 import { sampleCorpus } from "../../../src/shared/sample-corpus.js"
+import { unsupportedBlockCaseIds } from "../../../src/shared/unsupported-block-cases.js"
 import type { BlockType, EditorVersion, ParserCapabilityId } from "../../../src/shared/types.js"
 import { pathExists, repoPath, walkFiles } from "./paths.js"
 
@@ -15,7 +19,10 @@ export const collectParserStatus = async () => {
     parserFixtureFiles.map((filePath) => path.basename(filePath, ".html")),
   )
   const sampleById = new Map(sampleCorpus.map((sample) => [sample.id, sample]))
-  const capabilityIdSet = new Set(parserCapabilities.map((capability) => capability.id))
+  const capabilityLookupIdSet = new Set([
+    ...parserCapabilities.map((capability) => capability.id),
+    ...unsupportedBlockCaseIds.map((caseId) => getUnsupportedBlockCaseCapabilityLookupId(caseId)),
+  ])
   const sampleFixtureCapabilities = parserCapabilities.filter(
     (capability) => capability.verificationMode === "sample-fixture",
   )
@@ -71,19 +78,19 @@ export const collectParserStatus = async () => {
         continue
       }
 
-      if (!sample.expectedCapabilityIds.includes(capability.id)) {
+      if (!sample.expectedCapabilityLookupIds.includes(capability.id)) {
         invalidSampleLinks.push(
-          `${capability.id}: sample ${sampleId} does not declare the capability in expectedCapabilityIds`,
+          `${capability.id}: sample ${sampleId} does not declare the capability in expectedCapabilityLookupIds`,
         )
       }
     }
   }
 
   for (const sample of sampleCorpus) {
-    for (const capabilityId of sample.expectedCapabilityIds) {
-      if (!capabilityIdSet.has(capabilityId)) {
+    for (const capabilityLookupId of sample.expectedCapabilityLookupIds) {
+      if (!capabilityLookupIdSet.has(capabilityLookupId)) {
         invalidExpectedCapabilityIds.push(
-          `${sample.id}: expected capability ${capabilityId} is not declared in parserCapabilities`,
+          `${sample.id}: expected capability lookup ${capabilityLookupId} is not declared`,
         )
       }
     }

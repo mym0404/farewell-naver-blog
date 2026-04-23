@@ -55,10 +55,131 @@ export type CodeFenceStyle = "backtick" | "tilde"
 
 export type BlockOutputParamValue = string | number | boolean
 
-export type BlockOutputSelection = {
-  variant: string
+export type ParagraphBlockOutputSelection = {
+  variant: "markdown-paragraph"
   params?: Record<string, BlockOutputParamValue>
 }
+
+export type HeadingBlockOutputSelection = {
+  variant: "markdown-heading"
+  params?: {
+    levelOffset?: number
+  } & Record<string, BlockOutputParamValue>
+}
+
+export type QuoteBlockOutputSelection = {
+  variant: "blockquote"
+  params?: Record<string, BlockOutputParamValue>
+}
+
+export type DividerBlockOutputSelection =
+  | {
+      variant: "dash-rule"
+      params?: Record<string, BlockOutputParamValue>
+    }
+  | {
+      variant: "asterisk-rule"
+      params?: Record<string, BlockOutputParamValue>
+    }
+
+export type CodeBlockOutputSelection =
+  | {
+      variant: "backtick-fence"
+      params?: Record<string, BlockOutputParamValue>
+    }
+  | {
+      variant: "tilde-fence"
+      params?: Record<string, BlockOutputParamValue>
+    }
+
+export type FormulaBlockOutputSelection =
+  | {
+      variant: "wrapper"
+      params?: {
+        inlineWrapper?: string
+        blockWrapper?: string
+        inlineOpen?: string
+        inlineClose?: string
+        blockOpen?: string
+        blockClose?: string
+      } & Record<string, BlockOutputParamValue>
+    }
+  | {
+      variant: "math-fence"
+      params?: {
+        inlineWrapper?: string
+        inlineOpen?: string
+        inlineClose?: string
+      } & Record<string, BlockOutputParamValue>
+    }
+
+export type ImageBlockOutputSelection =
+  | {
+      variant: "markdown-image"
+      params?: Record<string, BlockOutputParamValue>
+    }
+  | {
+      variant: "linked-image"
+      params?: Record<string, BlockOutputParamValue>
+    }
+  | {
+      variant: "source-only"
+      params?: Record<string, BlockOutputParamValue>
+    }
+
+export type ImageGroupBlockOutputSelection = {
+  variant: "split-images"
+  params?: Record<string, BlockOutputParamValue>
+}
+
+export type VideoBlockOutputSelection = {
+  variant: "source-link"
+  params?: Record<string, BlockOutputParamValue>
+}
+
+export type LinkCardBlockOutputSelection = {
+  variant: "title-link"
+  params?: Record<string, BlockOutputParamValue>
+}
+
+export type TableBlockOutputSelection =
+  | {
+      variant: "gfm-or-html"
+      params?: Record<string, BlockOutputParamValue>
+    }
+  | {
+      variant: "html-only"
+      params?: Record<string, BlockOutputParamValue>
+    }
+
+export type RawHtmlBlockOutputSelection =
+  | {
+      variant: "omit"
+      params?: Record<string, BlockOutputParamValue>
+    }
+  | {
+      variant: "markdown-fallback"
+      params?: Record<string, BlockOutputParamValue>
+    }
+
+export type BlockOutputSelectionByType = {
+  paragraph: ParagraphBlockOutputSelection
+  heading: HeadingBlockOutputSelection
+  quote: QuoteBlockOutputSelection
+  divider: DividerBlockOutputSelection
+  code: CodeBlockOutputSelection
+  formula: FormulaBlockOutputSelection
+  image: ImageBlockOutputSelection
+  imageGroup: ImageGroupBlockOutputSelection
+  video: VideoBlockOutputSelection
+  linkCard: LinkCardBlockOutputSelection
+  table: TableBlockOutputSelection
+  rawHtml: RawHtmlBlockOutputSelection
+}
+
+export type BlockOutputSelection<
+  Block extends keyof BlockOutputSelectionByType = keyof BlockOutputSelectionByType,
+> = BlockOutputSelectionByType[Block]
 
 export type ImageHandlingMode = "download" | "remote" | "download-and-upload"
 
@@ -73,6 +194,125 @@ export type ThumbnailSource = "post-list-first" | "first-body-image" | "none"
 export type StickerAssetMode = "ignore" | "download-original"
 
 export type SameBlogPostLinkMode = "keep-source" | "custom-url" | "relative-filepath"
+
+export type UnsupportedBlockCaseId =
+  | "se2-inline-gif-video"
+  | "se3-horizontal-line-default"
+  | "se3-horizontal-line-line5"
+  | "se3-oglink-og_bSize"
+
+export type UnsupportedBlockCandidateIdByCase = {
+  "se2-inline-gif-video": "linked-poster-image" | "poster-image-only" | "source-link-only"
+  "se3-horizontal-line-default": "markdown-hr" | "asterisk-hr" | "html-default-hr"
+  "se3-horizontal-line-line5": "html-line5-hr" | "markdown-hr" | "asterisk-hr"
+  "se3-oglink-og_bSize": "rich-html-card" | "markdown-image-summary" | "title-link-only"
+}
+
+export type UnsupportedBlockCandidateId<
+  CaseId extends UnsupportedBlockCaseId = UnsupportedBlockCaseId,
+> = UnsupportedBlockCandidateIdByCase[CaseId]
+
+export type UnsupportedBlockCaseSelection<
+  CaseId extends UnsupportedBlockCaseId = UnsupportedBlockCaseId,
+> = CaseId extends UnsupportedBlockCaseId ? {
+  candidateId: UnsupportedBlockCandidateId<CaseId>
+  confirmed: boolean
+} : never
+
+export type UnsupportedBlockCaseSelections = {
+  [CaseId in UnsupportedBlockCaseId]: UnsupportedBlockCaseSelection<CaseId>
+}
+
+export type UnsupportedBlockResolvedAstBlockType = BlockType | "htmlFragment"
+
+export type UnsupportedBlockDataByCase = {
+  "se2-inline-gif-video": {
+    sourceUrl: string
+    posterUrl: string | null
+  }
+  "se3-horizontal-line-default": {
+    blockKind: "horizontalLine"
+    styleToken: "default"
+  }
+  "se3-horizontal-line-line5": {
+    blockKind: "horizontalLine"
+    styleToken: "line5"
+  }
+  "se3-oglink-og_bSize": {
+    url: string
+    title: string
+    description: string
+    publisher: string
+    imageUrl: string | null
+    sizeToken: "og_bSize"
+  }
+}
+
+export type UnsupportedBlockInstance<
+  CaseId extends UnsupportedBlockCaseId = UnsupportedBlockCaseId,
+> = CaseId extends UnsupportedBlockCaseId ? {
+  caseId: CaseId
+  blockIndex: number
+  blockCount?: number
+  warningText: string
+  data: UnsupportedBlockDataByCase[CaseId]
+} : never
+
+export type UnsupportedBlockAstResolution = {
+  blockTypes: [UnsupportedBlockResolvedAstBlockType, ...UnsupportedBlockResolvedAstBlockType[]]
+}
+
+export type UnsupportedBlockCompositeMarkdownSection =
+  | "linked-thumbnail"
+  | "linked-title"
+  | "description"
+  | "publisher"
+
+export type UnsupportedBlockRenderResolution =
+  | {
+      surface: "markdown"
+      blockType: "image"
+      selection: ImageBlockOutputSelection
+    }
+  | {
+      surface: "markdown"
+      blockType: "video"
+      selection: VideoBlockOutputSelection
+    }
+  | {
+      surface: "markdown"
+      blockType: "divider"
+      selection: DividerBlockOutputSelection
+    }
+  | {
+      surface: "markdown"
+      blockType: "linkCard"
+      selection: LinkCardBlockOutputSelection
+    }
+  | {
+      surface: "markdown"
+      blockType: "composite"
+      sections: UnsupportedBlockCompositeMarkdownSection[]
+    }
+  | {
+      surface: "html"
+      blockType: "htmlFragment"
+      htmlTag: "a" | "hr"
+    }
+
+export type UnsupportedBlockCaseCandidateResolution = {
+  ast: UnsupportedBlockAstResolution
+  render: UnsupportedBlockRenderResolution
+}
+
+export type UnsupportedBlockCaseResolutionRule<
+  CaseId extends UnsupportedBlockCaseId = UnsupportedBlockCaseId,
+> = {
+  caseId: CaseId
+  confirmedCandidateId: UnsupportedBlockCandidateId<CaseId>
+  resolution: UnsupportedBlockCaseCandidateResolution
+  processingScope: "block-unit"
+}
 
 export type OptionDescriptionMap = Record<string, string>
 export type UnknownRecord = Record<string, unknown>
@@ -184,9 +424,10 @@ export type ExportOptions = {
     linkStyle: MarkdownLinkStyle
   }
   blockOutputs: {
-    defaults: Partial<Record<BlockType, BlockOutputSelection>>
-    overrides: Partial<Record<ParserCapabilityId, BlockOutputSelection>>
+    defaults: Partial<{ [Key in BlockType]: BlockOutputSelection<Key> }>
+    overrides: Partial<{ [Key in ParserCapabilityId]: BlockOutputSelectionByType[Key extends `se${EditorVersion}-${infer Block}` ? Extract<Block, keyof BlockOutputSelectionByType> : never] }>
   }
+  unsupportedBlockCases: UnsupportedBlockCaseSelections
   assets: {
     imageHandlingMode: ImageHandlingMode
     compressionEnabled: boolean
@@ -289,17 +530,18 @@ export type AstBlock =
   | { type: "paragraph"; text: string }
   | { type: "heading"; level: number; text: string }
   | { type: "quote"; text: string }
-  | { type: "divider" }
+  | { type: "divider"; outputSelection?: DividerBlockOutputSelection }
   | { type: "code"; language: string | null; code: string }
   | { type: "formula"; formula: string; display: boolean }
-  | { type: "image"; image: ImageData }
+  | { type: "image"; image: ImageData; outputSelection?: ImageBlockOutputSelection }
   | { type: "imageGroup"; images: ImageData[] }
-  | { type: "video"; video: VideoData }
-  | { type: "linkCard"; card: LinkCardData }
+  | { type: "video"; video: VideoData; outputSelection?: VideoBlockOutputSelection }
+  | { type: "linkCard"; card: LinkCardData; outputSelection?: LinkCardBlockOutputSelection }
   | { type: "table"; rows: TableRow[]; html: string; complex: boolean }
+  | { type: "htmlFragment"; html: string }
   | { type: "rawHtml"; html: string; reason: string }
 
-export type BlockType = AstBlock["type"]
+export type BlockType = Exclude<AstBlock["type"], "htmlFragment">
 
 export type ParserFallbackPolicy =
   | "structured"
@@ -309,6 +551,8 @@ export type ParserFallbackPolicy =
   | "skip"
 
 export type ParserCapabilityId = `se${EditorVersion}-${BlockType}`
+export type UnsupportedBlockCaseCapabilityId = `case:${UnsupportedBlockCaseId}`
+export type ParserCapabilityLookupId = ParserCapabilityId | UnsupportedBlockCaseCapabilityId
 
 export type ParserCapabilityVerificationMode = "sample-fixture" | "parser-fixture"
 
@@ -320,6 +564,7 @@ export type ParserCapability = {
   verificationMode: ParserCapabilityVerificationMode
   sampleIds: string[]
   testFilePaths: string[]
+  unsupportedBlockCaseResolutions?: UnsupportedBlockCaseResolutionRule[]
 }
 
 export type SampleCorpusEntry = {
@@ -327,7 +572,7 @@ export type SampleCorpusEntry = {
   blogId: string
   logNo: string
   editorVersion: EditorVersion
-  expectedCapabilityIds: ParserCapabilityId[]
+  expectedCapabilityLookupIds: ParserCapabilityLookupId[]
   post: {
     title: string
     publishedAt: string
@@ -345,6 +590,7 @@ export type ParsedPost = {
   editorVersion: EditorVersion
   tags: string[]
   blocks: AstBlock[]
+  unsupportedBlocks?: UnsupportedBlockInstance[]
   warnings: string[]
   videos: VideoData[]
 }

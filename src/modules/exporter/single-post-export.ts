@@ -4,7 +4,7 @@ import { writeFile } from "node:fs/promises"
 import { cloneExportOptions } from "../../shared/export-options.js"
 import { isPostWithinScope } from "../../shared/export-scope.js"
 import type {
-  BlockType,
+  AstBlock,
   ExportOptions,
   ParsedPost,
   PostSummary,
@@ -18,6 +18,7 @@ import { reviewParsedPost } from "../reviewer/post-reviewer.js"
 import { AssetStore } from "./asset-store.js"
 import { buildMarkdownFilePath, getCategoryForPost } from "./export-paths.js"
 import { buildPostLinkTargets, createSameBlogPostLinkResolver } from "./post-link-rewriter.js"
+import { normalizeUnsupportedBlocks } from "../converter/unsupported-block-normalizer.js"
 
 export type SinglePostFetcher = {
   scanBlog: () => Promise<ScanResult>
@@ -40,7 +41,7 @@ export type ExportSinglePostDiagnostics = {
   markdown: string
   markdownFilePath: string
   editorVersion: ParsedPost["editorVersion"]
-  blockTypes: BlockType[]
+  blockTypes: AstBlock["type"][]
   parserWarnings: string[]
   reviewerWarnings: string[]
   renderWarnings: string[]
@@ -119,13 +120,17 @@ export const exportSinglePost = async ({
     targets: postLinkTargets,
   })
   const html = await fetcher.fetchPostHtml(post.logNo)
-  const parsedPost = parsePostHtml({
-    html,
-    sourceUrl: post.source,
-    options: {
-      markdown: resolvedOptions.markdown,
-      resolveLinkUrl,
-    },
+  const parsedPost = normalizeUnsupportedBlocks({
+    parsedPost: parsePostHtml({
+      html,
+      sourceUrl: post.source,
+      options: {
+        markdown: resolvedOptions.markdown,
+        unsupportedBlockCases: resolvedOptions.unsupportedBlockCases,
+        resolveLinkUrl,
+      },
+    }),
+    options: resolvedOptions,
   })
   const review = reviewParsedPost(parsedPost)
   const rendered = await renderMarkdownPost({

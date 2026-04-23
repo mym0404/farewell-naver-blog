@@ -139,6 +139,12 @@ describe("single-post cli", () => {
             },
           },
         },
+        unsupportedBlockCases: {
+          "se3-oglink-og_bSize": {
+            candidateId: "markdown-image-summary",
+            confirmed: true,
+          },
+        },
       }),
       "utf8",
     )
@@ -193,6 +199,10 @@ describe("single-post cli", () => {
 
       expect(exportSinglePost).toHaveBeenCalledTimes(1)
       expect(exportSinglePost.mock.calls[0][0].options.blockOutputs.defaults.heading?.params?.levelOffset).toBe(2)
+      expect(exportSinglePost.mock.calls[0][0].options.unsupportedBlockCases["se3-oglink-og_bSize"].candidateId).toBe(
+        "markdown-image-summary",
+      )
+      expect(exportSinglePost.mock.calls[0][0].options.unsupportedBlockCases["se3-oglink-og_bSize"].confirmed).toBe(true)
       expect(stdoutWrite).not.toHaveBeenCalled()
       expect(stderrWrite).toHaveBeenCalledWith(
         [

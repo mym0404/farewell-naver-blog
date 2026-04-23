@@ -11,19 +11,7 @@ categoryPath:
 editorVersion: 3
 visibility: public
 thumbnail: https://mblogthumb-phinf.pstatic.net/MjAxODA2MDNfMjI1/MDAxNTI4MDM0NTQwNTg5.ERq5Wa-BGkly6OymiT-ruEFUigr43NXjjd25J1hXNxkg.yrCSnvvU0niyVKTC8_BINfqjLWi0g4QZoDashAlpHVgg.JPEG.is02019/2017-11-18-210621.jpg?type=w800
-warnings:
-  - "SE3 블록을 구조화하지 못해 텍스트로 변환했습니다: se_component se_horizontalLine default"
-  - "SE3 블록을 구조화하지 못해 텍스트로 변환했습니다: se_component se_horizontalLine line5"
-  - "SE3 블록을 구조화하지 못해 텍스트로 변환했습니다: se_component se_oglink og_bSize "
 ---
-
-## Export Diagnostics
-
-> ⚠️ Warning: SE3 블록을 구조화하지 못해 텍스트로 변환했습니다: se_component se_horizontalLine default
-
-> ⚠️ Warning: SE3 블록을 구조화하지 못해 텍스트로 변환했습니다: se_component se_horizontalLine line5
-
-> ⚠️ Warning: SE3 블록을 구조화하지 못해 텍스트로 변환했습니다: se_component se_oglink og_bSize 
 
 ![](https://mblogthumb-phinf.pstatic.net/MjAxODA2MDNfMTY5/MDAxNTI4MDM0NTMyODQw.rjygL-4CrrRFzO2-6HXk_gKajGqAh-2naXSBa6Ymaj0g.CH2CdbfTHTLCrZvQF-FIuCiUXuCPeSP66PXdkG9VKEgg.JPEG.is02019/image_8875983951528028610005.jpg?type=w800)
 
@@ -105,7 +93,7 @@ BACK-ON / Mirrors (Music Video)
 | 게임은 반복적이고 지루하지만 건프라는 자유다!! |   |
 | 패미통 점수 | 34/40 |
 
----
+<hr data-naver-block="se3-horizontal-line" data-style="line5">
 
 > 후기
 
@@ -114,9 +102,9 @@ BACK-ON / Mirrors (Music Video)
 또 리뷰를 오랜만에 하게 되었습니다. 학교 복학 이후로 리뷰를 하고 싶어도 과제와의 싸움으로 힘들어지더군요. 그래서 건담 브레이커 3 브레이크 에디션 리뷰를 늦게 작성하게 되었습니다. 늦은 리뷰 죄송합니다. 그리고 6월 21일 **뉴 건담 브레이커**가 출시 예정이니 건담을 좋아하시거나 게임에 관심 있으신 분들은 플레이 전에 건담 브레이커 3을 플레이 해보시는 것을 추천드립니다. 일반판 같은 경우는 덤핑 되어 쓰니 가격이 매우 착하더군요.  
 이상 리뷰를 마치도록 하겠습니다. 부족한 글이었지만 봐주셔서 진심으로 감사합니다.
 
-[
-![](https://dthumb-phinf.pstatic.net/?src=%22https%3A%2F%2Fblogthumb.pstatic.net%2FMjAxNzA4MTVfNDMg%2FMDAxNTAyODA0MjkzODM1.u5F0sCir7QjJker3XId4S2BkVVyNvQybMU57vAhOJTUg.49IPaap9vWSaeUoAuLHe8QB4NkcLreJd3KGY60lHuPYg.JPEG.is02019%2F20170811_230234.jpg%3Ftype%3Dw2%22&type=ff500_300)
-\[Review PS Vita Part1\] 비타는 삶이다 - 소니 PS Vita
-SONY PS Vita안녕하세요. 게임최고RedSoul입니다. 이번에는 PS Vita를 리뷰해볼까합니다. 원래...
-blog.naver.com
-](https://blog.naver.com/is02019/221072284462)
+<a data-naver-block="se3-oglink" data-size="og_bSize" href="https://blog.naver.com/is02019/221072284462">
+  <img src="https://dthumb-phinf.pstatic.net/?src=%22https%3A%2F%2Fblogthumb.pstatic.net%2FMjAxNzA4MTVfNDMg%2FMDAxNTAyODA0MjkzODM1.u5F0sCir7QjJker3XId4S2BkVVyNvQybMU57vAhOJTUg.49IPaap9vWSaeUoAuLHe8QB4NkcLreJd3KGY60lHuPYg.JPEG.is02019%2F20170811_230234.jpg%3Ftype%3Dw2%22&amp;type=ff500_300" alt="">
+  <strong>[Review PS Vita Part1] 비타는 삶이다 - 소니 PS Vita</strong>
+  <span>SONY PS Vita안녕하세요. 게임최고RedSoul입니다. 이번에는 PS Vita를 리뷰해볼까합니다. 원래...</span>
+  <span>blog.naver.com</span>
+</a>

@@ -52,7 +52,7 @@ export const parsePostHtml = ({
 }: {
   html: string
   sourceUrl: string
-  options: Pick<ExportOptions, "markdown"> & {
+  options: Pick<ExportOptions, "markdown" | "unsupportedBlockCases"> & {
     resolveLinkUrl?: (url: string) => string
   }
 }) => {

@@ -895,6 +895,7 @@ export const parseSe4Post = ({
     editorVersion: 4,
     tags: unique(tags),
     blocks,
+    unsupportedBlocks: [],
     warnings: unique(warnings),
     videos,
   } satisfies ParsedPost

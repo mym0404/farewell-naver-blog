@@ -1,0 +1,57 @@
+{
+  "caseId": "se2-inline-gif-video",
+  "captureId": "se2-table-rawhtml-navigation__se2-inline-gif-video",
+  "sampleId": "se2-table-rawhtml-navigation",
+  "source": {
+    "blogId": "mym0404",
+    "logNo": "221459172607",
+    "url": "https://m.blog.naver.com/mym0404/221459172607",
+    "editorVersion": 2
+  },
+  "identificationKey": {
+    "editorVersion": 2,
+    "topLevelSignature": "p",
+    "childSignature": "video.fx._postImage._gifmp4[data-gif-url]",
+    "textPresence": "none",
+    "variantTokens": ["gifmp4", "data-gif-url"]
+  },
+  "warning": {
+    "text": "SE2 블록을 해석하지 못해 raw HTML로 남겼습니다: <p>",
+    "baselineExpectedFile": "tests/fixtures/samples/se2-table-rawhtml-navigation/expected.md",
+    "baselineExpectedLine": 15,
+    "status": "resolved-in-current-expected"
+  },
+  "locator": {
+    "sourceFile": "tests/fixtures/samples/se2-table-rawhtml-navigation/source.html",
+    "sourceLine": 312,
+    "cssSelector": "p > video.fx._postImage._gifmp4[data-gif-url]",
+    "unsupportedOrder": 1,
+    "previousTextAnchor": "결과물을 보자!",
+    "nextTextAnchor": "Navigation | Android Developers"
+  },
+  "references": {
+    "sampleCorpusFile": "src/shared/sample-corpus.ts",
+    "sampleCorpusLine": 194,
+    "fixtureEvidenceFile": "scripts/harness/lib/unsupported-block-fixture-evidence.ts",
+    "fixtureEvidenceId": "se2-inline-gif-video"
+  },
+  "tracking": {
+    "reuseKey": "se2-inline-gif-video",
+    "screenshotStem": "mym0404-221459172607-se2-inline-gif-video",
+    "status": "pending-capture",
+    "artifacts": {
+      "blockImage": {
+        "path": "unsupported-block-render-resolution-evidence/se2-inline-gif-video/mym0404-221459172607-se2-inline-gif-video-block.png",
+        "exists": false
+      },
+      "contextImage": {
+        "path": "unsupported-block-render-resolution-evidence/se2-inline-gif-video/mym0404-221459172607-se2-inline-gif-video-context.png",
+        "exists": false
+      },
+      "optionsNote": {
+        "path": "unsupported-block-render-resolution-evidence/se2-inline-gif-video/mym0404-221459172607-se2-inline-gif-video-options.md",
+        "exists": true
+      }
+    }
+  }
+}

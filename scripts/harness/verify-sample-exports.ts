@@ -4,6 +4,8 @@ import {
   renderSampleFixture,
 } from "./lib/sample-fixtures.js"
 
+const formatWarnings = (warnings: string[]) => warnings.join(" | ")
+
 const run = async () => {
   const failures: string[] = []
 
@@ -14,14 +16,40 @@ const run = async () => {
       html: fixture.html,
     })
 
-    for (const expectedCapabilityId of sample.expectedCapabilityIds) {
-      if (!rendered.observedCapabilityIds.includes(expectedCapabilityId)) {
-        failures.push(`${sample.id}: missing expected capability ${expectedCapabilityId}`)
+    for (const expectedCapabilityLookupId of sample.expectedCapabilityLookupIds) {
+      if (!rendered.observedCapabilityLookupIds.includes(expectedCapabilityLookupId)) {
+        failures.push(`${sample.id}: missing expected capability lookup ${expectedCapabilityLookupId}`)
       }
     }
 
     if (rendered.normalizedMarkdown !== fixture.expectedMarkdown) {
       failures.push(`${sample.id}: rendered markdown does not match expected.md`)
+    }
+
+    const unresolvedUnsupportedBlockCount = rendered.parsedPost.unsupportedBlocks?.length ?? 0
+
+    if (unresolvedUnsupportedBlockCount > 0) {
+      failures.push(
+        `${sample.id}: unsupported blocks must be fully resolved (${unresolvedUnsupportedBlockCount})`,
+      )
+    }
+
+    if (rendered.parsedPost.warnings.length > 0) {
+      failures.push(
+        `${sample.id}: parser warnings must be 0 (${formatWarnings(rendered.parsedPost.warnings)})`,
+      )
+    }
+
+    if (rendered.reviewWarnings.length > 0) {
+      failures.push(
+        `${sample.id}: reviewer warnings must be 0 (${formatWarnings(rendered.reviewWarnings)})`,
+      )
+    }
+
+    if (rendered.rendered.warnings.length > 0) {
+      failures.push(
+        `${sample.id}: render warnings must be 0 (${formatWarnings(rendered.rendered.warnings)})`,
+      )
     }
 
     if (rendered.normalizedMarkdown.includes("(undefined)")) {

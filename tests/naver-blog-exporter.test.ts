@@ -68,6 +68,40 @@ const postHtml = `
   </div>
 `
 
+const unsupportedSe3Html = `
+  <div id="viewTypeSelector">
+    <div class="se_component_wrap sect_dsc">
+      <div class="se_component se_text">
+        <div class="se_textarea">본문 시작입니다.</div>
+      </div>
+      <div class="se_component se_horizontalLine default">
+        <div class="se_horizontalLineView">
+          <div class="se_hr"><hr></div>
+        </div>
+      </div>
+      <div class="se_component se_horizontalLine line5">
+        <div class="se_horizontalLineView">
+          <div class="se_hr"><hr></div>
+        </div>
+      </div>
+      <div class="se_component se_oglink og_bSize ">
+        <div class="se_viewArea se_og_wrap">
+          <a class="se_og_box" href="https://blog.naver.com/is02019/221072284462" target="_blank">
+            <div class="se_og_thumb">
+              <img src="https://dthumb-phinf.pstatic.net/sample.jpg?type=ff500_300" alt="">
+            </div>
+            <div class="se_og_txt">
+              <div class="se_og_tit">비타는 삶이다</div>
+              <div class="se_og_desc">PS Vita 리뷰</div>
+              <div class="se_og_cp">blog.naver.com</div>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+`
+
 const sharedAssetHash = createHash("sha256").update("image").digest("hex")
 const sharedPublicPath = `../../public/${sharedAssetHash}.png`
 const sharedLocalPath = `public/${sharedAssetHash}.png`
@@ -134,6 +168,81 @@ assetPaths:
               {
                 kind: "thumbnail" as const,
                 sourceUrl: "https://example.com/thumb.png",
+                localPath: sharedLocalPath,
+                markdownReference: sharedPublicPath,
+              },
+            ],
+            uploadedUrls: [],
+            rewriteStatus: "pending" as const,
+            rewrittenAt: null,
+          },
+          warnings: [],
+          warningCount: 0,
+          error: null,
+        },
+      ],
+    },
+  }
+}
+
+const createHtmlFragmentUploadReadyFixture = ({
+  outputDir,
+}: {
+  outputDir: string
+}) => {
+  const outputPath = "PS-알고리즘-팁/2023-03-04-테스트-글/index.md"
+  const markdown = `<a data-naver-block="se3-oglink" data-size="og_bSize" href="https://blog.naver.com/is02019/221072284462">
+  <img src="${sharedPublicPath}" alt="">
+  <strong>비타는 삶이다</strong>
+</a>
+`
+
+  return {
+    markdown,
+    markdownPath: path.join(outputDir, outputPath),
+    manifest: {
+      blogId: "mym0404",
+      profile: "gfm" as const,
+      options: defaultExportOptions(),
+      selectedCategoryIds: [],
+      startedAt: "2026-04-17T04:00:00.000Z",
+      finishedAt: "2026-04-17T04:00:01.000Z",
+      totalPosts: 1,
+      successCount: 1,
+      failureCount: 0,
+      warningCount: 0,
+      upload: {
+        status: "upload-ready" as const,
+        eligiblePostCount: 1,
+        candidateCount: 1,
+        uploadedCount: 0,
+        failedCount: 0,
+        terminalReason: null,
+      },
+      categories: scanResult.categories,
+      posts: [
+        {
+          logNo: posts[0].logNo,
+          title: posts[0].title,
+          source: posts[0].source,
+          category: {
+            id: scanResult.categories[0]!.id,
+            name: scanResult.categories[0]!.name,
+            path: scanResult.categories[0]!.path,
+          },
+          editorVersion: 3 as const,
+          status: "success" as const,
+          outputPath,
+          assetPaths: [sharedPublicPath],
+          upload: {
+            eligible: true,
+            candidateCount: 1,
+            uploadedCount: 0,
+            failedCount: 0,
+            candidates: [
+              {
+                kind: "image" as const,
+                sourceUrl: "https://dthumb-phinf.pstatic.net/sample.jpg?type=ff500_300",
                 localPath: sharedLocalPath,
                 markdownReference: sharedPublicPath,
               },
@@ -263,6 +372,139 @@ describe("NaverBlogExporter", () => {
     expect(fetchBinarySpy).toHaveBeenCalled()
 
     await rm(outputDir, { recursive: true, force: true })
+  })
+
+  it("normalizes unsupported representative cases before warning aggregation in bulk exports", async () => {
+    const outputDir = await mkdtemp(path.join(tmpdir(), "bulk-export-"))
+    const onProgress = vi.fn()
+    const onItem = vi.fn()
+    const options = defaultExportOptions()
+    const se3Post = {
+      ...posts[0],
+      logNo: "221290869775",
+      title: "대표 미지원 블록 글",
+      source: "https://blog.naver.com/sekishin/221290869775",
+      editorVersion: 3 as const,
+      thumbnailUrl: null,
+    }
+
+    options.frontmatter.enabled = false
+    options.assets.imageHandlingMode = "download"
+
+    vi.spyOn(NaverBlogFetcher.prototype, "scanBlog").mockResolvedValue(scanResult)
+    vi.spyOn(NaverBlogFetcher.prototype, "getAllPosts").mockResolvedValue([se3Post])
+    vi.spyOn(NaverBlogFetcher.prototype, "fetchPostHtml").mockResolvedValue(unsupportedSe3Html)
+    vi.spyOn(NaverBlogFetcher.prototype, "downloadBinary").mockResolvedValue()
+    vi.spyOn(NaverBlogFetcher.prototype, "fetchBinary").mockResolvedValue({
+      bytes: Buffer.from("image"),
+      contentType: "image/png",
+    })
+
+    try {
+      const exporter = new NaverBlogExporter({
+        request: {
+          blogIdOrUrl: "https://blog.naver.com/mym0404",
+          outputDir,
+          profile: "gfm",
+          options,
+        },
+        onLog: () => {},
+        onProgress,
+        onItem,
+      })
+
+      const manifest = await exporter.run()
+      const markdownPath = path.join(outputDir, manifest.posts[0]!.outputPath!)
+      const writtenMarkdown = await readFile(markdownPath, "utf8")
+
+      expect(manifest.warningCount).toBe(0)
+      expect(manifest.posts[0]).toMatchObject({
+        logNo: se3Post.logNo,
+        editorVersion: 3,
+        warnings: [],
+        warningCount: 0,
+      })
+      expect(onProgress).toHaveBeenCalledWith({
+        total: 1,
+        completed: 1,
+        failed: 0,
+        warnings: 0,
+      })
+      expect(onItem).toHaveBeenCalledWith(
+        expect.objectContaining({
+          logNo: se3Post.logNo,
+          warnings: [],
+          warningCount: 0,
+        }),
+      )
+      expect(writtenMarkdown).toContain("본문 시작입니다.")
+      expect(writtenMarkdown).toContain("\n---\n")
+      expect(writtenMarkdown).toContain('<hr data-naver-block="se3-horizontal-line" data-style="line5">')
+      expect(writtenMarkdown).toContain(
+        '<a data-naver-block="se3-oglink" data-size="og_bSize" href="https://blog.naver.com/is02019/221072284462">',
+      )
+      expect(writtenMarkdown).toContain("비타는 삶이다")
+      expect(writtenMarkdown).not.toContain("## Export Diagnostics")
+    } finally {
+      await rm(outputDir, { recursive: true, force: true })
+    }
+  })
+
+  it("keeps html-fragment assets from normalized unsupported blocks in markdown and manifest upload metadata", async () => {
+    const outputDir = await mkdtemp(path.join(tmpdir(), "bulk-export-"))
+    const options = defaultExportOptions()
+    const se3Post = {
+      ...posts[0],
+      logNo: "221290869775",
+      title: "대표 미지원 블록 글",
+      source: "https://blog.naver.com/sekishin/221290869775",
+      editorVersion: 3 as const,
+      thumbnailUrl: null,
+    }
+
+    options.frontmatter.enabled = false
+    options.assets.imageHandlingMode = "download-and-upload"
+
+    vi.spyOn(NaverBlogFetcher.prototype, "scanBlog").mockResolvedValue(scanResult)
+    vi.spyOn(NaverBlogFetcher.prototype, "getAllPosts").mockResolvedValue([se3Post])
+    vi.spyOn(NaverBlogFetcher.prototype, "fetchPostHtml").mockResolvedValue(unsupportedSe3Html)
+    vi.spyOn(NaverBlogFetcher.prototype, "downloadBinary").mockResolvedValue()
+    vi.spyOn(NaverBlogFetcher.prototype, "fetchBinary").mockResolvedValue({
+      bytes: Buffer.from("image"),
+      contentType: "image/png",
+    })
+
+    try {
+      const exporter = new NaverBlogExporter({
+        request: {
+          blogIdOrUrl: "https://blog.naver.com/mym0404",
+          outputDir,
+          profile: "gfm",
+          options,
+        },
+        onLog: () => {},
+        onProgress: () => {},
+        onItem: () => {},
+      })
+
+      const manifest = await exporter.run()
+      const postManifest = manifest.posts[0]!
+      const markdownPath = path.join(outputDir, postManifest.outputPath!)
+      const writtenMarkdown = await readFile(markdownPath, "utf8")
+
+      expect(manifest.warningCount).toBe(0)
+      expect(postManifest.assetPaths).toHaveLength(1)
+      expect(postManifest.assetPaths[0]).toMatch(/^\.\.\/\.\.\/public\/[a-f0-9]{64}\.png$/)
+      expect(postManifest.upload.candidateCount).toBe(1)
+      expect(postManifest.upload.candidates[0]).toMatchObject({
+        kind: "image",
+        sourceUrl: "https://dthumb-phinf.pstatic.net/sample.jpg?type=ff500_300",
+        markdownReference: postManifest.assetPaths[0],
+      })
+      expect(writtenMarkdown).toContain(`<img src="${postManifest.assetPaths[0]}" alt="">`)
+    } finally {
+      await rm(outputDir, { recursive: true, force: true })
+    }
   })
 
   it("keeps manifest and job item order stable while exporting posts in parallel", async () => {
@@ -635,6 +877,47 @@ describe("NaverBlogExporter", () => {
 	      expect(rewritten.items[0]?.upload.uploadedUrls).toEqual(["https://cdn.example.com/shared.png"])
 	      expect(rewritten.items[0]).not.toHaveProperty("externalPreviewUrl")
 	    } finally {
+      await rm(outputDir, { recursive: true, force: true })
+    }
+  })
+
+  it("rewrites html-fragment image references in markdown and manifest from upload results", async () => {
+    const outputDir = await mkdtemp(path.join(tmpdir(), "bulk-export-rewrite-"))
+    const fixture = createHtmlFragmentUploadReadyFixture({
+      outputDir,
+    })
+
+    try {
+      await fs.mkdir(path.dirname(fixture.markdownPath), { recursive: true })
+      await writeFile(fixture.markdownPath, fixture.markdown, "utf8")
+      await writeFile(
+        path.join(outputDir, "manifest.json"),
+        JSON.stringify(fixture.manifest, null, 2),
+        "utf8",
+      )
+
+      const rewritten = await rewriteUploadedAssets({
+        outputDir,
+        manifest: fixture.manifest,
+        items: [],
+        uploadResults: [
+          {
+            candidate: fixture.manifest.posts[0]!.upload.candidates[0]!,
+            uploadedUrl: "https://cdn.example.com/shared.png",
+          },
+        ],
+      })
+
+      const rewrittenMarkdown = await readFile(fixture.markdownPath, "utf8")
+      const writtenManifest = JSON.parse(
+        await readFile(path.join(outputDir, "manifest.json"), "utf8"),
+      ) as typeof rewritten.manifest
+
+      expect(rewrittenMarkdown).toContain('<img src="https://cdn.example.com/shared.png" alt="">')
+      expect(writtenManifest.posts[0]?.assetPaths).toEqual(["https://cdn.example.com/shared.png"])
+      expect(writtenManifest.posts[0]?.upload.uploadedUrls).toEqual(["https://cdn.example.com/shared.png"])
+      expect(rewritten.items[0]?.assetPaths).toEqual(["https://cdn.example.com/shared.png"])
+    } finally {
       await rm(outputDir, { recursive: true, force: true })
     }
   })

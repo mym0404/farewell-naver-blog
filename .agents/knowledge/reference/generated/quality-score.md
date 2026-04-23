@@ -20,9 +20,9 @@
 | metric | coverage |
 | --- | --- |
 | parser block fixture coverage | 12/12 (100%) |
-| parser capability test mapping coverage | 27/27 (100%) |
+| parser capability test mapping coverage | 28/28 (100%) |
 | sample-fixture capability coverage | 22/22 (100%) |
-| parser-fixture only capabilities | 5 |
+| parser-fixture only capabilities | 6 |
 | sample corpus size | 13 |
 | covered editor versions | 3/3 (100%) |
 
@@ -34,4 +34,5 @@
 - `se2-quote`
 - `se2-divider`
 - `se3-code`
+- `se2-rawHtml`
 - `se4-rawHtml`

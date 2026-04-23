@@ -5,6 +5,7 @@ import type {
   FrontmatterFieldName,
   OptionDescriptionMap,
   ParserCapabilityId,
+  UnsupportedBlockCaseId,
 } from "./types.js"
 import {
   blockOutputFamilyOrder,
@@ -12,6 +13,11 @@ import {
   resolveBlockOutputSelection,
 } from "./block-registry.js"
 import { parserCapabilities } from "./parser-capabilities.js"
+import {
+  defaultUnsupportedBlockCaseSelections,
+  resolveUnsupportedBlockCaseSelection,
+  unsupportedBlockCaseIds,
+} from "./unsupported-block-cases.js"
 
 export type PartialExportOptions = {
   scope?: Partial<ExportOptions["scope"]>
@@ -23,9 +29,10 @@ export type PartialExportOptions = {
   }
   markdown?: Partial<ExportOptions["markdown"]>
   blockOutputs?: {
-    defaults?: Partial<Record<BlockType, ExportOptions["blockOutputs"]["defaults"][BlockType]>>
-    overrides?: Partial<Record<ParserCapabilityId, ExportOptions["blockOutputs"]["overrides"][ParserCapabilityId]>>
+    defaults?: Partial<ExportOptions["blockOutputs"]["defaults"]>
+    overrides?: Partial<ExportOptions["blockOutputs"]["overrides"]>
   }
+  unsupportedBlockCases?: Partial<ExportOptions["unsupportedBlockCases"]>
   assets?: Partial<ExportOptions["assets"]>
   links?: Partial<ExportOptions["links"]>
 }
@@ -277,6 +284,9 @@ export const defaultExportOptions = (): ExportOptions => ({
     ) as ExportOptions["blockOutputs"]["defaults"],
     overrides: {},
   },
+  unsupportedBlockCases: {
+    ...defaultUnsupportedBlockCaseSelections,
+  },
   assets: {
     imageHandlingMode: "download-and-upload",
     compressionEnabled: true,
@@ -390,6 +400,10 @@ export const sanitizePersistedExportOptions = (options?: PartialExportOptions): 
     }
   }
 
+  if (options?.unsupportedBlockCases) {
+    sanitized.unsupportedBlockCases = { ...options.unsupportedBlockCases }
+  }
+
   if (options?.assets) {
     sanitized.assets = {
       ...options.assets,
@@ -421,6 +435,18 @@ const parserCapabilityBlockTypeMap = new Map(
   parserCapabilities.map((capability) => [capability.id, capability.blockType]),
 )
 
+const assignBlockOutputOverride = <CapabilityId extends ParserCapabilityId>({
+  overrides,
+  capabilityId,
+  selection,
+}: {
+  overrides: ExportOptions["blockOutputs"]["overrides"]
+  capabilityId: CapabilityId
+  selection: ExportOptions["blockOutputs"]["overrides"][CapabilityId]
+}) => {
+  overrides[capabilityId] = selection
+}
+
 const buildDefaultBlockOutputs = (options?: PartialExportOptions["blockOutputs"]) =>
   Object.fromEntries(
     blockOutputFamilyOrder.map((blockType) => [
@@ -449,20 +475,37 @@ const buildBlockOutputOverrides = ({
       continue
     }
 
-    resolvedOverrides[typedCapabilityId] = resolveBlockOutputSelection({
-      blockType,
+    assignBlockOutputOverride({
+      overrides: resolvedOverrides,
       capabilityId: typedCapabilityId,
-      blockOutputs: {
-        defaults,
-        overrides: {
-          [typedCapabilityId]: selection,
+      selection: resolveBlockOutputSelection({
+        blockType,
+        capabilityId: typedCapabilityId,
+        blockOutputs: {
+          defaults,
+          overrides: {
+            [typedCapabilityId]: selection,
+          },
         },
-      },
+      }) as ExportOptions["blockOutputs"]["overrides"][typeof typedCapabilityId],
     })
   }
 
   return resolvedOverrides
 }
+
+const buildUnsupportedBlockCaseSelections = (
+  selections?: PartialExportOptions["unsupportedBlockCases"],
+) =>
+  Object.fromEntries(
+    unsupportedBlockCaseIds.map((caseId) => [
+      caseId,
+      resolveUnsupportedBlockCaseSelection({
+        caseId,
+        unsupportedBlockCases: selections,
+      }),
+    ]),
+  ) as ExportOptions["unsupportedBlockCases"]
 
 export const cloneExportOptions = (options?: PartialExportOptions) => {
   const defaults = defaultExportOptions()
@@ -503,6 +546,7 @@ export const cloneExportOptions = (options?: PartialExportOptions) => {
         overrides: options?.blockOutputs?.overrides,
       }),
     },
+    unsupportedBlockCases: buildUnsupportedBlockCaseSelections(options?.unsupportedBlockCases),
     assets: {
       imageHandlingMode:
         options?.assets?.imageHandlingMode ?? defaults.assets.imageHandlingMode,

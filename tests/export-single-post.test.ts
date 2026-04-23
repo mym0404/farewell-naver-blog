@@ -172,6 +172,65 @@ describe("exportSinglePost", () => {
     }
   })
 
+  it("normalizes unsupported representative cases before review and render", async () => {
+    const outputDir = await mkdtemp(path.join(tmpdir(), "single-post-export-"))
+    const options = defaultExportOptions()
+
+    const post = {
+      blogId,
+      logNo,
+      title: "Unsupported block post",
+      publishedAt: "2024-01-02T03:04:05+09:00",
+      categoryId: 11,
+      categoryName: "JavaScript",
+      source: sourceUrl,
+      editorVersion: 2 as const,
+      thumbnailUrl: null,
+    }
+
+    const html = `
+      <script>var data = { smartEditorVersion: 2 }</script>
+      <div id="viewTypeSelector">
+        <p>인트로입니다.</p>
+        <p>
+          <video
+            class="fx _postImage _gifmp4"
+            src="https://example.com/123.mp4"
+            data-gif-url="https://example.com/123.gif"
+          ></video>
+        </p>
+      </div>
+    `
+
+    try {
+      const diagnostics = await exportSinglePost({
+        blogId: inputBlogUrl,
+        logNo,
+        outputDir,
+        options,
+        createFetcher: ({ blogId: normalizedBlogId }) =>
+          createFetcher({
+            blogId: normalizedBlogId,
+            posts: [post],
+            html,
+          }),
+      })
+
+      expect(diagnostics.editorVersion).toBe(2)
+      expect(diagnostics.blockTypes).toEqual(["paragraph", "image"])
+      expect(diagnostics.parserWarnings).toEqual([])
+      expect(diagnostics.reviewerWarnings).toEqual([])
+      expect(diagnostics.renderWarnings).toEqual([])
+      expect(diagnostics.markdown).toContain("인트로입니다.")
+      expect(diagnostics.markdown).toContain(
+        "[![](",
+      )
+      expect(diagnostics.markdown).toContain("](https://example.com/123.mp4)")
+    } finally {
+      await rm(outputDir, { recursive: true, force: true })
+    }
+  })
+
   it("throws when the requested post metadata is missing", async () => {
     const outputDir = await mkdtemp(path.join(tmpdir(), "single-post-export-"))
     const sentinelPath = path.join(outputDir, "keep.txt")
@@ -185,13 +244,13 @@ describe("exportSinglePost", () => {
           logNo,
           outputDir,
           options: defaultExportOptions(),
-        createFetcher: ({ blogId: normalizedBlogId }) => {
-          expect(normalizedBlogId).toBe(blogId)
+          createFetcher: ({ blogId: normalizedBlogId }) => {
+            expect(normalizedBlogId).toBe(blogId)
 
-          return createFetcher({
-            blogId: normalizedBlogId,
-            posts: [],
-            html: "",
+            return createFetcher({
+              blogId: normalizedBlogId,
+              posts: [],
+              html: "",
             })
           },
         }),

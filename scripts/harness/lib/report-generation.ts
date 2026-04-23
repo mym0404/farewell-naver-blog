@@ -107,12 +107,12 @@ ${parserCapabilities
   .join("\n")}
 
 ## Sample Catalog
-| id | editorVersion | expectedCapabilityIds |
+| id | editorVersion | expectedCapabilityLookupIds |
 | --- | --- | --- |
 ${sampleCorpus
   .map(
     (sample) =>
-      `| \`${sample.id}\` | \`${sample.editorVersion}\` | ${sample.expectedCapabilityIds.map((capabilityId) => `\`${capabilityId}\``).join(", ")} |`,
+      `| \`${sample.id}\` | \`${sample.editorVersion}\` | ${sample.expectedCapabilityLookupIds.map((capabilityId) => `\`${capabilityId}\``).join(", ")} |`,
   )
   .join("\n")}
 
@@ -187,17 +187,18 @@ ${parserCapabilities
 - \`pnpm samples:refresh -- --id <sampleId>\`
 
 ## Sample Table
-| id | editorVersion | expectedCapabilityIds | description |
+| id | editorVersion | expectedCapabilityLookupIds | description |
 | --- | --- | --- | --- |
 ${sampleCorpus
   .map(
     (sample) =>
-      `| \`${sample.id}\` | \`${sample.editorVersion}\` | ${sample.expectedCapabilityIds.map((capabilityId) => `\`${capabilityId}\``).join(", ")} | ${sample.description} |`,
+      `| \`${sample.id}\` | \`${sample.editorVersion}\` | ${sample.expectedCapabilityLookupIds.map((capabilityId) => `\`${capabilityId}\``).join(", ")} | ${sample.description} |`,
   )
   .join("\n")}
 
 ## Selection Rules
 - sample은 가능한 한 capability id를 직접 증명하는 대표 글을 선택한다.
+- \`case:<unsupportedBlockCaseId>\` lookup id는 warning 기반 대표 사례 해소를 뜻한다.
 - \`sample-fixture\` capability에 연결할 sample이 없으면 gap을 숨기지 않고 generated coverage에 남긴다.
 - \`parser-fixture\` capability는 sample gap으로 계산하지 않는다. 이 경우 parser unit test와 parser fixture가 canonical 검증 경로다.
 - 새 sample을 추가할 때는 \`sample-corpus.ts\` metadata, \`source.html\`, \`expected.md\`를 같이 추가한다.

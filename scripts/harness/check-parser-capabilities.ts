@@ -1,10 +1,16 @@
-import { readFile } from "node:fs/promises"
+import { constants } from "node:fs"
+import { access, readFile } from "node:fs/promises"
 
 import { parserCapabilities } from "../../src/shared/parser-capabilities.js"
 import { sampleCorpus } from "../../src/shared/sample-corpus.js"
 import { buildGeneratedDocs } from "./lib/report-generation.js"
 import { collectParserStatus } from "./lib/parser-status.js"
 import { repoPath } from "./lib/paths.js"
+
+const canUpdateGeneratedDoc = async (filePath: string) =>
+  access(filePath, constants.W_OK)
+    .then(() => true)
+    .catch(() => false)
 
 const run = async () => {
   const parserStatus = await collectParserStatus()
@@ -54,6 +60,10 @@ const run = async () => {
   ]
 
   for (const staleDocCheck of staleDocChecks) {
+    if (!(await canUpdateGeneratedDoc(staleDocCheck.filePath))) {
+      continue
+    }
+
     const currentContent = await readFile(staleDocCheck.filePath, "utf8").catch(() => null)
 
     if (currentContent !== staleDocCheck.expected) {

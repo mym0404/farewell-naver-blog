@@ -22,6 +22,7 @@ import {
 } from "../../shared/utils.js"
 import { NaverBlogFetcher } from "../blog-fetcher/naver-blog-fetcher.js"
 import { renderMarkdownPost } from "../converter/markdown-renderer.js"
+import { normalizeUnsupportedBlocks } from "../converter/unsupported-block-normalizer.js"
 import { parsePostHtml } from "../parser/post-parser.js"
 import { reviewParsedPost } from "../reviewer/post-reviewer.js"
 import { AssetStore } from "./asset-store.js"
@@ -465,13 +466,17 @@ export class NaverBlogExporter {
           })
           const html = await fetcher.fetchPostHtml(post.logNo)
           throwIfAborted(this.abortSignal)
-          const parsedPost = parsePostHtml({
-            html,
-            sourceUrl: post.source,
-            options: {
-              markdown: options.markdown,
-              resolveLinkUrl,
-            },
+          const parsedPost = normalizeUnsupportedBlocks({
+            parsedPost: parsePostHtml({
+              html,
+              sourceUrl: post.source,
+              options: {
+                markdown: options.markdown,
+                unsupportedBlockCases: options.unsupportedBlockCases,
+                resolveLinkUrl,
+              },
+            }),
+            options,
           })
           const review = reviewParsedPost(parsedPost)
           const rendered = await renderMarkdownPost({
