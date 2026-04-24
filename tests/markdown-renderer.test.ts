@@ -317,6 +317,43 @@ describe("renderMarkdownPost", () => {
     expect(rendered.markdown).not.toContain("\nsource: https://blog.naver.com/mym0404/223034929697")
   })
 
+  it("renders raw html fallback without warnings when the no-warning option is selected", async () => {
+    const options = defaultExportOptions()
+
+    options.blockOutputs.defaults.rawHtml = {
+      variant: "markdown-no-warning",
+    }
+
+    const rendered = await renderMarkdownPost({
+      post,
+      category,
+      parsedPost: {
+        ...parsedPost,
+        warnings: [],
+        blocks: [
+          {
+            type: "rawHtml",
+            html: "<div><strong>raw</strong> text</div>",
+            reason: "fallback",
+          },
+        ],
+      },
+      markdownFilePath: testMarkdownFilePath,
+      reviewedWarnings: [],
+      options,
+      resolveAsset: async ({ kind, sourceUrl }) =>
+        createAssetRecord({
+          kind,
+          sourceUrl,
+          relativePath: publicImagePath,
+        }),
+    })
+
+    expect(rendered.markdown).toContain("**raw** text")
+    expect(rendered.markdown).not.toContain("## Export Diagnostics")
+    expect(rendered.warnings).toEqual([])
+  })
+
   it("renders referenced links, quotes, and plain video links without frontmatter", async () => {
     const options = defaultExportOptions()
 

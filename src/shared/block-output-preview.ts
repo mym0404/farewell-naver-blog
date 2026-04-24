@@ -88,6 +88,14 @@ const renderRawHtmlPreview = ({
     })
   }
 
+  if (selection.variant === "markdown-no-warning") {
+    return composeRawHtmlPreview({
+      body: extractedText,
+      diagnostics: [],
+      linkFormatter,
+    })
+  }
+
   return composeRawHtmlPreview({
     body: extractedText,
     diagnostics: [

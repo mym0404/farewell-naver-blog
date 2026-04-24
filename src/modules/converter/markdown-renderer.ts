@@ -521,6 +521,11 @@ export const renderMarkdownPost = async ({
         continue
       }
 
+      if (selection.variant === "markdown-no-warning") {
+        sections.push(extractedText)
+        continue
+      }
+
       const message = `raw HTML 블록을 Markdown으로 변환했습니다: ${block.reason}`
 
       warnings.push(message)

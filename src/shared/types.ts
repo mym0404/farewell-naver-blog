@@ -161,6 +161,10 @@ export type RawHtmlBlockOutputSelection =
       variant: "markdown-fallback"
       params?: Record<string, BlockOutputParamValue>
     }
+  | {
+      variant: "markdown-no-warning"
+      params?: Record<string, BlockOutputParamValue>
+    }
 
 export type BlockOutputSelectionByType = {
   paragraph: ParagraphBlockOutputSelection

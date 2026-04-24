@@ -537,6 +537,7 @@ export const blockOutputFamilyDefinitions: BlockOutputFamilyDefinition[] = [
     variants: [
       { id: "omit", label: "생략 + diagnostic", description: "본문에서는 생략하고 diagnostic에만 남깁니다." },
       { id: "markdown-fallback", label: "Markdown fallback", description: "추출 가능한 텍스트를 Markdown으로 남깁니다." },
+      { id: "markdown-no-warning", label: "경고 없이 출력", description: "추출 가능한 텍스트를 본문에만 남기고 warning과 diagnostic은 추가하지 않습니다." },
     ],
   },
 ]

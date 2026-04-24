@@ -552,6 +552,35 @@ describe("ExportOptionsPanel", () => {
     expect(preview).toContain("raw HTML 블록을 생략했습니다")
   })
 
+  it("shows raw html preview without diagnostics when the no-warning option is selected", async () => {
+    const options = defaultExportOptions()
+
+    options.blockOutputs.defaults.rawHtml = {
+      variant: "markdown-no-warning",
+    }
+
+    render(
+      <ExportOptionsPanel
+        step="markdown"
+        outputDir={testOutputDir}
+        options={options}
+        optionDescriptions={optionDescriptions}
+        frontmatterFieldOrder={frontmatterFieldOrder}
+        frontmatterFieldMeta={frontmatterFieldMeta}
+        frontmatterValidationErrors={[]}
+        onOutputDirChange={vi.fn()}
+        onOptionsChange={vi.fn()}
+      />,
+    )
+
+    const optionField = query<HTMLElement>('[data-block-output-card="rawHtml"]')
+
+    expect(optionField.textContent).toContain("경고 없이 출력")
+    expect(optionField.querySelector("pre")?.textContent).toContain("Legacy block")
+    expect(optionField.querySelector("pre")?.textContent).toContain("with text")
+    expect(optionField.querySelector("pre")?.textContent).not.toContain("## Export Diagnostics")
+  })
+
   it("shows multiple candidates for each unsupported representative case and updates the preview", async () => {
     const user = userEvent.setup()
     let latestOptions = defaultExportOptions()
