@@ -1,0 +1,26 @@
+status: open
+non_user_answer_streak: 0
+required_tracks:
+  scope:
+    status: open
+    summary: ''
+  non_goals:
+    status: open
+    summary: ''
+  outputs:
+    status: open
+    summary: ''
+  verification:
+    status: open
+    summary: ''
+  constraints:
+    status: open
+    summary: ''
+  stop_conditions:
+    status: open
+    summary: ''
+rounds: []
+closure:
+  ready: false
+  summary: ''
+  material_blockers: []

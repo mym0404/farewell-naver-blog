@@ -1,0 +1,8 @@
+events:
+- id: E1
+  kind: plan_initialized
+  summary: Initialized plan execution.
+  affects:
+  - exec.yaml
+  - status.yaml#phase
+  source: ex planner init
