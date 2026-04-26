@@ -7,10 +7,10 @@
 이 문서는 `src/shared/parser-capabilities.ts`, `src/shared/sample-corpus.ts`, `tests/fixtures/`, `tests/*.test.ts`를 바탕으로 자동 생성된다.
 
 ## 관련 코드
-- [../../src/shared/parser-capabilities.ts](../../src/shared/parser-capabilities.ts)
-- [../../src/shared/sample-corpus.ts](../../src/shared/sample-corpus.ts)
-- [../../scripts/harness/generate-quality-report.ts](../../scripts/harness/generate-quality-report.ts)
-- [../../scripts/harness/check-parser-capabilities.ts](../../scripts/harness/check-parser-capabilities.ts)
+- `src/shared/parser-capabilities.ts`
+- `src/shared/sample-corpus.ts`
+- `scripts/harness/generate-quality-report.ts`
+- `scripts/harness/check-parser-capabilities.ts`
 
 ## 검증 방법
 - `pnpm quality:report`
@@ -19,10 +19,10 @@
 ## Coverage Summary
 | metric | coverage |
 | --- | --- |
-| parser block fixture coverage | 12/12 (100%) |
-| parser capability test mapping coverage | 28/28 (100%) |
-| sample-fixture capability coverage | 22/22 (100%) |
-| parser-fixture only capabilities | 6 |
+| parser block fixture coverage | 11/11 (100%) |
+| parser capability test mapping coverage | 26/26 (100%) |
+| sample-fixture capability coverage | 21/21 (100%) |
+| parser-fixture only capabilities | 5 |
 | sample corpus size | 13 |
 | covered editor versions | 3/3 (100%) |
 
@@ -33,6 +33,5 @@
 - `se2-heading`
 - `se2-quote`
 - `se2-divider`
+- `se3-divider`
 - `se3-code`
-- `se2-rawHtml`
-- `se4-rawHtml`

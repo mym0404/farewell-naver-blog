@@ -1,24 +1,24 @@
 import { load } from "cheerio"
 import { describe, expect, it } from "vitest"
 
-import { parseSe2Post } from "../../src/modules/parser/se2-parser.js"
+import { NaverBlogSE2Editor } from "../../src/modules/parser/editors/naver-blog-se2-editor.js"
 import { defaultExportOptions } from "../../src/shared/export-options.js"
 
 const parserOptions = {
   markdown: defaultExportOptions().markdown,
-  unsupportedBlockCases: defaultExportOptions().unsupportedBlockCases,
 }
+const se2Editor = new NaverBlogSE2Editor()
 
 const createSe2Html = (content: string) => `<div id="viewTypeSelector">${content}</div>`
 
 const parseSe2Fixture = (content: string) =>
-  parseSe2Post({
+  se2Editor.parse({
     $: load(createSe2Html(content)),
     tags: ["legacy", "legacy", "archive"],
     options: parserOptions,
   })
 
-describe("parseSe2Post", () => {
+describe("NaverBlogSE2Editor", () => {
   it("parses direct text nodes into paragraph blocks", () => {
     const parsed = parseSe2Fixture("plain legacy text")
 
@@ -360,20 +360,22 @@ console.log(oldSchool)
     expect(parsed.blocks).toEqual([{ type: "paragraph", text: "**Fallback** html" }])
   })
 
-  it("keeps empty unsupported html as rawHtml blocks", () => {
+  it("keeps unsupported html as ordered fallback body nodes", () => {
     const parsed = parseSe2Fixture("<section></section>")
 
-    expect(parsed.blocks).toEqual([
+    expect(parsed.blocks).toEqual([])
+    expect(parsed.body).toEqual([
       {
-        type: "rawHtml",
+        kind: "fallbackHtml",
         html: "<section></section>",
         reason: "se2:section",
+        warnings: ["SE2 블록을 구조화하지 못해 원본 HTML로 보존했습니다: <section>"],
       },
     ])
-    expect(parsed.warnings).toContain("SE2 블록을 해석하지 못해 raw HTML로 남겼습니다: <section>")
+    expect(parsed.warnings).toContain("SE2 블록을 구조화하지 못해 원본 HTML로 보존했습니다: <section>")
   })
 
-  it("captures inline gif video fallback blocks as structured unsupported cases", () => {
+  it("keeps inline gif video fallback as ordered fallback html", () => {
     const parsed = parseSe2Fixture(`
       <p>
         <video
@@ -384,34 +386,14 @@ console.log(oldSchool)
       </p>
     `)
 
-    expect(parsed.blocks).toEqual([
-      {
-        type: "image",
-        image: {
-          sourceUrl: "https://mblogthumb-phinf.pstatic.net/sample.gif?type=w210",
-          originalSourceUrl: "https://mblogvideo-phinf.pstatic.net/sample.gif?type=mp4w800",
-          alt: "",
-          caption: null,
-          mediaKind: "image",
-        },
-        outputSelection: {
-          variant: "linked-image",
-        },
-      },
-    ])
-    expect(parsed.warnings).toEqual([])
-    expect(parsed.unsupportedBlocks).toEqual([
-      {
-        caseId: "se2-inline-gif-video",
-        blockIndex: 0,
-        blockCount: 1,
-        warningText: "SE2 블록을 해석하지 못해 raw HTML로 남겼습니다: <p>",
-        data: {
-          sourceUrl: "https://mblogvideo-phinf.pstatic.net/sample.gif?type=mp4w800",
-          posterUrl: "https://mblogthumb-phinf.pstatic.net/sample.gif?type=w210",
-        },
-      },
-    ])
+    expect(parsed.blocks).toEqual([])
+    expect(parsed.body?.[0]).toMatchObject({
+      kind: "fallbackHtml",
+      reason: "se2:inline-gif-video",
+      warnings: ["SE2 GIF video 블록을 구조화하지 못해 원본 HTML로 보존했습니다."],
+    })
+    expect(parsed.body?.[0]?.kind === "fallbackHtml" ? parsed.body[0].html : "").toContain("<video")
+    expect(parsed.warnings).toEqual(["SE2 GIF video 블록을 구조화하지 못해 원본 HTML로 보존했습니다."])
   })
 
   it("skips empty styled spacer paragraphs instead of keeping rawHtml", () => {

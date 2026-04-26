@@ -7,9 +7,9 @@
 - 실제 스택 계약은 `package.json`, `src/`, `scripts/`, `tests/`가 기준이다.
 
 ## 관련 코드
-- [../../../package.json](../../../package.json)
-- [../../../src/server.ts](../../../src/server.ts)
-- [../../../scripts/export-single-post.ts](../../../scripts/export-single-post.ts)
+- `package.json`
+- `src/server.ts`
+- `scripts/export-single-post.ts`
 
 ## 검증 방법
 - `pnpm typecheck`: 런타임 엔트리, shared 타입, import 구조를 빠르게 다시 확인할 때 실행한다.
@@ -42,8 +42,9 @@
 
 ## Repo Shape
 - `src/modules`: fetcher, parser, reviewer, converter, exporter
+- `src/modules/parser/editors`: SE2, SE3, SE4 parser class 구현
 - `src/server`: job store와 HTTP API
 - `src/shared`: 타입, 옵션, parser capability, sample corpus, 유틸
 - `src/ui`: React 앱 셸, `features/common` 공용 shell/hook/status, feature별 UI 조합, shadcn primitive
 - `tests`: unit, integration, smoke 보조 테스트
-- `docs`: 사용자 문서와 generated 보고서
+- `.agents/knowledge/reference`: generated 보고서, runbook, 플랜 아카이브, 트러블슈팅

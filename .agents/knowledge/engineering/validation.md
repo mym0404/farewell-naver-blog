@@ -8,15 +8,15 @@
 - bundled verification command 구성은 이 문서와 `package.json`에만 둔다. 다른 knowledge 문서는 검증 의미만 설명한다.
 
 ## 관련 코드
-- [../../../package.json](../../../package.json)
-- [../../../.github/workflows/required-checks.yml](../../../.github/workflows/required-checks.yml)
-- [../../../scripts/harness/check-parser-capabilities.ts](../../../scripts/harness/check-parser-capabilities.ts)
-- [../../../scripts/harness/verify-sample-exports.ts](../../../scripts/harness/verify-sample-exports.ts)
-- [../../../scripts/harness/refresh-sample-fixtures.ts](../../../scripts/harness/refresh-sample-fixtures.ts)
-- [../../../scripts/harness/run-ui-smoke.ts](../../../scripts/harness/run-ui-smoke.ts)
-- [../../../scripts/harness/run-ui-resume-smoke.ts](../../../scripts/harness/run-ui-resume-smoke.ts)
-- [../../../scripts/harness/run-ui-live-resume-export.ts](../../../scripts/harness/run-ui-live-resume-export.ts)
-- [../../../scripts/harness/run-ui-live-upload.ts](../../../scripts/harness/run-ui-live-upload.ts)
+- `package.json`
+- `.github/workflows/required-checks.yml`
+- `scripts/harness/check-parser-capabilities.ts`
+- `scripts/harness/verify-sample-exports.ts`
+- `scripts/harness/refresh-sample-fixtures.ts`
+- `scripts/harness/run-ui-smoke.ts`
+- `scripts/harness/run-ui-resume-smoke.ts`
+- `scripts/harness/run-ui-live-resume-export.ts`
+- `scripts/harness/run-ui-live-upload.ts`
 
 ## 검증 방법
 - `pnpm check:local`: 저장소 파일을 수정한 모든 턴에서 가장 먼저 실행하는 기본 검사다. 같은 로컬 기준선을 다시 확인한다. 실패하면 현재 작업이 만든 회귀인지 먼저 보고, 현재 작업 때문이면 고치면서 진행하고 다른 변경이나 기존 상태 때문이면 즉시 중단하고 실패 사실을 보고한다.
@@ -30,7 +30,7 @@
 ## 테스트 종류
 - parser unit
   `tests/parser/*.test.ts`
-  개별 editor parser가 blockType을 어떻게 AST로 만드는지 확인한다.
+  `src/modules/parser/editors/*`의 editor parser class와 호환 wrapper가 blockType을 어떻게 AST로 만드는지 확인한다.
 - renderer/exporter unit
   `tests/markdown-renderer.test.ts`, `tests/export-single-post.test.ts`, `tests/naver-blog-exporter.test.ts` 등
   AST -> Markdown, export 파이프라인, frontmatter, 자산 처리 계약을 확인한다.

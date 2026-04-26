@@ -1,7 +1,7 @@
 import { load } from "cheerio"
 import { describe, expect, it } from "vitest"
 
-import { parseSe4Post } from "../../src/modules/parser/se4-parser.js"
+import { NaverBlogSE4Editor } from "../../src/modules/parser/editors/naver-blog-se4-editor.js"
 import { defaultExportOptions } from "../../src/shared/export-options.js"
 
 const parserOptions = {
@@ -9,6 +9,7 @@ const parserOptions = {
 }
 
 const sourceUrl = "https://blog.naver.com/mym0404/123456789"
+const se4Editor = new NaverBlogSE4Editor()
 
 const createModuleScript = (module: Record<string, unknown>) =>
   `<script class="__se_module_data" data-module-v2='${JSON.stringify(module)}'></script>`
@@ -17,14 +18,14 @@ const createSe4Html = (...components: string[]) =>
   `<div id="viewTypeSelector">${components.join("")}</div>`
 
 const parseSe4Fixture = (...components: string[]) =>
-  parseSe4Post({
+  se4Editor.parse({
     $: load(createSe4Html(...components)),
     sourceUrl,
     tags: ["algo", "algo", "math"],
     options: parserOptions,
   })
 
-describe("parseSe4Post", () => {
+describe("NaverBlogSE4Editor", () => {
   it("parses text components into paragraph blocks", () => {
     const parsed = parseSe4Fixture(`
       <div class="se-component se-text">
@@ -277,7 +278,7 @@ console.log(value)
     })
   })
 
-  it("falls back to raw html when a table component has no table element", () => {
+  it("keeps table fallback as ordered fallback html when a table component has no table element", () => {
     const parsed = parseSe4Fixture(`
       <div class="se-component se-table">
         ${createModuleScript({ type: "v2_table" })}
@@ -285,16 +286,15 @@ console.log(value)
       </div>
     `)
 
-    expect(parsed.blocks).toHaveLength(1)
-    expect(parsed.blocks[0]).toMatchObject({
-      type: "rawHtml",
+    expect(parsed.blocks).toEqual([])
+    expect(parsed.body?.[0]).toMatchObject({
+      kind: "fallbackHtml",
       reason: "table-fallback",
     })
-    expect(parsed.blocks[0]).toHaveProperty("html")
-    expect(parsed.blocks[0]?.type === "rawHtml" ? parsed.blocks[0].html : "").toContain(
+    expect(parsed.body?.[0]?.kind === "fallbackHtml" ? parsed.body[0].html : "").toContain(
       '<div class="se-table-placeholder"></div>',
     )
-    expect(parsed.warnings).toContain("표 블록을 표로 해석하지 못해 raw HTML fallback으로 남겼습니다.")
+    expect(parsed.warnings).toContain("표 블록을 표로 해석하지 못해 원본 HTML로 보존했습니다.")
   })
 
   it("parses material components into link cards", () => {
@@ -551,35 +551,41 @@ console.log(value)
     expect(parsed.blocks).toEqual([{ type: "divider" }])
   })
 
-  it("converts unsupported components to markdown paragraphs when possible", () => {
+  it("keeps unsupported components with content as fallback html", () => {
     const parsed = parseSe4Fixture(`
       <div class="se-component se-unsupported">
         <p>Unsupported <strong>content</strong></p>
       </div>
     `)
 
-    expect(parsed.blocks).toEqual([{ type: "paragraph", text: "Unsupported **content**" }])
+    expect(parsed.blocks).toEqual([])
+    expect(parsed.body?.[0]).toMatchObject({
+      kind: "fallbackHtml",
+      reason: "unsupported:se-component se-unsupported",
+    })
+    expect(parsed.body?.[0]?.kind === "fallbackHtml" ? parsed.body[0].html : "").toContain(
+      "Unsupported <strong>content</strong>",
+    )
     expect(parsed.warnings).toContain(
-      "지원하지 않는 SE4 블록을 텍스트로 변환했습니다: se-component se-unsupported",
+      "지원하지 않는 SE4 블록을 원본 HTML로 보존했습니다: se-component se-unsupported",
     )
   })
 
-  it("keeps unsupported empty components as raw html", () => {
+  it("keeps unsupported empty components as fallback html", () => {
     const parsed = parseSe4Fixture(`
       <div class="se-component se-empty">
         <div></div>
       </div>
     `)
 
-    expect(parsed.blocks).toHaveLength(1)
-    expect(parsed.blocks[0]).toMatchObject({
-      type: "rawHtml",
+    expect(parsed.blocks).toEqual([])
+    expect(parsed.body?.[0]).toMatchObject({
+      kind: "fallbackHtml",
       reason: "unsupported:se-component se-empty",
     })
-    expect(parsed.blocks[0]).toHaveProperty("html")
-    expect(parsed.blocks[0]?.type === "rawHtml" ? parsed.blocks[0].html : "").toContain("<div></div>")
+    expect(parsed.body?.[0]?.kind === "fallbackHtml" ? parsed.body[0].html : "").toContain("<div></div>")
     expect(parsed.warnings).toContain(
-      "지원하지 않는 SE4 블록을 raw HTML로 보존했습니다: se-component se-empty",
+      "지원하지 않는 SE4 블록을 원본 HTML로 보존했습니다: se-component se-empty",
     )
   })
 })

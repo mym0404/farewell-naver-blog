@@ -4,17 +4,18 @@
 이 문서는 parser가 지원하는 capability-first 카탈로그를 정리한다. canonical 지원 단위는 공용 `blockType`이 아니라 `editorVersion + blockType` 조합이다.
 
 ## Source Of Truth
-- 실제 기준은 [../../../src/shared/block-registry.ts](../../../src/shared/block-registry.ts) 와 [../../../src/shared/parser-capabilities.ts](../../../src/shared/parser-capabilities.ts) 이다.
+- 실제 기준은 `src/shared/block-registry.ts` 와 `src/shared/parser-capabilities.ts` 이다.
 - 이 문서는 코드에서 자동 생성되며 수동 편집하지 않는다.
 
 ## 관련 코드
-- [../../../src/shared/block-registry.ts](../../../src/shared/block-registry.ts)
-- [../../../src/shared/parser-capabilities.ts](../../../src/shared/parser-capabilities.ts)
-- [../../../src/shared/sample-corpus.ts](../../../src/shared/sample-corpus.ts)
-- [../../../src/modules/parser/post-parser.ts](../../../src/modules/parser/post-parser.ts)
-- [../../../src/modules/parser/se2-parser.ts](../../../src/modules/parser/se2-parser.ts)
-- [../../../src/modules/parser/se3-parser.ts](../../../src/modules/parser/se3-parser.ts)
-- [../../../src/modules/parser/se4-parser.ts](../../../src/modules/parser/se4-parser.ts)
+- `src/shared/block-registry.ts`
+- `src/shared/parser-capabilities.ts`
+- `src/shared/sample-corpus.ts`
+- `src/modules/parser/post-parser.ts`
+- `src/modules/parser/editors/base-editor.ts`
+- `src/modules/parser/editors/naver-blog-se2-editor.ts`
+- `src/modules/parser/editors/naver-blog-se3-editor.ts`
+- `src/modules/parser/editors/naver-blog-se4-editor.ts`
 
 ## 검증 방법
 - `pnpm quality:report`
@@ -33,7 +34,7 @@
 | `se3-quote` | `3` | `quote` | `markdown-paragraph` | `sample-fixture` | `se3-quote-imagegroup-note9`, `se3-quote-table-vita` |
 | `se4-quote` | `4` | `quote` | `markdown-paragraph` | `sample-fixture` | `se4-quote-formula-code` |
 | `se2-divider` | `2` | `divider` | `structured` | `parser-fixture` | - |
-| `se3-divider` | `3` | `divider` | `structured` | `sample-fixture` | `se3-quote-table-vita` |
+| `se3-divider` | `3` | `divider` | `structured` | `parser-fixture` | - |
 | `se4-divider` | `4` | `divider` | `structured` | `sample-fixture` | `se4-formula-code-linkcard`, `se4-image-group`, `se4-heading-itinerary` |
 | `se2-code` | `2` | `code` | `markdown-paragraph` | `sample-fixture` | `se2-code-image-autolayout` |
 | `se3-code` | `3` | `code` | `markdown-paragraph` | `parser-fixture` | - |
@@ -50,11 +51,9 @@
 | `se2-table` | `2` | `table` | `raw-html` | `sample-fixture` | `se2-table-rawhtml-navigation` |
 | `se3-table` | `3` | `table` | `raw-html` | `sample-fixture` | `se3-quote-table-vita` |
 | `se4-table` | `4` | `table` | `raw-html` | `sample-fixture` | `se4-video-table`, `se4-heading-itinerary` |
-| `se2-rawHtml` | `2` | `rawHtml` | `raw-html` | `parser-fixture` | - |
-| `se4-rawHtml` | `4` | `rawHtml` | `raw-html` | `parser-fixture` | - |
 
 ## Notes
 - capability id는 parser, renderer, UI preview, generated knowledge가 함께 쓰는 공통 seam이다.
 - `sample-fixture` capability는 공개 글 fixture로 회귀를 확인한다.
 - `parser-fixture` capability는 parser unit test와 parser fixture로만 관리한다.
-- coverage gap과 parser-fixture only 목록은 [../reference/generated/sample-coverage.md](../reference/generated/sample-coverage.md) 에서 같이 본다.
+- coverage gap과 parser-fixture only 목록은 `.agents/knowledge/reference/generated/sample-coverage.md` 에서 같이 본다.
