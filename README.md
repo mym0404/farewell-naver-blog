@@ -133,8 +133,7 @@ UI에서 아래 5개 옵션 묶음을 조절할 수 있습니다.
 - 자산 옵션: 이미지 다운로드, 썸네일 처리, 압축, 캡션, 업로드 방식
 
 ## 검증
-
-- `pnpm parser:check`: 지원 범위와 샘플 검증 계약 확인
+: 지원 범위와 샘플 검증 계약 확인
 - `pnpm samples:verify`: 저장된 대표 샘플 export 결과 회귀 확인
 - `pnpm smoke:ui`: Playwright 기반 UI 흐름과 작업 복구 회귀 확인
 - `pnpm test:network:resume-export`: 실제 네이버 export 중단 후 `manifest.json` 기반 resume export 회귀 확인

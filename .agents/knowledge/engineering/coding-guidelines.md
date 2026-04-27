@@ -13,11 +13,11 @@
 - repo 바깥 지식보다 저장소 안의 코드, 설정, 테스트를 우선한다.
 - 구조, 샘플, 검증 기준은 숨기지 말고 코드와 문서에 남긴다.
 - parser, renderer, exporter, UI/API를 바꾸면 관련 문서와 harness를 함께 본다.
-- generated 문서는 직접 고치지 않고 스크립트로 다시 만든다.
+- `src/`는 런타임에 필요한 코드와 계약만 둔다. fixture 목록, coverage, report, harness 메타데이터처럼 런타임에 필요하지 않은 정보는 절대로 `src/`에서 관리하지 않는다.
 - commit, push, PR 생성은 명시적 요청이 있을 때만 수행한다.
 
 ## Change Discipline
-- parser 범위를 넓힐 때는 `src/modules/blog/BlogRegistry.ts`, 샘플 corpus, 테스트를 함께 맞춘다.
+- parser 범위를 넓힐 때는 `src/modules/blog/BlogRegistry.ts`, harness sample corpus, 테스트를 함께 맞춘다.
 - exporter나 renderer 규약을 바꾸면 `manifest`, Markdown 출력, export spec, smoke 흐름이 같이 맞아야 한다.
 - UI 변경은 정적 DOM id와 smoke selector 계약을 함부로 깨지 않도록 주의한다.
 - UI 테스트는 className, computed style, query selector 기반 CSS 검증을 기본값으로 두지 않는다. 실제 사용자 행동, 접근성 상태, 서버 계약이 바뀌는지만 본다.
@@ -25,6 +25,6 @@
 
 ## Documentation Discipline
 - evergreen 지식은 `.agents/knowledge/`가 기준이다.
-- `.agents/knowledge/reference/runbooks/`는 반복 가능한 운영 절차, `.agents/knowledge/reference/plan-archive/`는 완료된 큰 변경 기록, `.agents/knowledge/reference/troubleshooting/`는 재발 방지 메모, `.agents/knowledge/reference/generated/`는 harness 산출물이다.
+- `.agents/knowledge/reference/runbooks/`는 반복 가능한 운영 절차, `.agents/knowledge/reference/plan-archive/`는 완료된 큰 변경 기록, `.agents/knowledge/reference/troubleshooting/`는 재발 방지 메모다.
 - 코드 동작이 바뀌면 knowledge와 관련 docs를 같이 갱신한다.
 - `README.md`는 사용자 진입, `CONTRIBUTING.md`는 기여자 진입 문서로 유지한다.

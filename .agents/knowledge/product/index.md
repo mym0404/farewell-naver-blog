@@ -3,7 +3,7 @@
 ## 여기서 찾는 것
 - 도메인 엔티티와 상태 전이: `.agents/knowledge/product/domain.md`
 - 사용자 흐름과 출력 규약: `.agents/knowledge/product/product-outline.md`
-- 실샘플 대표성과 선택 규칙 projection: `.agents/knowledge/product/sample-corpus.md`
+- 실샘플 fixture 목록과 운영 규칙: `.agents/knowledge/product/sample-corpus.md`
 - 대시보드 UI 규약과 회귀 기준: `.agents/knowledge/DESIGN.md`
 
 ## 대표 기준점
@@ -18,4 +18,3 @@
 
 ## 검증
 - `pnpm smoke:ui`: scan, category 선택, export, upload, 작업 복구 화면까지 사용자 흐름을 다시 확인할 때 실행한다.
-- `pnpm quality:report`: sample corpus projection과 generated 품질 보고서가 달라질 때 실행한다.

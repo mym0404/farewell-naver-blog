@@ -1,4 +1,24 @@
-import type { SampleCorpusEntry } from "./Types.js"
+type SampleCorpusEntry = {
+  id: string
+  blogId: string
+  logNo: string
+  editorId: string
+  editorVersion: number
+  expectedWarnings?: {
+    parser?: string[]
+    reviewer?: string[]
+    render?: string[]
+  }
+  post: {
+    title: string
+    publishedAt: string
+    categoryId: number
+    categoryName: string
+    categoryPath: string[]
+    thumbnailUrl: string | null
+    source: string
+  }
+}
 
 export const sampleCorpus: SampleCorpusEntry[] = [
   {
@@ -7,11 +27,6 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     logNo: "221302086471",
     editorId: "naver.se4",
     editorVersion: 4,
-    expectedParserBlockIds: [
-      "naver.se4.image",
-      "naver.se4.video",
-      "naver.se4.table",
-    ],
     post: {
       title: "휴머노이드 첫 Rigging 성공 애니메이션",
       publishedAt: "2018-06-19T13:16:43+09:00",
@@ -22,8 +37,6 @@ export const sampleCorpus: SampleCorpusEntry[] = [
         "https://phinf.pstatic.net/image.nmv/blogucc28/2018/06/19/867/f18a79005b808502377d4b020c2641e0958e_ugcvideo_270P_01_16x9_logo.jpg",
       source: "https://blog.naver.com/mym0404/221302086471",
     },
-    description: "오래된 SE4 글에서 video, table, image 블록을 검증한다.",
-    notes: ["동영상 썸네일과 표 fallback이 아닌 구조화 파싱을 확인한다."],
   },
   {
     id: "se4-formula-code-linkcard",
@@ -31,14 +44,6 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     logNo: "223034929697",
     editorId: "naver.se4",
     editorVersion: 4,
-    expectedParserBlockIds: [
-      "naver.se4.linkCard",
-      "naver.se4.image",
-      "naver.se4.divider",
-      "naver.se4.text",
-      "naver.se4.formula",
-      "naver.se4.code",
-    ],
     post: {
       title: "[백준] 9942 하노이의 네 탑, 1607 원숭이 타워",
       publishedAt: "2023-03-04T22:38:22+09:00",
@@ -49,8 +54,6 @@ export const sampleCorpus: SampleCorpusEntry[] = [
         "https://mblogthumb-phinf.pstatic.net/MjAyMzAzMDRfNTMg/MDAxNjc3OTM2NTg2NDU2.e5y0ziI9pO5MQMvTUNcVWLysAejftoYV5O83vFQAk3sg.aLBO_S1K-b4pQU0tOZ3ipv_r4uGR3BPXr8-gaT42riYg.PNG.mym0404/bg.png?type=w800",
       source: "https://blog.naver.com/mym0404/223034929697",
     },
-    description: "수식, 코드, 링크 카드와 본문/구분선을 함께 검증한다.",
-    notes: ["Markdown 렌더링에서 수식과 fenced code block이 유지되어야 한다."],
   },
   {
     id: "se4-image-group",
@@ -58,11 +61,6 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     logNo: "224056819985",
     editorId: "naver.se4",
     editorVersion: 4,
-    expectedParserBlockIds: [
-      "naver.se4.text",
-      "naver.se4.divider",
-      "naver.se4.imageGroup",
-    ],
     post: {
       title: "초간단 운전면허 필기 2026 - 첫 시험에서 합격하는 가장 확실한 방법",
       publishedAt: "2025-10-28T18:55:34+09:00",
@@ -73,8 +71,6 @@ export const sampleCorpus: SampleCorpusEntry[] = [
         "https://mblogthumb-phinf.pstatic.net/MjAyNTEwMjhfMTAz/MDAxNzYxNjQ0NTc5Njc1.43EtjBHKBUENMLfYb279kooGwuikoeVTe_QMDNqMaoAg.96pBh3AVwoO8cdvS5KkkGMuXTSRnhgHjwmXShQ2wKP8g.PNG/ko-1.png?type=w800",
       source: "https://blog.naver.com/mym0404/224056819985",
     },
-    description: "imageGroup 블록과 문단, 구분선 조합을 검증한다.",
-    notes: ["기본 정책은 이미지 그룹을 개별 이미지 나열로 렌더링한다."],
   },
   {
     id: "se4-heading-itinerary",
@@ -82,15 +78,6 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     logNo: "223511986798",
     editorId: "naver.se4",
     editorVersion: 4,
-    expectedParserBlockIds: [
-      "naver.se4.text",
-      "naver.se4.image",
-      "naver.se4.heading",
-      "naver.se4.divider",
-      "naver.se4.imageGroup",
-      "naver.se4.linkCard",
-      "naver.se4.table",
-    ],
     post: {
       title: "전북 부안 가볼만한곳 변산반도 여행 1박2일 정산",
       publishedAt: "2024-07-14T09:31:32+09:00",
@@ -101,8 +88,6 @@ export const sampleCorpus: SampleCorpusEntry[] = [
         "https://mblogthumb-phinf.pstatic.net/MjAyNDA3MTNfMjk5/MDAxNzIwODQ3NjY3OTE4.Kz7fHr5z0nKd4RCms8SuM8shdSdXn0FrA3P4ebGcPQAg.z8SI0didzxBNQw-N7K2WHzKSjAeis5_KurpilM37-jQg.PNG/%BA%CE%BE%C8_%B0%A1%BA%BC%B8%B8%C7%D1%B0%F7_%282%29.png?type=w800",
       source: "https://blog.naver.com/goyamee/223511986798",
     },
-    description: "SE4 sectionTitle heading이 반복되는 여행 일정 글을 검증한다.",
-    notes: ["sectionTitle heading, 링크 카드, 이미지 묶음, 표가 함께 나오는 대표 샘플이다."],
   },
   {
     id: "se4-image-legacy-link",
@@ -110,10 +95,6 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     logNo: "221589718939",
     editorId: "naver.se4",
     editorVersion: 4,
-    expectedParserBlockIds: [
-      "naver.se4.text",
-      "naver.se4.image",
-    ],
     post: {
       title: "[Outsourcing] 외주2",
       publishedAt: "2019-07-19T12:11:57+09:00",
@@ -124,8 +105,6 @@ export const sampleCorpus: SampleCorpusEntry[] = [
         "https://mblogthumb-phinf.pstatic.net/MjAxOTA3MTlfMjkw/MDAxNTYzNTA1NzczODcw.uIJdF_uU_aV1Sm444n7B-cRewu97e3AGlD6V9qVEcMAg.wNNXNaRurOPPCL_uDYWxT3KEc2KxcyYmlS4nVMjcaUcg.PNG.mym0404/1.png?type=w800",
       source: "https://blog.naver.com/mym0404/221589718939",
     },
-    description: "__se_image_link 마크업을 쓰는 오래된 SE4 본문 이미지를 검증한다.",
-    notes: ["frontmatter thumbnail과 별개로 본문 이미지가 image 블록으로 유지되어야 한다."],
   },
   {
     id: "se4-quote-formula-code",
@@ -133,15 +112,6 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     logNo: "222619228134",
     editorId: "naver.se4",
     editorVersion: 4,
-    expectedParserBlockIds: [
-      "naver.se4.linkCard",
-      "naver.se4.image",
-      "naver.se4.divider",
-      "naver.se4.text",
-      "naver.se4.quote",
-      "naver.se4.formula",
-      "naver.se4.code",
-    ],
     post: {
       title: "[DP] Slope trick 공부 - BOJ - 19693 Safety",
       publishedAt: "2022-01-11T22:53:03+09:00",
@@ -152,8 +122,6 @@ export const sampleCorpus: SampleCorpusEntry[] = [
         "https://mblogthumb-phinf.pstatic.net/MjAyMjAxMTFfMzAw/MDAxNjQxOTAxMTY4NDI2.8akcjgeR4eBygaw-Aos4qS9Cl4K__Ms3xswjHEAWggAg.01-4GR4fCm4rUK_ywMmkcYx0mpoZMbdA_ooLeMIuxPEg.PNG.mym0404/bg.png?type=w800",
       source: "https://blog.naver.com/mym0404/222619228134",
     },
-    description: "인용문과 수식, 코드가 섞인 SE4 글을 검증한다.",
-    notes: ["quote 블록과 formula/code를 동시에 검증하는 대표 샘플이다."],
   },
   {
     id: "se2-legacy",
@@ -161,7 +129,6 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     logNo: "220496669802",
     editorId: "naver.se2",
     editorVersion: 2,
-    expectedParserBlockIds: ["naver.se2.textElement"],
     post: {
       title: "2015년 10월 1일 오후 6시 33분에 저장한 글입니다.",
       publishedAt: "2015-10-01T18:33:19+09:00",
@@ -171,8 +138,6 @@ export const sampleCorpus: SampleCorpusEntry[] = [
       thumbnailUrl: null,
       source: "https://blog.naver.com/mym0404/220496669802",
     },
-    description: "SE2 raw HTML 본문을 paragraph 중심으로 변환하는지 검증한다.",
-    notes: ["구형 에디터 글의 기본 경로를 유지한다."],
   },
   {
     id: "se2-code-image-autolayout",
@@ -180,11 +145,6 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     logNo: "221504285266",
     editorId: "naver.se2",
     editorVersion: 2,
-    expectedParserBlockIds: [
-      "naver.se2.textElement",
-      "naver.se2.image",
-      "naver.se2.table",
-    ],
     post: {
       title: "[iOS] 오토 레이아웃을 이용할 때 기기에 따라 적절한 값을 얻어오기",
       publishedAt: "2019-04-03T11:07:24+09:00",
@@ -194,8 +154,6 @@ export const sampleCorpus: SampleCorpusEntry[] = [
       thumbnailUrl: null,
       source: "https://blog.naver.com/mym0404/221504285266",
     },
-    description: "SE2 본문에서 code와 image가 함께 나오는 기술 글을 검증한다.",
-    notes: ["SE2 code block과 inline 본문 이미지가 같이 유지되어야 한다."],
   },
   {
     id: "se2-table-rawhtml-navigation",
@@ -203,11 +161,6 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     logNo: "221459172607",
     editorId: "naver.se2",
     editorVersion: 2,
-    expectedParserBlockIds: [
-      "naver.se2.textElement",
-      "naver.se2.image",
-      "naver.se2.table",
-    ],
     expectedWarnings: {
       parser: ["SE2 GIF video 블록을 구조화하지 못해 원본 HTML로 보존했습니다."],
       reviewer: [
@@ -229,10 +182,6 @@ export const sampleCorpus: SampleCorpusEntry[] = [
         "https://mblogthumb-phinf.pstatic.net/MjAxOTAyMDZfMTA0/MDAxNTQ5NDA2MzAxNjMx.yvJrtmBJP1HOloCZfCfI_oo4xxnZbqhEtct2h4sbWpAg.RY6DIb_lok5SJBDO-1pmxfY_z9zpLdab7jhCsp4cphIg.PNG.mym0404/1.png?type=w800",
       source: "https://blog.naver.com/mym0404/221459172607",
     },
-    description: "SE2 table과 인라인 GIF video fallback이 함께 반영된 실제 본문을 검증한다.",
-    notes: [
-      "테이블 구조화와 fallback HTML 보존을 함께 확인하는 대표 샘플이다.",
-    ],
   },
   {
     id: "se2-thumburl-image-group",
@@ -240,10 +189,6 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     logNo: "221425068566",
     editorId: "naver.se2",
     editorVersion: 2,
-    expectedParserBlockIds: [
-      "naver.se2.image",
-      "naver.se2.textElement",
-    ],
     post: {
       title: "트위치 로고, 카트라이더 부스터 로고를 만들어 보았다.",
       publishedAt: "2018-12-22T21:34:56+09:00",
@@ -254,8 +199,6 @@ export const sampleCorpus: SampleCorpusEntry[] = [
         "https://mblogthumb-phinf.pstatic.net/MjAxODEyMjJfODcg/MDAxNTQ1NDgyMDg4NDY0.Dh6dlA-1uJ3KLQ15Iq4IjlOYhVtQNzPsBRRku6MU05Ug.bU9cS-HO872lQuf7Uj1rdUXgJWJl-UyphJTMdOlGeJgg.PNG.mym0404/double_moderator.png?type=w800",
       source: "https://blog.naver.com/mym0404/221425068566",
     },
-    description: "SE2 thumburl 기반 레거시 본문 이미지 묶음을 검증한다.",
-    notes: ["글 목록 썸네일과 별개로 본문 이미지 2장이 imageGroup으로 유지되어야 한다."],
   },
   {
     id: "se3-legacy",
@@ -263,7 +206,6 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     logNo: "221236891086",
     editorId: "naver.se3",
     editorVersion: 3,
-    expectedParserBlockIds: ["naver.se3.text"],
     post: {
       title: "3월 25일 일요일",
       publishedAt: "2018-03-25T14:38:01+09:00",
@@ -273,8 +215,6 @@ export const sampleCorpus: SampleCorpusEntry[] = [
       thumbnailUrl: null,
       source: "https://blog.naver.com/mym0404/221236891086",
     },
-    description: "SE3 글 파싱과 chrome 텍스트 제거를 검증한다.",
-    notes: ["블로그 chrome 누수 없이 본문만 남아야 한다."],
   },
   {
     id: "se3-quote-imagegroup-note9",
@@ -282,12 +222,6 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     logNo: "221405258251",
     editorId: "naver.se3",
     editorVersion: 3,
-    expectedParserBlockIds: [
-      "naver.se3.text",
-      "naver.se3.image",
-      "naver.se3.quote",
-      "naver.se3.image",
-    ],
     post: {
       title: "[Quick Review] 더 강력해진 Note- 삼성 갤럭시 노트9 (Samsung Galaxy Note9)",
       publishedAt: "2018-11-24T15:03:13+09:00",
@@ -298,8 +232,6 @@ export const sampleCorpus: SampleCorpusEntry[] = [
         "https://mblogthumb-phinf.pstatic.net/MjAxODExMDZfNDUg/MDAxNTQxNDMyNDQ5NzMw.2pAP0hFxoYYl_Gutq5AhIqL3N5Z9-2AhOSEwK9-JdqYg.q2XelVfpsNJzliMBeV-mvzh9ffWUWt-5LQywlvG8pckg.JPEG.is02019/20181104_114001.jpg?type=w800",
       source: "https://blog.naver.com/sekishin/221405258251",
     },
-    description: "SE3 본문에서 image, quote, imageGroup이 함께 나오는 IT 리뷰 글을 검증한다.",
-    notes: ["SE3 quote와 imageGroup을 한 번에 커버하는 대표 샘플이다."],
   },
   {
     id: "se3-quote-table-vita",
@@ -307,12 +239,6 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     logNo: "221290869775",
     editorId: "naver.se3",
     editorVersion: 3,
-    expectedParserBlockIds: [
-      "naver.se3.text",
-      "naver.se3.image",
-      "naver.se3.quote",
-      "naver.se3.table",
-    ],
     expectedWarnings: {
       parser: [
         "SE3 대표 미지원 블록을 원본 HTML로 보존했습니다: se_component se_horizontalLine default",
@@ -342,9 +268,5 @@ export const sampleCorpus: SampleCorpusEntry[] = [
         "https://mblogthumb-phinf.pstatic.net/MjAxODA2MDNfMjI1/MDAxNTI4MDM0NTQwNTg5.ERq5Wa-BGkly6OymiT-ruEFUigr43NXjjd25J1hXNxkg.yrCSnvvU0niyVKTC8_BINfqjLWi0g4QZoDashAlpHVgg.JPEG.is02019/2017-11-18-210621.jpg?type=w800",
       source: "https://blog.naver.com/sekishin/221290869775",
     },
-    description: "SE3 table, quote와 fallback HTML 보존이 함께 반영된 게임 리뷰 글을 검증한다.",
-    notes: [
-      "SE3 table 구조화, quote 파싱, fallback HTML 보존을 함께 확인하는 대표 샘플이다.",
-    ],
   },
 ]

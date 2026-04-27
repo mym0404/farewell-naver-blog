@@ -11,13 +11,13 @@
 
 ## 라우터 운영 규칙
 - evergreen 지식은 이 트리에서 관리한다. 루트 `AGENTS.md`가 항상 첫 진입점이다.
-- 실제 source of truth 우선순위는 사용자 지시와 루트 `AGENTS.md`, 코드/설정/테스트, evergreen knowledge, reference/generated 문서 순서다.
+- 실제 source of truth 우선순위는 사용자 지시와 루트 `AGENTS.md`, 코드/설정/테스트, evergreen knowledge, reference 문서 순서다.
 - 스택, verification bundle, 구현 규칙은 `.agents/knowledge/engineering/`, 모듈 경계와 파이프라인은 `.agents/knowledge/architecture/`, 도메인 제약과 출력 규약은 `.agents/knowledge/product/`, UI 규칙은 `.agents/knowledge/DESIGN.md`로 내려간다.
 - `.agents/knowledge/reference/` 아래 문서는 반복 절차와 산출물 참고용이다. 제품 계약이나 구조 계약의 source of truth가 아니다.
 
 ## 문서 지도
 - `.agents/knowledge/`: 반복해서 참조해야 하는 evergreen 저장소 지식
-- `.agents/knowledge/reference/`: runbook, generated 보고서, 플랜 아카이브, 트러블슈팅, README 이미지처럼 깊게 보는 참고 자료
+- `.agents/knowledge/reference/`: runbook, 플랜 아카이브, 트러블슈팅, README 이미지처럼 깊게 보는 참고 자료
 - `.cache/`: 카테고리 스캔 캐시와 export UI 설정 같은 영속 로컬 상태 저장 위치
 - `public/brand/`: 로고, favicon, OG image, preview 원본 같은 정적 브랜드 자산 위치
 - `.agents/plan/`: 현재 plan-execute 번들과 evidence
@@ -29,18 +29,17 @@
 - parser editor dispatch: `src/modules/parser/PostParser.ts`, `src/modules/parser/editors/*`
 - parser block implementation: `src/modules/parser/blocks/`
 - parser 지원 범위 projection: `src/modules/blog/BlogRegistry.ts`
-- 실샘플 기준: `src/shared/SampleCorpus.ts`
+- 실샘플 기준: `scripts/harness/lib/sample-corpus.ts`
 - export/upload API 흐름: `src/server/HttpServer.ts`
 - export 파이프라인: `src/modules/exporter/NaverBlogExporter.ts`
 
 ## 먼저 봐야 하는 seam
 - parser block 지원 범위, fallback 정책, block class 배치를 바꾸면 `src/modules/parser/blocks/`, `src/shared/BlockRegistry.ts`, `src/modules/blog/BlogRegistry.ts`, `.agents/knowledge/architecture/parser-block-catalog.md`를 함께 본다.
-- sample 추가나 교체는 `src/shared/SampleCorpus.ts`와 generated projection인 `.agents/knowledge/product/sample-corpus.md`를 함께 본다.
+- sample 추가나 교체는 `scripts/harness/lib/sample-corpus.ts`, fixture 파일, `.agents/knowledge/product/sample-corpus.md`를 함께 본다.
 - export 후 upload 상태 전이나 결과 패널을 바꾸면 `.agents/knowledge/product/domain.md`, `.agents/knowledge/product/product-outline.md`, `src/server/HttpServer.ts`를 함께 본다.
 
 ## 검증
 - `pnpm check:local`: 저장소 파일 변경 뒤 가장 먼저 보는 기본 기준선이다.
-- `pnpm quality:report`: parser/sample knowledge projection과 generated 품질 보고서를 다시 만들 때 실행한다.
 - 수정한 링크와 코드 기준점 수동 spot-check: knowledge 문서를 바꾼 뒤 라우팅과 앵커가 여전히 맞는지 확인할 때 실행한다.
 - verification bundle 구성은 `.agents/knowledge/engineering/validation.md`, `package.json`만 기준으로 본다.
 

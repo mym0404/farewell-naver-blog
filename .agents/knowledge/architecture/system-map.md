@@ -47,7 +47,7 @@
 - parser block: `src/modules/blog/BlogRegistry.ts`
 - parser editor classes: `src/modules/parser/editors/BaseEditor.ts`, `src/modules/parser/editors/NaverBlogSe2Editor.ts`, `src/modules/parser/editors/NaverBlogSe3Editor.ts`, `src/modules/parser/editors/NaverBlogSe4Editor.ts`
 - parser block implementations: `src/modules/parser/blocks/`
-- sample corpus: `src/shared/SampleCorpus.ts`
+- sample corpus: `scripts/harness/lib/sample-corpus.ts`
 - Markdown renderer: `src/modules/converter/MarkdownRenderer.ts`
 - exporter flow: `src/modules/exporter/NaverBlogExporter.ts`
 - upload runner: `src/modules/exporter/ImageUploadPhase.ts`

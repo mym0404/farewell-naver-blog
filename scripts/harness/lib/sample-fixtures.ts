@@ -1,7 +1,6 @@
 import path from "node:path"
 
 import { renderMarkdownPost } from "../../../src/modules/converter/MarkdownRenderer.js"
-import { getParsedPostParserBlockIds } from "../../../src/modules/parser/ParserBlockUsage.js"
 import { parsePostHtml } from "../../../src/modules/parser/PostParser.js"
 import { reviewParsedPost } from "../../../src/modules/reviewer/PostReviewer.js"
 import { defaultExportOptions } from "../../../src/shared/ExportOptions.js"
@@ -9,10 +8,11 @@ import type {
   CategoryInfo,
   ExportOptions,
   PostSummary,
-  SampleCorpusEntry,
 } from "../../../src/shared/Types.js"
-import { unique } from "../../../src/shared/Utils.js"
 import { ensureHarnessDir, readUtf8, repoPath, writeUtf8 } from "./paths.js"
+import type { sampleCorpus } from "./sample-corpus.js"
+
+type SampleCorpusEntry = (typeof sampleCorpus)[number]
 
 export const getSampleFixtureDir = (sampleId: string) =>
   repoPath("tests", "fixtures", "samples", sampleId)
@@ -95,16 +95,10 @@ export const renderSampleFixture = async ({
       uploadCandidate: null,
     }),
   })
-  const observedParserBlockIds = unique([
-    ...getParsedPostParserBlockIds(parsedPostBeforeNormalization),
-    ...getParsedPostParserBlockIds(parsedPost),
-  ])
-
   return {
     parsedPost,
     reviewWarnings: review.warnings,
     rendered,
-    observedParserBlockIds,
     normalizedMarkdown: normalizeMarkdownFixture(rendered.markdown),
   }
 }

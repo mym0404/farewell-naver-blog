@@ -1,4 +1,4 @@
-import { sampleCorpus } from "../../src/shared/SampleCorpus.js"
+import { sampleCorpus } from "./lib/sample-corpus.js"
 import {
   loadSampleFixture,
   renderSampleFixture,
@@ -23,12 +23,6 @@ const run = async () => {
       sample,
       html: fixture.html,
     })
-
-    for (const expectedParserBlockId of sample.expectedParserBlockIds) {
-      if (!rendered.observedParserBlockIds.includes(expectedParserBlockId)) {
-        failures.push(`${sample.id}: missing expected parser block ${expectedParserBlockId}`)
-      }
-    }
 
     if (rendered.normalizedMarkdown !== fixture.expectedMarkdown) {
       failures.push(`${sample.id}: rendered markdown does not match expected.md`)

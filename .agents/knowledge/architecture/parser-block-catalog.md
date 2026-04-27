@@ -6,18 +6,14 @@
 ## Source Of Truth
 - 실제 기준은 `src/modules/blog/BlogRegistry.ts` 이다.
 - output family 기준은 `src/shared/BlockRegistry.ts` 이다.
-- 이 문서는 코드에서 자동 생성되며 수동 편집하지 않는다.
 
 ## 관련 코드
 - `src/modules/blog/BlogRegistry.ts`
 - `src/modules/parser/ParserBlockFactory.ts`
 - `src/shared/BlockRegistry.ts`
-- `src/shared/SampleCorpus.ts`
 - `src/modules/parser/PostParser.ts`
 
 ## 검증 방법
-- `pnpm quality:report`
-- `pnpm parser:check`
 - `pnpm samples:verify`
 
 ## Blog Table
@@ -69,4 +65,4 @@
 ## Notes
 - Parser Block은 source HTML parser 단위이고 AST Block은 Markdown renderer용 공통 중간 표현이다.
 - 같은 AST Block으로 변환되더라도 Parser Block id는 editor별 source 구조를 기준으로 분리한다.
-- sample coverage gap은 `.agents/knowledge/reference/generated/sample-coverage.md` 에서 같이 본다.
+- fixture 샘플 목록은 `scripts/harness/lib/sample-corpus.ts`에서 관리한다.

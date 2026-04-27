@@ -1,32 +1,17 @@
 # Browser Verification Runbook
 
 ## 목적
-이 문서는 UI smoke 실패 후 수동으로 브라우저에서 확인해야 할 순서를 정리한다.
+이 문서는 실제 E2E 환경을 `agent-browser`로 확인할 때 필요한 흐름을 rough하게 정리한다.
 
 ## Single Post Cross-Check
 개별 글의 구조와 Markdown 결과를 비교해야 하면 `.agents/knowledge/reference/runbooks/single-post-verification.md`를 따른다.
 
 ## Source Of Truth
-기본 자동 검증은 `scripts/harness/run-ui-smoke.ts`, `scripts/harness/run-ui-resume-smoke.ts` 이고, 이 문서는 수동 재현 절차를 보완한다.
+자동 회귀는 `pnpm smoke:ui`, live E2E는 `pnpm test:network`가 맡는다. 이 문서는 agent가 브라우저에서 실제 흐름을 직접 확인할 때 쓰는 보조 런북이다.
 
 ## Browser Tool
-- UI 변경 요청의 수동 브라우저 검증은 `agent-browser`를 기본 도구로 사용한다.
-- 같은 시나리오를 반복 회귀나 CI로 고정해야 하면 Playwright harness에 추가하고, 이 문서는 보조 수동 절차로만 유지한다.
-
-## 관련 코드
-- `index.html`
-- `src/ui/App.tsx`
-- `src/ui/features/common/shell/WizardHeader.tsx`
-- `src/ui/features/common/shell/WizardDock.tsx`
-- `src/ui/features/scan/BlogInputPanel.tsx`
-- `src/ui/features/resume/ResumeDialogPanel.tsx`
-- `src/ui/styles/globals.css`
-- `src/ui/features/options/ExportOptionsPanel.tsx`
-- `src/ui/features/job-results/JobResultsPanel.tsx`
-- `.agents/knowledge/DESIGN.md`
-- `src/server/HttpServer.ts`
-- `scripts/harness/run-ui-smoke.ts`
-- `scripts/harness/run-ui-resume-smoke.ts`
+- 실제 브라우저 확인은 `agent-browser`를 기본 도구로 사용한다.
+- 반복 회귀나 CI로 고정할 시나리오는 Playwright harness에 추가한다.
 
 ## 검증 방법
 - `agent-browser`
@@ -53,7 +38,7 @@
 16. warning/error 필터를 눌러 결과가 좁혀지는지 확인한다.
 17. 결과 설명, field help, 파일 subtitle 텍스트가 육안으로도 옅지 않은지 확인한다.
 18. 앱을 새로 열었을 때 마지막 `outputDir`의 `manifest.json` 기준으로 복구 Dialog가 뜨고, `running / upload / result` 중 마지막 단계로 바로 진입하는지 확인한다.
-19. 복구 직후에는 자동으로 export/upload가 다시 시작되지 않고, 사용자가 `남은 작업 계속` 또는 `남은 업로드 계속`을 눌렀을 때만 이어지는지 확인한다.
+19. 복구 직후에는 자동 export/upload가 시작되지 않고, 사용자가 `남은 작업 계속` 또는 `남은 업로드 계속`을 눌렀을 때만 이어지는지 확인한다.
 
 ## Screenshot Feedback Loop
 같은 시나리오로 아래 루프를 5번 반복한다.
@@ -68,8 +53,8 @@
 - Blog ID 입력과 카테고리 스캔 버튼이 본문 첫 카드 상단에 있는지
 - 카테고리 패널이 카드 더미가 아니라 고정 높이 표로 보이는지
 - 모바일 sticky command bar가 과하게 높아지거나 본문을 덮어버리지 않는지
-- 사이드바에 `Command Rail`, `Stage` 같은 불필요한 텍스트가 다시 생기지 않는지
-- Sidebar brand에 장식 아이콘이 다시 들어오지 않았는지
+- 사이드바에 `Command Rail`, `Stage` 같은 불필요한 텍스트가 보이지 않는지
+- Sidebar brand가 텍스트 중심이고 장식 아이콘이 없는지
 - 모바일 가로 스크롤이 없는지
 - 데스크톱도 body 기준 좌우 스크롤이 생기지 않는지
 - 좌측 rail과 모바일 sticky rail이 window edge에 바로 붙어 있는지
@@ -96,11 +81,6 @@
 - smoke는 desktop/mobile 모두 viewport horizontal overflow가 1px를 넘으면 실패한다.
 - 회귀 대상 selector는 `#category-status`, `.panel-description`, `.field-help`, `.frontmatter-description`, `.results-description`, `.job-results-row span`, `.scan-status-note`, `.sidebar-brand strong`, `.sidebar-heading`, `.sidebar-link span`, `.sidebar-summary-title`, `.sidebar-summary-metric span`, `#export-button span`다.
 - 새 설명 텍스트나 helper UI를 추가하면 smoke 대상 selector도 같이 확장한다.
-
-## Icon Policy
-- 앱 전역 아이콘은 Remix icon 기준으로 유지한다.
-- 상태, 파일, 액션, 네비게이션 보조 외 장식성 아이콘은 추가하지 않는다.
-- 특히 사이드바 상단 brand 영역에는 아이콘을 다시 넣지 않는다.
 
 ## What To Record
 - scan 실패 여부

@@ -426,31 +426,6 @@ export type ParsedPostBodyNode = ParsedPostStructuredBodyNode | ParsedPostFallba
 
 export type BlockType = AstBlock["type"]
 
-export type SampleCorpusEntry = {
-  id: string
-  blogId: string
-  logNo: string
-  editorId: BlogEditorId
-  editorVersion: number
-  expectedParserBlockIds: ParserBlockId[]
-  expectedWarnings?: {
-    parser?: string[]
-    reviewer?: string[]
-    render?: string[]
-  }
-  post: {
-    title: string
-    publishedAt: string
-    categoryId: number
-    categoryName: string
-    categoryPath: string[]
-    thumbnailUrl: string | null
-    source: string
-  }
-  description: string
-  notes: string[]
-}
-
 export type ParsedPost = {
   editorId: BlogEditorId
   editorVersion: number
