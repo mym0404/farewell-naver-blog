@@ -26,6 +26,7 @@
 ## Verification Bundles
 - `package.json` 기준으로 `pnpm check:local`은 `pnpm typecheck && pnpm test:offline && pnpm parser:check && pnpm samples:verify`를 실행한다.
 - `package.json` 기준으로 `pnpm check:full`은 `pnpm quality:report && pnpm typecheck && pnpm test:offline && pnpm parser:check && pnpm samples:verify && pnpm smoke:ui`를 실행한다.
+- `package.json` 기준으로 `pnpm test:network`는 `pnpm build:ui`를 한 번 실행한 뒤 live resume export, SE2 table resume export, live upload e2e를 순서대로 실행한다.
 
 ## 테스트 종류
 - parser unit
@@ -46,6 +47,9 @@
 - Playwright live upload e2e
   `pnpm test:network:upload`
   실제 네트워크와 외부 업로드 상태를 포함한 검증이다.
+- bundled network e2e
+  `pnpm test:network`
+  live resume export, SE2 table resume export, live upload e2e를 build 1회 뒤 순서대로 실행한다.
 - live resume export e2e
   `pnpm test:network:resume-export`
   실제 네이버 네트워크로 export를 시작한 뒤 중간 종료 후 `manifest.json` 기반 resume export를 다시 끝까지 확인한다.
@@ -56,6 +60,7 @@
 ## Primary Commands
 - `pnpm check:local`: 저장소 파일을 수정한 모든 턴에서 가장 먼저 실행하는 기본 검사다. 타입, 오프라인 테스트, parser 구조 계약, sample fixture 회귀까지 포함한 기본 회귀를 확인할 때 실행한다.
 - `pnpm check:full`: generated 품질 보고서, sample fixture, Playwright smoke UI까지 묶은 전체 기본 회귀를 확인할 때 실행한다.
+- `pnpm test:network`: 실제 네이버 fetch 기반 resume export, SE2 table resume export, 실제 GitHub upload e2e를 한 번에 확인할 때 실행한다. 처음에 `pnpm build:ui`를 한 번만 실행하고, 외부 네트워크와 업로드 secret이 필요하며 remote state를 만든다.
 
 ## Focused Commands
 - `pnpm dev`: `tsx watch`와 Vite HMR이 붙은 사용자용 개발 서버를 `http://localhost:4173`에 띄울 때 실행한다. AI agent, test, harness는 이 명령을 그대로 쓰지 않고 별도 `FAREWELL_SETTINGS_PATH`, `FAREWELL_SCAN_CACHE_PATH`, `PORT`를 준 `pnpm exec tsx src/Server.ts`나 `listen(0)` 기반 harness entry로 분리한다.
