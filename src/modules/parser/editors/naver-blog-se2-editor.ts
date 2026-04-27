@@ -1,42 +1,22 @@
 import type { CheerioAPI } from "cheerio"
-import type { AnyNode } from "domhandler"
 
-import type {
-  AstBlock,
-  ExportOptions,
-  ParsedPost,
-  ParsedPostBodyNode,
-} from "../../../shared/types.js"
+import type { AstBlock, ExportOptions, ParsedPost } from "../../../shared/types.js"
 import { unique } from "../../../shared/utils.js"
-import {
-  createBodyNodesFromStructuredBlocks,
-  createFallbackHtmlBodyNode,
-} from "../blocks/body-node-utils.js"
-import type {
-  ParserBlock,
-  ParserBlockConvertContext,
-  ParserBlockResult,
-} from "../blocks/parser-node.js"
-import {
-  se2ContainerBlock,
-  se2DividerBlock,
-  se2LineBreakBlock,
-  se2SpacerBlock,
-} from "../blocks/naver-se2/container.js"
-import { se2CodeBlock } from "../blocks/naver-se2/code.js"
-import {
-  se2FallbackBlock,
-  se2InlineGifVideoFallbackBlock,
-} from "../blocks/naver-se2/fallback.js"
-import { se2HeadingBlock } from "../blocks/naver-se2/heading.js"
-import { se2ImageBlock } from "../blocks/naver-se2/image.js"
-import { se2QuoteBlock } from "../blocks/naver-se2/quote.js"
-import { se2TableBlock } from "../blocks/naver-se2/table.js"
-import {
-  se2BookWidgetBlock,
-  se2TextElementBlock,
-  se2TextNodeBlock,
-} from "../blocks/naver-se2/text-node.js"
+import type { ParserBlock } from "../blocks/parser-node.js"
+import { NaverSe2BookWidgetBlock } from "../blocks/naver-se2/NaverSe2BookWidgetBlock.js"
+import { NaverSe2CodeBlock } from "../blocks/naver-se2/NaverSe2CodeBlock.js"
+import { NaverSe2ContainerBlock } from "../blocks/naver-se2/NaverSe2ContainerBlock.js"
+import { NaverSe2DividerBlock } from "../blocks/naver-se2/NaverSe2DividerBlock.js"
+import { NaverSe2FallbackBlock } from "../blocks/naver-se2/NaverSe2FallbackBlock.js"
+import { NaverSe2HeadingBlock } from "../blocks/naver-se2/NaverSe2HeadingBlock.js"
+import { NaverSe2ImageBlock } from "../blocks/naver-se2/NaverSe2ImageBlock.js"
+import { NaverSe2InlineGifVideoFallbackBlock } from "../blocks/naver-se2/NaverSe2InlineGifVideoFallbackBlock.js"
+import { NaverSe2LineBreakBlock } from "../blocks/naver-se2/NaverSe2LineBreakBlock.js"
+import { NaverSe2QuoteBlock } from "../blocks/naver-se2/NaverSe2QuoteBlock.js"
+import { NaverSe2SpacerBlock } from "../blocks/naver-se2/NaverSe2SpacerBlock.js"
+import { NaverSe2TableBlock } from "../blocks/naver-se2/NaverSe2TableBlock.js"
+import { NaverSe2TextElementBlock } from "../blocks/naver-se2/NaverSe2TextElementBlock.js"
+import { NaverSe2TextNodeBlock } from "../blocks/naver-se2/NaverSe2TextNodeBlock.js"
 import { BaseEditor } from "./base-editor.js"
 
 export type ParseSe2PostInput = {
@@ -49,83 +29,30 @@ export type ParseSe2PostInput = {
 
 export class NaverBlogSE2Editor extends BaseEditor<ParseSe2PostInput> {
   protected override readonly supportedBlocks: readonly ParserBlock[] = [
-    se2TextNodeBlock,
-    se2BookWidgetBlock,
-    se2ContainerBlock,
-    se2TableBlock,
-    se2DividerBlock,
-    se2LineBreakBlock,
-    se2QuoteBlock,
-    se2HeadingBlock,
-    se2CodeBlock,
-    se2InlineGifVideoFallbackBlock,
-    se2ImageBlock,
-    se2SpacerBlock,
-    se2TextElementBlock,
-    se2FallbackBlock,
+    new NaverSe2TextNodeBlock(),
+    new NaverSe2BookWidgetBlock(),
+    new NaverSe2ContainerBlock(),
+    new NaverSe2TableBlock(),
+    new NaverSe2DividerBlock(),
+    new NaverSe2LineBreakBlock(),
+    new NaverSe2QuoteBlock(),
+    new NaverSe2HeadingBlock(),
+    new NaverSe2CodeBlock(),
+    new NaverSe2InlineGifVideoFallbackBlock(),
+    new NaverSe2ImageBlock(),
+    new NaverSe2SpacerBlock(),
+    new NaverSe2TextElementBlock(),
+    new NaverSe2FallbackBlock(),
   ]
 
   parse({ $, tags, options }: ParseSe2PostInput): ParsedPost {
-    const warnings: string[] = []
-    const blocks: AstBlock[] = []
-    const body: ParsedPostBodyNode[] = []
     const container = $("#viewTypeSelector").first()
-
-    const appendWarnings = (nextWarnings: string[]) => {
-      warnings.push(...nextWarnings)
-    }
-
-    const appendBodyNodes = (nodes: ParsedPostBodyNode[]) => {
-      body.push(...nodes)
-    }
-
-    const handleResult = (result: ParserBlockResult) => {
-      if (result.warnings) {
-        appendWarnings(result.warnings)
-      }
-
-      if (result.status === "handled") {
-        blocks.push(...result.blocks)
-        body.push(...createBodyNodesFromStructuredBlocks(result.blocks))
-        return
-      }
-
-      if (result.status === "fallback") {
-        body.push(
-          createFallbackHtmlBodyNode({
-            html: result.html,
-            reason: result.reason,
-            warnings: result.warnings,
-          }),
-        )
-        return
-      }
-
-      if (result.status === "traverse") {
-        result.nodes?.forEach(appendBlocksFromNode)
-      }
-    }
-
-    const appendBlocksFromNode = (node: AnyNode) => {
-      const context: ParserBlockConvertContext = {
-        $,
-        $node: $(node),
-        node,
-        tags,
-        options,
-        appendBodyNodes,
-        appendWarnings,
-      }
-      const block = this.supportedBlocks.find((supportedBlock) => supportedBlock.match(context))
-
-      if (!block) {
-        return
-      }
-
-      handleResult(block.convert(context))
-    }
-
-    container.contents().toArray().forEach(appendBlocksFromNode)
+    const { blocks, body, warnings } = this.runBlocks({
+      $,
+      nodes: container.contents().toArray(),
+      tags,
+      options,
+    })
 
     const videos = blocks
       .filter((block): block is Extract<AstBlock, { type: "video" }> => block.type === "video")

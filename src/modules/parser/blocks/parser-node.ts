@@ -5,6 +5,7 @@ import type {
   ExportOptions,
   ParsedPostBodyNode,
   StructuredAstBlock,
+  UnknownRecord,
 } from "../../../shared/types.js"
 
 export type ParserBlockOptions = Pick<ExportOptions, "markdown"> &
@@ -19,6 +20,9 @@ export type ParserBlockContext<TNode extends AnyNode = AnyNode> = {
   sourceUrl?: string
   tags: string[]
   options: ParserBlockOptions
+  moduleData?: UnknownRecord | null
+  moduleType?: string | null
+  hasQuote?: boolean
 }
 
 export type ParserBlockConvertContext<TNode extends AnyNode = AnyNode> = ParserBlockContext<TNode> & {
@@ -48,18 +52,21 @@ export type ParserBlockResult<TNode extends AnyNode = AnyNode> =
       warnings?: string[]
     }
 
-export type ParserBlockBase<TNode extends AnyNode = AnyNode> = {
-  id: string
-  match: (context: ParserBlockContext<TNode>) => boolean
-  convert: (context: ParserBlockConvertContext<TNode>) => ParserBlockResult<TNode>
+export abstract class BaseBlock<TNode extends AnyNode = AnyNode> {
+  abstract readonly id: string
+  abstract readonly kind: "container" | "leaf"
+
+  abstract match(context: ParserBlockContext<TNode>): boolean
+
+  abstract convert(context: ParserBlockConvertContext<TNode>): ParserBlockResult<TNode>
 }
 
-export type ContainerBlock<TNode extends AnyNode = AnyNode> = ParserBlockBase<TNode> & {
-  kind: "container"
+export abstract class ContainerBlock<TNode extends AnyNode = AnyNode> extends BaseBlock<TNode> {
+  override readonly kind = "container"
 }
 
-export type LeafBlock<TNode extends AnyNode = AnyNode> = ParserBlockBase<TNode> & {
-  kind: "leaf"
+export abstract class LeafBlock<TNode extends AnyNode = AnyNode> extends BaseBlock<TNode> {
+  override readonly kind = "leaf"
 }
 
 export type ParserBlock<TNode extends AnyNode = AnyNode> = ContainerBlock<TNode> | LeafBlock<TNode>

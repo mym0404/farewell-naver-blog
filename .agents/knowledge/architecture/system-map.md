@@ -35,9 +35,17 @@
 - `converter` -> `shared/*`
 - `ui` -> HTTP API only
 
+## Parser Block Structure
+- `src/modules/parser/blocks/parser-node.ts` defines `BaseBlock`, `ContainerBlock`, and `LeafBlock`.
+- SE2, SE3, SE4 block implementations live under `src/modules/parser/blocks/naver-se*/`.
+- Each concrete parser block class lives in its own `NaverSe*Block.ts` file.
+- Shared parsing helpers can live next to block classes, but helper files do not export parser block classes.
+- Editor classes own block ordering and source-level context only; block-specific `match` and `convert` logic stays in block class files.
+
 ## Code Anchors
 - parser capability: `src/shared/parser-capabilities.ts`
 - parser editor classes: `src/modules/parser/editors/base-editor.ts`, `src/modules/parser/editors/naver-blog-se2-editor.ts`, `src/modules/parser/editors/naver-blog-se3-editor.ts`, `src/modules/parser/editors/naver-blog-se4-editor.ts`
+- parser block classes: `src/modules/parser/blocks/naver-se*/NaverSe*Block.ts`
 - sample corpus: `src/shared/sample-corpus.ts`
 - Markdown renderer: `src/modules/converter/markdown-renderer.ts`
 - exporter flow: `src/modules/exporter/naver-blog-exporter.ts`

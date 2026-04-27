@@ -27,13 +27,14 @@
 - 저장소 명령과 검증 루프: `package.json`
 - parser/block SoT: `src/shared/block-registry.ts`
 - parser editor dispatch: `src/modules/parser/post-parser.ts`, `src/modules/parser/editors/*`
+- parser block implementation: `src/modules/parser/blocks/naver-se*/NaverSe*Block.ts`
 - parser 지원 범위 projection: `src/shared/parser-capabilities.ts`
 - 실샘플 기준: `src/shared/sample-corpus.ts`
 - export/upload API 흐름: `src/server/http-server.ts`
 - export 파이프라인: `src/modules/exporter/naver-blog-exporter.ts`
 
 ## 먼저 봐야 하는 seam
-- parser block 지원 범위나 fallback 정책을 바꾸면 `src/shared/block-registry.ts`, `src/shared/parser-capabilities.ts`, `.agents/knowledge/architecture/parser-block-catalog.md`를 함께 본다.
+- parser block 지원 범위, fallback 정책, block class 배치를 바꾸면 `src/modules/parser/blocks/`, `src/shared/block-registry.ts`, `src/shared/parser-capabilities.ts`, `.agents/knowledge/architecture/parser-block-catalog.md`를 함께 본다.
 - sample 추가나 교체는 `src/shared/sample-corpus.ts`와 generated projection인 `.agents/knowledge/product/sample-corpus.md`를 함께 본다.
 - export 후 upload 상태 전이나 결과 패널을 바꾸면 `.agents/knowledge/product/domain.md`, `.agents/knowledge/product/product-outline.md`, `src/server/http-server.ts`를 함께 본다.
 
