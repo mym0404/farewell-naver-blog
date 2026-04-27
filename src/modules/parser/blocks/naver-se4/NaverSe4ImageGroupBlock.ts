@@ -1,4 +1,4 @@
-import type { ImageData } from "../../../../shared/types.js"
+import type { ImageData } from "../../../../shared/Types.js"
 import { LeafBlock } from "../parser-node.js"
 import type { ParserBlockContext, ParserBlockResult } from "../parser-node.js"
 import { parseImageLink, se4ImageLinkSelector } from "./image-link.js"

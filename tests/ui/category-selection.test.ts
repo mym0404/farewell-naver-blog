@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest"
 
-import type { CategoryInfo } from "../../src/shared/types.js"
+import type { CategoryInfo } from "../../src/shared/Types.js"
 import {
   getCategoryCheckboxState,
   orderCategoriesHierarchically,
   toggleCategorySelection,
-} from "../../src/ui/features/scan/category-selection.js"
+} from "../../src/ui/features/scan/CategorySelection.js"
 
 const categories: CategoryInfo[] = [
   {

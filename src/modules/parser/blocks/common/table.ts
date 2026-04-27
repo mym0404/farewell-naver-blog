@@ -1,5 +1,5 @@
 import { convertHtmlToMarkdown } from "../../../converter/html-fragment-converter.js"
-import type { ExportOptions, StructuredAstBlock } from "../../../../shared/types.js"
+import type { ExportOptions, StructuredAstBlock } from "../../../../shared/Types.js"
 import { parseHtmlTable } from "../../table-parser.js"
 
 export const parseSingleColumnTableAsParagraphs = ({

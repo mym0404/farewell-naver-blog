@@ -7,8 +7,8 @@
 - 대시보드 UI 규약과 회귀 기준: `.agents/knowledge/DESIGN.md`
 
 ## 대표 기준점
-- scan/export/upload API: `src/server/http-server.ts`
-- export 파이프라인: `src/modules/exporter/naver-blog-exporter.ts`
+- scan/export/upload API: `src/Server/HttpServer.ts`
+- export 파이프라인: `src/modules/exporter/NaverBlogExporter.ts`
 - UI 셸과 단계 전환: `src/ui/App.tsx`
 
 ## 언제 읽는가

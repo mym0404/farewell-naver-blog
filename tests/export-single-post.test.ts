@@ -5,8 +5,8 @@ import { tmpdir } from "node:os"
 
 import { describe, expect, it } from "vitest"
 
-import { exportSinglePost } from "../src/modules/exporter/single-post-export.js"
-import { defaultExportOptions } from "../src/shared/export-options.js"
+import { exportSinglePost } from "../src/modules/exporter/SinglePostExport.js"
+import { defaultExportOptions } from "../src/shared/ExportOptions.js"
 
 const blogId = "mym0404"
 const logNo = "223034929697"

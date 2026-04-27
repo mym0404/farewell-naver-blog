@@ -9,7 +9,7 @@ import type {
   ScanResult,
   ThemePreference,
   UploadProviderCatalogResponse,
-} from "../../shared/types.js"
+} from "../../shared/Types.js"
 
 export type ExportBootstrapResponse = {
   profile: "gfm"

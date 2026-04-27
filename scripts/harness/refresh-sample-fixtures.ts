@@ -1,5 +1,5 @@
-import { NaverBlogFetcher } from "../../src/modules/blog-fetcher/naver-blog-fetcher.js"
-import { sampleCorpus } from "../../src/shared/sample-corpus.js"
+import { NaverBlogFetcher } from "../../src/modules/blog-fetcher/NaverBlogFetcher.js"
+import { sampleCorpus } from "../../src/shared/SampleCorpus.js"
 import { renderSampleFixture, writeSampleFixture } from "./lib/sample-fixtures.js"
 
 const parseArgs = (argv: string[]) => {

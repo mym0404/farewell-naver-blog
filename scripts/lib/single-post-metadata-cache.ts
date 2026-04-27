@@ -1,9 +1,9 @@
 import { mkdir, writeFile as writeFileDefault } from "node:fs/promises"
 import path from "node:path"
 
-import { NaverBlogFetcher } from "../../src/modules/blog-fetcher/naver-blog-fetcher.js"
-import type { SinglePostFetcher } from "../../src/modules/exporter/single-post-export.js"
-import type { PostSummary, ScanResult } from "../../src/shared/types.js"
+import { NaverBlogFetcher } from "../../src/modules/blog-fetcher/NaverBlogFetcher.js"
+import type { SinglePostFetcher } from "../../src/modules/exporter/SinglePostExport.js"
+import type { PostSummary, ScanResult } from "../../src/shared/Types.js"
 
 export type SinglePostMetadataCacheFile = {
   blogId: string

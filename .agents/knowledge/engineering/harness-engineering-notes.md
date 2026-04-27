@@ -5,7 +5,7 @@
 
 ## Source Of Truth
 - 실제 harness 동작은 `package.json`, `scripts/harness/*`, generated 보고서 출력 경로가 기준이다.
-- parser/sample knowledge projection의 canonical SoT는 `src/shared/block-registry.ts`, `src/shared/parser-capabilities.ts`, `src/shared/sample-corpus.ts`다.
+- parser/sample knowledge projection의 canonical SoT는 `src/shared/BlockRegistry.ts`, `src/shared/ParserCapabilities.ts`, `src/shared/SampleCorpus.ts`다.
 - 사용자 수동 개발 서버는 `pnpm dev`의 `4173` 포트를 기준으로 보고, harness가 띄우는 서버는 이 포트와 겹치지 않게 `listen(0)` 또는 별도 포트를 사용한다.
 
 ## 관련 코드

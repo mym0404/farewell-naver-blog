@@ -11,9 +11,9 @@
 - shadcn chooser와 현재 사용처: `.agents/knowledge/engineering/shadcn-component-map.md`
 - 복구 dialog와 상태: `src/ui/features/resume`
 - 블로그 입력/스캔 상태: `src/ui/features/scan`
-- 옵션 패널: `src/ui/features/options/export-options-panel.tsx`
-- 결과/업로드 패널: `src/ui/features/job-results/job-results-panel.tsx`
-- 카테고리 패널: `src/ui/features/scan/category-panel.tsx`
+- 옵션 패널: `src/ui/features/options/ExportOptionsPanel.tsx`
+- 결과/업로드 패널: `src/ui/features/job-results/JobResultsPanel.tsx`
+- 카테고리 패널: `src/ui/features/scan/CategoryPanel.tsx`
 - 공용 primitive: `src/ui/components/ui`
 
 ## Source Of Truth

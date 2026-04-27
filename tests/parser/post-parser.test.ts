@@ -3,9 +3,9 @@ import { describe, expect, it } from "vitest"
 import {
   detectEditorVersionFromHtml,
   parsePostHtml,
-} from "../../src/modules/parser/post-parser.js"
-import { createBodyNodesFromLegacyBlocks } from "../../src/modules/parser/blocks/body-node-utils.js"
-import { defaultExportOptions } from "../../src/shared/export-options.js"
+} from "../../src/modules/parser/PostParser.js"
+import { createBodyNodesFromLegacyBlocks } from "../../src/modules/parser/blocks/BodyNodeUtils.js"
+import { defaultExportOptions } from "../../src/shared/ExportOptions.js"
 
 const parserOptions = {
   markdown: defaultExportOptions().markdown,

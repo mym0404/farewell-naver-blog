@@ -1,7 +1,7 @@
 import { load } from "cheerio"
 
-import type { UnknownRecord } from "../../../../shared/types.js"
-import { compactText, normalizeAssetUrl } from "../../../../shared/utils.js"
+import type { UnknownRecord } from "../../../../shared/Types.js"
+import { compactText, normalizeAssetUrl } from "../../../../shared/Utils.js"
 import { LeafBlock } from "../parser-node.js"
 import type { ParserBlockContext, ParserBlockResult } from "../parser-node.js"
 

@@ -7,8 +7,8 @@
 - 실제 흐름과 출력 동작은 server, exporter, renderer, React UI 구현이 기준이다.
 
 ## 관련 코드
-- `src/server/http-server.ts`
-- `src/modules/converter/markdown-renderer.ts`
+- `src/Server/HttpServer.ts`
+- `src/modules/converter/MarkdownRenderer.ts`
 - `src/ui/App.tsx`
 
 ## 검증 방법

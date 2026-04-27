@@ -17,8 +17,8 @@ This file is the only live progress record for this bundle.
 - `Slice`: Upload Runner
 - `Status`: Done
 - `Depends On`: None
-- `Start When`: The bundle is approved and `src/modules/exporter/image-upload-phase.ts` still uploads all candidates in one batch without any intermediate callback.
-- `Files`: primary: `src/modules/exporter/image-upload-phase.ts`, `tests/image-upload-phase.test.ts`; generated/incidental: N/A
+- `Start When`: The bundle is approved and `src/modules/exporter/ImageUploadPhase.ts` still uploads all candidates in one batch without any intermediate callback.
+- `Files`: primary: `src/modules/exporter/ImageUploadPhase.ts`, `tests/image-upload-phase.test.ts`; generated/incidental: N/A
 - `Context`: The UI already polls once per second. The missing piece is an upload runner that can report completed asset counts before the whole PicGo call and rewrite phase finish.
 - `Produces`: A PicGo upload runner that emits deterministic per-asset progress updates while preserving candidate dedupe, URL validation, and final result ordering.
 - `Must Do`: Keep dedupe by `localPath`. Emit progress on completed asset count after each asset upload succeeds. Preserve the original candidate-to-result mapping and keep absolute HTTP(S) URL validation intact. If PicGo does not expose per-file callbacks, switch the runner to deterministic one-candidate-at-a-time calls instead of inventing fake progress.
@@ -37,7 +37,7 @@ This file is the only live progress record for this bundle.
 - `Status`: Done
 - `Depends On`: T1
 - `Start When`: T1 is `Done` and the upload orchestration still changes job state only at `startUpload`, `completeUpload`, or `failUpload`.
-- `Files`: primary: `src/server/http-server.ts`, `src/server/job-store.ts`, `src/modules/exporter/image-upload-rewriter.ts`, `tests/http-server.test.ts`; generated/incidental: N/A
+- `Files`: primary: `src/Server/HttpServer.ts`, `src/Server/JobStore.ts`, `src/modules/exporter/ImageUploadRewriter.ts`, `tests/http-server.test.ts`; generated/incidental: N/A
 - `Context`: Real progress is only useful if the same job polling payload exposes it while upload is still running and preserves it across rewrite failure.
 - `Produces`: Incremental `job.upload` and `item.upload` count updates during upload, explicit rewrite boundary handling, and regression tests for partial-progress polling.
 - `Must Do`: Call the runner progress callback from `http-server` and persist it through `jobStore.updateUpload`. Update affected job items so per-post uploaded counts move as assets complete. Keep `upload-completed` reserved for rewrite success. Preserve nonzero uploaded counts when rewrite fails after some or all assets were already uploaded. Add log messages that separate “upload still running” from “uploaded, now rewriting” so the UI can explain a full bar without a final success state.
@@ -56,7 +56,7 @@ This file is the only live progress record for this bundle.
 - `Status`: Done
 - `Depends On`: T2
 - `Start When`: T2 is `Done` and the upload panel still lacks progress bars, per-post partial status, or a scroll-bounded upload table.
-- `Files`: primary: `src/ui/components/ui/progress.tsx`, `src/ui/features/job-results/job-results-panel.tsx`, `tests/ui/app.test.tsx`; generated/incidental: N/A
+- `Files`: primary: `src/ui/components/ui/Progress.tsx`, `src/ui/features/job-results/JobResultsPanel.tsx`, `tests/ui/app.test.tsx`; generated/incidental: N/A
 - `Context`: Once polling exposes partial counts, the running and upload panels need a user-readable visualization and the upload table needs a bounded layout.
 - `Produces`: Reusable progress component usage in the running/upload panels, per-post row status rendering, and `max-height` + internal scroll behavior for the upload table.
 - `Must Do`: Show a running-stage bar using `job.progress.completed / job.progress.total`. Show an upload-stage bar using `job.upload.uploadedCount / job.upload.candidateCount`. Render row status from each item's upload counts as `대기 / 부분 완료 / 완료 / 실패` instead of mirroring the whole job status. In `upload-failed`, every row label becomes `실패` regardless of completed asset count. Reuse the existing `ScrollArea` pattern or an equivalent bounded scroll wrapper for the upload table. Make the panel copy distinguish a full bar during rewrite from final success. Add fixed verification hooks for both bars, the upload-table scroll wrapper, and row statuses so `agent-browser`, `tests/ui/app.test.tsx`, and Playwright harnesses can all target the same signals.
@@ -75,7 +75,7 @@ This file is the only live progress record for this bundle.
 - `Status`: Done
 - `Depends On`: T2, T3
 - `Start When`: T2 and T3 are `Done` and the server polling contract plus upload panel UX are both in place.
-- `Files`: primary: `src/modules/exporter/image-upload-phase.ts`, `src/server/http-server.ts`, `src/server/job-store.ts`, `src/modules/exporter/image-upload-rewriter.ts`, `src/ui/components/ui/progress.tsx`, `src/ui/features/job-results/job-results-panel.tsx`, `tests/image-upload-phase.test.ts`, `tests/http-server.test.ts`, `tests/ui/app.test.tsx`; generated/incidental: N/A
+- `Files`: primary: `src/modules/exporter/ImageUploadPhase.ts`, `src/Server/HttpServer.ts`, `src/Server/JobStore.ts`, `src/modules/exporter/ImageUploadRewriter.ts`, `src/ui/components/ui/Progress.tsx`, `src/ui/features/job-results/JobResultsPanel.tsx`, `tests/image-upload-phase.test.ts`, `tests/http-server.test.ts`, `tests/ui/app.test.tsx`; generated/incidental: N/A
 - `Context`: Before changing harnesses or docs, the focused execution and UI contract must be stable and internally consistent.
 - `Produces`: A checkpoint proving the partial-progress data path and upload panel contract are ready to freeze into harnesses and docs.
 - `Must Do`: Re-run the focused tests that own the new contract. Manually inspect the diff surface for any stale `uploadedCount === 0 on rewrite failure` assumptions, missing `부분 완료` text, or upload table wrapper regressions.
@@ -151,7 +151,7 @@ This file is the only live progress record for this bundle.
 - `Status`: Done
 - `Depends On`: CP2
 - `Start When`: CP2 is `Done` and the required live-upload env vars are present.
-- `Files`: primary: `src/modules/exporter/image-upload-phase.ts`, `src/modules/exporter/image-upload-rewriter.ts`, `src/server/http-server.ts`, `src/server/job-store.ts`, `src/ui/components/ui/progress.tsx`, `src/ui/features/job-results/job-results-panel.tsx`, `scripts/harness/run-ui-smoke.ts`, `scripts/harness/run-ui-live-upload.ts`, `.agents/knowledge/product/domain.md`, `.agents/knowledge/DESIGN.md`, `.agents/knowledge/architecture/system-map.md`, `.agents/knowledge/reference/runbooks/browser-verification.md`, `tests/image-upload-phase.test.ts`, `tests/http-server.test.ts`, `tests/ui/app.test.tsx`; generated/incidental: coverage artifacts, smoke screenshots/logs, live upload evidence, any changed manifest fixture outputs
+- `Files`: primary: `src/modules/exporter/ImageUploadPhase.ts`, `src/modules/exporter/ImageUploadRewriter.ts`, `src/Server/HttpServer.ts`, `src/Server/JobStore.ts`, `src/ui/components/ui/Progress.tsx`, `src/ui/features/job-results/JobResultsPanel.tsx`, `scripts/harness/run-ui-smoke.ts`, `scripts/harness/run-ui-live-upload.ts`, `.agents/knowledge/product/domain.md`, `.agents/knowledge/DESIGN.md`, `.agents/knowledge/architecture/system-map.md`, `.agents/knowledge/reference/runbooks/browser-verification.md`, `tests/image-upload-phase.test.ts`, `tests/http-server.test.ts`, `tests/ui/app.test.tsx`; generated/incidental: coverage artifacts, smoke screenshots/logs, live upload evidence, any changed manifest fixture outputs
 - `Context`: Final verification must prove both general regression safety and the specific real-provider bug the user asked to fix.
 - `Produces`: Final evidence that broad repo-native checks and real GitHub upload progress visibility both pass.
 - `Must Do`: Run `pnpm check:full` and `pnpm test:network:upload` in that order. Confirm the live upload evidence includes an intermediate state with `status === "uploading"` and nonzero uploaded count before final completion, and that `master` already has GitHub-side partial-upload evidence at that moment. Also confirm fast live runs still preserve a final result-stage upload snapshot with `#upload-progress` and completed rows after `upload-completed`. Confirm the upload table remains height-bounded in smoke evidence for both desktop and mobile captures.

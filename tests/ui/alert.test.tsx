@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest"
 
 import "@testing-library/jest-dom/vitest"
 
-import { Alert, AlertDescription, AlertTitle } from "../../src/ui/components/ui/alert.js"
+import { Alert, AlertDescription, AlertTitle } from "../../src/ui/components/ui/Alert.js"
 
 describe("Alert", () => {
   it("renders title, description, and destructive variant semantics", () => {

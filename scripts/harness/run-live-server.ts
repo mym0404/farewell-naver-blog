@@ -1,5 +1,5 @@
-import { createHttpServer } from "../../src/server/http-server.js"
-import { NaverBlogFetcher } from "../../src/modules/blog-fetcher/naver-blog-fetcher.js"
+import { createHttpServer } from "../../src/server/HttpServer.js"
+import { NaverBlogFetcher } from "../../src/modules/blog-fetcher/NaverBlogFetcher.js"
 
 const wait = (ms: number) =>
   new Promise<void>((resolve) => {

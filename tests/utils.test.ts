@@ -13,7 +13,7 @@ import {
   sanitizePathSegment,
   slugifyTitle,
   toErrorMessage,
-} from "../src/shared/utils.js"
+} from "../src/shared/Utils.js"
 import { createTestPath } from "./helpers/test-paths.js"
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url))

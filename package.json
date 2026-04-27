@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "NODE_ENV=development tsx watch src/server.ts",
-    "start": "pnpm build:ui && node --import tsx ./src/server.ts",
+    "dev": "NODE_ENV=development tsx watch src/Server.ts",
+    "start": "pnpm build:ui && node --import tsx ./src/Server.ts",
     "build:ui": "vite build",
     "build:server": "tsc -p tsconfig.json",
     "build": "pnpm build:ui && pnpm build:server",

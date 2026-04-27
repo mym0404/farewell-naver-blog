@@ -4,12 +4,12 @@
 네이버 블로그 export 문제 영역과 핵심 엔티티, 도메인 제약을 정리한다.
 
 ## Source Of Truth
-- 실제 도메인 계약은 `src/shared/types.ts`, `src/shared/export-options.ts`, exporter/server/UI 구현이 기준이다.
+- 실제 도메인 계약은 `src/shared/Types.ts`, `src/shared/ExportOptions.ts`, exporter/server/UI 구현이 기준이다.
 
 ## 관련 코드
-- `src/shared/types.ts`
-- `src/shared/export-options.ts`
-- `src/server/http-server.ts`
+- `src/shared/Types.ts`
+- `src/shared/ExportOptions.ts`
+- `src/Server/HttpServer.ts`
 
 ## 검증 방법
 - `pnpm check:local`: shared 타입, export 옵션, 서버 계약 같은 도메인 규칙을 바꾼 뒤 기본 회귀를 확인할 때 실행한다.

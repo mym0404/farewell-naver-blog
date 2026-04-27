@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { NaverBlogFetcher } from "../src/modules/blog-fetcher/naver-blog-fetcher.js"
+import { NaverBlogFetcher } from "../src/modules/blog-fetcher/NaverBlogFetcher.js"
 
 describe("NaverBlogFetcher", () => {
   afterEach(() => {

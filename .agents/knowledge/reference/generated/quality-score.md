@@ -4,11 +4,11 @@
 이 문서는 parser fixture, parser test mapping, 실샘플 coverage를 요약하는 generated 품질 리포트다.
 
 ## Source Of Truth
-이 문서는 `src/shared/parser-capabilities.ts`, `src/shared/sample-corpus.ts`, `tests/fixtures/`, `tests/*.test.ts`를 바탕으로 자동 생성된다.
+이 문서는 `src/shared/ParserCapabilities.ts`, `src/shared/SampleCorpus.ts`, `tests/fixtures/`, `tests/*.test.ts`를 바탕으로 자동 생성된다.
 
 ## 관련 코드
-- `src/shared/parser-capabilities.ts`
-- `src/shared/sample-corpus.ts`
+- `src/shared/ParserCapabilities.ts`
+- `src/shared/SampleCorpus.ts`
 - `scripts/harness/generate-quality-report.ts`
 - `scripts/harness/check-parser-capabilities.ts`
 

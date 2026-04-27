@@ -58,7 +58,7 @@
 - `pnpm check:full`: generated 품질 보고서, sample fixture, Playwright smoke UI까지 묶은 전체 기본 회귀를 확인할 때 실행한다.
 
 ## Focused Commands
-- `pnpm dev`: `tsx watch`와 Vite HMR이 붙은 사용자용 개발 서버를 `http://localhost:4173`에 띄울 때 실행한다. AI agent, test, harness는 이 명령을 그대로 쓰지 않고 별도 `FAREWELL_SETTINGS_PATH`, `FAREWELL_SCAN_CACHE_PATH`, `PORT`를 준 `pnpm exec tsx src/server.ts`나 `listen(0)` 기반 harness entry로 분리한다.
+- `pnpm dev`: `tsx watch`와 Vite HMR이 붙은 사용자용 개발 서버를 `http://localhost:4173`에 띄울 때 실행한다. AI agent, test, harness는 이 명령을 그대로 쓰지 않고 별도 `FAREWELL_SETTINGS_PATH`, `FAREWELL_SCAN_CACHE_PATH`, `PORT`를 준 `pnpm exec tsx src/Server.ts`나 `listen(0)` 기반 harness entry로 분리한다.
 - `pnpm start`: `pnpm build:ui` 뒤 `dist/client` 산출물을 같은 서버에서 확인할 때 실행한다.
 - `pnpm typecheck`: TypeScript 오류만 빠르게 다시 확인할 때 실행한다.
 - `pnpm test:offline`: 네트워크 없는 로컬 테스트만 다시 확인할 때 실행한다.

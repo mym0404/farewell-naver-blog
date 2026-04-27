@@ -12,8 +12,8 @@
 - 같은 업로드 경로를 재사용하면 GitHub 쪽 변경이 no-op처럼 보여 partial evidence가 약해진다.
 
 ## 대응
-- `src/server/http-server.ts`와 `src/server/job-store.ts`에서 upload snapshot을 유지해 결과 단계에서도 마지막 count를 읽게 한다.
-- `src/ui/features/job-results/job-results-panel.tsx`에서 `upload-completed` 뒤에도 마지막 upload progress와 row 상태를 보여 준다.
+- `src/Server/HttpServer.ts`와 `src/Server/JobStore.ts`에서 upload snapshot을 유지해 결과 단계에서도 마지막 count를 읽게 한다.
+- `src/ui/features/job-results/JobResultsPanel.tsx`에서 `upload-completed` 뒤에도 마지막 upload progress와 row 상태를 보여 준다.
 - `scripts/harness/run-ui-live-upload.ts`는 `master`에 run-unique path로 업로드해 같은 브랜치에서 partial evidence를 남긴다.
 - live 확인은 `status === "uploading"`와 `uploadedCount > 0`를 우선 찾고, 매우 빠른 run이면 결과 단계 persisted snapshot까지 증거로 본다.
 
@@ -24,8 +24,8 @@
 
 ## 관련 경로
 - `.agents/knowledge/reference/plan-archive/picgo-upload-progress-visibility/plan.md`
-- `src/server/http-server.ts`
-- `src/server/job-store.ts`
-- `src/ui/features/job-results/job-results-panel.tsx`
-- `src/ui/features/job-results/use-export-job.ts`
+- `src/Server/HttpServer.ts`
+- `src/Server/JobStore.ts`
+- `src/ui/features/job-results/JobResultsPanel.tsx`
+- `src/ui/features/job-results/UseExportJob.ts`
 - `scripts/harness/run-ui-live-upload.ts`

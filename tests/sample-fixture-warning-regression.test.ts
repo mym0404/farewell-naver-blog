@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { sampleCorpus } from "../src/shared/sample-corpus.js"
+import { sampleCorpus } from "../src/shared/SampleCorpus.js"
 
 describe("sample fixture unsupported warning regression", () => {
   it("does not use representative unsupported case lookup ids", () => {

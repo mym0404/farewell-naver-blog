@@ -3,13 +3,13 @@
 import { act, renderHook, waitFor } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { defaultExportOptions } from "../../src/shared/export-options.js"
-import type { ExportJobState, ScanResult } from "../../src/shared/types.js"
-import { useExportJob } from "../../src/ui/features/job-results/use-export-job.js"
-import { fetchJson, postJson, postUploadJson } from "../../src/ui/lib/api.js"
+import { defaultExportOptions } from "../../src/shared/ExportOptions.js"
+import type { ExportJobState, ScanResult } from "../../src/shared/Types.js"
+import { useExportJob } from "../../src/ui/features/job-results/UseExportJob.js"
+import { fetchJson, postJson, postUploadJson } from "../../src/ui/lib/Api.js"
 import { createTestPath } from "../helpers/test-paths.js"
 
-vi.mock("../../src/ui/lib/api.js", () => ({
+vi.mock("../../src/ui/lib/Api.js", () => ({
   fetchJson: vi.fn(),
   postJson: vi.fn(),
   postUploadJson: vi.fn(),

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { ignoredRuntimeOutputGlobs } from "../src/shared/runtime-output-watch-globs.js"
+import { ignoredRuntimeOutputGlobs } from "../src/shared/RuntimeOutputWatchGlobs.js"
 
 describe("vite config", () => {
   it("ignores runtime export directories in dev watch mode", () => {

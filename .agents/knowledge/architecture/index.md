@@ -6,9 +6,9 @@
 - parser block 지원 범위와 fallback projection: `.agents/knowledge/architecture/parser-block-catalog.md`
 
 ## 대표 기준점
-- export 파이프라인: `src/modules/exporter/naver-blog-exporter.ts`
-- Markdown 렌더러: `src/modules/converter/markdown-renderer.ts`
-- HTTP API와 job lifecycle: `src/server/http-server.ts`
+- export 파이프라인: `src/modules/exporter/NaverBlogExporter.ts`
+- Markdown 렌더러: `src/modules/converter/MarkdownRenderer.ts`
+- HTTP API와 job lifecycle: `src/Server/HttpServer.ts`
 
 ## 언제 읽는가
 - 모듈 경계와 의존 방향을 빠르게 파악해야 할 때

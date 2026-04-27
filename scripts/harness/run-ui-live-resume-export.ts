@@ -4,8 +4,8 @@ import { tmpdir } from "node:os"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 
-import { defaultExportOptions } from "../../src/shared/export-options.js"
-import type { ExportJobState, ExportManifest, ExportOptions, ScanResult } from "../../src/shared/types.js"
+import { defaultExportOptions } from "../../src/shared/ExportOptions.js"
+import type { ExportJobState, ExportManifest, ExportOptions, ScanResult } from "../../src/shared/Types.js"
 
 const repoRoot = fileURLToPath(new URL("../../", import.meta.url))
 const blogId = process.env.FAREWELL_LIVE_RESUME_BLOG_ID ?? "mym0404"

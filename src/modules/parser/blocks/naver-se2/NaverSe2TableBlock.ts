@@ -3,9 +3,9 @@ import type { CheerioAPI } from "cheerio"
 import { LeafBlock } from "../parser-node.js"
 import type { ParserBlockResult } from "../parser-node.js"
 import type { ParserBlockContext } from "../parser-node.js"
-import { parseSingleColumnTableAsParagraphs } from "../common/table.js"
-import type { StructuredAstBlock } from "../../../../shared/types.js"
-import { compactText } from "../../../../shared/utils.js"
+import { parseSingleColumnTableAsParagraphs } from "../common/Table.js"
+import type { StructuredAstBlock } from "../../../../shared/Types.js"
+import { compactText } from "../../../../shared/Utils.js"
 import { parseHtmlTable } from "../../table-parser.js"
 
 const parseColorScripterCodeBlock = ({

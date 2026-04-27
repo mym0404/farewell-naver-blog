@@ -9,12 +9,12 @@
 - 원요청은 “PicGo upload에서 실제 GitHub 커밋은 먼저 생기는데 UI에서 부분 완료를 관찰할 수 없고, 수집/업로드 진행률과 업로드 테이블 가시성도 부족하다”는 후속 개선이다.
 - planning session 시작 시 subagent 사용 승인을 받았고, quick local sweep 뒤 필수 explore lens `Implementation Surface`, `Verification Surface`를 실행했다. 추가로 `Partial State` lens를 실행해 기존 bundle 재사용 가능성도 확인했다.
 - explore 결과 핵심 사실:
-- export 단계는 이미 `src/modules/exporter/naver-blog-exporter.ts`에서 글 단위 `onProgress`, `onItem`을 호출해 증분 갱신을 한다.
-- upload 단계는 `src/server/http-server.ts`에서 `startUpload -> runPicGoUploadPhase -> rewriteUploadedAssets -> completeUpload`만 묶고 중간 증분 갱신이 없다.
-- `src/server/job-store.ts`에는 `updateUpload()`가 이미 있지만 실제 upload 경로에서 호출되지 않는다.
-- `src/modules/exporter/image-upload-phase.ts`는 PicGo에 파일 배열 전체를 한 번 넘기고 최종 결과 배열을 마지막에만 받는다.
-- `src/ui/features/job-results/use-export-job.ts`는 이미 1초 polling을 하고 있어 transport 추가 없이도 서버 state만 자주 갱신하면 UI가 따라온다.
-- `src/ui/features/job-results/job-results-panel.tsx`는 업로드 패널과 대상 테이블을 이미 갖고 있지만 progress bar가 없고, 행 상태도 전역 job 상태만 따라간다.
+- export 단계는 이미 `src/modules/exporter/NaverBlogExporter.ts`에서 글 단위 `onProgress`, `onItem`을 호출해 증분 갱신을 한다.
+- upload 단계는 `src/Server/HttpServer.ts`에서 `startUpload -> runPicGoUploadPhase -> rewriteUploadedAssets -> completeUpload`만 묶고 중간 증분 갱신이 없다.
+- `src/Server/JobStore.ts`에는 `updateUpload()`가 이미 있지만 실제 upload 경로에서 호출되지 않는다.
+- `src/modules/exporter/ImageUploadPhase.ts`는 PicGo에 파일 배열 전체를 한 번 넘기고 최종 결과 배열을 마지막에만 받는다.
+- `src/ui/features/job-results/UseExportJob.ts`는 이미 1초 polling을 하고 있어 transport 추가 없이도 서버 state만 자주 갱신하면 UI가 따라온다.
+- `src/ui/features/job-results/JobResultsPanel.tsx`는 업로드 패널과 대상 테이블을 이미 갖고 있지만 progress bar가 없고, 행 상태도 전역 job 상태만 따라간다.
 - 같은 파일의 결과 리스트는 `ScrollArea + max-h` 패턴을 이미 쓰고 있어 업로드 테이블에 같은 house pattern을 재사용할 수 있다.
 - `.agents/knowledge/DESIGN.md`와 현재 UI 구현은 upload form이 `upload-ready`, `upload-failed`에서만 보이고 `uploading`, `upload-completed`에서는 숨는 계약을 이미 갖고 있다. 이번 bundle은 그 기존 동작을 보존하고 regression으로 고정한다.
 - `scripts/harness/run-ui-smoke.ts`는 mocked upload flow를, `scripts/harness/run-ui-live-upload.ts`는 실제 GitHub upload를 이미 검증하지만 둘 다 “중간 진행률이 올라가는가”는 강하게 고정하지 않는다.
@@ -69,19 +69,19 @@
 
 ## Project Structure
 
-- `src/modules/exporter/image-upload-phase.ts`
+- `src/modules/exporter/ImageUploadPhase.ts`
   - PicGo upload 실행 surface. 현재 batch 호출만 하므로 중간 progress를 만들려면 여기부터 바뀐다.
-- `src/modules/exporter/image-upload-rewriter.ts`
+- `src/modules/exporter/ImageUploadRewriter.ts`
   - upload 결과를 Markdown/manifest/item에 반영하는 후처리 surface. 최종 완료 경계가 여기와 붙어 있다.
-- `src/server/http-server.ts`
+- `src/Server/HttpServer.ts`
   - upload same-job orchestration, polling API, progress update 결합 지점
-- `src/server/job-store.ts`
+- `src/Server/JobStore.ts`
   - upload 중간 집계와 item-level count를 보관하는 상태 저장소
-- `src/ui/features/job-results/use-export-job.ts`
+- `src/ui/features/job-results/UseExportJob.ts`
   - `/api/export/:id` polling loop
-- `src/ui/features/job-results/job-results-panel.tsx`
+- `src/ui/features/job-results/JobResultsPanel.tsx`
   - 실행/업로드/결과 패널, progress bar, upload table, row status surface
-- `src/ui/components/ui/scroll-area.tsx`
+- `src/ui/components/ui/ScrollArea.tsx`
   - 업로드 테이블 max-height에 재사용할 기존 scroll container
 - `src/ui/App.tsx`
   - panel step 전환과 top summary progress surface

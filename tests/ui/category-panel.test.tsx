@@ -4,8 +4,8 @@ import "@testing-library/jest-dom/vitest"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { cleanup, fireEvent, render } from "@testing-library/react"
 
-import type { ScanResult } from "../../src/shared/types.js"
-import { CategoryPanel } from "../../src/ui/features/scan/category-panel.js"
+import type { ScanResult } from "../../src/shared/Types.js"
+import { CategoryPanel } from "../../src/ui/features/scan/CategoryPanel.js"
 
 afterEach(() => {
   cleanup()

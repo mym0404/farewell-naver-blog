@@ -15,7 +15,7 @@ export default defineConfig({
       exclude: [
         "src/modules/blog-fetcher/**",
         "src/modules/exporter/export-preview.ts",
-        "src/ui/main.tsx",
+        "src/ui/Main.tsx",
       ],
       thresholds: {
         lines: 90,

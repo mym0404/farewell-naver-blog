@@ -16,15 +16,15 @@
 ## 관련 코드
 - `index.html`
 - `src/ui/App.tsx`
-- `src/ui/features/common/shell/wizard-header.tsx`
-- `src/ui/features/common/shell/wizard-dock.tsx`
-- `src/ui/features/scan/blog-input-panel.tsx`
-- `src/ui/features/resume/resume-dialog-panel.tsx`
+- `src/ui/features/common/shell/WizardHeader.tsx`
+- `src/ui/features/common/shell/WizardDock.tsx`
+- `src/ui/features/scan/BlogInputPanel.tsx`
+- `src/ui/features/resume/ResumeDialogPanel.tsx`
 - `src/ui/styles/globals.css`
-- `src/ui/features/options/export-options-panel.tsx`
-- `src/ui/features/job-results/job-results-panel.tsx`
+- `src/ui/features/options/ExportOptionsPanel.tsx`
+- `src/ui/features/job-results/JobResultsPanel.tsx`
 - `.agents/knowledge/DESIGN.md`
-- `src/server/http-server.ts`
+- `src/Server/HttpServer.ts`
 - `scripts/harness/run-ui-smoke.ts`
 - `scripts/harness/run-ui-resume-smoke.ts`
 

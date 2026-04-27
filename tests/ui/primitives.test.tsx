@@ -14,19 +14,19 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "../../src/ui/components/ui/dialog.js"
-import { Skeleton } from "../../src/ui/components/ui/skeleton.js"
-import { Toaster } from "../../src/ui/components/ui/sonner.js"
+} from "../../src/ui/components/ui/Dialog.js"
+import { Skeleton } from "../../src/ui/components/ui/Skeleton.js"
+import { Toaster } from "../../src/ui/components/ui/Sonner.js"
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "../../src/ui/components/ui/tabs.js"
+} from "../../src/ui/components/ui/Tabs.js"
 import {
   ToggleGroup,
   ToggleGroupItem,
-} from "../../src/ui/components/ui/toggle-group.js"
+} from "../../src/ui/components/ui/ToggleGroup.js"
 
 afterEach(() => {
   cleanup()

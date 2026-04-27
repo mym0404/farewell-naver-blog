@@ -5,18 +5,18 @@ import { mkdir } from "node:fs/promises"
 
 import { chromium } from "playwright"
 
-import { createHttpServer } from "../../src/server/http-server.js"
+import { createHttpServer } from "../../src/server/HttpServer.js"
 import {
   defaultExportOptions,
   frontmatterFieldMeta,
   frontmatterFieldOrder,
   optionDescriptions,
-} from "../../src/shared/export-options.js"
+} from "../../src/shared/ExportOptions.js"
 import type {
   ExportJobPollingConfig,
   UploadProviderCatalogResponse,
   UploadProviderValue,
-} from "../../src/shared/types.js"
+} from "../../src/shared/Types.js"
 
 const responseTimeoutMs = 90_000
 const smokeFast = process.env.FAREWELL_SMOKE_FAST !== "0"

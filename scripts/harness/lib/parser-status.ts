@@ -1,8 +1,8 @@
 import path from "node:path"
 
-import { parserCapabilities } from "../../../src/shared/parser-capabilities.js"
-import { sampleCorpus } from "../../../src/shared/sample-corpus.js"
-import type { BlockType, EditorVersion, ParserCapabilityId } from "../../../src/shared/types.js"
+import { parserCapabilities } from "../../../src/shared/ParserCapabilities.js"
+import { sampleCorpus } from "../../../src/shared/SampleCorpus.js"
+import type { BlockType, EditorVersion, ParserCapabilityId } from "../../../src/shared/Types.js"
 import { pathExists, repoPath, walkFiles } from "./paths.js"
 
 export const collectParserStatus = async () => {

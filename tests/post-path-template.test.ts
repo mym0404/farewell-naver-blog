@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest"
 
-import { defaultExportOptions } from "../src/shared/export-options.js"
+import { defaultExportOptions } from "../src/shared/ExportOptions.js"
 import {
   applyPostTemplate,
   buildPostFolderName,
   buildPostTemplateValues,
-} from "../src/shared/post-path-template.js"
+} from "../src/shared/PostPathTemplate.js"
 
 const samplePost = {
   blogId: "mym0404",

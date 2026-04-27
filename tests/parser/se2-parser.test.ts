@@ -1,8 +1,8 @@
 import { load } from "cheerio"
 import { describe, expect, it } from "vitest"
 
-import { NaverBlogSE2Editor } from "../../src/modules/parser/editors/naver-blog-se2-editor.js"
-import { defaultExportOptions } from "../../src/shared/export-options.js"
+import { NaverBlogSE2Editor } from "../../src/modules/parser/editors/NaverBlogSe2Editor.js"
+import { defaultExportOptions } from "../../src/shared/ExportOptions.js"
 
 const parserOptions = {
   markdown: defaultExportOptions().markdown,

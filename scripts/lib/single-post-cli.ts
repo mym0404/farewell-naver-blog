@@ -2,15 +2,15 @@ import {
   blockOutputFamilyDefinitions,
   blockOutputFamilyOrder,
   resolveBlockOutputSelection,
-} from "../../src/shared/block-registry.js"
-import { defaultExportOptions } from "../../src/shared/export-options.js"
-import { parserCapabilities } from "../../src/shared/parser-capabilities.js"
+} from "../../src/shared/BlockRegistry.js"
+import { defaultExportOptions } from "../../src/shared/ExportOptions.js"
+import { parserCapabilities } from "../../src/shared/ParserCapabilities.js"
 import type {
   BlockOutputSelection,
   BlockOutputSelectionByType,
   ExportOptions,
   ParserCapabilityId,
-} from "../../src/shared/types.js"
+} from "../../src/shared/Types.js"
 
 const entrypoint = "pnpm exec tsx scripts/export-single-post.ts"
 

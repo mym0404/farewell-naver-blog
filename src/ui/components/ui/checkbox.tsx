@@ -4,7 +4,7 @@ import { RiCheckLine } from "@remixicon/react"
 import * as React from "react"
 import { Checkbox as CheckboxPrimitive } from "radix-ui"
 
-import { cn } from "../../lib/cn.js"
+import { cn } from "../../lib/Cn.js"
 
 function Checkbox({
   className,

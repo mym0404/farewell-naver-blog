@@ -6,13 +6,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import "@testing-library/jest-dom/vitest"
 
-import { defaultExportOptions } from "../../src/shared/export-options.js"
+import { defaultExportOptions } from "../../src/shared/ExportOptions.js"
 import type {
   ExportJobState,
   UploadProviderCatalogResponse,
   UploadProviderValue,
-} from "../../src/shared/types.js"
-import { JobResultsPanel } from "../../src/ui/features/job-results/job-results-panel.js"
+} from "../../src/shared/Types.js"
+import { JobResultsPanel } from "../../src/ui/features/job-results/JobResultsPanel.js"
 import { createTestPath } from "../helpers/test-paths.js"
 
 const testOutputDir = createTestPath("ui-job-results-panel", "output")

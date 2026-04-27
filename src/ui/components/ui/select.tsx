@@ -6,7 +6,7 @@ import {
 } from "@remixicon/react"
 import { Select as SelectPrimitive } from "radix-ui"
 
-import { cn } from "../../lib/cn.js"
+import { cn } from "../../lib/Cn.js"
 
 function Select({
   ...props

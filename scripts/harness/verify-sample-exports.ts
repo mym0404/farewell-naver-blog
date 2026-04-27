@@ -1,4 +1,4 @@
-import { sampleCorpus } from "../../src/shared/sample-corpus.js"
+import { sampleCorpus } from "../../src/shared/SampleCorpus.js"
 import {
   loadSampleFixture,
   renderSampleFixture,

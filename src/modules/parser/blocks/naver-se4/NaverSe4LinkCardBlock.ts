@@ -1,4 +1,4 @@
-import { compactText, normalizeAssetUrl } from "../../../../shared/utils.js"
+import { compactText, normalizeAssetUrl } from "../../../../shared/Utils.js"
 import { LeafBlock } from "../parser-node.js"
 import type { ParserBlockContext, ParserBlockResult } from "../parser-node.js"
 

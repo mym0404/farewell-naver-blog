@@ -3,10 +3,10 @@ import { tmpdir } from "node:os"
 import path from "node:path"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { NaverBlogFetcher } from "../src/modules/blog-fetcher/naver-blog-fetcher.js"
-import { NaverBlogExporter } from "../src/modules/exporter/naver-blog-exporter.js"
-import { buildMarkdownViewerShareUrl } from "../src/modules/exporter/markdown-viewer-share-url.js"
-import { defaultExportOptions } from "../src/shared/export-options.js"
+import { NaverBlogFetcher } from "../src/modules/blog-fetcher/NaverBlogFetcher.js"
+import { NaverBlogExporter } from "../src/modules/exporter/NaverBlogExporter.js"
+import { buildMarkdownViewerShareUrl } from "../src/modules/exporter/MarkdownViewerShareUrl.js"
+import { defaultExportOptions } from "../src/shared/ExportOptions.js"
 import type {
   ExportManifest,
   ExportJobState,
@@ -14,9 +14,9 @@ import type {
   UploadCandidate,
   UploadProviderCatalogResponse,
   UploadProviderValue,
-} from "../src/shared/types.js"
-import { AbortOperationError } from "../src/shared/utils.js"
-import { createHttpServer } from "../src/server/http-server.js"
+} from "../src/shared/Types.js"
+import { AbortOperationError } from "../src/shared/Utils.js"
+import { createHttpServer } from "../src/server/HttpServer.js"
 import { createTestPath } from "./helpers/test-paths.js"
 
 let activeServer: ReturnType<typeof createHttpServer> | null = null

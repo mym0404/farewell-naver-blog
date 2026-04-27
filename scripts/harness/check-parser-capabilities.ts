@@ -1,8 +1,8 @@
 import { constants } from "node:fs"
 import { access, readFile } from "node:fs/promises"
 
-import { parserCapabilities } from "../../src/shared/parser-capabilities.js"
-import { sampleCorpus } from "../../src/shared/sample-corpus.js"
+import { parserCapabilities } from "../../src/shared/ParserCapabilities.js"
+import { sampleCorpus } from "../../src/shared/SampleCorpus.js"
 import { buildGeneratedDocs } from "./lib/report-generation.js"
 import { collectParserStatus } from "./lib/parser-status.js"
 import { repoPath } from "./lib/paths.js"

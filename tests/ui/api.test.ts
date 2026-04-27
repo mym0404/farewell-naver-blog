@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { fetchJson, postJson } from "../../src/ui/lib/api.js"
+import { fetchJson, postJson } from "../../src/ui/lib/Api.js"
 
 const buildResponse = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {

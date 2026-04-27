@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest"
 
-import { defaultExportOptions } from "../src/shared/export-options.js"
-import type { ExportJobState, ScanResult } from "../src/shared/types.js"
-import { buildResumableExportManifest } from "../src/server/export-job-manifest.js"
+import { defaultExportOptions } from "../src/shared/ExportOptions.js"
+import type { ExportJobState, ScanResult } from "../src/shared/Types.js"
+import { buildResumableExportManifest } from "../src/server/ExportJobManifest.js"
 import { createTestPath } from "./helpers/test-paths.js"
 
 const testOutputDir = createTestPath("export-job-manifest", "output")

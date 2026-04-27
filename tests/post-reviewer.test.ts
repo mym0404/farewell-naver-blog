@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
-import { reviewParsedPost } from "../src/modules/reviewer/post-reviewer.js"
-import type { ParsedPost } from "../src/shared/types.js"
+import { reviewParsedPost } from "../src/modules/reviewer/PostReviewer.js"
+import type { ParsedPost } from "../src/shared/Types.js"
 
 const createParsedPost = (overrides?: Partial<ParsedPost>): ParsedPost => ({
   editorVersion: 4,

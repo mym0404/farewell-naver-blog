@@ -4,8 +4,8 @@ import { mkdir, readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 
-import { cloneExportOptions } from "../src/shared/export-options.js"
-import { exportSinglePost } from "../src/modules/exporter/single-post-export.js"
+import { cloneExportOptions } from "../src/shared/ExportOptions.js"
+import { exportSinglePost } from "../src/modules/exporter/SinglePostExport.js"
 import { createSinglePostMetadataCachingFetcher } from "./lib/single-post-metadata-cache.js"
 import {
   parseSinglePostCliArgs,

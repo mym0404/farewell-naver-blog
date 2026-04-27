@@ -1,6 +1,6 @@
 import type { ComponentPropsWithoutRef } from "react"
 
-import { cn } from "../../lib/cn.js"
+import { cn } from "../../lib/Cn.js"
 
 export const Progress = ({
   className,

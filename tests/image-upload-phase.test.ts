@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from "vitest"
 
-import type { UploadCandidate } from "../src/shared/types.js"
+import type { UploadCandidate } from "../src/shared/Types.js"
 import {
   ImageUploadPhaseError,
   runImageUploadPhase,
   type ImageUploadProgress,
-} from "../src/modules/exporter/image-upload-phase.js"
+} from "../src/modules/exporter/ImageUploadPhase.js"
 import { createTestPath } from "./helpers/test-paths.js"
 
 const testExportDir = createTestPath("image-upload-phase", "export")

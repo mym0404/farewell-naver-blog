@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest"
 
-import { defaultExportOptions } from "../src/shared/export-options.js"
-import type { ExportManifest, ExportRequest } from "../src/shared/types.js"
-import { JobStore } from "../src/server/job-store.js"
+import { defaultExportOptions } from "../src/shared/ExportOptions.js"
+import type { ExportManifest, ExportRequest } from "../src/shared/Types.js"
+import { JobStore } from "../src/server/JobStore.js"
 import { createTestPath } from "./helpers/test-paths.js"
 
 const testOutputDir = createTestPath("job-store", "output")

@@ -2,7 +2,7 @@ import { convertHtmlToMarkdown } from "../../../converter/html-fragment-converte
 import { LeafBlock } from "../parser-node.js"
 import type { ParserBlockResult } from "../parser-node.js"
 import type { ParserBlockContext } from "../parser-node.js"
-import { compactText } from "../../../../shared/utils.js"
+import { compactText } from "../../../../shared/Utils.js"
 
 export class NaverSe2HeadingBlock extends LeafBlock {
   override readonly id = "se2-heading"

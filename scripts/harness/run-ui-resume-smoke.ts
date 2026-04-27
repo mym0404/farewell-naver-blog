@@ -4,14 +4,14 @@ import path from "node:path"
 
 import { chromium } from "playwright"
 
-import { createHttpServer } from "../../src/server/http-server.js"
+import { createHttpServer } from "../../src/server/HttpServer.js"
 import {
   defaultExportOptions,
   frontmatterFieldMeta,
   frontmatterFieldOrder,
   optionDescriptions,
-} from "../../src/shared/export-options.js"
-import { mapConcurrent } from "../../src/shared/utils.js"
+} from "../../src/shared/ExportOptions.js"
+import { mapConcurrent } from "../../src/shared/Utils.js"
 import type {
   ExportJobPollingConfig,
   ExportJobItem,
@@ -20,7 +20,7 @@ import type {
   ScanResult,
   UploadProviderCatalogResponse,
   UploadProviderValue,
-} from "../../src/shared/types.js"
+} from "../../src/shared/Types.js"
 
 const desktopViewport = {
   width: 1440,

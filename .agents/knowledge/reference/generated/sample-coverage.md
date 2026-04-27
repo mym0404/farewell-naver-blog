@@ -4,11 +4,11 @@
 이 문서는 capability별 대표 샘플 매핑과 sample fixture coverage gap을 보여주는 generated 리포트다.
 
 ## Source Of Truth
-이 문서는 `src/shared/parser-capabilities.ts` 와 `src/shared/sample-corpus.ts` 를 바탕으로 자동 생성된다.
+이 문서는 `src/shared/ParserCapabilities.ts` 와 `src/shared/SampleCorpus.ts` 를 바탕으로 자동 생성된다.
 
 ## 관련 코드
-- `src/shared/parser-capabilities.ts`
-- `src/shared/sample-corpus.ts`
+- `src/shared/ParserCapabilities.ts`
+- `src/shared/SampleCorpus.ts`
 - `.agents/knowledge/product/sample-corpus.md`
 - `scripts/harness/generate-quality-report.ts`
 

@@ -7,13 +7,13 @@
 ## Tech Stack
 - `pnpm` 단일 저장소에서 `Node.js` ESM, `TypeScript`, `tsx`를 사용한다.
 - 로컬 대시보드는 `React 19`, `Vite`, `Tailwind CSS v4`, `shadcn`/`Radix`, `Sonner` 위에서 동작한다.
-- export 파이프라인은 `src/modules/*`, HTTP 런타임은 `src/server/*`, 공용 계약은 `src/shared/*`에 모인다.
+- export 파이프라인은 `src/modules/*`, HTTP 런타임은 `src/Server/*`, 공용 계약은 `src/shared/*`에 모인다.
 - 검증 표면은 `Vitest`, Playwright, `scripts/harness/*`가 맡는다.
 
 ## Runtime And Architecture
-- 런타임 시작점은 `src/server.ts`, `src/server/http-server.ts`다.
-- export 실행 구조는 `src/modules/exporter/naver-blog-exporter.ts`에서 따라간다.
-- parser/sample 구조 seam은 `src/modules/parser/post-parser.ts`, `src/modules/parser/editors/*`, `src/modules/parser/blocks/naver-se*/NaverSe*Block.ts`, `src/shared/parser-capabilities.ts`, `src/shared/sample-corpus.ts`가 기준이다.
+- 런타임 시작점은 `src/Server.ts`, `src/Server/HttpServer.ts`다.
+- export 실행 구조는 `src/modules/exporter/NaverBlogExporter.ts`에서 따라간다.
+- parser/sample 구조 seam은 `src/modules/parser/PostParser.ts`, `src/modules/parser/editors/*`, `src/modules/parser/blocks/naver-se*/NaverSe*Block.ts`, `src/shared/ParserCapabilities.ts`, `src/shared/SampleCorpus.ts`가 기준이다.
 - UI 셸과 토큰 시작점은 `src/ui/App.tsx`, `src/ui/features/common/*`, `src/ui/styles/globals.css`다.
 
 ## Design System

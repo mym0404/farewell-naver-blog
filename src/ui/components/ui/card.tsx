@@ -1,7 +1,7 @@
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 
-import { cn } from "../../lib/cn.js"
+import { cn } from "../../lib/Cn.js"
 
 const cardVariants = cva("rounded-[var(--radius-xl)] text-card-foreground", {
   variants: {

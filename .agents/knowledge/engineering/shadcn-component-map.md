@@ -39,21 +39,21 @@
 ## 현재 사용처
 | primitive | 현재 사용처 | 역할 |
 | --- | --- | --- |
-| `Alert` | `src/ui/features/options/export-options-panel.tsx` | frontmatter alias 같은 blocking validation |
-| `Badge` | `src/ui/features/common/shell/wizard-header.tsx`, `src/ui/features/scan/category-panel.tsx`, `src/ui/features/options/export-options-panel.tsx`, `src/ui/features/job-results/job-results-panel.tsx` | 단계 상태, count, 결과 status pill |
-| `Button` | `src/ui/features/common/shell/wizard-dock.tsx`, `src/ui/features/scan/category-panel.tsx`, `src/ui/features/job-results/job-results-panel.tsx` | primary/secondary/destructive action |
-| `Card` | `src/ui/App.tsx`, `src/ui/features/scan/blog-input-panel.tsx`, `src/ui/features/scan/category-panel.tsx`, `src/ui/features/options/export-options-panel.tsx`, `src/ui/features/job-results/job-results-panel.tsx` | shell, section panel, status board |
-| `Checkbox` | `src/ui/features/scan/category-panel.tsx`, `src/ui/features/options/export-options-panel.tsx`, `src/ui/features/job-results/job-results-panel.tsx` | 독립 boolean field |
-| `Collapsible` | `src/ui/features/options/export-options-panel.tsx` | 고급 옵션 펼침/접힘 |
-| `Dialog` | `src/ui/features/resume/resume-dialog-panel.tsx` | resume/초기화 같은 modal interrupt |
-| `Input` | `src/ui/features/scan/blog-input-panel.tsx`, `src/ui/features/scan/category-panel.tsx`, `src/ui/features/options/export-options-panel.tsx`, `src/ui/features/job-results/job-results-panel.tsx` | text, path, url, alias, token 입력 |
-| `Progress` | `src/ui/features/job-results/job-results-panel.tsx` | export/upload 진행률 |
-| `ScrollArea` | `src/ui/features/scan/category-panel.tsx`, `src/ui/features/job-results/job-results-panel.tsx` | 긴 표와 로그 viewport |
-| `Select` | `src/ui/features/scan/category-panel.tsx`, `src/ui/features/options/export-options-panel.tsx`, `src/ui/features/job-results/job-results-panel.tsx` | 단일 선택 dropdown |
-| `Separator` | `src/ui/features/job-results/job-results-panel.tsx` | upload/result panel 내부 구획 |
+| `Alert` | `src/ui/features/options/ExportOptionsPanel.tsx` | frontmatter alias 같은 blocking validation |
+| `Badge` | `src/ui/features/common/shell/WizardHeader.tsx`, `src/ui/features/scan/CategoryPanel.tsx`, `src/ui/features/options/ExportOptionsPanel.tsx`, `src/ui/features/job-results/JobResultsPanel.tsx` | 단계 상태, count, 결과 status pill |
+| `Button` | `src/ui/features/common/shell/WizardDock.tsx`, `src/ui/features/scan/CategoryPanel.tsx`, `src/ui/features/job-results/JobResultsPanel.tsx` | primary/secondary/destructive action |
+| `Card` | `src/ui/App.tsx`, `src/ui/features/scan/BlogInputPanel.tsx`, `src/ui/features/scan/CategoryPanel.tsx`, `src/ui/features/options/ExportOptionsPanel.tsx`, `src/ui/features/job-results/JobResultsPanel.tsx` | shell, section panel, status board |
+| `Checkbox` | `src/ui/features/scan/CategoryPanel.tsx`, `src/ui/features/options/ExportOptionsPanel.tsx`, `src/ui/features/job-results/JobResultsPanel.tsx` | 독립 boolean field |
+| `Collapsible` | `src/ui/features/options/ExportOptionsPanel.tsx` | 고급 옵션 펼침/접힘 |
+| `Dialog` | `src/ui/features/resume/ResumeDialogPanel.tsx` | resume/초기화 같은 modal interrupt |
+| `Input` | `src/ui/features/scan/BlogInputPanel.tsx`, `src/ui/features/scan/CategoryPanel.tsx`, `src/ui/features/options/ExportOptionsPanel.tsx`, `src/ui/features/job-results/JobResultsPanel.tsx` | text, path, url, alias, token 입력 |
+| `Progress` | `src/ui/features/job-results/JobResultsPanel.tsx` | export/upload 진행률 |
+| `ScrollArea` | `src/ui/features/scan/CategoryPanel.tsx`, `src/ui/features/job-results/JobResultsPanel.tsx` | 긴 표와 로그 viewport |
+| `Select` | `src/ui/features/scan/CategoryPanel.tsx`, `src/ui/features/options/ExportOptionsPanel.tsx`, `src/ui/features/job-results/JobResultsPanel.tsx` | 단일 선택 dropdown |
+| `Separator` | `src/ui/features/job-results/JobResultsPanel.tsx` | upload/result panel 내부 구획 |
 | `Sonner` | `src/ui/App.tsx` | toast |
-| `Table` | `src/ui/features/scan/category-panel.tsx`, `src/ui/features/job-results/job-results-panel.tsx` | 카테고리 트리, 결과/업로드 파일 테이블 |
-| `ToggleGroup` | `src/ui/features/common/shell/wizard-header.tsx`, `src/ui/features/job-results/job-results-panel.tsx` | theme toggle, 소수의 상호배타 선택 |
+| `Table` | `src/ui/features/scan/CategoryPanel.tsx`, `src/ui/features/job-results/JobResultsPanel.tsx` | 카테고리 트리, 결과/업로드 파일 테이블 |
+| `ToggleGroup` | `src/ui/features/common/shell/WizardHeader.tsx`, `src/ui/features/job-results/JobResultsPanel.tsx` | theme toggle, 소수의 상호배타 선택 |
 | `Skeleton` | 현재 미사용 | 실제 비동기 로딩 placeholder가 필요할 때만 사용 |
 | `Tabs` | 현재 미사용 | 같은 깊이의 병렬 뷰가 필요할 때만 사용 |
 

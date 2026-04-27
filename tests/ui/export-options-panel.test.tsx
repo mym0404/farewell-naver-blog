@@ -11,9 +11,9 @@ import {
   frontmatterFieldMeta,
   frontmatterFieldOrder,
   optionDescriptions,
-} from "../../src/shared/export-options.js"
-import type { ExportOptions } from "../../src/shared/types.js"
-import { ExportOptionsPanel } from "../../src/ui/features/options/export-options-panel.js"
+} from "../../src/shared/ExportOptions.js"
+import type { ExportOptions } from "../../src/shared/Types.js"
+import { ExportOptionsPanel } from "../../src/ui/features/options/ExportOptionsPanel.js"
 import { createTestPath } from "../helpers/test-paths.js"
 
 const testOutputDir = createTestPath("ui-export-options-panel", "output")

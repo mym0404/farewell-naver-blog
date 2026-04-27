@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { resolveBlockOutputSelection } from "../src/shared/block-registry.js"
+import { resolveBlockOutputSelection } from "../src/shared/BlockRegistry.js"
 import {
   cloneExportOptions,
   frontmatterFieldMeta,
@@ -8,7 +8,7 @@ import {
   optionDescriptions,
   sanitizePersistedExportOptions,
   validateFrontmatterAliases,
-} from "../src/shared/export-options.js"
+} from "../src/shared/ExportOptions.js"
 
 describe("export options", () => {
   it("merges frontmatter aliases with defaults", () => {

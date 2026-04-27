@@ -1,17 +1,17 @@
 import path from "node:path"
 
-import { renderMarkdownPost } from "../../../src/modules/converter/markdown-renderer.js"
-import { parsePostHtml } from "../../../src/modules/parser/post-parser.js"
-import { reviewParsedPost } from "../../../src/modules/reviewer/post-reviewer.js"
-import { defaultExportOptions } from "../../../src/shared/export-options.js"
-import { getParserCapabilityLookupIds } from "../../../src/shared/parser-capabilities.js"
+import { renderMarkdownPost } from "../../../src/modules/converter/MarkdownRenderer.js"
+import { parsePostHtml } from "../../../src/modules/parser/PostParser.js"
+import { reviewParsedPost } from "../../../src/modules/reviewer/PostReviewer.js"
+import { defaultExportOptions } from "../../../src/shared/ExportOptions.js"
+import { getParserCapabilityLookupIds } from "../../../src/shared/ParserCapabilities.js"
 import type {
   CategoryInfo,
   ExportOptions,
   PostSummary,
   SampleCorpusEntry,
-} from "../../../src/shared/types.js"
-import { unique } from "../../../src/shared/utils.js"
+} from "../../../src/shared/Types.js"
+import { unique } from "../../../src/shared/Utils.js"
 import { ensureHarnessDir, readUtf8, repoPath, writeUtf8 } from "./paths.js"
 
 export const getSampleFixtureDir = (sampleId: string) =>

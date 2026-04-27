@@ -4,7 +4,7 @@ import {
   getParserCapabilityId,
   getParserCapabilityLookupIds,
   parserCapabilities,
-} from "../src/shared/parser-capabilities.js"
+} from "../src/shared/ParserCapabilities.js"
 
 describe("parserCapabilities", () => {
   it("does not declare rawHtml as a parser capability", () => {

@@ -8,7 +8,7 @@
 
 ## 관련 코드
 - `package.json`
-- `src/server.ts`
+- `src/Server.ts`
 - `scripts/export-single-post.ts`
 
 ## 검증 방법
@@ -34,7 +34,7 @@
 - `typescript`: 정적 타입체크
 
 ## Application Surfaces
-- `src/server.ts`, `src/server/http-server.ts`: 로컬 HTTP 서버와 API
+- `src/Server.ts`, `src/Server/HttpServer.ts`: 로컬 HTTP 서버와 API
 - `index.html`, `src/ui/*`: React + Vite 기반 로컬 웹 UI
 - `src/modules/exporter/*`: 전체 export 실행과 단건 export
 - `scripts/export-single-post.ts`: 단건 수동 검증 CLI
@@ -43,7 +43,7 @@
 ## Repo Shape
 - `src/modules`: fetcher, parser, reviewer, converter, exporter
 - `src/modules/parser/editors`: SE2, SE3, SE4 parser class 구현
-- `src/server`: job store와 HTTP API
+- `src/Server`: job store와 HTTP API
 - `src/shared`: 타입, 옵션, parser capability, sample corpus, 유틸
 - `src/ui`: React 앱 셸, `features/common` 공용 shell/hook/status, feature별 UI 조합, shadcn primitive
 - `tests`: unit, integration, smoke 보조 테스트

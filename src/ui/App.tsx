@@ -16,9 +16,9 @@ import type {
   ScanResult,
   ThemePreference,
   UploadProviderFields,
-} from "../shared/types.js"
-import { Card, CardContent } from "./components/ui/card.js"
-import { Toaster, toast } from "./components/ui/sonner.js"
+} from "../shared/Types.js"
+import { Card, CardContent } from "./components/ui/Card.js"
+import { Toaster, toast } from "./components/ui/Sonner.js"
 import { BlogInputPanel } from "./features/scan/blog-input-panel.js"
 import { toggleCategorySelection } from "./features/scan/category-selection.js"
 import { CategoryPanel } from "./features/scan/category-panel.js"
@@ -60,8 +60,8 @@ import {
 } from "./features/common/shell/wizard-flow.js"
 import { WizardDock } from "./features/common/shell/wizard-dock.js"
 import { WizardHeader } from "./features/common/shell/wizard-header.js"
-import type { ExportBootstrapResponse } from "./lib/api.js"
-import { cn } from "./lib/cn.js"
+import type { ExportBootstrapResponse } from "./lib/Api.js"
+import { cn } from "./lib/Cn.js"
 import { useUploadProvidersCatalog } from "./features/job-results/use-upload-providers-catalog.js"
 
 const fallbackDefaults: ExportBootstrapResponse = {

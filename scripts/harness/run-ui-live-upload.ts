@@ -5,8 +5,8 @@ import path from "node:path"
 
 import { chromium } from "playwright"
 
-import { createHttpServer } from "../../src/server/http-server.js"
-import type { ExportJobState, PostManifestEntry, ScanResult } from "../../src/shared/types.js"
+import { createHttpServer } from "../../src/server/HttpServer.js"
+import type { ExportJobState, PostManifestEntry, ScanResult } from "../../src/shared/Types.js"
 
 const blogId = "mym0404"
 const targetLogNo = "222990202785"

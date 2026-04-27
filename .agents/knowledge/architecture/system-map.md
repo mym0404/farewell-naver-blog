@@ -4,13 +4,13 @@
 모듈별 책임, 의존 방향, 코드 기준점을 빠르게 찾도록 돕는다.
 
 ## Source Of Truth
-- 실제 경계는 `src/modules`, `src/server`, `src/shared`, `src/ui` 코드가 기준이다.
+- 실제 경계는 `src/modules`, `src/Server`, `src/shared`, `src/ui` 코드가 기준이다.
 
 ## 관련 코드
-- `src/modules/blog-fetcher/naver-blog-fetcher.ts`
-- `src/modules/parser/post-parser.ts`
-- `src/modules/parser/editors/base-editor.ts`
-- `src/shared/export-options.ts`
+- `src/modules/blog-fetcher/NaverBlogFetcher.ts`
+- `src/modules/parser/PostParser.ts`
+- `src/modules/parser/editors/BaseEditor.ts`
+- `src/shared/ExportOptions.ts`
 
 ## 검증 방법
 - `pnpm typecheck`: 모듈 경계나 import 방향을 바꾼 뒤 정적 연결 상태를 빠르게 확인할 때 실행한다.
@@ -36,32 +36,32 @@
 - `ui` -> HTTP API only
 
 ## Parser Block Structure
-- `src/modules/parser/blocks/parser-node.ts` defines `BaseBlock`, `ContainerBlock`, and `LeafBlock`.
+- `src/modules/parser/blocks/ParserNode.ts` defines `BaseBlock`, `ContainerBlock`, and `LeafBlock`.
 - SE2, SE3, SE4 block implementations live under `src/modules/parser/blocks/naver-se*/`.
 - Each concrete parser block class lives in its own `NaverSe*Block.ts` file.
 - Shared parsing helpers can live next to block classes, but helper files do not export parser block classes.
 - Editor classes own block ordering and source-level context only; block-specific `match` and `convert` logic stays in block class files.
 
 ## Code Anchors
-- parser capability: `src/shared/parser-capabilities.ts`
-- parser editor classes: `src/modules/parser/editors/base-editor.ts`, `src/modules/parser/editors/naver-blog-se2-editor.ts`, `src/modules/parser/editors/naver-blog-se3-editor.ts`, `src/modules/parser/editors/naver-blog-se4-editor.ts`
+- parser capability: `src/shared/ParserCapabilities.ts`
+- parser editor classes: `src/modules/parser/editors/BaseEditor.ts`, `src/modules/parser/editors/NaverBlogSe2Editor.ts`, `src/modules/parser/editors/NaverBlogSe3Editor.ts`, `src/modules/parser/editors/NaverBlogSe4Editor.ts`
 - parser block classes: `src/modules/parser/blocks/naver-se*/NaverSe*Block.ts`
-- sample corpus: `src/shared/sample-corpus.ts`
-- Markdown renderer: `src/modules/converter/markdown-renderer.ts`
-- exporter flow: `src/modules/exporter/naver-blog-exporter.ts`
-- upload runner: `src/modules/exporter/image-upload-phase.ts`
-- output rewrite after upload: `src/modules/exporter/image-upload-rewriter.ts`
-- HTTP API: `src/server/http-server.ts`
+- sample corpus: `src/shared/SampleCorpus.ts`
+- Markdown renderer: `src/modules/converter/MarkdownRenderer.ts`
+- exporter flow: `src/modules/exporter/NaverBlogExporter.ts`
+- upload runner: `src/modules/exporter/ImageUploadPhase.ts`
+- output rewrite after upload: `src/modules/exporter/ImageUploadRewriter.ts`
+- HTTP API: `src/Server/HttpServer.ts`
 - UI shell: `index.html`, `src/ui/App.tsx`, `src/ui/features/common/*`, `src/ui/styles/globals.css`, `src/ui/features/*`
-- results/upload surface: `src/ui/features/job-results/job-results-panel.tsx`
-- upload polling hook: `src/ui/features/job-results/use-export-job.ts`
-- progress primitive: `src/ui/components/ui/progress.tsx`
+- results/upload surface: `src/ui/features/job-results/JobResultsPanel.tsx`
+- upload polling hook: `src/ui/features/job-results/UseExportJob.ts`
+- progress primitive: `src/ui/components/ui/Progress.tsx`
 
 ## Upload Progress Flow
-- `src/modules/exporter/image-upload-phase.ts`는 dedupe된 자산을 순차 업로드하고 asset-by-asset progress callback과 per-asset completion callback을 올린다.
-- `src/server/http-server.ts`는 callback을 받아 `JobStore.updateUpload()`와 item-level count로 반영한다.
-- `src/server/job-store.ts`는 같은 job의 `upload.uploadedCount`, item별 `upload.uploadedCount`, `rewriteStatus`를 polling payload에 유지한다.
-- `src/modules/exporter/image-upload-rewriter.ts`는 글 단위 Markdown 치환 뒤 같은 `manifest.json` snapshot을 즉시 갱신한다.
-- `src/server/export-job-manifest.ts`는 `manifest.json`을 결과물 + 복구 SoT로 읽고 쓴다.
+- `src/modules/exporter/ImageUploadPhase.ts`는 dedupe된 자산을 순차 업로드하고 asset-by-asset progress callback과 per-asset completion callback을 올린다.
+- `src/Server/HttpServer.ts`는 callback을 받아 `JobStore.updateUpload()`와 item-level count로 반영한다.
+- `src/Server/JobStore.ts`는 같은 job의 `upload.uploadedCount`, item별 `upload.uploadedCount`, `rewriteStatus`를 polling payload에 유지한다.
+- `src/modules/exporter/ImageUploadRewriter.ts`는 글 단위 Markdown 치환 뒤 같은 `manifest.json` snapshot을 즉시 갱신한다.
+- `src/Server/ExportJobManifest.ts`는 `manifest.json`을 결과물 + 복구 SoT로 읽고 쓴다.
 - 글에 필요한 자산이 모두 업로드되면 그 글만 즉시 치환한다. 최종 `upload-completed` 전이는 남은 rewrite 대상이 없어졌을 때만 일어난다.
-- `src/ui/features/job-results/job-results-panel.tsx`는 `upload-completed` 뒤에도 upload snapshot을 결과 단계에 남겨 fast live runs에서도 마지막 progress/row 상태를 확인할 수 있게 한다.
+- `src/ui/features/job-results/JobResultsPanel.tsx`는 `upload-completed` 뒤에도 upload snapshot을 결과 단계에 남겨 fast live runs에서도 마지막 progress/row 상태를 확인할 수 있게 한다.

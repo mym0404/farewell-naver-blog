@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { createCoalescedTaskRunner } from "../src/server/coalesced-task-runner.js"
+import { createCoalescedTaskRunner } from "../src/server/CoalescedTaskRunner.js"
 
 describe("coalesced task runner", () => {
   it("coalesces repeated schedules into one rerun while work is in flight", async () => {

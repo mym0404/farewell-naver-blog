@@ -10,7 +10,7 @@ vi.mock("piclist", () => ({
   },
 }))
 
-import { createImageUploadProviderSource } from "../src/server/image-upload-provider-source.js"
+import { createImageUploadProviderSource } from "../src/server/ImageUploadProviderSource.js"
 
 const createRuntimeMock = () => ({
   helper: {

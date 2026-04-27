@@ -6,10 +6,10 @@ import { tmpdir } from "node:os"
 
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { NaverBlogFetcher } from "../src/modules/blog-fetcher/naver-blog-fetcher.js"
-import { NaverBlogExporter } from "../src/modules/exporter/naver-blog-exporter.js"
-import { rewriteUploadedAssets } from "../src/modules/exporter/image-upload-rewriter.js"
-import { defaultExportOptions } from "../src/shared/export-options.js"
+import { NaverBlogFetcher } from "../src/modules/blog-fetcher/NaverBlogFetcher.js"
+import { NaverBlogExporter } from "../src/modules/exporter/NaverBlogExporter.js"
+import { rewriteUploadedAssets } from "../src/modules/exporter/ImageUploadRewriter.js"
+import { defaultExportOptions } from "../src/shared/ExportOptions.js"
 
 const scanResult = {
   blogId: "mym0404",

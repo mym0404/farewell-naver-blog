@@ -1,5 +1,5 @@
 import { convertHtmlToMarkdown } from "../../../converter/html-fragment-converter.js"
-import { compactText } from "../../../../shared/utils.js"
+import { compactText } from "../../../../shared/Utils.js"
 import { LeafBlock } from "../parser-node.js"
 import type { ParserBlockContext, ParserBlockResult } from "../parser-node.js"
 

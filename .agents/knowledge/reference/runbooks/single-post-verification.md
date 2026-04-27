@@ -4,12 +4,12 @@
 공개 네이버 블로그 글 1건을 브라우저로 확인한 직후 같은 글을 단건 CLI로 변환하고, 결과를 같은 작업의 검증 메모에 남긴다.
 
 ## Source Of Truth
-단건 변환은 `scripts/export-single-post.ts`와 `src/modules/exporter/single-post-export.ts`의 동일한 Markdown/export option 규약을 따른다.
+단건 변환은 `scripts/export-single-post.ts`와 `src/modules/exporter/SinglePostExport.ts`의 동일한 Markdown/export option 규약을 따른다.
 
 ## 관련 코드
 - `scripts/export-single-post.ts`
 - `scripts/lib/single-post-cli.ts`
-- `src/modules/exporter/single-post-export.ts`
+- `src/modules/exporter/SinglePostExport.ts`
 
 ## 검증 방법
 이 예시는 `blogId`, `logNo`, `outputDir`, `report`, `manualReviewMarkdownPath`, `metadataCachePath` 경로를 1건 분량으로 보여주는 기준값이다. 같은 블로그를 반복 검증할 때는 `metadataCachePath`를 재사용한다.
