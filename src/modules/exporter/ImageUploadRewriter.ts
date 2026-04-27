@@ -2,9 +2,9 @@ import { randomUUID } from "node:crypto"
 import * as fs from "node:fs/promises"
 import path from "node:path"
 
-import { UPLOAD_STATUSES } from "../../shared/export-job-state.js"
+import { UPLOAD_STATUSES } from "../../shared/ExportJobState.js"
 import type { ExportJobItem, ExportManifest, PostManifestEntry } from "../../shared/Types.js"
-import type { ImageUploadResult } from "./image-upload-phase.js"
+import type { ImageUploadResult } from "./ImageUploadPhase.js"
 
 type FileOps = Pick<typeof fs, "readFile" | "writeFile" | "rename" | "rm">
 

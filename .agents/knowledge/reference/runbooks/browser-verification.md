@@ -24,7 +24,7 @@
 - `src/ui/features/options/ExportOptionsPanel.tsx`
 - `src/ui/features/job-results/JobResultsPanel.tsx`
 - `.agents/knowledge/DESIGN.md`
-- `src/Server/HttpServer.ts`
+- `src/server/HttpServer.ts`
 - `scripts/harness/run-ui-smoke.ts`
 - `scripts/harness/run-ui-resume-smoke.ts`
 

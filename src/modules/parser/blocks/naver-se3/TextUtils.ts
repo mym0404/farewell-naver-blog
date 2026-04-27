@@ -1,8 +1,8 @@
 import type { CheerioAPI } from "cheerio"
 
-import { convertHtmlToMarkdown } from "../../../converter/html-fragment-converter.js"
+import { convertHtmlToMarkdown } from "../../../converter/HtmlFragmentConverter.js"
 import { compactMarkdownText } from "../../../../shared/Utils.js"
-import type { ParserBlockContext } from "../parser-node.js"
+import type { ParserBlockContext } from "../ParserNode.js"
 
 export const parseTextBlocks = ({
   $,

@@ -1,7 +1,7 @@
 import path from "node:path"
 
 import type { CategoryInfo, ExportOptions, PostSummary } from "../../shared/Types.js"
-import { buildPostFolderName } from "../../shared/post-path-template.js"
+import { buildPostFolderName } from "../../shared/PostPathTemplate.js"
 import {
   formatCategorySegment,
   sanitizeCategoryName,

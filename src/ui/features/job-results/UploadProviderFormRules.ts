@@ -4,7 +4,7 @@ import type {
   UploadProviderFields,
   UploadProviderValue,
 } from "../../../shared/Types.js"
-import { UPLOAD_PROVIDER_KEYS } from "../../../shared/upload-provider-keys.js"
+import { UPLOAD_PROVIDER_KEYS } from "../../../shared/UploadProviderKeys.js"
 
 export type ProviderFormState = UploadProviderFields
 

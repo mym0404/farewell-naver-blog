@@ -1,6 +1,6 @@
 import YAML from "yaml"
 
-import { convertHtmlToMarkdown } from "./html-fragment-converter.js"
+import { convertHtmlToMarkdown } from "./HtmlFragmentConverter.js"
 
 import type {
   AssetRecord,
@@ -15,7 +15,7 @@ import type {
   PostSummary,
   StructuredAstBlock,
 } from "../../shared/Types.js"
-import { resolveBlockOutputSelection } from "../../shared/block-registry.js"
+import { resolveBlockOutputSelection } from "../../shared/BlockRegistry.js"
 import {
   buildDiagnosticsSection,
   createLinkFormatter,
@@ -30,14 +30,14 @@ import {
   renderLinkCardBlock,
   renderParagraph,
   renderQuote,
-} from "../../shared/block-markdown.js"
-import { getFrontmatterExportKey } from "../../shared/export-options.js"
-import { getParserCapabilityId } from "../../shared/parser-capabilities.js"
+} from "../../shared/BlockMarkdown.js"
+import { getFrontmatterExportKey } from "../../shared/ExportOptions.js"
+import { getParserCapabilityId } from "../../shared/ParserCapabilities.js"
 import { unique } from "../../shared/Utils.js"
 import {
   getFallbackHtmlBodyNodeWarnings,
   getParsedPostBodyNodes,
-} from "../parser/blocks/body-node-utils.js"
+} from "../parser/blocks/BodyNodeUtils.js"
 
 const buildFrontmatter = ({
   fields,

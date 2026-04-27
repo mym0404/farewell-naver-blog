@@ -5,7 +5,7 @@ import type {
   ImageData,
   MarkdownLinkStyle,
 } from "./Types.js"
-import { splitFormulaWrapper } from "./formula-wrapper.js"
+import { splitFormulaWrapper } from "./FormulaWrapper.js"
 
 const markdownLineWhitespacePattern = /[^\S\n]+/g
 

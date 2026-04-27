@@ -13,20 +13,19 @@ import {
   blockOutputFamilyDefinitions,
   getBlockOutputFamilyDefinition,
   resolveBlockOutputSelection,
-} from "../../../shared/block-registry.js"
-import { renderBlockOutputPreview } from "../../../shared/block-output-preview.js"
-import { formatCategorySegment } from "../../../shared/path-format.js"
-import { getDefaultSlugWhitespace } from "../../../shared/export-options.js"
+} from "../../../shared/BlockRegistry.js"
+import { renderBlockOutputPreview } from "../../../shared/BlockOutputPreview.js"
+import { formatCategorySegment } from "../../../shared/PathFormat.js"
+import { getDefaultSlugWhitespace } from "../../../shared/ExportOptions.js"
 import {
   applyPostTemplate,
   buildPostFolderName,
   buildPostTemplateValues,
   postTemplateKeys,
-} from "../../../shared/post-path-template.js"
+} from "../../../shared/PostPathTemplate.js"
 
 import { Alert, AlertDescription, AlertTitle } from "../../components/ui/Alert.js"
 import { Badge } from "../../components/ui/Badge.js"
-import { Button } from "../../components/ui/Button.js"
 import {
   Card,
   CardContent,
@@ -49,7 +48,7 @@ import {
   SelectValue,
 } from "../../components/ui/Select.js"
 import { cn } from "../../lib/Cn.js"
-import { exportOptionsStepMeta, type ExportOptionsStep } from "./export-options-steps.js"
+import type { ExportOptionsStep } from "./ExportOptionsSteps.js"
 
 type StructurePreviewTreeNode =
   | {
@@ -734,7 +733,6 @@ export const ExportOptionsPanel = ({
   frontmatterFieldMeta,
   frontmatterValidationErrors,
   linkTemplatePreviewPost,
-  onOutputDirChange,
   onOptionsChange,
 }: {
   step: ExportOptionsStep
@@ -745,7 +743,6 @@ export const ExportOptionsPanel = ({
   frontmatterFieldMeta: Record<FrontmatterFieldName, FrontmatterFieldMeta>
   frontmatterValidationErrors: string[]
   linkTemplatePreviewPost?: Pick<PostSummary, "blogId" | "logNo" | "title" | "publishedAt" | "categoryName"> | null
-  onOutputDirChange: (value: string) => void
   onOptionsChange: (updater: (current: ExportOptions) => ExportOptions) => void
 }) => {
   const description = (key: string) => optionDescriptions[key]

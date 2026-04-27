@@ -7,7 +7,7 @@ import type {
   ScanResult,
   UploadProviderFields,
 } from "../../../shared/Types.js"
-import { isTerminalJobStatus, JOB_STATUSES, UPLOAD_STATUSES } from "../../../shared/export-job-state.js"
+import { isTerminalJobStatus, JOB_STATUSES, UPLOAD_STATUSES } from "../../../shared/ExportJobState.js"
 import { fetchJson, postJson, postUploadJson } from "../../lib/Api.js"
 
 type UploadProviderInput = {

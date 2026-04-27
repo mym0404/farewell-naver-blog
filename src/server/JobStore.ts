@@ -6,7 +6,7 @@ import type {
   ExportManifest,
   ExportRequest,
 } from "../shared/Types.js"
-import { JOB_STATUSES, UPLOAD_STATUSES } from "../shared/export-job-state.js"
+import { JOB_STATUSES, UPLOAD_STATUSES } from "../shared/ExportJobState.js"
 
 const getJobItemId = ({
   outputPath,

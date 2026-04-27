@@ -10,7 +10,7 @@ import type {
   PostManifestEntry,
   ScanResult,
 } from "../shared/Types.js"
-import { resolveExportResumePhase } from "../shared/export-job-state.js"
+import { resolveExportResumePhase } from "../shared/ExportJobState.js"
 import { extractBlogId, resolveRepoPath } from "../shared/Utils.js"
 
 const manifestFileName = "manifest.json"

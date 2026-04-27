@@ -7,14 +7,14 @@ export default defineConfig({
       reporter: ["text", "json-summary", "lcov"],
       include: [
         "src/modules/**/*.ts",
-        "src/shared/export-options.ts",
-        "src/shared/utils.ts",
+        "src/shared/ExportOptions.ts",
+        "src/shared/Utils.ts",
         "src/ui/**/*.ts",
         "src/ui/**/*.tsx",
       ],
       exclude: [
         "src/modules/blog-fetcher/**",
-        "src/modules/exporter/export-preview.ts",
+        "src/modules/exporter/ExportPreview.ts",
         "src/ui/Main.tsx",
       ],
       thresholds: {

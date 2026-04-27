@@ -8,20 +8,18 @@ import {
   optionDescriptions,
   sanitizePersistedExportOptions,
   validateFrontmatterAliases,
-} from "../shared/export-options.js"
-import { filterPostsByScope } from "../shared/export-scope.js"
+} from "../shared/ExportOptions.js"
+import { filterPostsByScope } from "../shared/ExportScope.js"
 import type {
   ExportOptions,
   ScanCacheMap,
   ScanResult,
   ThemePreference,
-  UploadProviderFields,
 } from "../shared/Types.js"
 import { Card, CardContent } from "./components/ui/Card.js"
-import { Toaster, toast } from "./components/ui/Sonner.js"
-import { BlogInputPanel } from "./features/scan/blog-input-panel.js"
-import { toggleCategorySelection } from "./features/scan/category-selection.js"
-import { CategoryPanel } from "./features/scan/category-panel.js"
+import { Toaster } from "./components/ui/Sonner.js"
+import { BlogInputPanel } from "./features/scan/BlogInputPanel.js"
+import { CategoryPanel } from "./features/scan/CategoryPanel.js"
 import {
   defaultCategoryStatus,
   defaultOutputDir,
@@ -30,21 +28,21 @@ import {
   restoredCategoryFallbackStatus,
   restoredCategoryStatus,
   restoredScanStatus,
-} from "./features/scan/scan-status.js"
-import { ExportOptionsPanel } from "./features/options/export-options-panel.js"
-import { JobResultsPanel } from "./features/job-results/job-results-panel.js"
-import { shouldLoadUploadProviders } from "./features/job-results/export-job-fallback.js"
-import { setExportJobPollingConfig, useExportJob } from "./features/job-results/use-export-job.js"
-import { useJobNotifications } from "./features/job-results/use-job-notifications.js"
-import { ResumeDialogPanel } from "./features/resume/resume-dialog-panel.js"
-import type { ResumeDialogState } from "./features/resume/resume-state.js"
-import { useBeforeUnloadWarning } from "./features/common/hooks/use-before-unload-warning.js"
-import { useBootstrapDefaults } from "./features/common/hooks/use-bootstrap-defaults.js"
-import { useBrandMarkScroll } from "./features/common/hooks/use-brand-mark-scroll.js"
-import { useExportSettingsSync } from "./features/common/hooks/use-export-settings-sync.js"
-import { useStepScroll } from "./features/common/hooks/use-step-scroll.js"
-import { useThemePreference } from "./features/common/hooks/use-theme-preference.js"
-import { useWizardActions } from "./features/common/hooks/use-wizard-actions.js"
+} from "./features/scan/ScanStatus.js"
+import { ExportOptionsPanel } from "./features/options/ExportOptionsPanel.js"
+import { JobResultsPanel } from "./features/job-results/JobResultsPanel.js"
+import { shouldLoadUploadProviders } from "./features/job-results/ExportJobFallback.js"
+import { setExportJobPollingConfig, useExportJob } from "./features/job-results/UseExportJob.js"
+import { useJobNotifications } from "./features/job-results/UseJobNotifications.js"
+import { ResumeDialogPanel } from "./features/resume/ResumeDialogPanel.js"
+import type { ResumeDialogState } from "./features/resume/ResumeState.js"
+import { useBeforeUnloadWarning } from "./features/common/hooks/UseBeforeUnloadWarning.js"
+import { useBootstrapDefaults } from "./features/common/hooks/UseBootstrapDefaults.js"
+import { useBrandMarkScroll } from "./features/common/hooks/UseBrandMarkScroll.js"
+import { useExportSettingsSync } from "./features/common/hooks/UseExportSettingsSync.js"
+import { useStepScroll } from "./features/common/hooks/UseStepScroll.js"
+import { useThemePreference } from "./features/common/hooks/UseThemePreference.js"
+import { useWizardActions } from "./features/common/hooks/UseWizardActions.js"
 import {
   buildSummaryCards,
   getHeaderStatus,
@@ -57,12 +55,12 @@ import {
   stepMeta,
   type SetupStep,
   type WizardStep,
-} from "./features/common/shell/wizard-flow.js"
-import { WizardDock } from "./features/common/shell/wizard-dock.js"
-import { WizardHeader } from "./features/common/shell/wizard-header.js"
+} from "./features/common/shell/WizardFlow.js"
+import { WizardDock } from "./features/common/shell/WizardDock.js"
+import { WizardHeader } from "./features/common/shell/WizardHeader.js"
 import type { ExportBootstrapResponse } from "./lib/Api.js"
 import { cn } from "./lib/Cn.js"
-import { useUploadProvidersCatalog } from "./features/job-results/use-upload-providers-catalog.js"
+import { useUploadProvidersCatalog } from "./features/job-results/UseUploadProvidersCatalog.js"
 
 const fallbackDefaults: ExportBootstrapResponse = {
   profile: "gfm",
@@ -485,7 +483,6 @@ export const App = () => {
         frontmatterFieldMeta={defaults.frontmatterFieldMeta}
         frontmatterValidationErrors={frontmatterValidationErrors}
         linkTemplatePreviewPost={linkTemplatePreviewPost}
-        onOutputDirChange={handleOutputDirChange}
         onOptionsChange={updateOptions}
       />
     )

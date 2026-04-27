@@ -2,16 +2,15 @@ import { useEffect, useState } from "react"
 
 import type {
   UploadProviderCatalogResponse,
-  UploadProviderDefinition,
 } from "../../../shared/Types.js"
-import { buildInitialProviderUiState, type ProviderFormState, type ProviderUiState } from "./upload-provider-form-rules.js"
+import { buildInitialProviderUiState, type ProviderFormState, type ProviderUiState } from "./UploadProviderFormRules.js"
 import {
   buildGitHubJsDelivrCustomUrl,
   buildInitialProviderFieldMap,
   buildInitialProviderFields,
   getPreferredDefaultProviderKey,
   isGitHubProvider,
-} from "./job-results-helpers.js"
+} from "./JobResultsHelpers.js"
 
 const buildInitialProviderUiStateMap = (catalog: UploadProviderCatalogResponse) =>
   Object.fromEntries(

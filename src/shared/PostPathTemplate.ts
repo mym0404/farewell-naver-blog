@@ -4,7 +4,7 @@ import {
   formatTitleSegment,
   getDateSlug,
   sanitizePathSegment,
-} from "./path-format.js"
+} from "./PathFormat.js"
 
 export const postTemplateKeys = [
   "slug",

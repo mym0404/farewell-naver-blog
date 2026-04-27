@@ -1,4 +1,4 @@
-import { LeafBlock } from "../parser-node.js"
+import { LeafBlock } from "../ParserNode.js"
 
 export const getComponentHtml = ({
   $,

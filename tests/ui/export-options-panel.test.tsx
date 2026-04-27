@@ -97,7 +97,6 @@ describe("ExportOptionsPanel", () => {
         frontmatterFieldOrder={frontmatterFieldOrder}
         frontmatterFieldMeta={frontmatterFieldMeta}
         frontmatterValidationErrors={['title와 source가 같은 alias "shared"를 사용할 수 없습니다.']}
-        onOutputDirChange={vi.fn()}
         onOptionsChange={onOptionsChange}
       />,
     )
@@ -120,7 +119,6 @@ describe("ExportOptionsPanel", () => {
         frontmatterFieldOrder={frontmatterFieldOrder}
         frontmatterFieldMeta={frontmatterFieldMeta}
         frontmatterValidationErrors={['title와 source가 같은 alias "shared"를 사용할 수 없습니다.']}
-        onOutputDirChange={vi.fn()}
         onOptionsChange={onOptionsChange}
       />,
     )
@@ -149,7 +147,6 @@ describe("ExportOptionsPanel", () => {
         frontmatterFieldOrder={frontmatterFieldOrder}
         frontmatterFieldMeta={frontmatterFieldMeta}
         frontmatterValidationErrors={[]}
-        onOutputDirChange={vi.fn()}
         onOptionsChange={onOptionsChange}
       />,
     )
@@ -185,7 +182,6 @@ describe("ExportOptionsPanel", () => {
         frontmatterFieldOrder={frontmatterFieldOrder}
         frontmatterFieldMeta={frontmatterFieldMeta}
         frontmatterValidationErrors={[]}
-        onOutputDirChange={vi.fn()}
         onOptionsChange={onOptionsChange}
       />,
     )
@@ -208,7 +204,6 @@ describe("ExportOptionsPanel", () => {
         frontmatterFieldOrder={frontmatterFieldOrder}
         frontmatterFieldMeta={frontmatterFieldMeta}
         frontmatterValidationErrors={[]}
-        onOutputDirChange={vi.fn()}
         onOptionsChange={onOptionsChange}
       />,
     )
@@ -226,7 +221,6 @@ describe("ExportOptionsPanel", () => {
         frontmatterFieldOrder={frontmatterFieldOrder}
         frontmatterFieldMeta={frontmatterFieldMeta}
         frontmatterValidationErrors={[]}
-        onOutputDirChange={vi.fn()}
         onOptionsChange={onOptionsChange}
       />,
     )
@@ -248,7 +242,6 @@ describe("ExportOptionsPanel", () => {
         frontmatterFieldOrder={frontmatterFieldOrder}
         frontmatterFieldMeta={frontmatterFieldMeta}
         frontmatterValidationErrors={[]}
-        onOutputDirChange={vi.fn()}
         onOptionsChange={onOptionsChange}
       />,
     )
@@ -304,7 +297,6 @@ describe("ExportOptionsPanel", () => {
         frontmatterFieldOrder={frontmatterFieldOrder}
         frontmatterFieldMeta={frontmatterFieldMeta}
         frontmatterValidationErrors={[]}
-        onOutputDirChange={vi.fn()}
         onOptionsChange={(updater) => {
           latestOptions = updater(latestOptions)
         }}
@@ -344,7 +336,6 @@ describe("ExportOptionsPanel", () => {
         frontmatterFieldOrder={frontmatterFieldOrder}
         frontmatterFieldMeta={frontmatterFieldMeta}
         frontmatterValidationErrors={[]}
-        onOutputDirChange={vi.fn()}
         onOptionsChange={(updater) => {
           latestOptions = updater(latestOptions)
         }}
@@ -376,7 +367,6 @@ describe("ExportOptionsPanel", () => {
         frontmatterFieldOrder={frontmatterFieldOrder}
         frontmatterFieldMeta={frontmatterFieldMeta}
         frontmatterValidationErrors={[]}
-        onOutputDirChange={vi.fn()}
         onOptionsChange={vi.fn()}
       />,
     )
@@ -405,7 +395,6 @@ describe("ExportOptionsPanel", () => {
         frontmatterFieldOrder={frontmatterFieldOrder}
         frontmatterFieldMeta={frontmatterFieldMeta}
         frontmatterValidationErrors={[]}
-        onOutputDirChange={vi.fn()}
         onOptionsChange={vi.fn()}
       />,
     )
@@ -431,7 +420,6 @@ describe("ExportOptionsPanel", () => {
         frontmatterFieldOrder={frontmatterFieldOrder}
         frontmatterFieldMeta={frontmatterFieldMeta}
         frontmatterValidationErrors={[]}
-        onOutputDirChange={vi.fn()}
         onOptionsChange={(updater) => {
           latestOptions = updater(latestOptions)
         }}
@@ -453,7 +441,6 @@ describe("ExportOptionsPanel", () => {
         frontmatterFieldOrder={frontmatterFieldOrder}
         frontmatterFieldMeta={frontmatterFieldMeta}
         frontmatterValidationErrors={[]}
-        onOutputDirChange={vi.fn()}
         onOptionsChange={(updater) => {
           latestOptions = updater(latestOptions)
         }}
@@ -473,7 +460,6 @@ describe("ExportOptionsPanel", () => {
         frontmatterFieldOrder={frontmatterFieldOrder}
         frontmatterFieldMeta={frontmatterFieldMeta}
         frontmatterValidationErrors={[]}
-        onOutputDirChange={vi.fn()}
         onOptionsChange={vi.fn()}
       />,
     )
@@ -500,7 +486,6 @@ describe("ExportOptionsPanel", () => {
         frontmatterFieldOrder={frontmatterFieldOrder}
         frontmatterFieldMeta={frontmatterFieldMeta}
         frontmatterValidationErrors={[]}
-        onOutputDirChange={vi.fn()}
         onOptionsChange={vi.fn()}
       />,
     )
@@ -520,7 +505,6 @@ describe("ExportOptionsPanel", () => {
         frontmatterFieldOrder={frontmatterFieldOrder}
         frontmatterFieldMeta={frontmatterFieldMeta}
         frontmatterValidationErrors={[]}
-        onOutputDirChange={vi.fn()}
         onOptionsChange={vi.fn()}
       />,
     )
@@ -538,7 +522,6 @@ describe("ExportOptionsPanel", () => {
         frontmatterFieldOrder={frontmatterFieldOrder}
         frontmatterFieldMeta={frontmatterFieldMeta}
         frontmatterValidationErrors={[]}
-        onOutputDirChange={vi.fn()}
         onOptionsChange={vi.fn()}
       />,
     )
@@ -563,7 +546,6 @@ describe("ExportOptionsPanel", () => {
         frontmatterFieldOrder={frontmatterFieldOrder}
         frontmatterFieldMeta={frontmatterFieldMeta}
         frontmatterValidationErrors={[]}
-        onOutputDirChange={vi.fn()}
         onOptionsChange={vi.fn()}
       />,
     )
@@ -593,7 +575,6 @@ describe("ExportOptionsPanel", () => {
         frontmatterFieldOrder={frontmatterFieldOrder}
         frontmatterFieldMeta={frontmatterFieldMeta}
         frontmatterValidationErrors={[]}
-        onOutputDirChange={vi.fn()}
         onOptionsChange={(updater) => {
           latestOptions = updater(latestOptions)
         }}
@@ -626,7 +607,6 @@ describe("ExportOptionsPanel", () => {
         frontmatterFieldOrder={frontmatterFieldOrder}
         frontmatterFieldMeta={frontmatterFieldMeta}
         frontmatterValidationErrors={[]}
-        onOutputDirChange={vi.fn()}
         onOptionsChange={(updater) => {
           latestOptions = updater(latestOptions)
         }}
@@ -650,7 +630,6 @@ describe("ExportOptionsPanel", () => {
         frontmatterFieldOrder={frontmatterFieldOrder}
         frontmatterFieldMeta={frontmatterFieldMeta}
         frontmatterValidationErrors={[]}
-        onOutputDirChange={vi.fn()}
         onOptionsChange={(updater) => {
           latestOptions = updater(latestOptions)
         }}
@@ -682,7 +661,6 @@ describe("ExportOptionsPanel", () => {
           publishedAt: "2026-04-11T04:00:00.000Z",
           categoryName: "NestJS",
         }}
-        onOutputDirChange={vi.fn()}
         onOptionsChange={vi.fn()}
       />,
     )

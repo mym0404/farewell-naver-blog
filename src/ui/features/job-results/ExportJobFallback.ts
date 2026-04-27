@@ -1,4 +1,4 @@
-import { JOB_STATUSES, UPLOAD_STATUSES, isUploadActionableJob } from "../../../shared/export-job-state.js"
+import { JOB_STATUSES, UPLOAD_STATUSES, isUploadActionableJob } from "../../../shared/ExportJobState.js"
 import type { ExportJobState, ExportOptions } from "../../../shared/Types.js"
 
 export const shouldLoadUploadProviders = (job: ExportJobState | null) => isUploadActionableJob(job)

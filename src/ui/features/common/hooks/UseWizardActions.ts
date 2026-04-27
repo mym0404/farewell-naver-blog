@@ -1,6 +1,6 @@
 import { useCallback } from "react"
 
-import { sanitizePersistedExportOptions } from "../../../../shared/export-options.js"
+import { sanitizePersistedExportOptions } from "../../../../shared/ExportOptions.js"
 import type {
   ExportOptions,
   ScanResult,
@@ -9,7 +9,7 @@ import type {
 import type { ExportBootstrapResponse, ExportResumeLookupResponse } from "../../../lib/Api.js"
 import { postJson } from "../../../lib/Api.js"
 import { toast } from "../../../components/ui/Sonner.js"
-import { toggleCategorySelection } from "../../scan/category-selection.js"
+import { toggleCategorySelection } from "../../scan/CategorySelection.js"
 import {
   defaultCategoryStatus,
   defaultScanLoadingStatus,
@@ -19,10 +19,10 @@ import {
   readyCategoryStatus,
   resolveScopedCategoryIds,
   resumeLookupErrorStatus,
-} from "../../scan/scan-status.js"
-import type { ResumeDialogState } from "../../resume/resume-state.js"
-import { createErrorJobState } from "../../job-results/export-job-fallback.js"
-import { getPersistedUiStateSignature, setupSteps, type SetupStep } from "../shell/wizard-flow.js"
+} from "../../scan/ScanStatus.js"
+import type { ResumeDialogState } from "../../resume/ResumeState.js"
+import { createErrorJobState } from "../../job-results/ExportJobFallback.js"
+import { getPersistedUiStateSignature, setupSteps, type SetupStep } from "../shell/WizardFlow.js"
 
 export const useWizardActions = ({
   isSetupStep,

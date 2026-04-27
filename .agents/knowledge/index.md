@@ -27,16 +27,16 @@
 - 저장소 명령과 검증 루프: `package.json`
 - parser/block SoT: `src/shared/BlockRegistry.ts`
 - parser editor dispatch: `src/modules/parser/PostParser.ts`, `src/modules/parser/editors/*`
-- parser block implementation: `src/modules/parser/blocks/naver-se*/NaverSe*Block.ts`
+- parser block implementation: `src/modules/parser/blocks/`
 - parser 지원 범위 projection: `src/shared/ParserCapabilities.ts`
 - 실샘플 기준: `src/shared/SampleCorpus.ts`
-- export/upload API 흐름: `src/Server/HttpServer.ts`
+- export/upload API 흐름: `src/server/HttpServer.ts`
 - export 파이프라인: `src/modules/exporter/NaverBlogExporter.ts`
 
 ## 먼저 봐야 하는 seam
 - parser block 지원 범위, fallback 정책, block class 배치를 바꾸면 `src/modules/parser/blocks/`, `src/shared/BlockRegistry.ts`, `src/shared/ParserCapabilities.ts`, `.agents/knowledge/architecture/parser-block-catalog.md`를 함께 본다.
 - sample 추가나 교체는 `src/shared/SampleCorpus.ts`와 generated projection인 `.agents/knowledge/product/sample-corpus.md`를 함께 본다.
-- export 후 upload 상태 전이나 결과 패널을 바꾸면 `.agents/knowledge/product/domain.md`, `.agents/knowledge/product/product-outline.md`, `src/Server/HttpServer.ts`를 함께 본다.
+- export 후 upload 상태 전이나 결과 패널을 바꾸면 `.agents/knowledge/product/domain.md`, `.agents/knowledge/product/product-outline.md`, `src/server/HttpServer.ts`를 함께 본다.
 
 ## 검증
 - `pnpm check:local`: 저장소 파일 변경 뒤 가장 먼저 보는 기본 기준선이다.

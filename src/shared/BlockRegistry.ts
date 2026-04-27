@@ -6,10 +6,8 @@ import type {
   EditorVersion,
   ParserCapability,
   ParserCapabilityId,
-  ParserFallbackPolicy,
-  ParserCapabilityVerificationMode,
 } from "./Types.js"
-import { normalizeFormulaWrapperParams } from "./formula-wrapper.js"
+import { normalizeFormulaWrapperParams } from "./FormulaWrapper.js"
 
 export const getParserCapabilityId = ({
   editorVersion,

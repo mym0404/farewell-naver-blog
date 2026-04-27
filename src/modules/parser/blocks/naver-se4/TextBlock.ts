@@ -1,0 +1,116 @@
+import { convertHtmlToMarkdown } from "../../../converter/HtmlFragmentConverter.js"
+import { compactMarkdownText } from "../../../../shared/Utils.js"
+import { LeafBlock } from "../ParserNode.js"
+import type { ParserBlockContext } from "../ParserNode.js"
+
+const recommendationHeaderPatterns = [/^추천트렌드/, /^이런 상품 어때요/]
+const recommendationNoisePatterns = [
+  ...recommendationHeaderPatterns,
+  /^요즘 많이 찾는/,
+  /^추천검색어/,
+]
+
+const isHashtagParagraph = (text: string) =>
+  text
+    .split(/\s+/)
+    .filter(Boolean)
+    .every((token) => token.startsWith("#"))
+
+const parseRecommendationTextBlocks = (texts: string[]) => {
+  const recommendationStartIndex = texts.findIndex((text) =>
+    recommendationHeaderPatterns.some((pattern) => pattern.test(text)),
+  )
+
+  if (recommendationStartIndex === -1 || texts.length - recommendationStartIndex < 6) {
+    return null
+  }
+
+  const introBlocks = texts.slice(0, recommendationStartIndex).map((text) => ({
+    type: "paragraph" as const,
+    text,
+  }))
+  const items: string[] = []
+  let currentItem: string | null = null
+
+  texts.slice(recommendationStartIndex).forEach((text) => {
+    if (recommendationNoisePatterns.some((pattern) => pattern.test(text))) {
+      return
+    }
+
+    if (isHashtagParagraph(text)) {
+      if (currentItem) {
+        currentItem = `${currentItem} ${text}`.trim()
+      }
+      return
+    }
+
+    if (currentItem) {
+      items.push(currentItem)
+    }
+
+    currentItem = text
+  })
+
+  if (currentItem) {
+    items.push(currentItem)
+  }
+
+  if (items.length < 3) {
+    return null
+  }
+
+  return [
+    ...introBlocks,
+    {
+      type: "paragraph" as const,
+      text: items.map((item) => `- ${item}`).join("\n"),
+    },
+  ]
+}
+
+const parseTextBlocks = ({
+  $node,
+  options,
+}: {
+  $node: Parameters<LeafBlock["convert"]>[0]["$node"]
+  options: ParserBlockContext["options"]
+}) => {
+  const texts = $node
+    .find("p.se-text-paragraph")
+    .toArray()
+    .map((paragraph) =>
+      convertHtmlToMarkdown({
+        html: $node.find(paragraph).html() ?? "",
+        options,
+        resolveLinkUrl: options.resolveLinkUrl,
+      }),
+    )
+    .map((text) => compactMarkdownText(text))
+    .filter(Boolean)
+
+  const recommendationBlocks = parseRecommendationTextBlocks(texts)
+
+  if (recommendationBlocks) {
+    return recommendationBlocks
+  }
+
+  return texts.map((text) => ({
+    type: "paragraph" as const,
+    text,
+  }))
+}
+
+export class NaverSe4TextBlock extends LeafBlock {
+  override readonly id = "se4-text"
+
+  override match({ $node, moduleType }: ParserBlockContext) {
+    return moduleType === "v2_text" || $node.hasClass("se-text")
+  }
+
+  override convert({ $node, options }: Parameters<LeafBlock["convert"]>[0]) {
+    return {
+      status: "handled" as const,
+      blocks: parseTextBlocks({ $node, options }),
+    }
+  }
+}

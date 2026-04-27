@@ -7,8 +7,8 @@ import {
   DEFAULT_UPLOAD_PROVIDER_KEY,
   EMPTY_SELECT_VALUE,
   UPLOAD_PROVIDER_KEYS,
-} from "../../../shared/upload-provider-keys.js"
-import type { ProviderFormState } from "./upload-provider-form-rules.js"
+} from "../../../shared/UploadProviderKeys.js"
+import type { ProviderFormState } from "./UploadProviderFormRules.js"
 
 const INDEX_MARKDOWN_FILE = "index.md"
 

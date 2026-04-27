@@ -11,13 +11,13 @@ import type {
 import {
   createBodyNodesFromStructuredBlocks,
   createFallbackHtmlBodyNode,
-} from "../blocks/body-node-utils.js"
+} from "../blocks/BodyNodeUtils.js"
 import type {
   ParserBlock,
   ParserBlockConvertContext,
   ParserBlockOptions,
   ParserBlockResult,
-} from "../blocks/parser-node.js"
+} from "../blocks/ParserNode.js"
 
 export type BaseEditorParseInput = {
   $: CheerioAPI

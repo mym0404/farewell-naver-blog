@@ -3,8 +3,8 @@ import { RiMoonClearLine, RiSunLine } from "@remixicon/react"
 import type { ThemePreference } from "../../../../shared/Types.js"
 import { Badge } from "../../../components/ui/Badge.js"
 import { Card, CardContent } from "../../../components/ui/Card.js"
-import { ToggleGroup, ToggleGroupItem } from "../../../components/ui/toggle-group.js"
-import { getStatusPillClassName } from "../status/status-pill.js"
+import { ToggleGroup, ToggleGroupItem } from "../../../components/ui/ToggleGroup.js"
+import { getStatusPillClassName } from "../status/StatusPill.js"
 
 export const WizardHeader = ({
   isSetupStep,

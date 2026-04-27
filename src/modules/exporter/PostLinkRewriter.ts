@@ -2,9 +2,9 @@ import type { CategoryInfo, ExportOptions, PostSummary } from "../../shared/Type
 import {
   applySameBlogPostCustomUrlTemplate,
   buildSameBlogPostTemplateValues,
-} from "../../shared/same-blog-post-link-template.js"
+} from "../../shared/SameBlogPostLinkTemplate.js"
 import { relativePathFrom } from "../../shared/Utils.js"
-import { buildMarkdownFilePath, getCategoryForPost } from "./export-paths.js"
+import { buildMarkdownFilePath, getCategoryForPost } from "./ExportPaths.js"
 
 const naverBlogHosts = new Set(["blog.naver.com", "m.blog.naver.com"])
 const postViewPathPattern = /\/PostView\.naver$/i

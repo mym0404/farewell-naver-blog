@@ -1,10 +1,10 @@
 import { useEffect } from "react"
 
 import type { ThemePreference } from "../../../../shared/Types.js"
-import { sanitizePersistedExportOptions } from "../../../../shared/export-options.js"
+import { sanitizePersistedExportOptions } from "../../../../shared/ExportOptions.js"
 import type { ExportBootstrapResponse } from "../../../lib/Api.js"
 import { fetchJson } from "../../../lib/Api.js"
-import { getPersistedUiStateSignature } from "../shell/wizard-flow.js"
+import { getPersistedUiStateSignature } from "../shell/WizardFlow.js"
 
 export const useBootstrapDefaults = ({
   fallbackDefaults,

@@ -8,7 +8,7 @@
 ## 대표 기준점
 - export 파이프라인: `src/modules/exporter/NaverBlogExporter.ts`
 - Markdown 렌더러: `src/modules/converter/MarkdownRenderer.ts`
-- HTTP API와 job lifecycle: `src/Server/HttpServer.ts`
+- HTTP API와 job lifecycle: `src/server/HttpServer.ts`
 
 ## 언제 읽는가
 - 모듈 경계와 의존 방향을 빠르게 파악해야 할 때

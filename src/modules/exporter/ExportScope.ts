@@ -2,4 +2,4 @@ export {
   filterPostsByScope,
   isPostWithinScope,
   resolveSelectedCategoryIds,
-} from "../../shared/export-scope.js"
+} from "../../shared/ExportScope.js"

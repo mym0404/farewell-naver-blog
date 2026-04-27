@@ -1,4 +1,4 @@
-import { getParserCapabilityId } from "./parser-capabilities.js"
+import { getParserCapabilityId } from "./ParserCapabilities.js"
 import type { SampleCorpusEntry } from "./Types.js"
 
 export const sampleCorpus: SampleCorpusEntry[] = [

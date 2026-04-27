@@ -6,7 +6,7 @@ import {
   defaultExportOptions,
   sanitizePersistedExportOptions,
   type PartialExportOptions,
-} from "../shared/export-options.js"
+} from "../shared/ExportOptions.js"
 import type { ScanCacheMap, ThemePreference } from "../shared/Types.js"
 
 const readFileWithFallback = async ({

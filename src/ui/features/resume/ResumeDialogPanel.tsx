@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../../components/ui/Dialog.js"
-import type { ResumeDialogState } from "./resume-state.js"
+import type { ResumeDialogState } from "./ResumeState.js"
 
 export const ResumeDialogPanel = ({
   resumeDialog,

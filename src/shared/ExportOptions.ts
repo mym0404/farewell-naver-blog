@@ -10,8 +10,8 @@ import {
   blockOutputFamilyOrder,
   defaultBlockOutputSelections,
   resolveBlockOutputSelection,
-} from "./block-registry.js"
-import { parserCapabilities } from "./parser-capabilities.js"
+} from "./BlockRegistry.js"
+import { parserCapabilities } from "./ParserCapabilities.js"
 
 export type PartialExportOptions = {
   scope?: Partial<ExportOptions["scope"]>

@@ -4,7 +4,6 @@ import { writeFile } from 'node:fs/promises';
 import {
   type CategoryInfo,
   type EditorVersion,
-  type PostSummary,
   type ScanResult,
 } from '../../shared/Types.js';
 import {

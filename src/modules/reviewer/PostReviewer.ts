@@ -4,7 +4,7 @@ import {
   getFallbackHtmlBodyNodeWarnings,
   getFallbackHtmlBodyNodes,
   getParsedPostBodyNodes,
-} from "../parser/blocks/body-node-utils.js"
+} from "../parser/blocks/BodyNodeUtils.js"
 
 export const reviewParsedPost = (parsedPost: ParsedPost) => {
   const bodyNodes = getParsedPostBodyNodes(parsedPost)

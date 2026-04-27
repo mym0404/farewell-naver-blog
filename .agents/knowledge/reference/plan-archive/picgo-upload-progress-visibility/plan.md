@@ -10,8 +10,8 @@
 - planning session 시작 시 subagent 사용 승인을 받았고, quick local sweep 뒤 필수 explore lens `Implementation Surface`, `Verification Surface`를 실행했다. 추가로 `Partial State` lens를 실행해 기존 bundle 재사용 가능성도 확인했다.
 - explore 결과 핵심 사실:
 - export 단계는 이미 `src/modules/exporter/NaverBlogExporter.ts`에서 글 단위 `onProgress`, `onItem`을 호출해 증분 갱신을 한다.
-- upload 단계는 `src/Server/HttpServer.ts`에서 `startUpload -> runPicGoUploadPhase -> rewriteUploadedAssets -> completeUpload`만 묶고 중간 증분 갱신이 없다.
-- `src/Server/JobStore.ts`에는 `updateUpload()`가 이미 있지만 실제 upload 경로에서 호출되지 않는다.
+- upload 단계는 `src/server/HttpServer.ts`에서 `startUpload -> runPicGoUploadPhase -> rewriteUploadedAssets -> completeUpload`만 묶고 중간 증분 갱신이 없다.
+- `src/server/JobStore.ts`에는 `updateUpload()`가 이미 있지만 실제 upload 경로에서 호출되지 않는다.
 - `src/modules/exporter/ImageUploadPhase.ts`는 PicGo에 파일 배열 전체를 한 번 넘기고 최종 결과 배열을 마지막에만 받는다.
 - `src/ui/features/job-results/UseExportJob.ts`는 이미 1초 polling을 하고 있어 transport 추가 없이도 서버 state만 자주 갱신하면 UI가 따라온다.
 - `src/ui/features/job-results/JobResultsPanel.tsx`는 업로드 패널과 대상 테이블을 이미 갖고 있지만 progress bar가 없고, 행 상태도 전역 job 상태만 따라간다.
@@ -73,9 +73,9 @@
   - PicGo upload 실행 surface. 현재 batch 호출만 하므로 중간 progress를 만들려면 여기부터 바뀐다.
 - `src/modules/exporter/ImageUploadRewriter.ts`
   - upload 결과를 Markdown/manifest/item에 반영하는 후처리 surface. 최종 완료 경계가 여기와 붙어 있다.
-- `src/Server/HttpServer.ts`
+- `src/server/HttpServer.ts`
   - upload same-job orchestration, polling API, progress update 결합 지점
-- `src/Server/JobStore.ts`
+- `src/server/JobStore.ts`
   - upload 중간 집계와 item-level count를 보관하는 상태 저장소
 - `src/ui/features/job-results/UseExportJob.ts`
   - `/api/export/:id` polling loop

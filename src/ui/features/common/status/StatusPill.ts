@@ -1,4 +1,4 @@
-import { JOB_STATUSES } from "../../../../shared/export-job-state.js"
+import { JOB_STATUSES } from "../../../../shared/ExportJobState.js"
 import { cn } from "../../../lib/Cn.js"
 
 export const getStatusPillClassName = (status: string | undefined) =>

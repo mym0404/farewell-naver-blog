@@ -29,7 +29,7 @@
 
 ## Discoveries
 
-- `src/Server/JobStore.ts` already has `updateUpload()` but no current upload path uses it.
+- `src/server/JobStore.ts` already has `updateUpload()` but no current upload path uses it.
 - `src/ui/features/job-results/UseExportJob.ts` already polls every second, so progress visibility is blocked by state production, not transport.
 - `src/modules/exporter/ImageUploadPhase.ts` currently returns only final results after a single batch call.
 - `src/modules/exporter/ImageUploadRewriter.ts` currently moves counts to final values only after rewrite success.

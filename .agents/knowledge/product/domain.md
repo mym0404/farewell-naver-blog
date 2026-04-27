@@ -9,7 +9,7 @@
 ## 관련 코드
 - `src/shared/Types.ts`
 - `src/shared/ExportOptions.ts`
-- `src/Server/HttpServer.ts`
+- `src/server/HttpServer.ts`
 
 ## 검증 방법
 - `pnpm check:local`: shared 타입, export 옵션, 서버 계약 같은 도메인 규칙을 바꾼 뒤 기본 회귀를 확인할 때 실행한다.

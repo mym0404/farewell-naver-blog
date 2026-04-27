@@ -3,7 +3,7 @@ import path from "node:path"
 
 import type { UploadCandidate, UploadRuntimeConfig } from "../../shared/Types.js"
 import { throwIfAborted } from "../../shared/Utils.js"
-import { dedupeUploadCandidatesByLocalPath } from "./upload-candidate-utils.js"
+import { dedupeUploadCandidatesByLocalPath } from "./UploadCandidateUtils.js"
 
 type RuntimeUploadResponse = {
   imgUrl?: string

@@ -17,7 +17,7 @@ import {
   renderLinkCardBlock,
   renderParagraph,
   renderQuote,
-} from "./block-markdown.js"
+} from "./BlockMarkdown.js"
 
 const toPreviewAssetPath = (sourceUrl: string) => {
   const pathname = (() => {

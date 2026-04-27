@@ -10,7 +10,7 @@ import type {
   UploadProviderOptionValue,
   UploadProviderValue,
 } from "../shared/Types.js"
-import { DEFAULT_UPLOAD_PROVIDER_KEY, UPLOAD_PROVIDER_KEYS } from "../shared/upload-provider-keys.js"
+import { DEFAULT_UPLOAD_PROVIDER_KEY, UPLOAD_PROVIDER_KEYS } from "../shared/UploadProviderKeys.js"
 
 const providerLabelMap: Record<string, string> = {
   [UPLOAD_PROVIDER_KEYS.ADVANCED]: "Advanced Custom",

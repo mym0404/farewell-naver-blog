@@ -1,5 +1,5 @@
 import { RiCheckDoubleLine, RiEraserLine } from "@remixicon/react"
-import { getCategoryCheckboxState, orderCategoriesHierarchically } from "./category-selection.js"
+import { getCategoryCheckboxState, orderCategoriesHierarchically } from "./CategorySelection.js"
 import type { ScanResult } from "../../../shared/Types.js"
 
 import { Badge } from "../../components/ui/Badge.js"
@@ -13,7 +13,7 @@ import {
 } from "../../components/ui/Card.js"
 import { Checkbox } from "../../components/ui/Checkbox.js"
 import { Input } from "../../components/ui/Input.js"
-import { ScrollArea } from "../../components/ui/scroll-area.js"
+import { ScrollArea } from "../../components/ui/ScrollArea.js"
 import {
   Select,
   SelectContent,

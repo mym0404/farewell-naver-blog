@@ -6,8 +6,8 @@ import type {
   UploadProviderCatalogResponse,
   UploadProviderFields,
 } from "../../../shared/Types.js"
-import { EMPTY_SELECT_VALUE, UPLOAD_PROVIDER_KEYS } from "../../../shared/upload-provider-keys.js"
-import { isUploadActionableJob, JOB_STATUSES } from "../../../shared/export-job-state.js"
+import { EMPTY_SELECT_VALUE, UPLOAD_PROVIDER_KEYS } from "../../../shared/UploadProviderKeys.js"
+import { isUploadActionableJob, JOB_STATUSES } from "../../../shared/ExportJobState.js"
 
 import { Badge } from "../../components/ui/Badge.js"
 import { Button, buttonVariants } from "../../components/ui/Button.js"
@@ -21,7 +21,7 @@ import {
 import { Checkbox } from "../../components/ui/Checkbox.js"
 import { Input } from "../../components/ui/Input.js"
 import { Progress } from "../../components/ui/Progress.js"
-import { ScrollArea } from "../../components/ui/scroll-area.js"
+import { ScrollArea } from "../../components/ui/ScrollArea.js"
 import {
   Select,
   SelectContent,
@@ -40,7 +40,7 @@ import {
   TableHeader,
   TableRow,
 } from "../../components/ui/Table.js"
-import { ToggleGroup, ToggleGroupItem } from "../../components/ui/toggle-group.js"
+import { ToggleGroup, ToggleGroupItem } from "../../components/ui/ToggleGroup.js"
 import {
   Tooltip,
   TooltipContent,
@@ -53,7 +53,7 @@ import {
   getUploadProviderFieldRule,
   hasMissingRequiredUploadProviderField,
   trimProviderFieldsForSubmit,
-} from "./upload-provider-form-rules.js"
+} from "./UploadProviderFormRules.js"
 import {
   buildJobItemPathMeta,
   buildJobItemSeverity,
@@ -68,9 +68,9 @@ import {
   toProgressValue,
   type JobFilter,
   type JobResultsMode,
-} from "./job-results-helpers.js"
-import { useUploadProviderForm } from "./use-upload-provider-form.js"
-import { getStatusPillClassName } from "../common/status/status-pill.js"
+} from "./JobResultsHelpers.js"
+import { useUploadProviderForm } from "./UseUploadProviderForm.js"
+import { getStatusPillClassName } from "../common/status/StatusPill.js"
 
 const CompactMetrics = ({
   items,

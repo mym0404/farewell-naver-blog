@@ -7,13 +7,13 @@
 ## Tech Stack
 - `pnpm` 단일 저장소에서 `Node.js` ESM, `TypeScript`, `tsx`를 사용한다.
 - 로컬 대시보드는 `React 19`, `Vite`, `Tailwind CSS v4`, `shadcn`/`Radix`, `Sonner` 위에서 동작한다.
-- export 파이프라인은 `src/modules/*`, HTTP 런타임은 `src/Server/*`, 공용 계약은 `src/shared/*`에 모인다.
+- export 파이프라인은 `src/modules/*`, HTTP 런타임은 `src/server/*`, 공용 계약은 `src/shared/*`에 모인다.
 - 검증 표면은 `Vitest`, Playwright, `scripts/harness/*`가 맡는다.
 
 ## Runtime And Architecture
-- 런타임 시작점은 `src/Server.ts`, `src/Server/HttpServer.ts`다.
+- 런타임 시작점은 `src/Server.ts`, `src/server/HttpServer.ts`다.
 - export 실행 구조는 `src/modules/exporter/NaverBlogExporter.ts`에서 따라간다.
-- parser/sample 구조 seam은 `src/modules/parser/PostParser.ts`, `src/modules/parser/editors/*`, `src/modules/parser/blocks/naver-se*/NaverSe*Block.ts`, `src/shared/ParserCapabilities.ts`, `src/shared/SampleCorpus.ts`가 기준이다.
+- parser/sample 구조 seam은 `src/modules/parser/PostParser.ts`, `src/modules/parser/editors/*`, `src/modules/parser/blocks/*`, `src/shared/ParserCapabilities.ts`, `src/shared/SampleCorpus.ts`가 기준이다.
 - UI 셸과 토큰 시작점은 `src/ui/App.tsx`, `src/ui/features/common/*`, `src/ui/styles/globals.css`다.
 
 ## Design System
@@ -31,7 +31,7 @@
 - 저장소 파일을 수정한 턴에서는 범위와 무관하게 `pnpm check:local`을 항상 실행한다. 이 명령이 가장 기본 검사다.
 - 검증 명령이 실패하면 현재 작업이 만든 회귀인지 먼저 본다. 현재 작업 때문이면 고치면서 계속 진행하고, 다른 변경이나 기존 상태 때문에 생긴 실패면 바로 멈추고 실패 사실을 보고한다.
 - parser capability, sample fixture, renderer/exporter 계약이 바뀌면 관련 knowledge와 generated 문서를 같이 갱신한다.
-- parser block 구현은 `BaseBlock -> ContainerBlock / LeafBlock -> editor별 NaverSe*Block` class 구조를 쓰고, 블록 class 파일은 class당 1개로 둔다.
+- parser block 구현은 `BaseBlock -> ContainerBlock / LeafBlock -> blocks 하위 구현체` 구조를 쓰고, `blocks/common`, `blocks/naver-se2`, `blocks/naver-se3`, `blocks/naver-se4` 아래에 책임별 파일로 둔다.
 - parser/sample 회귀는 fixture-first가 기본이다. live 네이버 fetch는 fixture refresh/drift check 보조 경로로만 취급한다.
 - Playwright UI smoke와 live upload e2e는 유지한다. parser fixture 전환을 이유로 제거하지 않는다.
 - 코어 기능, 사용자 흐름, 상태 전이, 결과/복구 구조를 바꾸는 변경 뒤에는 최소 `pnpm smoke:ui` 실행을 보장한다.

@@ -1,4 +1,4 @@
-import { getParserCapabilityId, parserCapabilityCatalog } from "./block-registry.js"
+import { getParserCapabilityId, parserCapabilityCatalog } from "./BlockRegistry.js"
 
 import type {
   AstBlock,
