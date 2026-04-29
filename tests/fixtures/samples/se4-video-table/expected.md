@@ -7,7 +7,6 @@ publishedAt: 2018-06-19T13:16:43+09:00
 category: Blender
 categoryPath:
   - Blender
-editorVersion: 4
 visibility: public
 thumbnail: https://phinf.pstatic.net/image.nmv/blogucc28/2018/06/19/867/f18a79005b808502377d4b020c2641e0958e_ugcvideo_270P_01_16x9_logo.jpg
 video:

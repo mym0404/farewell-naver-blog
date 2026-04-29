@@ -2,13 +2,13 @@ import type {
   ExportJobState,
   UploadProviderCatalogResponse,
   UploadProviderDefinition,
+  UploadProviderFields,
 } from "../../../shared/Types.js"
 import {
   DEFAULT_UPLOAD_PROVIDER_KEY,
   EMPTY_SELECT_VALUE,
   UPLOAD_PROVIDER_KEYS,
 } from "../../../shared/UploadProviderKeys.js"
-import type { ProviderFormState } from "./UploadProviderFormRules.js"
 
 const INDEX_MARKDOWN_FILE = "index.md"
 
@@ -53,7 +53,7 @@ export const getPreferredDefaultProviderKey = (catalog: UploadProviderCatalogRes
   catalog.providers[0]?.key ??
   ""
 
-export const buildInitialProviderFields = (provider: UploadProviderDefinition | null): ProviderFormState =>
+export const buildInitialProviderFields = (provider: UploadProviderDefinition | null): UploadProviderFields =>
   Object.fromEntries(
     (provider?.fields ?? []).map((field) => {
       if (field.inputType === "checkbox") {
@@ -79,7 +79,7 @@ export const buildInitialProviderFields = (provider: UploadProviderDefinition | 
 export const buildInitialProviderFieldMap = (catalog: UploadProviderCatalogResponse) =>
   Object.fromEntries(
     catalog.providers.map((provider) => [provider.key, buildInitialProviderFields(provider)]),
-  ) as Record<string, ProviderFormState>
+  ) as Record<string, UploadProviderFields>
 
 export const buildGitHubJsDelivrCustomUrl = ({
   repo,

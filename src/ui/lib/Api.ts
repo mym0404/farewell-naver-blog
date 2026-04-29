@@ -126,5 +126,3 @@ export const postUploadJson = <T>(input: RequestInfo | URL, body: unknown) =>
   })
 
 export type ExportJobResponse = Pick<ExportJobState, "id" | "status">
-
-export type UploadProvidersResponse = UploadProviderCatalogResponse

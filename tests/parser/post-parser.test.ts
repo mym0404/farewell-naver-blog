@@ -1,10 +1,7 @@
 import { describe, expect, it } from "vitest"
 
-import {
-  detectEditorVersionFromHtml,
-  parsePostHtml,
-} from "../../src/modules/parser/PostParser.js"
-import { createBodyNodesFromLegacyBlocks } from "../../src/modules/parser/blocks/BodyNodeUtils.js"
+import { parsePostHtml } from "../../src/modules/parser/PostParser.js"
+import { createBodyNodesFromLegacyBlocks } from "../../src/modules/blocks/BodyNodeUtils.js"
 import { defaultExportOptions } from "../../src/shared/ExportOptions.js"
 
 const parserOptions = {
@@ -12,16 +9,6 @@ const parserOptions = {
 }
 
 describe("post-parser routing", () => {
-  it("detects editor versions from explicit metadata and class fallbacks", () => {
-    expect(detectEditorVersionFromHtml("smartEditorVersion: 4")).toBe(4)
-    expect(detectEditorVersionFromHtml("smartEditorVersion: 3")).toBe(3)
-    expect(detectEditorVersionFromHtml("smartEditorVersion: 2")).toBe(2)
-    expect(detectEditorVersionFromHtml("smartEditorVersion&#034;:&#034;4&#034;")).toBe(4)
-    expect(detectEditorVersionFromHtml('<div class="se-component"></div>')).toBe(4)
-    expect(detectEditorVersionFromHtml('<div class="se_component"></div>')).toBe(3)
-    expect(detectEditorVersionFromHtml("<div></div>")).toBe(2)
-  })
-
   it("routes SE4 html to the SE4 parser and extracts unique tags", () => {
     const parsed = parsePostHtml({
       html: `
@@ -41,14 +28,11 @@ describe("post-parser routing", () => {
       sourceUrl: "https://blog.naver.com/mym0404/1",
       options: parserOptions,
     })
-
-    expect(parsed.editorVersion).toBe(4)
     expect(parsed.tags).toEqual(["algo", "math"])
     expect(parsed.blocks).toEqual([{ type: "paragraph", text: "SE4 text" }])
     expect(parsed.body).toEqual([
       {
         kind: "block",
-        parserBlockId: "naver.se4.text",
         block: { type: "paragraph", text: "SE4 text" },
       },
     ])
@@ -93,8 +77,6 @@ describe("post-parser routing", () => {
       sourceUrl: "https://blog.naver.com/mym0404/2",
       options: parserOptions,
     })
-
-    expect(parsed.editorVersion).toBe(3)
     expect(parsed.blocks).toEqual([{ type: "paragraph", text: "SE3 text" }])
   })
 
@@ -108,8 +90,6 @@ describe("post-parser routing", () => {
       sourceUrl: "https://blog.naver.com/mym0404/3",
       options: parserOptions,
     })
-
-    expect(parsed.editorVersion).toBe(2)
     expect(parsed.blocks).toEqual([{ type: "heading", level: 2, text: "SE2 title" }])
   })
 

@@ -118,7 +118,6 @@ const resumedScanResult: ScanResult = {
       categoryId: 101,
       categoryName: "NestJS",
       source: "https://blog.naver.com/mym0404/223034929700",
-      editorVersion: 4,
       thumbnailUrl: null,
     },
   ],

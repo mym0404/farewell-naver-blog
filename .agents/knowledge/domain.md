@@ -10,7 +10,7 @@
 - `CategoryInfo`: category tree node with path and post count.
 - `ScanResult`: public post count, categories, and post summary snapshot.
 - `ExportOptions`: scope, structure, frontmatter, Markdown, asset, diagnostic, and upload-related export options.
-- `ParsedPost`: common AST blocks, tags, videos, and warnings.
+- `ParsedPost`: common AST blocks, tags, videos, and warnings. It does not carry editor identity metadata.
 - `ExportManifest`: post results, summary, upload summary, logs, and UI recovery job snapshot.
 - `ExportJobState`: server/UI state for export, upload, result, failure, and recovery.
 - `UploadCandidate`: local asset selected for post-export upload.
@@ -30,6 +30,7 @@
 ## Frontmatter Rules
 - `category` is a display string.
 - `categoryPath` is a path array.
+- Editor identity is not exported as frontmatter.
 - Each frontmatter field has enable/disable, description, and alias controls in the UI.
 - Empty alias uses the default field name.
 - Alias must start with a letter or `_`, and may then contain letters, numbers, `-`, or `_`.

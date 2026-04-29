@@ -9,7 +9,7 @@ import {
   getBlockOutputFamilyDefinition,
   resolveBlockOutputSelection,
 } from "./BlockRegistry.js"
-import type { ParserBlockId } from "../modules/blog/BlogTypes.js"
+import type { BlockType } from "./Types.js"
 
 export type PartialExportOptions = {
   scope?: Partial<ExportOptions["scope"]>
@@ -35,7 +35,6 @@ export const frontmatterFieldOrder: FrontmatterFieldName[] = [
   "publishedAt",
   "category",
   "categoryPath",
-  "editorVersion",
   "visibility",
   "tags",
   "thumbnail",
@@ -80,11 +79,6 @@ export const frontmatterFieldMeta: Record<FrontmatterFieldName, FrontmatterField
     label: "categoryPath",
     description: "상위 카테고리 경로를 배열로 기록합니다.",
     defaultAlias: "categoryPath",
-  },
-  editorVersion: {
-    label: "editorVersion",
-    description: "파싱된 에디터 버전을 기록합니다.",
-    defaultAlias: "editorVersion",
   },
   visibility: {
     label: "visibility",
@@ -238,7 +232,6 @@ export const defaultExportOptions = (): ExportOptions => ({
       publishedAt: true,
       category: true,
       categoryPath: true,
-      editorVersion: true,
       visibility: true,
       tags: true,
       thumbnail: true,
@@ -255,7 +248,6 @@ export const defaultExportOptions = (): ExportOptions => ({
       publishedAt: "",
       category: "",
       categoryPath: "",
-      editorVersion: "",
       visibility: "",
       tags: "",
       thumbnail: "",
@@ -373,8 +365,8 @@ export const sanitizePersistedExportOptions = (options?: PartialExportOptions): 
 
     if (options.blockOutputs.defaults) {
       blockOutputs.defaults = Object.fromEntries(
-        Object.entries(options.blockOutputs.defaults).filter(([parserBlockId]) =>
-          blockOutputFamilyOrder.includes(parserBlockId as ParserBlockId),
+        Object.entries(options.blockOutputs.defaults).filter(([blockType]) =>
+          blockOutputFamilyOrder.includes(blockType as BlockType),
         ),
       ) as NonNullable<PartialExportOptions["blockOutputs"]>["defaults"]
     }
@@ -413,16 +405,15 @@ const coerceAssetOptions = (options: ExportOptions["assets"]) => {
 
 const buildDefaultBlockOutputs = (options?: PartialExportOptions["blockOutputs"]) =>
   Object.fromEntries(
-    blockOutputFamilyOrder.flatMap((parserBlockId) => {
-      const family = getBlockOutputFamilyDefinition(parserBlockId)
+    blockOutputFamilyOrder.flatMap((blockType) => {
+      const family = getBlockOutputFamilyDefinition(blockType)
 
       return family
         ? [
             [
-              parserBlockId,
+              blockType,
               resolveBlockOutputSelection({
                 blockType: family.astBlockType,
-                parserBlockId,
                 blockOutputs: options,
               }),
             ],

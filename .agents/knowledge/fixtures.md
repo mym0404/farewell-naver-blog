@@ -29,7 +29,7 @@
 
 ## Operating Rules
 - Add or update `source.html` and `expected.md` together.
-- `expected.md` must start with YAML frontmatter containing title, source, blogId, logNo, publishedAt, category, categoryPath, and editorVersion.
+- `expected.md` must start with YAML frontmatter containing title, source, blogId, logNo, publishedAt, category, and categoryPath.
 - Fixture ids should describe editor and dominant block coverage.
 - A parser block without a public sample should be covered by focused parser tests until a durable sample exists.
 - Parser block, renderer, or export option changes that alter Markdown output must update the affected `expected.md` files intentionally.

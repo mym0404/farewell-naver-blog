@@ -12,9 +12,8 @@ import type {
   UnknownRecord,
   ParsedPostFallbackHtmlBodyNode,
   ParsedPost,
-  ParsedPostStructuredBodyNode,
   PostSummary,
-  StructuredAstBlock,
+  AstBlock,
 } from "../../shared/Types.js"
 import { resolveBlockOutputSelection } from "../../shared/BlockRegistry.js"
 import {
@@ -37,7 +36,7 @@ import { unique } from "../../shared/Utils.js"
 import {
   getFallbackHtmlBodyNodeWarnings,
   getParsedPostBodyNodes,
-} from "../parser/blocks/BodyNodeUtils.js"
+} from "../blocks/BodyNodeUtils.js"
 
 const buildFrontmatter = ({
   fields,
@@ -239,7 +238,7 @@ export const renderMarkdownPost = async ({
 
   const renderFallbackHtmlBodyNode = (node: ParsedPostFallbackHtmlBodyNode) => node.html.trim()
 
-  const renderVideoBlock = async (block: Extract<StructuredAstBlock, { type: "video" }>) => {
+  const renderVideoBlock = async (block: Extract<AstBlock, { type: "video" }>) => {
     renderedVideos.push({
       title: block.video.title,
       sourceUrl: block.video.sourceUrl,
@@ -252,13 +251,9 @@ export const renderMarkdownPost = async ({
     })
   }
 
-  const renderTableBlock = (
-    block: Extract<StructuredAstBlock, { type: "table" }>,
-    parserBlockId: ParsedPostStructuredBodyNode["parserBlockId"],
-  ) => {
+  const renderTableBlock = (block: Extract<AstBlock, { type: "table" }>) => {
     const selection = resolveBlockOutputSelection({
       blockType: "table",
-      parserBlockId,
       blockOutputs: options.blockOutputs,
     })
 
@@ -293,7 +288,6 @@ export const renderMarkdownPost = async ({
     if (block.type === "heading") {
       const selection = resolveBlockOutputSelection({
         blockType: "heading",
-        parserBlockId: bodyNode.parserBlockId,
         blockOutputs: options.blockOutputs,
       })
       const adjustedLevel = Math.min(
@@ -313,7 +307,6 @@ export const renderMarkdownPost = async ({
     if (block.type === "divider") {
       const selection = resolveBlockOutputSelection({
         blockType: "divider",
-        parserBlockId: bodyNode.parserBlockId,
         blockOutputs: options.blockOutputs,
       })
       sections.push(getDividerMarker(block.outputSelection ?? selection))
@@ -323,7 +316,6 @@ export const renderMarkdownPost = async ({
     if (block.type === "code") {
       const selection = resolveBlockOutputSelection({
         blockType: "code",
-        parserBlockId: bodyNode.parserBlockId,
         blockOutputs: options.blockOutputs,
       })
       sections.push(
@@ -339,7 +331,6 @@ export const renderMarkdownPost = async ({
     if (block.type === "formula") {
       const selection = resolveBlockOutputSelection({
         blockType: "formula",
-        parserBlockId: bodyNode.parserBlockId,
         blockOutputs: options.blockOutputs,
       })
       sections.push(
@@ -355,7 +346,6 @@ export const renderMarkdownPost = async ({
     if (block.type === "image") {
       const selection = resolveBlockOutputSelection({
         blockType: "image",
-        parserBlockId: bodyNode.parserBlockId,
         blockOutputs: options.blockOutputs,
       })
       sections.push(
@@ -403,7 +393,7 @@ export const renderMarkdownPost = async ({
     }
 
     if (block.type === "table") {
-      sections.push(renderTableBlock(block, bodyNode.parserBlockId))
+      sections.push(renderTableBlock(block))
       continue
     }
 
@@ -424,7 +414,6 @@ export const renderMarkdownPost = async ({
     publishedAt: post.publishedAt,
     category: category.name,
     categoryPath: category.path,
-    editorVersion: parsedPost.editorVersion,
     visibility: "public",
     tags: parsedPost.tags,
     thumbnail: thumbnailPath,

@@ -30,8 +30,8 @@ describe("export options", () => {
     expect(options.links.sameBlogPostMode).toBe("keep-source")
     expect(options.links.sameBlogPostCustomUrlTemplate).toBe("")
     expect(options.markdown.linkStyle).toBe("inlined")
-    expect(options.blockOutputs.defaults["naver.se4.formula"]?.params?.inlineWrapper).toBe("$")
-    expect(options.blockOutputs.defaults["naver.se4.formula"]?.params?.blockWrapper).toBe("$$")
+    expect(options.blockOutputs.defaults["formula"]?.params?.inlineWrapper).toBe("$")
+    expect(options.blockOutputs.defaults["formula"]?.params?.blockWrapper).toBe("$$")
     expect(Object.hasOwn(options, "unsupportedBlockCases")).toBe(false)
     expect(options.structure.groupByCategory).toBe(true)
     expect(options.structure.includeDateInPostFolderName).toBe(true)
@@ -67,10 +67,10 @@ describe("export options", () => {
     const options = cloneExportOptions({
       blockOutputs: {
         defaults: {
-          "naver.se4.code": {
+          "code": {
             variant: "tilde-fence",
           },
-          "naver.se4.formula": {
+          "formula": {
             variant: "wrapper",
             params: {
               inlineWrapper: "\\(...\\)",
@@ -81,10 +81,10 @@ describe("export options", () => {
       },
     })
 
-    expect(options.blockOutputs.defaults["naver.se4.code"]?.variant).toBe("tilde-fence")
-    expect(options.blockOutputs.defaults["naver.se4.formula"]?.variant).toBe("wrapper")
-    expect(options.blockOutputs.defaults["naver.se4.formula"]?.params?.inlineWrapper).toBe("\\(...\\)")
-    expect(options.blockOutputs.defaults["naver.se4.formula"]?.params?.blockWrapper).toBe("\\[...\\]")
+    expect(options.blockOutputs.defaults["code"]?.variant).toBe("tilde-fence")
+    expect(options.blockOutputs.defaults["formula"]?.variant).toBe("wrapper")
+    expect(options.blockOutputs.defaults["formula"]?.params?.inlineWrapper).toBe("\\(...\\)")
+    expect(options.blockOutputs.defaults["formula"]?.params?.blockWrapper).toBe("\\[...\\]")
   })
 
   it("ignores legacy unsupported block representative-case selections", () => {
@@ -110,7 +110,7 @@ describe("export options", () => {
     const options = cloneExportOptions({
       blockOutputs: {
         defaults: {
-          "naver.se4.formula": {
+          "formula": {
             variant: "wrapper",
             params: {
               inlineOpen: "\\(",
@@ -123,7 +123,6 @@ describe("export options", () => {
 
     const selection = resolveBlockOutputSelection({
       blockType: "formula",
-      parserBlockId: "naver.se4.formula",
       blockOutputs: options.blockOutputs,
     })
 
@@ -255,7 +254,6 @@ describe("export options", () => {
         publishedAt: false,
         category: false,
         categoryPath: false,
-        editorVersion: false,
         visibility: false,
         tags: false,
         thumbnail: false,
@@ -272,7 +270,6 @@ describe("export options", () => {
         publishedAt: "",
         category: "",
         categoryPath: "",
-        editorVersion: "",
         visibility: "",
         tags: "",
         thumbnail: "",

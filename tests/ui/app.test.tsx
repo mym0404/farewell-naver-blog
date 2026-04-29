@@ -53,7 +53,6 @@ const buildPostSummary = (logNo: number, categoryId: number, categoryName: strin
   categoryId,
   categoryName,
   source: `https://blog.naver.com/mym0404/${logNo}`,
-  editorVersion: 4 as const,
   thumbnailUrl: null,
 })
 

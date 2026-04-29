@@ -20,7 +20,7 @@ import {
   throwIfAborted,
   toErrorMessage,
 } from "../../shared/Utils.js"
-import { NaverBlogFetcher } from "../blog-fetcher/NaverBlogFetcher.js"
+import { NaverBlogFetcher } from "../fetcher/NaverBlogFetcher.js"
 import { renderMarkdownPost } from "../converter/MarkdownRenderer.js"
 import { parsePostHtml } from "../parser/PostParser.js"
 import { reviewParsedPost } from "../reviewer/PostReviewer.js"
@@ -218,7 +218,6 @@ export class NaverBlogExporter {
   private createSuccessResult({
     post,
     category,
-    parsedEditorVersion,
     outputDir,
     markdownFilePath,
     assetPaths,
@@ -227,7 +226,6 @@ export class NaverBlogExporter {
   }: {
     post: Awaited<ReturnType<NaverBlogFetcher["getAllPosts"]>>[number]
     category: ReturnType<typeof getCategoryForPost>
-    parsedEditorVersion: PostManifestEntry["editorVersion"]
     outputDir: string
     markdownFilePath: string
     assetPaths: string[]
@@ -244,7 +242,6 @@ export class NaverBlogExporter {
         name: category.name,
         path: category.path,
       },
-      editorVersion: parsedEditorVersion,
       status: "success",
       outputPath: path.relative(outputDir, markdownFilePath).split(path.sep).join("/"),
       assetPaths,
@@ -262,7 +259,6 @@ export class NaverBlogExporter {
         title: post.title,
         source: post.source,
         category: manifestEntry.category,
-        editorVersion: manifestEntry.editorVersion,
         status: "success",
         outputPath: manifestEntry.outputPath,
         assetPaths,
@@ -297,7 +293,6 @@ export class NaverBlogExporter {
         name: category.name,
         path: category.path,
       },
-      editorVersion: post.editorVersion,
       status: "failed",
       outputPath: null,
       assetPaths: [],
@@ -315,7 +310,6 @@ export class NaverBlogExporter {
         title: post.title,
         source: post.source,
         category: manifestEntry.category,
-        editorVersion: post.editorVersion,
         status: "failed",
         outputPath: null,
         assetPaths: [],
@@ -509,7 +503,6 @@ export class NaverBlogExporter {
             this.createSuccessResult({
               post,
               category,
-              parsedEditorVersion: parsedPost.editorVersion,
               outputDir,
               markdownFilePath,
               assetPaths,

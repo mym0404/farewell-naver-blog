@@ -25,7 +25,6 @@ const buildJobItemFromPost = (
   title: post.title,
   source: post.source,
   category: post.category,
-  editorVersion: post.editorVersion,
   status: post.status,
   outputPath: post.outputPath,
   assetPaths: post.assetPaths,

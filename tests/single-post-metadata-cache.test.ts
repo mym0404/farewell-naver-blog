@@ -45,7 +45,6 @@ const createBaseFetcher = ({
           categoryId: 85,
           categoryName: "BOJ",
           source: "https://blog.naver.com/mym0404/223034929697",
-          editorVersion: 4 as const,
           thumbnailUrl: null,
         },
     ]

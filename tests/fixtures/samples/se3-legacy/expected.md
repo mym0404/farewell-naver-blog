@@ -7,7 +7,6 @@ publishedAt: 2018-03-25T14:38:01+09:00
 category: Daily
 categoryPath:
   - Daily
-editorVersion: 3
 visibility: public
 ---
 

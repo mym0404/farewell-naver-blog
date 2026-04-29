@@ -11,13 +11,13 @@ import type {
 import {
   createBodyNodesFromStructuredBlocks,
   createFallbackHtmlBodyNode,
-} from "../parser/blocks/BodyNodeUtils.js"
+} from "../blocks/BodyNodeUtils.js"
 import type {
   ParserBlockConvertContext,
   ParserBlockOptions,
   ParserBlockResult,
-} from "../parser/blocks/ParserNode.js"
-import type { ParserBlockBinding } from "../parser/ParserBlockFactory.js"
+} from "../blocks/ParserNode.js"
+import type { BaseBlock } from "../blocks/BaseBlock.js"
 
 export type BaseEditorParseInput = {
   $: CheerioAPI
@@ -29,10 +29,12 @@ export type BaseEditorParseInput = {
     }
 }
 
-export abstract class BaseEditor<TInput extends BaseEditorParseInput = BaseEditorParseInput> {
-  protected readonly supportedBlocks: readonly ParserBlockBinding[] = []
+export abstract class BaseEditor {
+  protected readonly supportedBlocks: readonly BaseBlock[] = []
 
-  abstract parse(input: TInput): ParsedPost
+  abstract canParse(html: string): boolean
+
+  abstract parse(input: BaseEditorParseInput): ParsedPost
 
   protected runBlocks({
     $,
@@ -65,14 +67,14 @@ export abstract class BaseEditor<TInput extends BaseEditorParseInput = BaseEdito
       body.push(...nodes)
     }
 
-    const handleResult = (result: ParserBlockResult, parserBlockId: ParserBlockBinding["id"]) => {
+    const handleResult = (result: ParserBlockResult) => {
       if (result.warnings) {
         appendWarnings(result.warnings)
       }
 
       if (result.status === "handled") {
         blocks.push(...result.blocks)
-        body.push(...createBodyNodesFromStructuredBlocks(result.blocks, parserBlockId))
+        body.push(...createBodyNodesFromStructuredBlocks(result.blocks))
         return
       }
 
@@ -104,13 +106,13 @@ export abstract class BaseEditor<TInput extends BaseEditorParseInput = BaseEdito
         appendWarnings,
         ...moduleContext?.(node),
       }
-      const block = this.supportedBlocks.find((supportedBlock) => supportedBlock.block.match(context))
+      const block = this.supportedBlocks.find((supportedBlock) => supportedBlock.match(context))
 
       if (!block) {
         return
       }
 
-      handleResult(block.block.convert(context), block.id)
+      handleResult(block.convert(context))
     }
 
     nodes.forEach(appendBlocksFromNode)

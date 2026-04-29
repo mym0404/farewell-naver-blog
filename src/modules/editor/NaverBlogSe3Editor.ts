@@ -1,22 +1,37 @@
-import type { CheerioAPI } from "cheerio"
-
-import type { ExportOptions, ParsedPost } from "@shared/Types.js"
+import type { ParsedPost } from "@shared/Types.js"
 import { unique } from "@shared/Utils.js"
-import { createParserBlocksForEditor } from "../parser/ParserBlockFactory.js"
+import { NaverSe3CodeBlock } from "../blocks/naver-se3/CodeBlock.js"
+import { NaverSe3DocumentTitleBlock } from "../blocks/naver-se3/DocumentTitleBlock.js"
+import { NaverSe3FallbackBlock } from "../blocks/naver-se3/FallbackBlock.js"
+import { NaverSe3ImageBlock } from "../blocks/naver-se3/ImageBlock.js"
+import { NaverSe3QuoteBlock } from "../blocks/naver-se3/QuoteBlock.js"
+import { NaverSe3RepresentativeUnsupportedBlock } from "../blocks/naver-se3/RepresentativeUnsupportedBlock.js"
+import { NaverSe3TableBlock } from "../blocks/naver-se3/TableBlock.js"
+import { NaverSe3TextBlock } from "../blocks/naver-se3/TextBlock.js"
 import { BaseEditor } from "./BaseEditor.js"
+import type { BaseEditorParseInput } from "./BaseEditor.js"
 
-export type ParseSe3PostInput = {
-  $: CheerioAPI
-  tags: string[]
-  options: Pick<ExportOptions, "markdown"> & {
-    resolveLinkUrl?: (url: string) => string
+const hasSmartEditorVersion = (html: string, version: number) =>
+  html.replaceAll("&#034;", "\"").match(/smartEditorVersion["']?\s*:\s*["']?(\d+)["']?/i)?.[1] ===
+  String(version)
+
+export class NaverBlogSE3Editor extends BaseEditor {
+  protected override readonly supportedBlocks = [
+    new NaverSe3DocumentTitleBlock(),
+    new NaverSe3TableBlock(),
+    new NaverSe3QuoteBlock(),
+    new NaverSe3CodeBlock(),
+    new NaverSe3ImageBlock(),
+    new NaverSe3RepresentativeUnsupportedBlock(),
+    new NaverSe3TextBlock(),
+    new NaverSe3FallbackBlock(),
+  ]
+
+  override canParse(html: string) {
+    return hasSmartEditorVersion(html, 3) || html.includes('class="se_component')
   }
-}
 
-export class NaverBlogSE3Editor extends BaseEditor<ParseSe3PostInput> {
-  protected override readonly supportedBlocks = createParserBlocksForEditor("naver.se3")
-
-  parse({ $, tags, options }: ParseSe3PostInput): ParsedPost {
+  override parse({ $, tags, options }: BaseEditorParseInput): ParsedPost {
     const container = $("#viewTypeSelector .se_component_wrap.sect_dsc").first()
     const { blocks, body, warnings } = this.runBlocks({
       $,
@@ -26,8 +41,6 @@ export class NaverBlogSE3Editor extends BaseEditor<ParseSe3PostInput> {
     })
 
     return {
-      editorVersion: 3,
-      editorId: "naver.se3",
       tags: unique(tags),
       body,
       blocks,

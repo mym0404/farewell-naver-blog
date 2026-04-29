@@ -8,7 +8,7 @@ import { access, readFile, rm } from "node:fs/promises"
 import path from "node:path"
 import type { ViteDevServer } from "vite"
 
-import { NaverBlogFetcher } from "../modules/blog-fetcher/NaverBlogFetcher.js"
+import { NaverBlogFetcher } from "../modules/fetcher/NaverBlogFetcher.js"
 import { NaverBlogExporter } from "../modules/exporter/NaverBlogExporter.js"
 import {
   rewriteImageUploadPost,
@@ -42,7 +42,7 @@ import type {
   ScanResult,
   ThemePreference,
   UploadProviderFields,
-  UploadRuntimeConfig,
+  UnknownRecord,
 } from "../shared/Types.js"
 import {
   extractBlogId,
@@ -867,7 +867,7 @@ export const createHttpServer = ({
   }: {
     jobId: string
     uploaderKey: string
-    uploaderConfig: UploadRuntimeConfig
+    uploaderConfig: UnknownRecord
     signal?: AbortSignal
   }) => {
     const job = jobStore.get(jobId)

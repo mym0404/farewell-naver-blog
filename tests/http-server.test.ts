@@ -3,7 +3,7 @@ import { tmpdir } from "node:os"
 import path from "node:path"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { NaverBlogFetcher } from "../src/modules/blog-fetcher/NaverBlogFetcher.js"
+import { NaverBlogFetcher } from "../src/modules/fetcher/NaverBlogFetcher.js"
 import { NaverBlogExporter } from "../src/modules/exporter/NaverBlogExporter.js"
 import { buildMarkdownViewerShareUrl } from "../src/modules/exporter/MarkdownViewerShareUrl.js"
 import { defaultExportOptions } from "../src/shared/ExportOptions.js"
@@ -74,7 +74,6 @@ const createPosts = (thumbnailUrl: string | null) => [
     categoryId: 84,
     categoryName: "PS 알고리즘, 팁",
     source: "https://blog.naver.com/mym0404/223034929697",
-    editorVersion: 4 as const,
     thumbnailUrl,
   },
 ]
@@ -95,7 +94,6 @@ const createPost = ({
   categoryId: 84,
   categoryName: "PS 알고리즘, 팁",
   source: `https://blog.naver.com/mym0404/${logNo}`,
-  editorVersion: 4 as const,
   thumbnailUrl,
 })
 
@@ -441,7 +439,7 @@ describe("http server", () => {
           }
           blockOutputs: {
             defaults: {
-              "naver.se4.formula"?: {
+              "formula"?: {
                 params?: {
                   blockWrapper?: string
                 }
@@ -469,7 +467,7 @@ describe("http server", () => {
       expect(body.options.structure.slugWhitespace).toBe("underscore")
       expect(body.options.structure.postFolderNameMode).toBe("preset")
       expect(body.options.structure.postFolderNameCustomTemplate).toBe("")
-      expect(body.options.blockOutputs.defaults["naver.se4.formula"]?.params?.blockWrapper).toBe("$$")
+      expect(body.options.blockOutputs.defaults["formula"]?.params?.blockWrapper).toBe("$$")
       expect(body.options.assets.stickerAssetMode).toBe("ignore")
       expect(body.lastOutputDir).toBe(outputDir)
       expect(body.resumedJob).toBeNull()

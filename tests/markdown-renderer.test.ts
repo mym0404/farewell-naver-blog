@@ -26,7 +26,6 @@ const post: PostSummary = {
   categoryId: 84,
   categoryName: "PS 알고리즘, 팁",
   source: "https://blog.naver.com/mym0404/223034929697",
-  editorVersion: 4,
   thumbnailUrl: "https://example.com/thumb.png",
 }
 
@@ -65,8 +64,6 @@ const createAssetRecord = ({
   }) satisfies AssetRecord
 
 const parsedPost: ParsedPost = {
-  editorVersion: 4,
-  editorId: "naver.se4",
   tags: ["algo"],
   warnings: [],
   videos: [
@@ -191,7 +188,7 @@ describe("renderMarkdownPost", () => {
   it("renders custom formula wrappers and image asset references", async () => {
     const options = defaultExportOptions()
 
-    options.blockOutputs.defaults["naver.se4.formula"] = {
+    options.blockOutputs.defaults["formula"] = {
       variant: "wrapper",
       params: {
         inlineWrapper: "\\(...\\)",
@@ -374,7 +371,7 @@ describe("renderMarkdownPost", () => {
 
     options.frontmatter.enabled = false
     options.markdown.linkStyle = "referenced"
-    options.blockOutputs.defaults["naver.se4.image"] = {
+    options.blockOutputs.defaults["image"] = {
       variant: "source-only",
     }
 
@@ -432,19 +429,19 @@ describe("renderMarkdownPost", () => {
   it("renders fallback warnings for image-group and table edge cases while keeping videos as plain links", async () => {
     const options = defaultExportOptions()
 
-    options.blockOutputs.defaults["naver.se4.formula"] = {
+    options.blockOutputs.defaults["formula"] = {
       variant: "math-fence",
       params: {
         inlineWrapper: "$",
       },
     }
-    options.blockOutputs.defaults["naver.se4.code"] = {
+    options.blockOutputs.defaults["code"] = {
       variant: "tilde-fence",
     }
-    options.blockOutputs.defaults["naver.se4.divider"] = {
+    options.blockOutputs.defaults["divider"] = {
       variant: "asterisk-rule",
     }
-    options.blockOutputs.defaults["naver.se4.table"] = {
+    options.blockOutputs.defaults["table"] = {
       variant: "html-only",
     }
 

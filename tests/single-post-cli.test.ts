@@ -65,7 +65,6 @@ describe("single-post cli", () => {
       renderSinglePostSummary({
         blogId: "my-blog",
         logNo: "123456789012",
-        editorVersion: 4,
         blockTypes: ["paragraph", "code"],
         exporterMarkdownFilePath: testExporterMarkdownFilePath,
         manualReviewMarkdownFilePath: "/tmp/manual-review/post.md",
@@ -77,7 +76,6 @@ describe("single-post cli", () => {
     ).toBe([
       "blogId: my-blog",
       "logNo: 123456789012",
-      "editorVersion: 4",
       "blockTypes: paragraph, code",
       "parserWarnings: 2",
       "reviewerWarnings: 1",
@@ -93,7 +91,6 @@ describe("single-post cli", () => {
       renderSinglePostSummary({
         blogId: "my-blog",
         logNo: "123456789012",
-        editorVersion: 4,
         blockTypes: [],
         exporterMarkdownFilePath: testExporterMarkdownFilePath,
         manualReviewMarkdownFilePath: null,
@@ -105,7 +102,6 @@ describe("single-post cli", () => {
     ).toBe([
       "blogId: my-blog",
       "logNo: 123456789012",
-      "editorVersion: 4",
       "blockTypes: (none)",
       "parserWarnings: 0",
       "reviewerWarnings: 0",
@@ -131,7 +127,7 @@ describe("single-post cli", () => {
       JSON.stringify({
         blockOutputs: {
           defaults: {
-            "naver.se4.heading": {
+            "heading": {
               variant: "markdown-heading",
               params: {
                 levelOffset: 2,
@@ -160,12 +156,10 @@ describe("single-post cli", () => {
         categoryId: 11,
         categoryName: "JavaScript",
         source: "https://blog.naver.com/my-blog/123456789012",
-        editorVersion: 4,
         thumbnailUrl: null,
       },
       markdown: "# hello\n",
       markdownFilePath: path.join(outputDir, "posts", "single-post.md"),
-      editorVersion: 4,
       blockTypes: ["paragraph"],
       parserWarnings: ["parser warning"],
       reviewerWarnings: [],
@@ -198,14 +192,13 @@ describe("single-post cli", () => {
       })
 
       expect(exportSinglePost).toHaveBeenCalledTimes(1)
-      expect(exportSinglePost.mock.calls[0][0].options.blockOutputs.defaults["naver.se4.heading"]?.params?.levelOffset).toBe(2)
+      expect(exportSinglePost.mock.calls[0][0].options.blockOutputs.defaults["heading"]?.params?.levelOffset).toBe(2)
       expect(Object.hasOwn(exportSinglePost.mock.calls[0][0].options, "unsupportedBlockCases")).toBe(false)
       expect(stdoutWrite).not.toHaveBeenCalled()
       expect(stderrWrite).toHaveBeenCalledWith(
         [
           "blogId: my-blog",
           "logNo: 123456789012",
-          "editorVersion: 4",
           "blockTypes: paragraph",
           "parserWarnings: 1",
           "reviewerWarnings: 0",
@@ -259,12 +252,10 @@ describe("single-post cli", () => {
             categoryId: 11,
             categoryName: "JavaScript",
             source: "https://blog.naver.com/my-blog/123456789012",
-            editorVersion: 4,
             thumbnailUrl: null,
           },
           markdown: "# stdout markdown",
           markdownFilePath: path.join(outputDir, "posts", "single-post.md"),
-          editorVersion: 4,
           blockTypes: ["paragraph"],
           parserWarnings: [],
           reviewerWarnings: [],
@@ -280,7 +271,6 @@ describe("single-post cli", () => {
         [
           "blogId: my-blog",
           "logNo: 123456789012",
-          "editorVersion: 4",
           "blockTypes: paragraph",
           "parserWarnings: 0",
           "reviewerWarnings: 0",
@@ -306,7 +296,7 @@ describe("single-post cli", () => {
       JSON.stringify({
         blockOutputs: {
           defaults: {
-            "naver.se4.heading": {
+            "heading": {
               params: {
                 levelOffset: "bad",
               },
@@ -365,12 +355,10 @@ describe("single-post cli", () => {
         categoryId: 11,
         categoryName: "JavaScript",
         source: "https://blog.naver.com/my-blog/123456789012",
-        editorVersion: 4,
         thumbnailUrl: null,
       },
       markdown: "# hello\n",
       markdownFilePath: path.join(outputDir, "posts", "single-post.md"),
-      editorVersion: 4,
       blockTypes: ["paragraph"],
       parserWarnings: [],
       reviewerWarnings: [],

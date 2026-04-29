@@ -4,8 +4,8 @@ import {
   resolveBlockOutputSelection,
 } from "../../src/shared/BlockRegistry.js"
 import { defaultExportOptions } from "../../src/shared/ExportOptions.js"
-import type { ParserBlockId } from "../../src/modules/blog/BlogTypes.js"
 import type {
+  BlockType,
   BlockOutputSelection,
   BlockOutputSelectionByType,
   ExportOptions,
@@ -36,7 +36,6 @@ const allowedFrontmatterFieldKeys = [
   "publishedAt",
   "category",
   "categoryPath",
-  "editorVersion",
   "visibility",
   "tags",
   "thumbnail",
@@ -70,7 +69,7 @@ const stickerAssetModes = ["ignore", "download-original"] as const
 const thumbnailSources = ["post-list-first", "first-body-image", "none"] as const
 const sameBlogPostModes = ["keep-source", "custom-url", "relative-filepath"] as const
 const blockOutputFamilyDefinitionMap = new Map(
-  blockOutputFamilyDefinitions.map((definition) => [definition.parserBlockId, definition]),
+  blockOutputFamilyDefinitions.map((definition) => [definition.astBlockType, definition]),
 )
 
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
@@ -344,24 +343,23 @@ const validateBlockOutputSelection = <Block extends SupportedBlockOutputType>({
   value,
   context,
   optionsPath,
-  parserBlockId,
+  blockType,
 }: {
   value: unknown
   context: string
   optionsPath: string
-  parserBlockId: ParserBlockId
+  blockType: BlockType
 }) => {
   assertPlainObject(value, context, optionsPath)
   assertAllowedKeys(value, ["variant", "params"], context, optionsPath)
 
   const definition =
-    blockOutputFamilyDefinitionMap.get(parserBlockId) ??
-    failOptions(optionsPath, `${context} references unknown parser block: ${parserBlockId}`)
-  const blockType = definition.astBlockType as Block
+    blockOutputFamilyDefinitionMap.get(blockType) ??
+    failOptions(optionsPath, `${context} references unknown block type: ${blockType}`)
+  const resolvedBlockType = definition.astBlockType as Block
 
   const nextSelection = resolveBlockOutputSelection({
-    blockType,
-    parserBlockId,
+    blockType: resolvedBlockType,
   })
 
   if ("variant" in value) {
@@ -414,14 +412,14 @@ const validateBlockOutputSelection = <Block extends SupportedBlockOutputType>({
 
 const assignBlockOutputDefault = <Block extends SupportedBlockOutputType>({
   defaults,
-  parserBlockId,
+  blockType,
   selection,
 }: {
   defaults: ExportOptions["blockOutputs"]["defaults"]
-  parserBlockId: ParserBlockId
+  blockType: Block
   selection: BlockOutputSelection<Block>
 }) => {
-  defaults[parserBlockId] = selection
+  defaults[blockType] = selection
 }
 
 const validateBlockOutputsOptions = (value: unknown, optionsPath: string) => {
@@ -439,16 +437,16 @@ const validateBlockOutputsOptions = (value: unknown, optionsPath: string) => {
       ...blockOutputs.defaults,
     }
 
-    for (const parserBlockId of blockOutputFamilyOrder) {
-      if (parserBlockId in defaultsValue) {
+    for (const blockType of blockOutputFamilyOrder) {
+      if (blockType in defaultsValue) {
         assignBlockOutputDefault({
           defaults: nextDefaults,
-          parserBlockId,
+          blockType,
           selection: validateBlockOutputSelection({
-            value: defaultsValue[parserBlockId],
-            context: `blockOutputs.defaults.${parserBlockId}`,
+            value: defaultsValue[blockType],
+            context: `blockOutputs.defaults.${blockType}`,
             optionsPath,
-            parserBlockId,
+            blockType,
           }),
         })
       }
@@ -664,7 +662,6 @@ export const parseSinglePostCliArgs = (args: string[]) => {
 export const renderSinglePostSummary = ({
   blogId,
   logNo,
-  editorVersion,
   blockTypes,
   exporterMarkdownFilePath,
   manualReviewMarkdownFilePath,
@@ -675,7 +672,6 @@ export const renderSinglePostSummary = ({
 }: {
   blogId: string
   logNo: string
-  editorVersion: number
   blockTypes: string[]
   exporterMarkdownFilePath: string
   manualReviewMarkdownFilePath: string | null
@@ -687,7 +683,6 @@ export const renderSinglePostSummary = ({
   [
     `blogId: ${blogId}`,
     `logNo: ${logNo}`,
-    `editorVersion: ${editorVersion}`,
     `blockTypes: ${blockTypes.join(", ") || "(none)"}`,
     `parserWarnings: ${parserWarnings.length}`,
     `reviewerWarnings: ${reviewerWarnings.length}`,

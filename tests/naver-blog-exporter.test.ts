@@ -6,7 +6,7 @@ import { tmpdir } from "node:os"
 
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { NaverBlogFetcher } from "../src/modules/blog-fetcher/NaverBlogFetcher.js"
+import { NaverBlogFetcher } from "../src/modules/fetcher/NaverBlogFetcher.js"
 import { NaverBlogExporter } from "../src/modules/exporter/NaverBlogExporter.js"
 import { rewriteUploadedAssets } from "../src/modules/exporter/ImageUploadRewriter.js"
 import { defaultExportOptions } from "../src/shared/ExportOptions.js"
@@ -37,7 +37,6 @@ const posts = [
     categoryId: 84,
     categoryName: "PS 알고리즘, 팁",
     source: "https://blog.naver.com/mym0404/223034929697",
-    editorVersion: 4 as const,
     thumbnailUrl: "https://example.com/thumb.png",
   },
 ]
@@ -155,7 +154,6 @@ assetPaths:
             name: scanResult.categories[0]!.name,
             path: scanResult.categories[0]!.path,
           },
-          editorVersion: 4 as const,
           status: "success" as const,
           outputPath,
           assetPaths: [sharedPublicPath],
@@ -230,7 +228,6 @@ const createHtmlFragmentUploadReadyFixture = ({
             name: scanResult.categories[0]!.name,
             path: scanResult.categories[0]!.path,
           },
-          editorVersion: 3 as const,
           status: "success" as const,
           outputPath,
           assetPaths: [sharedPublicPath],
@@ -384,7 +381,6 @@ describe("NaverBlogExporter", () => {
       logNo: "221290869775",
       title: "대표 미지원 블록 글",
       source: "https://blog.naver.com/sekishin/221290869775",
-      editorVersion: 3 as const,
       thumbnailUrl: null,
     }
 
@@ -420,7 +416,6 @@ describe("NaverBlogExporter", () => {
       expect(manifest.warningCount).toBe(4)
       expect(manifest.posts[0]).toMatchObject({
         logNo: se3Post.logNo,
-        editorVersion: 3,
         warnings: [
           "SE3 대표 미지원 블록을 원본 HTML로 보존했습니다: se_component se_horizontalLine default",
           "SE3 대표 미지원 블록을 원본 HTML로 보존했습니다: se_component se_horizontalLine line5",
@@ -466,7 +461,6 @@ describe("NaverBlogExporter", () => {
       logNo: "221290869775",
       title: "대표 미지원 블록 글",
       source: "https://blog.naver.com/sekishin/221290869775",
-      editorVersion: 3 as const,
       thumbnailUrl: null,
     }
 

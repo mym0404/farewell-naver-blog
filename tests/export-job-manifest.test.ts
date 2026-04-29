@@ -31,7 +31,6 @@ const scanResult: ScanResult = {
       categoryId: 17,
       categoryName: "M2JAM",
       source: "https://blog.naver.com/mym0404/220971999345",
-      editorVersion: 4,
       thumbnailUrl: null,
     },
     {
@@ -42,7 +41,6 @@ const scanResult: ScanResult = {
       categoryId: 17,
       categoryName: "M2JAM",
       source: "https://blog.naver.com/mym0404/220971956932",
-      editorVersion: 4,
       thumbnailUrl: null,
     },
   ],
@@ -92,7 +90,6 @@ const job: ExportJobState = {
         name: "M2JAM",
         path: ["M2JAM"],
       },
-      editorVersion: 4,
       status: "success",
       outputPath: "posts/post-1/index.md",
       assetPaths: [],

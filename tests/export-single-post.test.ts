@@ -27,7 +27,6 @@ const createFetcher = ({
     categoryId: number
     categoryName: string
     source: string
-    editorVersion: 2 | 3 | 4 | null
     thumbnailUrl: string | null
   }>
   html: string
@@ -89,7 +88,6 @@ describe("exportSinglePost", () => {
       categoryId: 11,
       categoryName: "JavaScript",
       source: sourceUrl,
-      editorVersion: 4 as const,
       thumbnailUrl: null,
     }
 
@@ -127,7 +125,6 @@ describe("exportSinglePost", () => {
                 categoryId: 10,
                 categoryName: "Tech",
                 source: "https://blog.naver.com/mym0404/000000000000",
-                editorVersion: 2,
                 thumbnailUrl: null,
               },
               post,
@@ -152,7 +149,6 @@ describe("exportSinglePost", () => {
 
       expect(diagnostics.post).toEqual(post)
       expect(diagnostics.markdownFilePath).toBe(expectedMarkdownFilePath)
-      expect(diagnostics.editorVersion).toBe(4)
       expect(diagnostics.blockTypes).toEqual(["paragraph", "image"])
       expect(diagnostics.parserWarnings).toEqual([])
       expect(diagnostics.reviewerWarnings).toEqual([])
@@ -184,7 +180,6 @@ describe("exportSinglePost", () => {
       categoryId: 11,
       categoryName: "JavaScript",
       source: sourceUrl,
-      editorVersion: 2 as const,
       thumbnailUrl: null,
     }
 
@@ -215,8 +210,6 @@ describe("exportSinglePost", () => {
             html,
           }),
       })
-
-      expect(diagnostics.editorVersion).toBe(2)
       expect(diagnostics.blockTypes).toEqual(["paragraph"])
       expect(diagnostics.parserWarnings).toEqual([
         "SE2 GIF video 블록을 구조화하지 못해 원본 HTML로 보존했습니다.",
@@ -289,7 +282,6 @@ describe("exportSinglePost", () => {
                   categoryId: 11,
                   categoryName: "JavaScript",
                   source: sourceUrl,
-                  editorVersion: 4,
                   thumbnailUrl: null,
                 },
               ],
@@ -326,7 +318,6 @@ describe("exportSinglePost", () => {
                   categoryId: 11,
                   categoryName: "JavaScript",
                   source: sourceUrl,
-                  editorVersion: 4,
                   thumbnailUrl: null,
                 },
               ],

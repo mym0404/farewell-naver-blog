@@ -37,7 +37,7 @@
 
 ## Task Loops
 - Knowledge-only changes still need path and command spot checks. Run `pnpm check:local` when practical.
-- Parser block or sample fixture changes need `pnpm test:offline` at minimum.
+- Parser block, editor dispatch, or sample fixture changes need `pnpm test:offline` at minimum.
 - Exporter, renderer, manifest, upload, resume, or UI state changes need `pnpm smoke:ui`.
 - Live resume or upload changes need the matching `pnpm test:network:*` command.
 - If a command fails, compare the failure to the current diff before changing code. Report unrelated existing failures without calling them pass.

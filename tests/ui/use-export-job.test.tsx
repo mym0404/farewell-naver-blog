@@ -43,7 +43,6 @@ const scanResult: ScanResult = {
       categoryId: 84,
       categoryName: "PS 알고리즘, 팁",
       source: "https://blog.naver.com/mym0404/223034929697",
-      editorVersion: 4,
       thumbnailUrl: null,
     },
   ],

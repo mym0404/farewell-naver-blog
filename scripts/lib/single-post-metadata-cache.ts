@@ -1,7 +1,7 @@
 import { mkdir, writeFile as writeFileDefault } from "node:fs/promises"
 import path from "node:path"
 
-import { NaverBlogFetcher } from "../../src/modules/blog-fetcher/NaverBlogFetcher.js"
+import { NaverBlogFetcher } from "../../src/modules/fetcher/NaverBlogFetcher.js"
 import type { SinglePostFetcher } from "../../src/modules/exporter/SinglePostExport.js"
 import type { PostSummary, ScanResult } from "../../src/shared/Types.js"
 
@@ -38,10 +38,6 @@ const isPostSummary = (value: unknown): value is PostSummary => {
     typeof value.categoryId === "number" &&
     isString(value.categoryName) &&
     isString(value.source) &&
-    (value.editorVersion === null ||
-      value.editorVersion === 2 ||
-      value.editorVersion === 3 ||
-      value.editorVersion === 4) &&
     (value.thumbnailUrl === null || isString(value.thumbnailUrl))
   )
 }

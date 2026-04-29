@@ -28,7 +28,6 @@ const buildPostManifestEntryFromItem = (item: ExportJobItem): PostManifestEntry 
   title: item.title,
   source: item.source,
   category: item.category,
-  editorVersion: item.editorVersion ?? null,
   status: item.status,
   outputPath: item.outputPath,
   assetPaths: item.assetPaths,
@@ -57,7 +56,6 @@ const mergeManifestPosts = ({
     return {
       ...existingPost,
       ...buildPostManifestEntryFromItem(item),
-      editorVersion: item.editorVersion ?? existingPost?.editorVersion ?? null,
     } satisfies PostManifestEntry
   })
 }

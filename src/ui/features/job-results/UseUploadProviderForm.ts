@@ -2,8 +2,9 @@ import { useEffect, useState } from "react"
 
 import type {
   UploadProviderCatalogResponse,
+  UploadProviderFields,
 } from "../../../shared/Types.js"
-import { buildInitialProviderUiState, type ProviderFormState, type ProviderUiState } from "./UploadProviderFormRules.js"
+import { buildInitialProviderUiState, type ProviderUiState } from "./UploadProviderFormRules.js"
 import {
   buildGitHubJsDelivrCustomUrl,
   buildInitialProviderFieldMap,
@@ -25,7 +26,7 @@ export const useUploadProviderForm = ({
   uploadProviders: UploadProviderCatalogResponse
 }) => {
   const [providerKey, setProviderKey] = useState(() => getPreferredDefaultProviderKey(uploadProviders))
-  const [providerFieldMap, setProviderFieldMap] = useState<Record<string, ProviderFormState>>(() =>
+  const [providerFieldMap, setProviderFieldMap] = useState<Record<string, UploadProviderFields>>(() =>
     buildInitialProviderFieldMap(uploadProviders),
   )
   const [providerUiStateMap, setProviderUiStateMap] = useState<Record<string, ProviderUiState>>(() =>
@@ -54,7 +55,7 @@ export const useUploadProviderForm = ({
     branch: String(activeProviderFields.branch ?? ""),
   })
 
-  const updateProviderField = (key: string, value: ProviderFormState[string]) => {
+  const updateProviderField = (key: string, value: UploadProviderFields[string]) => {
     setProviderFieldMap((current) => ({
       ...current,
       [providerKey]: {

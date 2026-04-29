@@ -1,5 +1,3 @@
-import type { BlogEditorId, ParserBlockId } from "../modules/blog/BlogTypes.js"
-
 export type ExportProfile = "gfm"
 
 export type ThemePreference = "dark" | "light"
@@ -20,7 +18,6 @@ export type FrontmatterFieldName =
   | "publishedAt"
   | "category"
   | "categoryPath"
-  | "editorVersion"
   | "visibility"
   | "tags"
   | "thumbnail"
@@ -189,7 +186,6 @@ export type UnknownRecord = Record<string, unknown>
 
 export type UploadProviderValue = string | number | boolean
 export type UploadProviderFields = Record<string, UploadProviderValue>
-export type UploadRuntimeConfig = UnknownRecord
 
 export type UploadProviderInputType = "text" | "password" | "number" | "select" | "checkbox"
 
@@ -294,7 +290,9 @@ export type ExportOptions = {
     linkStyle: MarkdownLinkStyle
   }
   blockOutputs: {
-    defaults: Partial<Record<ParserBlockId, BlockOutputSelection>>
+    defaults: Partial<{
+      [Key in keyof BlockOutputSelectionByType]: BlockOutputSelection<Key>
+    }>
   }
   assets: {
     imageHandlingMode: ImageHandlingMode
@@ -353,7 +351,6 @@ export type PostSummary = {
   categoryId: number
   categoryName: string
   source: string
-  editorVersion: number | null
   thumbnailUrl: string | null
 }
 
@@ -407,12 +404,9 @@ export type AstBlock =
   | { type: "linkCard"; card: LinkCardData; outputSelection?: LinkCardBlockOutputSelection }
   | { type: "table"; rows: TableRow[]; html: string; complex: boolean }
 
-export type StructuredAstBlock = AstBlock
-
 export type ParsedPostStructuredBodyNode = {
   kind: "block"
-  block: StructuredAstBlock
-  parserBlockId?: ParserBlockId
+  block: AstBlock
 }
 
 export type ParsedPostFallbackHtmlBodyNode = {
@@ -427,8 +421,6 @@ export type ParsedPostBodyNode = ParsedPostStructuredBodyNode | ParsedPostFallba
 export type BlockType = AstBlock["type"]
 
 export type ParsedPost = {
-  editorId: BlogEditorId
-  editorVersion: number
   tags: string[]
   body?: ParsedPostBodyNode[]
   blocks: AstBlock[]
@@ -454,7 +446,6 @@ export type PostManifestEntry = {
     name: string
     path: string[]
   }
-  editorVersion: number | null
   status: "success" | "failed"
   outputPath: string | null
   assetPaths: string[]
@@ -474,7 +465,6 @@ export type ExportJobItem = {
     name: string
     path: string[]
   }
-  editorVersion?: number | null
   status: "success" | "failed"
   outputPath: string | null
   assetPaths: string[]

@@ -8,17 +8,17 @@ import type {
   ParsedPost,
   PostSummary,
   ScanResult,
-  StructuredAstBlock,
+  AstBlock,
 } from "../../shared/Types.js"
 import { ensureDir, extractBlogId, recreateDir, resolveRepoPath } from "../../shared/Utils.js"
-import { NaverBlogFetcher } from "../blog-fetcher/NaverBlogFetcher.js"
+import { NaverBlogFetcher } from "../fetcher/NaverBlogFetcher.js"
 import { renderMarkdownPost } from "../converter/MarkdownRenderer.js"
 import { parsePostHtml } from "../parser/PostParser.js"
 import { reviewParsedPost } from "../reviewer/PostReviewer.js"
 import { AssetStore } from "./AssetStore.js"
 import { buildMarkdownFilePath, getCategoryForPost } from "./ExportPaths.js"
 import { buildPostLinkTargets, createSameBlogPostLinkResolver } from "./PostLinkRewriter.js"
-import { getStructuredBodyBlocks } from "../parser/blocks/BodyNodeUtils.js"
+import { getStructuredBodyBlocks } from "../blocks/BodyNodeUtils.js"
 
 export type SinglePostFetcher = {
   scanBlog: () => Promise<ScanResult>
@@ -40,8 +40,7 @@ export type ExportSinglePostDiagnostics = {
   post: PostSummary
   markdown: string
   markdownFilePath: string
-  editorVersion: ParsedPost["editorVersion"]
-  blockTypes: StructuredAstBlock["type"][]
+  blockTypes: AstBlock["type"][]
   parserWarnings: string[]
   reviewerWarnings: string[]
   renderWarnings: string[]
@@ -148,7 +147,6 @@ export const exportSinglePost = async ({
     post,
     markdown: rendered.markdown,
     markdownFilePath,
-    editorVersion: parsedPost.editorVersion,
     blockTypes: getStructuredBodyBlocks(parsedPost).map((block) => block.type),
     parserWarnings: parsedPost.warnings,
     reviewerWarnings: review.warnings,

@@ -6,8 +6,6 @@ import type {
 } from "../../../shared/Types.js"
 import { UPLOAD_PROVIDER_KEYS } from "../../../shared/UploadProviderKeys.js"
 
-export type ProviderFormState = UploadProviderFields
-
 export type ProviderUiState = {
   alistAuthMode: "token" | "account"
   githubUseJsDelivr: boolean
@@ -36,7 +34,7 @@ export const getUploadProviderFieldRule = ({
 }: {
   providerKey: string
   field: UploadProviderFieldDefinition
-  providerFields: ProviderFormState
+  providerFields: UploadProviderFields
   providerUiState: ProviderUiState
 }): UploadProviderFieldRule => {
   const baseRule: UploadProviderFieldRule = {
@@ -129,7 +127,7 @@ export const hasMissingRequiredUploadProviderField = ({
   providerUiState,
 }: {
   provider: UploadProviderDefinition | null
-  providerFields: ProviderFormState
+  providerFields: UploadProviderFields
   providerUiState: ProviderUiState
 }) =>
   (provider?.fields ?? []).some((field) => {
@@ -155,7 +153,7 @@ export const trimProviderFieldsForSubmit = ({
   providerUiState,
 }: {
   provider: UploadProviderDefinition | null
-  providerFields: ProviderFormState
+  providerFields: UploadProviderFields
   providerUiState: ProviderUiState
 }) =>
   Object.fromEntries(

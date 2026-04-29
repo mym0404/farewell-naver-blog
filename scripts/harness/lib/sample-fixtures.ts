@@ -17,7 +17,6 @@ type SampleFixtureEntry = {
   id: string
   blogId: string
   logNo: string
-  editorVersion: number
   post: {
     title: string
     publishedAt: string
@@ -37,7 +36,6 @@ type ExpectedFrontmatter = {
   publishedAt: string
   category: string
   categoryPath: string[]
-  editorVersion: number
   thumbnail?: string | null
 }
 
@@ -82,11 +80,6 @@ const parseExpectedFrontmatter = (markdown: string): ExpectedFrontmatter => {
   }
 
   const frontmatter = parsed as Record<string, unknown>
-  const editorVersion = Number(frontmatter.editorVersion)
-
-  if (!Number.isFinite(editorVersion)) {
-    throw new Error("sample fixture frontmatter editorVersion must be a number")
-  }
 
   return {
     title: assertString(frontmatter.title, "title"),
@@ -96,7 +89,6 @@ const parseExpectedFrontmatter = (markdown: string): ExpectedFrontmatter => {
     publishedAt: assertString(frontmatter.publishedAt, "publishedAt"),
     category: assertString(frontmatter.category, "category"),
     categoryPath: assertStringArray(frontmatter.categoryPath, "categoryPath"),
-    editorVersion,
     thumbnail:
       typeof frontmatter.thumbnail === "string"
         ? frontmatter.thumbnail
@@ -112,7 +104,6 @@ export const readSampleFixtureEntry = async (sampleId: string): Promise<SampleFi
     id: sampleId,
     blogId: frontmatter.blogId,
     logNo: frontmatter.logNo,
-    editorVersion: frontmatter.editorVersion,
     post: {
       title: frontmatter.title,
       publishedAt: frontmatter.publishedAt,
@@ -168,7 +159,6 @@ export const buildSamplePostSummary = (sample: SampleFixtureEntry): PostSummary 
   categoryId: sample.post.categoryId,
   categoryName: sample.post.categoryName,
   source: sample.post.source,
-  editorVersion: sample.editorVersion,
   thumbnailUrl: sample.post.thumbnailUrl,
 })
 

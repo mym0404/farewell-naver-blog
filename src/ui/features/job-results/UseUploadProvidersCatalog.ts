@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react"
 
 import type { UploadProviderCatalogResponse } from "../../../shared/Types.js"
-import type { UploadProvidersResponse } from "../../lib/Api.js"
 import { fetchJson } from "../../lib/Api.js"
 
 const emptyUploadProviders: UploadProviderCatalogResponse = {
@@ -35,7 +34,7 @@ export const useUploadProvidersCatalog = ({
 
     const loadCatalog = async () => {
       try {
-        const nextCatalog = await fetchJson<UploadProvidersResponse>("/api/upload-providers")
+        const nextCatalog = await fetchJson<UploadProviderCatalogResponse>("/api/upload-providers")
 
         if (cancelled) {
           return

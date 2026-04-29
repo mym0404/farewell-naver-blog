@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { NaverBlogFetcher } from "../src/modules/blog-fetcher/NaverBlogFetcher.js"
+import { NaverBlogFetcher } from "../src/modules/fetcher/NaverBlogFetcher.js"
 
 describe("NaverBlogFetcher", () => {
   afterEach(() => {
@@ -137,7 +137,6 @@ describe("NaverBlogFetcher", () => {
         title: "첫 글",
         categoryId: 11,
         categoryName: "Backend",
-        editorVersion: 4,
         thumbnailUrl: "https://mblogthumb-phinf.pstatic.net/thumb.png?type=w800",
       }),
     ])

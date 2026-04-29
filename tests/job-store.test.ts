@@ -44,7 +44,6 @@ const manifest: ExportManifest = {
         name: "NestJS",
         path: ["NestJS"],
       },
-      editorVersion: 4,
       status: "success",
       outputPath: "posts/first/index.md",
       assetPaths: [],

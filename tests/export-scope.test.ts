@@ -40,7 +40,6 @@ const posts: PostSummary[] = [
     categoryId: 1,
     categoryName: "Algorithm",
     source: "https://blog.naver.com/mym0404/1",
-    editorVersion: 4,
     thumbnailUrl: null,
   },
   {
@@ -51,7 +50,6 @@ const posts: PostSummary[] = [
     categoryId: 2,
     categoryName: "BOJ",
     source: "https://blog.naver.com/mym0404/2",
-    editorVersion: 4,
     thumbnailUrl: null,
   },
 ]

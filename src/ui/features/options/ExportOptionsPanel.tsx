@@ -512,7 +512,6 @@ const BlockOutputCard = ({
 }) => {
   const selection = resolveBlockOutputSelection({
     blockType: family.astBlockType,
-    parserBlockId: family.parserBlockId,
     blockOutputs: options.blockOutputs,
   })
   const previewSnippet = renderBlockOutputPreview({
@@ -522,12 +521,11 @@ const BlockOutputCard = ({
     includeImageCaptions: options.assets.includeImageCaptions,
     imageHandlingMode: options.assets.imageHandlingMode,
   })
-  const optionKeyPrefix = `blockOutputs-defaults-${family.parserBlockId.replaceAll(".", "-")}`
+  const optionKeyPrefix = `blockOutputs-defaults-${family.astBlockType}`
   const updateSelection = (updater: (current: NonNullable<typeof selection>) => NonNullable<typeof selection>) => {
     onOptionsChange((current) => {
       const currentSelection = resolveBlockOutputSelection({
         blockType: family.astBlockType,
-        parserBlockId: family.parserBlockId,
         blockOutputs: current.blockOutputs,
       })
       const nextSelection = updater(currentSelection)
@@ -538,7 +536,7 @@ const BlockOutputCard = ({
           ...current.blockOutputs,
           defaults: {
             ...current.blockOutputs.defaults,
-            [family.parserBlockId]: nextSelection,
+            [family.astBlockType]: nextSelection,
           },
         },
       }
@@ -546,7 +544,7 @@ const BlockOutputCard = ({
   }
 
   return (
-    <Card className={blockOutputCardClass} data-block-output-card={family.parserBlockId}>
+    <Card className={blockOutputCardClass} data-block-output-card={family.astBlockType}>
       <CardHeader className="gap-2 px-0 pb-0">
         <div className="flex items-start justify-between gap-3">
           <div className="grid gap-1">
@@ -557,7 +555,6 @@ const BlockOutputCard = ({
               {family.description}
             </CardDescription>
           </div>
-          <Badge variant="outline">{family.parserBlockId}</Badge>
         </div>
       </CardHeader>
       <CardContent className="grid content-start gap-4 px-0 pb-0">
@@ -1175,7 +1172,7 @@ export const ExportOptionsPanel = ({
       </OptionField>
       {blockOutputFamilyDefinitions.map((family) => (
         <BlockOutputCard
-          key={family.parserBlockId}
+          key={family.astBlockType}
           options={options}
           family={family}
           onOptionsChange={onOptionsChange}

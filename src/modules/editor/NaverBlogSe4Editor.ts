@@ -1,10 +1,32 @@
 import type { CheerioAPI } from "cheerio"
 import type { AnyNode } from "domhandler"
 
-import type { AstBlock, ExportOptions, ParsedPost, UnknownRecord } from "@shared/Types.js"
+import type { AstBlock, ParsedPost, UnknownRecord } from "@shared/Types.js"
 import { unique } from "@shared/Utils.js"
-import { createParserBlocksForEditor } from "../parser/ParserBlockFactory.js"
+import { NaverSe4CodeBlock } from "../blocks/naver-se4/CodeBlock.js"
+import { NaverSe4DividerBlock } from "../blocks/naver-se4/DividerBlock.js"
+import { NaverSe4DocumentTitleBlock } from "../blocks/naver-se4/DocumentTitleBlock.js"
+import { NaverSe4FallbackBlock } from "../blocks/naver-se4/FallbackBlock.js"
+import { NaverSe4FormulaBlock } from "../blocks/naver-se4/FormulaBlock.js"
+import { NaverSe4HeadingBlock } from "../blocks/naver-se4/HeadingBlock.js"
+import { NaverSe4ImageBlock } from "../blocks/naver-se4/ImageBlock.js"
+import { NaverSe4ImageGroupBlock } from "../blocks/naver-se4/ImageGroupBlock.js"
+import { NaverSe4ImageStripBlock } from "../blocks/naver-se4/ImageStripBlock.js"
+import { NaverSe4LinkCardBlock } from "../blocks/naver-se4/LinkCardBlock.js"
+import { NaverSe4MapBlock } from "../blocks/naver-se4/MapBlock.js"
+import { NaverSe4MaterialBlock } from "../blocks/naver-se4/MaterialBlock.js"
+import { NaverSe4OembedBlock } from "../blocks/naver-se4/OembedBlock.js"
+import { NaverSe4QuoteBlock } from "../blocks/naver-se4/QuoteBlock.js"
+import { NaverSe4StickerBlock } from "../blocks/naver-se4/StickerBlock.js"
+import { NaverSe4TableBlock } from "../blocks/naver-se4/TableBlock.js"
+import { NaverSe4TextBlock } from "../blocks/naver-se4/TextBlock.js"
+import { NaverSe4VideoBlock } from "../blocks/naver-se4/VideoBlock.js"
 import { BaseEditor } from "./BaseEditor.js"
+import type { BaseEditorParseInput } from "./BaseEditor.js"
+
+const hasSmartEditorVersion = (html: string, version: number) =>
+  html.replaceAll("&#034;", "\"").match(/smartEditorVersion["']?\s*:\s*["']?(\d+)["']?/i)?.[1] ===
+  String(version)
 
 const parseJsonAttribute = (value: string | undefined) => {
   if (!value) {
@@ -27,19 +49,33 @@ const getComponentModule = ($component: ReturnType<CheerioAPI>) => {
   )
 }
 
-export type ParseSe4PostInput = {
-  $: CheerioAPI
-  sourceUrl: string
-  tags: string[]
-  options: Pick<ExportOptions, "markdown"> & {
-    resolveLinkUrl?: (url: string) => string
+export class NaverBlogSE4Editor extends BaseEditor {
+  protected override readonly supportedBlocks = [
+    new NaverSe4DocumentTitleBlock(),
+    new NaverSe4FormulaBlock(),
+    new NaverSe4CodeBlock(),
+    new NaverSe4LinkCardBlock(),
+    new NaverSe4VideoBlock(),
+    new NaverSe4OembedBlock(),
+    new NaverSe4MapBlock(),
+    new NaverSe4TableBlock(),
+    new NaverSe4ImageStripBlock(),
+    new NaverSe4ImageGroupBlock(),
+    new NaverSe4StickerBlock(),
+    new NaverSe4ImageBlock(),
+    new NaverSe4HeadingBlock(),
+    new NaverSe4DividerBlock(),
+    new NaverSe4QuoteBlock(),
+    new NaverSe4TextBlock(),
+    new NaverSe4MaterialBlock(),
+    new NaverSe4FallbackBlock(),
+  ]
+
+  override canParse(html: string) {
+    return hasSmartEditorVersion(html, 4) || html.includes('class="se-component')
   }
-}
 
-export class NaverBlogSE4Editor extends BaseEditor<ParseSe4PostInput> {
-  protected override readonly supportedBlocks = createParserBlocksForEditor("naver.se4")
-
-  parse({ $, sourceUrl, tags, options }: ParseSe4PostInput): ParsedPost {
+  override parse({ $, sourceUrl = "", tags, options }: BaseEditorParseInput): ParsedPost {
     const { blocks, body, warnings } = this.runBlocks({
       $,
       nodes: $("#viewTypeSelector .se-component").toArray(),
@@ -63,8 +99,6 @@ export class NaverBlogSE4Editor extends BaseEditor<ParseSe4PostInput> {
       .map((block) => block.video)
 
     return {
-      editorVersion: 4,
-      editorId: "naver.se4",
       tags: unique(tags),
       body,
       blocks,

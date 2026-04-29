@@ -33,7 +33,6 @@ const posts: PostSummary[] = [
     categoryId: 10,
     categoryName: "NestJS",
     source: "https://blog.naver.com/mym0404/223034929697",
-    editorVersion: 4,
     thumbnailUrl: null,
   },
   {
@@ -44,7 +43,6 @@ const posts: PostSummary[] = [
     categoryId: 10,
     categoryName: "NestJS",
     source: "https://blog.naver.com/mym0404/223034929698",
-    editorVersion: 4,
     thumbnailUrl: null,
   },
 ]

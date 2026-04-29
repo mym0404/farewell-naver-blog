@@ -1,7 +1,7 @@
 import os from "node:os"
 import path from "node:path"
 
-import type { UploadCandidate, UploadRuntimeConfig } from "../../shared/Types.js"
+import type { UploadCandidate, UnknownRecord } from "../../shared/Types.js"
 import { throwIfAborted } from "../../shared/Utils.js"
 import { dedupeUploadCandidatesByLocalPath } from "./UploadCandidateUtils.js"
 
@@ -11,7 +11,7 @@ type RuntimeUploadResponse = {
 }
 
 type RuntimeUploaderClient = {
-  changeCurrentUploader: (uploaderKey: string, uploaderConfig: UploadRuntimeConfig) => void
+  changeCurrentUploader: (uploaderKey: string, uploaderConfig: UnknownRecord) => void
   upload: (input: string[]) => Promise<RuntimeUploadResponse[] | Error>
 }
 
@@ -40,7 +40,7 @@ export type RunImageUploadPhaseInput = {
   outputDir: string
   candidates: UploadCandidate[]
   uploaderKey: string
-  uploaderConfig: UploadRuntimeConfig
+  uploaderConfig: UnknownRecord
   abortSignal?: AbortSignal | null
   onAssetStart?: (candidate: UploadCandidate) => void | Promise<void>
   onAssetUploaded?: (input: {

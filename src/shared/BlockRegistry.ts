@@ -3,9 +3,8 @@ import type {
   BlockOutputSelection,
   BlockOutputSelectionByType,
   BlockType,
+  ExportOptions,
 } from "./Types.js"
-import type { BlogEditorId, ParserBlockId } from "../modules/blog/BlogTypes.js"
-import { blogEditors } from "../modules/blog/BlogRegistry.js"
 import { normalizeFormulaWrapperParams } from "./FormulaWrapper.js"
 
 type BlockOutputParamDefinition = {
@@ -23,8 +22,6 @@ type BlockOutputVariantDefinition = {
 }
 
 export type BlockOutputFamilyDefinition = {
-  parserBlockId: ParserBlockId
-  editorId: BlogEditorId
   astBlockType: BlockType
   label: string
   description: string
@@ -40,76 +37,6 @@ const previewImage = {
   caption: "caption",
   mediaKind: "image",
 } as const
-
-const outputParserBlockIds = new Set<ParserBlockId>([
-  "naver.se2.textNode",
-  "naver.se2.bookWidget",
-  "naver.se2.table",
-  "naver.se2.divider",
-  "naver.se2.quote",
-  "naver.se2.heading",
-  "naver.se2.code",
-  "naver.se2.image",
-  "naver.se2.textElement",
-  "naver.se3.table",
-  "naver.se3.quote",
-  "naver.se3.code",
-  "naver.se3.image",
-  "naver.se3.text",
-  "naver.se4.formula",
-  "naver.se4.code",
-  "naver.se4.linkCard",
-  "naver.se4.video",
-  "naver.se4.oembed",
-  "naver.se4.map",
-  "naver.se4.table",
-  "naver.se4.imageStrip",
-  "naver.se4.imageGroup",
-  "naver.se4.sticker",
-  "naver.se4.image",
-  "naver.se4.heading",
-  "naver.se4.divider",
-  "naver.se4.quote",
-  "naver.se4.text",
-  "naver.se4.material",
-])
-
-const parserBlockAstTypeMap: Partial<Record<ParserBlockId, BlockType>> = {
-  "naver.se2.textNode": "paragraph",
-  "naver.se2.bookWidget": "paragraph",
-  "naver.se2.table": "table",
-  "naver.se2.divider": "divider",
-  "naver.se2.quote": "quote",
-  "naver.se2.heading": "heading",
-  "naver.se2.code": "code",
-  "naver.se2.image": "image",
-  "naver.se2.textElement": "paragraph",
-  "naver.se3.table": "table",
-  "naver.se3.quote": "quote",
-  "naver.se3.code": "code",
-  "naver.se3.image": "image",
-  "naver.se3.text": "paragraph",
-  "naver.se4.formula": "formula",
-  "naver.se4.code": "code",
-  "naver.se4.linkCard": "linkCard",
-  "naver.se4.video": "video",
-  "naver.se4.oembed": "linkCard",
-  "naver.se4.map": "linkCard",
-  "naver.se4.table": "table",
-  "naver.se4.imageStrip": "imageGroup",
-  "naver.se4.imageGroup": "imageGroup",
-  "naver.se4.sticker": "image",
-  "naver.se4.image": "image",
-  "naver.se4.heading": "heading",
-  "naver.se4.divider": "divider",
-  "naver.se4.quote": "quote",
-  "naver.se4.text": "paragraph",
-  "naver.se4.material": "paragraph",
-}
-
-export const blockOutputFamilyOrder: ParserBlockId[] = blogEditors.flatMap((editor) =>
-  editor.supportedBlocks.filter((parserBlockId) => outputParserBlockIds.has(parserBlockId)),
-)
 
 export const defaultBlockOutputSelections: {
   [Key in BlockType]: BlockOutputSelection<Key>
@@ -138,11 +65,7 @@ export const defaultBlockOutputSelections: {
   table: { variant: "gfm-or-html" },
 }
 
-type BaseBlockOutputFamilyDefinition = Omit<BlockOutputFamilyDefinition, "parserBlockId" | "editorId" | "astBlockType"> & {
-  astBlockType: BlockType
-}
-
-const baseBlockOutputFamilyDefinitions: BaseBlockOutputFamilyDefinition[] = [
+export const blockOutputFamilyDefinitions: BlockOutputFamilyDefinition[] = [
   {
     astBlockType: "paragraph",
     label: "문단",
@@ -322,44 +245,14 @@ const baseBlockOutputFamilyDefinitions: BaseBlockOutputFamilyDefinition[] = [
   },
 ]
 
-const baseBlockOutputFamilyDefinitionMap = new Map(
-  baseBlockOutputFamilyDefinitions.map((definition) => [definition.astBlockType, definition]),
-)
-
-export const blockOutputFamilyDefinitions: BlockOutputFamilyDefinition[] = blockOutputFamilyOrder.flatMap((parserBlockId) => {
-  const astBlockType = parserBlockAstTypeMap[parserBlockId]
-  const editorId = parserBlockId.split(".").slice(0, 2).join(".") as BlogEditorId
-  if (!astBlockType) {
-    return []
-  }
-
-  const baseDefinition = baseBlockOutputFamilyDefinitionMap.get(astBlockType)
-
-  return baseDefinition
-    ? [
-        {
-          ...baseDefinition,
-          parserBlockId,
-          editorId,
-          astBlockType,
-        },
-      ]
-    : []
-})
+export const blockOutputFamilyOrder = blockOutputFamilyDefinitions.map((definition) => definition.astBlockType)
 
 const blockOutputFamilyDefinitionMap = new Map(
-  blockOutputFamilyDefinitions.map((definition) => [definition.parserBlockId, definition]),
+  blockOutputFamilyDefinitions.map((definition) => [definition.astBlockType, definition]),
 )
 
-const astBlockTypeDefaultParserBlockIdMap = new Map(
-  blockOutputFamilyDefinitions.map((definition) => [definition.astBlockType, definition.parserBlockId]),
-)
-
-export const getBlockOutputFamilyDefinition = (parserBlockId: ParserBlockId) =>
-  blockOutputFamilyDefinitionMap.get(parserBlockId)
-
-export const getDefaultParserBlockIdForAstBlockType = (blockType: BlockType) =>
-  astBlockTypeDefaultParserBlockIdMap.get(blockType)
+export const getBlockOutputFamilyDefinition = (blockType: BlockType) =>
+  blockOutputFamilyDefinitionMap.get(blockType)
 
 const mergeBlockOutputSelection = ({
   baseSelection,
@@ -423,23 +316,17 @@ const mergeFormulaBlockOutputSelection = ({
 
 export const resolveBlockOutputSelection = <Block extends BlockType>({
   blockType,
-  parserBlockId,
   blockOutputs,
 }: {
   blockType: Block
-  parserBlockId?: ParserBlockId
   blockOutputs?: {
-    defaults?: Partial<Record<ParserBlockId, BlockOutputSelection>>
+    defaults?: ExportOptions["blockOutputs"]["defaults"]
   }
 }): BlockOutputSelectionByType[Block] => {
-  const selectionParserBlockId = parserBlockId ?? getDefaultParserBlockIdForAstBlockType(blockType)
-
   if (blockType === "formula") {
     const baseSelection = mergeFormulaBlockOutputSelection({
       baseSelection: defaultBlockOutputSelections.formula,
-      nextSelection: selectionParserBlockId
-        ? (blockOutputs?.defaults?.[selectionParserBlockId] as BlockOutputSelection<"formula"> | undefined)
-        : undefined,
+      nextSelection: blockOutputs?.defaults?.formula as BlockOutputSelection<"formula"> | undefined,
     })
 
     return baseSelection as BlockOutputSelectionByType[Block]
@@ -447,9 +334,7 @@ export const resolveBlockOutputSelection = <Block extends BlockType>({
 
   const baseSelection = mergeBlockOutputSelection({
     baseSelection: defaultBlockOutputSelections[blockType],
-    nextSelection: selectionParserBlockId
-      ? (blockOutputs?.defaults?.[selectionParserBlockId] as BlockOutputSelection<Block> | undefined)
-      : undefined,
+    nextSelection: blockOutputs?.defaults?.[blockType] as BlockOutputSelection<Block> | undefined,
   })
 
   return baseSelection as BlockOutputSelectionByType[Block]
