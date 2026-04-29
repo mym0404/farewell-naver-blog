@@ -7,7 +7,7 @@
 - UI calls HTTP APIs only. It does not import server or exporter internals.
 
 ## Main Flow
-- Blog scan and post HTML fetch start in `src/modules/blog-fetcher/NaverBlogFetcher.ts`.
+- Blog scan and post HTML fetch start in `src/modules/fetcher/NaverBlogFetcher.ts`.
 - `src/modules/parser/PostParser.ts` builds a `src/modules/blog/NaverBlog.ts` instance and lets its editor instances choose the matching parser through `canParse`.
 - Editor classes own block ordering and source-level context. Block-specific `match` and `convert` logic stays in `src/modules/blocks/*`.
 - `src/modules/reviewer/PostReviewer.ts` normalizes parse warnings before rendering.
@@ -15,7 +15,7 @@
 - `src/modules/exporter/ExportPaths.ts`, `AssetStore.ts`, `PostLinkRewriter.ts`, and `ExportJobManifest.ts` handle output paths, deduped assets, post links, and `manifest.json`.
 
 ## Module Boundaries
-- `src/modules/blog-fetcher`: Naver mobile API, post HTML fetch, asset download inputs.
+- `src/modules/fetcher`: Naver mobile API, post HTML fetch, and fetcher HTTP utilities.
 - `src/modules/parser`: SE2, SE3, SE4 HTML structures to common AST.
 - `src/modules/reviewer`: parse warning cleanup and review output.
 - `src/modules/converter`: AST to Markdown and frontmatter.

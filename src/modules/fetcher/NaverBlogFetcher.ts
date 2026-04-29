@@ -1,19 +1,16 @@
-import path from 'node:path';
-import { writeFile } from 'node:fs/promises';
-
 import {
   type CategoryInfo,
   type ScanResult,
 } from '../../shared/Types.js';
 import {
   delay,
-  ensureDir,
   getSourceUrl,
   mapConcurrent,
   normalizeAssetUrl,
   sanitizeCategoryName,
   toKstDateTime,
 } from '../../shared/Utils.js';
+import * as HttpUtil from './util/HttpUtil.js';
 
 type CategoryApiItem = {
   categoryName: string;
@@ -232,12 +229,14 @@ export class NaverBlogFetcher {
   }
 
   async fetchPostHtml(logNo: string) {
-    const response = await this.fetchResponse({
+    const response = await HttpUtil.fetchResponseWithRetry({
       url: `https://m.blog.naver.com/PostView.naver?blogId=${this.blogId}&logNo=${logNo}`,
       headers: htmlHeaders({
         blogId: this.blogId,
       }),
       failureLabel: '글 HTML 요청 실패',
+      retryDelays: this.retryDelays,
+      requestTimeoutMs: this.requestTimeoutMs,
     });
 
     return response.text();
@@ -250,27 +249,24 @@ export class NaverBlogFetcher {
     sourceUrl: string;
     destinationPath: string;
   }) {
-    const binary = await this.fetchBinary({
+    await HttpUtil.downloadBinary({
       sourceUrl,
+      destinationPath,
+      headers: binaryHeaders,
+      failureLabel: '자산 다운로드 실패',
+      retryDelays: this.retryDelays,
+      requestTimeoutMs: this.requestTimeoutMs,
     });
-    await ensureDir(path.dirname(destinationPath));
-    await writeFile(destinationPath, binary.bytes);
   }
 
   async fetchBinary({ sourceUrl }: { sourceUrl: string }) {
-    const normalizedSourceUrl = normalizeAssetUrl(sourceUrl);
-    const response = await this.fetchResponse({
-      url: normalizedSourceUrl,
+    return HttpUtil.fetchBinary({
+      sourceUrl,
       headers: binaryHeaders,
       failureLabel: '자산 다운로드 실패',
+      retryDelays: this.retryDelays,
+      requestTimeoutMs: this.requestTimeoutMs,
     });
-
-    const arrayBuffer = await response.arrayBuffer();
-
-    return {
-      bytes: Buffer.from(arrayBuffer),
-      contentType: response.headers.get('content-type'),
-    };
   }
 
   private async fetchJson<Result>({ url }: { url: string }): Promise<Result> {
@@ -284,14 +280,15 @@ export class NaverBlogFetcher {
       let response: Response;
 
       try {
-        response = await this.fetchWithTimeout({
+        response = await HttpUtil.fetchWithTimeout({
           url,
           headers: browserHeaders({ blogId: this.blogId }),
+          requestTimeoutMs: this.requestTimeoutMs,
         });
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
 
-        if (this.shouldRetryRequestError(error)) {
+        if (HttpUtil.shouldRetryRequestError(error)) {
           continue;
         }
 
@@ -303,7 +300,7 @@ export class NaverBlogFetcher {
           `API 요청 실패: ${response.status} ${response.statusText}`,
         );
 
-        if (response.status === 429 || response.status >= 500) {
+        if (HttpUtil.shouldRetryStatus(response.status)) {
           continue;
         }
 
@@ -324,91 +321,6 @@ export class NaverBlogFetcher {
     }
 
     throw lastError ?? new Error('API 요청에 실패했습니다.');
-  }
-
-  private async fetchResponse({
-    url,
-    headers,
-    failureLabel,
-  }: {
-    url: string;
-    headers: Record<string, string>;
-    failureLabel: string;
-  }) {
-    let lastError: Error | null = null;
-
-    for (const retryDelay of this.retryDelays) {
-      if (retryDelay > 0) {
-        await delay(retryDelay);
-      }
-
-      let response: Response;
-
-      try {
-        response = await this.fetchWithTimeout({
-          url,
-          headers,
-        });
-      } catch (error) {
-        lastError = error instanceof Error ? error : new Error(String(error));
-
-        if (this.shouldRetryRequestError(error)) {
-          continue;
-        }
-
-        throw lastError;
-      }
-
-      if (!response.ok) {
-        lastError = new Error(
-          `${failureLabel}: ${response.status} ${response.statusText}`,
-        );
-
-        if (this.shouldRetryStatus(response.status)) {
-          continue;
-        }
-
-        throw lastError;
-      }
-
-      return response;
-    }
-
-    throw lastError ?? new Error(`${failureLabel}: 알 수 없는 오류`);
-  }
-
-  private async fetchWithTimeout({
-    url,
-    headers,
-  }: {
-    url: string;
-    headers: Record<string, string>;
-  }) {
-    const controller = new AbortController();
-    const timeoutHandle = setTimeout(() => {
-      controller.abort();
-    }, this.requestTimeoutMs);
-
-    try {
-      return await fetch(url, {
-        headers,
-        signal: controller.signal,
-      });
-    } finally {
-      clearTimeout(timeoutHandle);
-    }
-  }
-
-  private shouldRetryRequestError(error: unknown) {
-    if (error instanceof DOMException && error.name === 'AbortError') {
-      return true;
-    }
-
-    return error instanceof TypeError;
-  }
-
-  private shouldRetryStatus(status: number) {
-    return status === 429 || status >= 500;
   }
 
   private log(message: string) {
