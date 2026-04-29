@@ -138,7 +138,7 @@ export const renderFormula = ({
 }: {
   formula: string
   display: boolean
-  selection: BlockOutputSelection<"formula">
+  selection: BlockOutputSelection
 }) => {
   const inline = splitFormulaWrapper({
     wrapper: String(selection.params?.inlineWrapper ?? "$"),
@@ -254,10 +254,10 @@ export const renderLinkCardBlock = ({
   return [formatLink({ label: title, url: block.card.url }), description].filter(Boolean).join("\n\n")
 }
 
-export const getDividerMarker = (selection: BlockOutputSelection<"divider">) =>
+export const getDividerMarker = (selection: BlockOutputSelection) =>
   selection.variant === "asterisk-rule" ? "***" : "---"
 
-export const getHeadingLevelOffset = (selection: BlockOutputSelection<"heading">) =>
+export const getHeadingLevelOffset = (selection: BlockOutputSelection) =>
   Number(selection.params?.levelOffset ?? 0)
 
 export const renderGfmTable = (block: Extract<AstBlock, { type: "table" }>) => {
@@ -290,7 +290,7 @@ export const renderImageBlockMarkdown = ({
 }: {
   image: ImageData
   assetPath: string
-  selection: BlockOutputSelection<"image">
+  selection: BlockOutputSelection
   formatLink: (input: { label: string; url: string }) => string
   includeImageCaptions: boolean
 }) => {
@@ -362,7 +362,7 @@ export const getHtmlConversionOptions = ({
   dividerSelection,
 }: {
   linkStyle: ExportOptions["markdown"]["linkStyle"]
-  dividerSelection: BlockOutputSelection<"divider">
+  dividerSelection: BlockOutputSelection
 }) =>
   ({
     linkStyle,

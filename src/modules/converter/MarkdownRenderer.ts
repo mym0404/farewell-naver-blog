@@ -206,7 +206,7 @@ export const renderMarkdownPost = async ({
     selection,
   }: {
     image: ImageData
-    selection: BlockOutputSelection<"image">
+    selection: BlockOutputSelection
   }) => {
     const renderableSourceUrl = getRenderableImageSource(image)
 

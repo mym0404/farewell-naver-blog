@@ -1,14 +1,12 @@
 import type {
   BlockOutputSelection,
-  BlockOutputSelectionByType,
+  BlockOutputParamValue,
   BlockType,
   ExportOptions,
   OutputOption,
 } from "./Types.js"
 
-const fallbackBlockOutputSelections: {
-  [Key in BlockType]: BlockOutputSelection<Key>
-} = {
+const fallbackBlockOutputSelections: Record<BlockType, BlockOutputSelection> = {
   paragraph: { variant: "markdown-paragraph" },
   heading: {
     variant: "markdown-heading",
@@ -55,33 +53,38 @@ const getDefaultOutputOption = (outputOptions: readonly OutputOption[]) =>
   outputOptions.find((option) => option.isDefault) ?? outputOptions[0]
 
 const createSelectionFromOutputOption = (option: OutputOption): BlockOutputSelection => {
-  const params = Object.fromEntries(
-    (option.params ?? [])
-      .filter((param) => param.defaultValue !== undefined)
-      .map((param) => [param.key, param.defaultValue]),
+  const params = (option.params ?? []).reduce<Record<string, BlockOutputParamValue>>(
+    (nextParams, param) => {
+      if (param.defaultValue !== undefined) {
+        nextParams[param.key] = param.defaultValue
+      }
+
+      return nextParams
+    },
+    {},
   )
 
   return {
     variant: option.id,
     ...(Object.keys(params).length > 0 ? { params } : {}),
-  } as BlockOutputSelection
+  }
 }
 
-export const resolveBlockOutputSelection = <Block extends BlockType>({
+export const resolveBlockOutputSelection = ({
   blockType,
   outputOptions,
   blockOutputs,
   selectionKey,
 }: {
-  blockType: Block
+  blockType: BlockType
   outputOptions?: readonly OutputOption[]
   blockOutputs?: {
     defaults?: ExportOptions["blockOutputs"]["defaults"]
   }
   selectionKey?: string
-}): BlockOutputSelectionByType[Block] => {
+}): BlockOutputSelection => {
   const nextSelection = selectionKey
-    ? blockOutputs?.defaults?.[selectionKey] as BlockOutputSelection<Block> | undefined
+    ? blockOutputs?.defaults?.[selectionKey]
     : undefined
 
   const defaultOption = outputOptions ? getDefaultOutputOption(outputOptions) : undefined
@@ -94,5 +97,5 @@ export const resolveBlockOutputSelection = <Block extends BlockType>({
     nextSelection,
   })
 
-  return selection as BlockOutputSelectionByType[Block]
+  return selection
 }

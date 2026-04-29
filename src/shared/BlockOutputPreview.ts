@@ -1,9 +1,7 @@
 import type {
   AstBlock,
   BlockOutputSelection,
-  DividerBlockOutputSelection,
   ExportOptions,
-  ImageBlockOutputSelection,
 } from "./Types.js"
 import {
   composeSnippetWithReferences,
@@ -70,7 +68,7 @@ const getImagePreviewSelection = ({
     throw new Error("image preview selection is missing")
   }
 
-  return selection as ImageBlockOutputSelection
+  return selection
 }
 
 const getDividerPreviewSelection = ({
@@ -89,7 +87,7 @@ const getDividerPreviewSelection = ({
     throw new Error("divider preview selection is missing")
   }
 
-  return selection as DividerBlockOutputSelection
+  return selection
 }
 
 const renderResolvedPreviewBlock = ({
@@ -205,9 +203,8 @@ export const renderBlockOutputPreview = ({
   }
 
   if (block.type === "heading") {
-    const headingSelection = selection as BlockOutputSelection<"heading">
     const adjustedLevel = Math.min(
-      Math.max(block.level + getHeadingLevelOffset(headingSelection), 1),
+      Math.max(block.level + getHeadingLevelOffset(selection), 1),
       6,
     )
 
@@ -236,12 +233,10 @@ export const renderBlockOutputPreview = ({
   }
 
   if (block.type === "formula") {
-    const formulaSelection = selection as BlockOutputSelection<"formula">
-
     return renderFormula({
       formula: block.formula,
       display: block.display,
-      selection: formulaSelection,
+      selection,
     })
   }
 
@@ -265,8 +260,6 @@ export const renderBlockOutputPreview = ({
   }
 
   if (block.type === "imageGroup") {
-    const imageSelection = selection as BlockOutputSelection<"image">
-
     return composeSnippetWithReferences({
       body: block.images
         .map((image) =>
@@ -276,7 +269,7 @@ export const renderBlockOutputPreview = ({
               sourceUrl: image.sourceUrl,
               imageHandlingMode,
             }),
-            selection: imageSelection,
+            selection,
             formatLink: linkFormatter.formatLink,
             includeImageCaptions,
           }),
@@ -307,9 +300,7 @@ export const renderBlockOutputPreview = ({
   }
 
   if (block.type === "table") {
-    const tableSelection = selection as BlockOutputSelection<"table">
-
-    return tableSelection.variant === "html-only" ? block.html : renderGfmTable(block)
+    return selection.variant === "html-only" ? block.html : renderGfmTable(block)
   }
 
   return ""

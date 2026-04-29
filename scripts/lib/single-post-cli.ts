@@ -3,14 +3,12 @@ import { defaultExportOptions } from "../../src/shared/ExportOptions.js"
 import { NaverBlog } from "../../src/modules/blog/NaverBlog.js"
 import type {
   BlockOutputSelection,
-  BlockOutputSelectionByType,
   ExportOptions,
 } from "../../src/shared/Types.js"
 
 const entrypoint = "pnpm exec tsx scripts/export-single-post.ts"
 
 const allowedTopLevelOptionKeys = ["scope", "structure", "frontmatter", "markdown", "blockOutputs", "unsupportedBlockCases", "assets", "links"] as const
-type SupportedBlockOutputType = keyof BlockOutputSelectionByType
 const allowedScopeKeys = ["categoryIds", "categoryMode", "dateFrom", "dateTo"] as const
 const allowedStructureKeys = [
   "groupByCategory",
@@ -337,7 +335,7 @@ const validateMarkdownOptions = (value: unknown, optionsPath: string) => {
   return markdown
 }
 
-const validateBlockOutputSelection = <Block extends SupportedBlockOutputType>({
+const validateBlockOutputSelection = ({
   value,
   context,
   optionsPath,
@@ -358,7 +356,7 @@ const validateBlockOutputSelection = <Block extends SupportedBlockOutputType>({
     definition.options.find((option) => option.isDefault) ??
     definition.options[0] ??
     failOptions(optionsPath, `${context} has no output options`)
-  const resolvedBlockType = defaultOption.preview.type as Block
+  const resolvedBlockType = defaultOption.preview.type
 
   const nextSelection = resolveBlockOutputSelection({
     blockType: resolvedBlockType,
@@ -376,7 +374,7 @@ const validateBlockOutputSelection = <Block extends SupportedBlockOutputType>({
       )
     }
 
-    nextSelection.variant = variant as BlockOutputSelection<Block>["variant"]
+    nextSelection.variant = variant
   }
 
   if ("params" in value) {
@@ -412,17 +410,17 @@ const validateBlockOutputSelection = <Block extends SupportedBlockOutputType>({
     }
   }
 
-  return nextSelection as BlockOutputSelection<Block>
+  return nextSelection
 }
 
-const assignBlockOutputDefault = <Block extends SupportedBlockOutputType>({
+const assignBlockOutputDefault = ({
   defaults,
   selectionKey,
   selection,
 }: {
   defaults: ExportOptions["blockOutputs"]["defaults"]
   selectionKey: string
-  selection: BlockOutputSelection<Block>
+  selection: BlockOutputSelection
 }) => {
   defaults[selectionKey] = selection
 }

@@ -29,6 +29,7 @@
 - Editor classes hold `BaseBlock[]` instances directly; there is no string id registry between blog, editor, and parser block.
 - Editor `supportedBlocks` arrays are ordered first-match lists; place more specific blocks before broader fallback blocks.
 - Parser block classes own optional `BaseBlock.outputOptions` arrays. Each option describes the parser block output choice, preview, default marker, and params.
+- `src/shared/Types.ts` `AstBlock` union is the source of truth for block type strings; `BlockType` is derived from `AstBlock["type"]`.
 - `src/modules/blog/BaseBlog.ts` derives selectable output definitions from its editors, and `src/modules/editor/BaseEditor.ts` filters to blocks with at least two output options and keys selections as `editorType:blockId`.
 - `src/modules/editor/BaseEditor.ts` stamps selectable AST blocks with `outputSelectionKey` and `outputSelection`; `src/modules/converter/MarkdownRenderer.ts` uses that per-block selection before renderer defaults.
 - Output option metadata stays on concrete parser block classes, even when labels or defaults are duplicated across SE2, SE3, and SE4 blocks. `src/shared/BlockRegistry.ts` only resolves selection values from parser-provided options and stored export options.

@@ -52,120 +52,10 @@ export type CodeFenceStyle = "backtick" | "tilde"
 
 export type BlockOutputParamValue = string | number | boolean
 
-export type ParagraphBlockOutputSelection = {
-  variant: "markdown-paragraph"
+export type BlockOutputSelection = {
+  variant: string
   params?: Record<string, BlockOutputParamValue>
 }
-
-export type HeadingBlockOutputSelection = {
-  variant: "markdown-heading"
-  params?: {
-    levelOffset?: number
-  } & Record<string, BlockOutputParamValue>
-}
-
-export type QuoteBlockOutputSelection = {
-  variant: "blockquote"
-  params?: Record<string, BlockOutputParamValue>
-}
-
-export type DividerBlockOutputSelection =
-  | {
-      variant: "dash-rule"
-      params?: Record<string, BlockOutputParamValue>
-    }
-  | {
-      variant: "asterisk-rule"
-      params?: Record<string, BlockOutputParamValue>
-    }
-
-export type CodeBlockOutputSelection =
-  | {
-      variant: "backtick-fence"
-      params?: Record<string, BlockOutputParamValue>
-    }
-  | {
-      variant: "tilde-fence"
-      params?: Record<string, BlockOutputParamValue>
-    }
-
-export type FormulaBlockOutputSelection =
-  | {
-      variant: "wrapper"
-      params?: {
-        inlineWrapper?: string
-        blockWrapper?: string
-        inlineOpen?: string
-        inlineClose?: string
-        blockOpen?: string
-        blockClose?: string
-      } & Record<string, BlockOutputParamValue>
-    }
-  | {
-      variant: "math-fence"
-      params?: {
-        inlineWrapper?: string
-        inlineOpen?: string
-        inlineClose?: string
-      } & Record<string, BlockOutputParamValue>
-    }
-
-export type ImageBlockOutputSelection =
-  | {
-      variant: "markdown-image"
-      params?: Record<string, BlockOutputParamValue>
-    }
-  | {
-      variant: "linked-image"
-      params?: Record<string, BlockOutputParamValue>
-    }
-  | {
-      variant: "source-only"
-      params?: Record<string, BlockOutputParamValue>
-    }
-
-export type ImageGroupBlockOutputSelection = {
-  variant: "split-images"
-  params?: Record<string, BlockOutputParamValue>
-}
-
-export type VideoBlockOutputSelection = {
-  variant: "source-link"
-  params?: Record<string, BlockOutputParamValue>
-}
-
-export type LinkCardBlockOutputSelection = {
-  variant: "title-link"
-  params?: Record<string, BlockOutputParamValue>
-}
-
-export type TableBlockOutputSelection =
-  | {
-      variant: "gfm-or-html"
-      params?: Record<string, BlockOutputParamValue>
-    }
-  | {
-      variant: "html-only"
-      params?: Record<string, BlockOutputParamValue>
-    }
-
-export type BlockOutputSelectionByType = {
-  paragraph: ParagraphBlockOutputSelection
-  heading: HeadingBlockOutputSelection
-  quote: QuoteBlockOutputSelection
-  divider: DividerBlockOutputSelection
-  code: CodeBlockOutputSelection
-  formula: FormulaBlockOutputSelection
-  image: ImageBlockOutputSelection
-  imageGroup: ImageGroupBlockOutputSelection
-  video: VideoBlockOutputSelection
-  linkCard: LinkCardBlockOutputSelection
-  table: TableBlockOutputSelection
-}
-
-export type BlockOutputSelection<
-  Block extends keyof BlockOutputSelectionByType = keyof BlockOutputSelectionByType,
-> = BlockOutputSelectionByType[Block]
 
 export type OutputOptionParam = {
   key: string
@@ -176,7 +66,7 @@ export type OutputOptionParam = {
 }
 
 export type OutputOption<Block extends BlockType = BlockType> = {
-  id: BlockOutputSelection<Block>["variant"]
+  id: string
   label: string
   description: string
   preview: Extract<AstBlock, { type: Block }>
@@ -192,9 +82,9 @@ export type EditorBlockOutputDefinition = {
   options: OutputOption[]
 }
 
-export type AstBlockOutputSelection<Block extends keyof BlockOutputSelectionByType> = {
+export type AstBlockOutputSelection = {
   outputSelectionKey?: string
-  outputSelection?: BlockOutputSelection<Block>
+  outputSelection?: BlockOutputSelection
 }
 
 export type ImageHandlingMode = "download" | "remote" | "download-and-upload"
@@ -422,17 +312,17 @@ export type ImageData = {
 }
 
 export type AstBlock =
-  | ({ type: "paragraph"; text: string } & AstBlockOutputSelection<"paragraph">)
-  | ({ type: "heading"; level: number; text: string } & AstBlockOutputSelection<"heading">)
-  | ({ type: "quote"; text: string } & AstBlockOutputSelection<"quote">)
-  | ({ type: "divider" } & AstBlockOutputSelection<"divider">)
-  | ({ type: "code"; language: string | null; code: string } & AstBlockOutputSelection<"code">)
-  | ({ type: "formula"; formula: string; display: boolean } & AstBlockOutputSelection<"formula">)
-  | ({ type: "image"; image: ImageData } & AstBlockOutputSelection<"image">)
-  | ({ type: "imageGroup"; images: ImageData[] } & AstBlockOutputSelection<"imageGroup">)
-  | ({ type: "video"; video: VideoData } & AstBlockOutputSelection<"video">)
-  | ({ type: "linkCard"; card: LinkCardData } & AstBlockOutputSelection<"linkCard">)
-  | ({ type: "table"; rows: TableRow[]; html: string; complex: boolean } & AstBlockOutputSelection<"table">)
+  | ({ type: "paragraph"; text: string } & AstBlockOutputSelection)
+  | ({ type: "heading"; level: number; text: string } & AstBlockOutputSelection)
+  | ({ type: "quote"; text: string } & AstBlockOutputSelection)
+  | ({ type: "divider" } & AstBlockOutputSelection)
+  | ({ type: "code"; language: string | null; code: string } & AstBlockOutputSelection)
+  | ({ type: "formula"; formula: string; display: boolean } & AstBlockOutputSelection)
+  | ({ type: "image"; image: ImageData } & AstBlockOutputSelection)
+  | ({ type: "imageGroup"; images: ImageData[] } & AstBlockOutputSelection)
+  | ({ type: "video"; video: VideoData } & AstBlockOutputSelection)
+  | ({ type: "linkCard"; card: LinkCardData } & AstBlockOutputSelection)
+  | ({ type: "table"; rows: TableRow[]; html: string; complex: boolean } & AstBlockOutputSelection)
 
 export type ParsedPostStructuredBodyNode = {
   kind: "block"
