@@ -10,7 +10,7 @@
 - The repo is strict TypeScript with NodeNext ESM.
 - Use `.js` extensions in TS imports where NodeNext runtime imports require them.
 - Reuse shared types from `src/shared/*` when crossing module or server/UI boundaries.
-- Keep parser block output behavior aligned with editor `supportedBlocks` arrays and `src/shared/BlockRegistry.ts`.
+- Keep parser block output behavior aligned across `BaseBlock.outputOptions`, editor `supportedBlocks` arrays, and `src/shared/BlockRegistry.ts`.
 - Prefer `type` aliases for object shapes, unions, and inferred helper types; do not introduce `interface` unless an external API requires it.
 - For finite runtime options, define `as const` arrays or objects and derive union types from them with `typeof`.
 - Use `as const satisfies` for registries and status maps that need literal inference plus shared shape checking.

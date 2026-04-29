@@ -3,11 +3,15 @@ import type { AnyNode } from "domhandler"
 
 import type {
   AstBlock,
+  BlockOutputSelection,
+  EditorBlockOutputDefinition,
   ExportOptions,
+  EditorBlockOutputSelectionKey,
   ParsedPost,
   ParsedPostBodyNode,
   UnknownRecord,
 } from "@shared/Types.js"
+import { resolveBlockOutputSelection } from "@shared/BlockRegistry.js"
 import {
   createBodyNodesFromStructuredBlocks,
   createFallbackHtmlBodyNode,
@@ -23,18 +27,51 @@ export type BaseEditorParseInput = {
   $: CheerioAPI
   sourceUrl?: string
   tags: string[]
-  options: Pick<ExportOptions, "markdown"> &
+  options: Pick<ExportOptions, "markdown" | "blockOutputs"> &
     {
       resolveLinkUrl?: (url: string) => string
     }
 }
 
 export abstract class BaseEditor {
+  abstract readonly type: string
+  abstract readonly label: string
+
   protected readonly supportedBlocks: readonly BaseBlock[] = []
 
   abstract canParse(html: string): boolean
 
   abstract parse(input: BaseEditorParseInput): ParsedPost
+
+  getBlockOutputDefinitions(): EditorBlockOutputDefinition[] {
+    return this.supportedBlocks.flatMap((block) => {
+      const outputOptions = block.outputOptions
+
+      if (!outputOptions || outputOptions.variants.length < 2) {
+        return []
+      }
+
+      return [
+        {
+          key: this.createBlockOutputSelectionKey(outputOptions.blockId),
+          editorType: this.type,
+          editorLabel: this.label,
+          blockId: outputOptions.blockId,
+          astBlockType: outputOptions.astBlockType,
+          label: outputOptions.label,
+          description: outputOptions.description,
+          previewBlock: outputOptions.previewBlock,
+          defaultSelection: outputOptions.defaultSelection,
+          variants: outputOptions.variants,
+          params: outputOptions.params,
+        },
+      ]
+    })
+  }
+
+  private createBlockOutputSelectionKey(blockId: string): EditorBlockOutputSelectionKey {
+    return `${this.type}:${blockId}`
+  }
 
   protected runBlocks({
     $,
@@ -67,14 +104,55 @@ export abstract class BaseEditor {
       body.push(...nodes)
     }
 
-    const handleResult = (result: ParserBlockResult) => {
+    const applyOutputSelection = ({
+      parsedBlock,
+      parserBlock,
+    }: {
+      parsedBlock: AstBlock
+      parserBlock: BaseBlock
+    }) => {
+      const outputOptions = parserBlock.outputOptions
+
+      if (!outputOptions || outputOptions.variants.length < 2 || outputOptions.astBlockType !== parsedBlock.type) {
+        return parsedBlock
+      }
+
+      const selectionKey = this.createBlockOutputSelectionKey(outputOptions.blockId)
+
+      return {
+        ...parsedBlock,
+        outputSelectionKey: selectionKey,
+        outputSelection: resolveBlockOutputSelection({
+          blockType: outputOptions.astBlockType,
+          blockOutputs: options.blockOutputs,
+          selectionKey,
+        }) as BlockOutputSelection,
+      } as AstBlock & {
+        outputSelectionKey: EditorBlockOutputSelectionKey
+        outputSelection: BlockOutputSelection
+      }
+    }
+
+    const handleResult = ({
+      result,
+      parserBlock,
+    }: {
+      result: ParserBlockResult
+      parserBlock: BaseBlock
+    }) => {
       if (result.warnings) {
         appendWarnings(result.warnings)
       }
 
       if (result.status === "handled") {
-        blocks.push(...result.blocks)
-        body.push(...createBodyNodesFromStructuredBlocks(result.blocks))
+        const selectedBlocks = result.blocks.map((parsedBlock) =>
+          applyOutputSelection({
+            parsedBlock,
+            parserBlock,
+          }),
+        )
+        blocks.push(...selectedBlocks)
+        body.push(...createBodyNodesFromStructuredBlocks(selectedBlocks))
         return
       }
 
@@ -112,7 +190,10 @@ export abstract class BaseEditor {
         return
       }
 
-      handleResult(block.convert(context))
+      handleResult({
+        result: block.convert(context),
+        parserBlock: block,
+      })
     }
 
     nodes.forEach(appendBlocksFromNode)

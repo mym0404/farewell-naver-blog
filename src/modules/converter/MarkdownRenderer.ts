@@ -252,7 +252,7 @@ export const renderMarkdownPost = async ({
   }
 
   const renderTableBlock = (block: Extract<AstBlock, { type: "table" }>) => {
-    const selection = resolveBlockOutputSelection({
+    const selection = block.outputSelection ?? resolveBlockOutputSelection({
       blockType: "table",
       blockOutputs: options.blockOutputs,
     })
@@ -314,7 +314,7 @@ export const renderMarkdownPost = async ({
     }
 
     if (block.type === "code") {
-      const selection = resolveBlockOutputSelection({
+      const selection = block.outputSelection ?? resolveBlockOutputSelection({
         blockType: "code",
         blockOutputs: options.blockOutputs,
       })
@@ -329,7 +329,7 @@ export const renderMarkdownPost = async ({
     }
 
     if (block.type === "formula") {
-      const selection = resolveBlockOutputSelection({
+      const selection = block.outputSelection ?? resolveBlockOutputSelection({
         blockType: "formula",
         blockOutputs: options.blockOutputs,
       })

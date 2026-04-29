@@ -1,13 +1,13 @@
 import {
-  blockOutputFamilyDefinitions,
-  blockOutputFamilyOrder,
+  getEditorBlockOutputDefinitions,
   resolveBlockOutputSelection,
 } from "../../src/shared/BlockRegistry.js"
 import { defaultExportOptions } from "../../src/shared/ExportOptions.js"
+import { NaverBlog } from "../../src/modules/blog/NaverBlog.js"
 import type {
-  BlockType,
   BlockOutputSelection,
   BlockOutputSelectionByType,
+  EditorBlockOutputSelectionKey,
   ExportOptions,
 } from "../../src/shared/Types.js"
 
@@ -68,9 +68,11 @@ const imageHandlingModes = ["download", "remote", "download-and-upload"] as cons
 const stickerAssetModes = ["ignore", "download-original"] as const
 const thumbnailSources = ["post-list-first", "first-body-image", "none"] as const
 const sameBlogPostModes = ["keep-source", "custom-url", "relative-filepath"] as const
-const blockOutputFamilyDefinitionMap = new Map(
-  blockOutputFamilyDefinitions.map((definition) => [definition.astBlockType, definition]),
+const editorBlockOutputDefinitions = getEditorBlockOutputDefinitions(new NaverBlog())
+const editorBlockOutputDefinitionMap = new Map(
+  editorBlockOutputDefinitions.map((definition) => [definition.key, definition]),
 )
+const editorBlockOutputSelectionKeys = editorBlockOutputDefinitions.map((definition) => definition.key)
 
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value)
@@ -343,19 +345,19 @@ const validateBlockOutputSelection = <Block extends SupportedBlockOutputType>({
   value,
   context,
   optionsPath,
-  blockType,
+  selectionKey,
 }: {
   value: unknown
   context: string
   optionsPath: string
-  blockType: BlockType
+  selectionKey: EditorBlockOutputSelectionKey
 }) => {
   assertPlainObject(value, context, optionsPath)
   assertAllowedKeys(value, ["variant", "params"], context, optionsPath)
 
   const definition =
-    blockOutputFamilyDefinitionMap.get(blockType) ??
-    failOptions(optionsPath, `${context} references unknown block type: ${blockType}`)
+    editorBlockOutputDefinitionMap.get(selectionKey) ??
+    failOptions(optionsPath, `${context} references unknown editor block output key: ${selectionKey}`)
   const resolvedBlockType = definition.astBlockType as Block
 
   const nextSelection = resolveBlockOutputSelection({
@@ -412,14 +414,14 @@ const validateBlockOutputSelection = <Block extends SupportedBlockOutputType>({
 
 const assignBlockOutputDefault = <Block extends SupportedBlockOutputType>({
   defaults,
-  blockType,
+  selectionKey,
   selection,
 }: {
   defaults: ExportOptions["blockOutputs"]["defaults"]
-  blockType: Block
+  selectionKey: EditorBlockOutputSelectionKey
   selection: BlockOutputSelection<Block>
 }) => {
-  defaults[blockType] = selection
+  defaults[selectionKey] = selection
 }
 
 const validateBlockOutputsOptions = (value: unknown, optionsPath: string) => {
@@ -431,22 +433,22 @@ const validateBlockOutputsOptions = (value: unknown, optionsPath: string) => {
   if ("defaults" in value) {
     const defaultsValue = value.defaults
     assertPlainObject(defaultsValue, "blockOutputs.defaults", optionsPath)
-    assertAllowedKeys(defaultsValue, blockOutputFamilyOrder, "blockOutputs.defaults", optionsPath)
+    assertAllowedKeys(defaultsValue, editorBlockOutputSelectionKeys, "blockOutputs.defaults", optionsPath)
 
     const nextDefaults: ExportOptions["blockOutputs"]["defaults"] = {
       ...blockOutputs.defaults,
     }
 
-    for (const blockType of blockOutputFamilyOrder) {
-      if (blockType in defaultsValue) {
+    for (const selectionKey of editorBlockOutputSelectionKeys) {
+      if (selectionKey in defaultsValue) {
         assignBlockOutputDefault({
           defaults: nextDefaults,
-          blockType,
+          selectionKey,
           selection: validateBlockOutputSelection({
-            value: defaultsValue[blockType],
-            context: `blockOutputs.defaults.${blockType}`,
+            value: defaultsValue[selectionKey],
+            context: `blockOutputs.defaults.${selectionKey}`,
             optionsPath,
-            blockType,
+            selectionKey,
           }),
         })
       }

@@ -13,6 +13,7 @@ import {
   optionDescriptions,
 } from "../../src/shared/ExportOptions.js"
 import type {
+  ExportOptions,
   ExportJobPollingConfig,
   UploadProviderCatalogResponse,
   UploadProviderValue,
@@ -114,6 +115,29 @@ const waitForExportSettingsSave = ({
       }
 
       return body.themePreference === expectedThemePreference
+    },
+    { timeout: responseTimeoutMs },
+  )
+
+const waitForBlockOutputSettingsSave = ({
+  page,
+  baseUrl,
+}: {
+  page: import("playwright").Page
+  baseUrl: string
+}) =>
+  page.waitForRequest(
+    (request) => {
+      if (request.url() !== `${baseUrl}/api/export-settings` || request.method() !== "POST") {
+        return false
+      }
+
+      const body = request.postDataJSON() as {
+        options?: ExportOptions
+      }
+      const defaults = body.options?.blockOutputs.defaults ?? {}
+
+      return defaults["naver-se4:formula"]?.params?.inlineWrapper === "\\(...\\)"
     },
     { timeout: responseTimeoutMs },
   )
@@ -580,6 +604,19 @@ const applyCurrentOutputDir = <T extends {
   return job
 }
 
+const applyCurrentExportOptions = <T extends {
+  request: { options: ExportOptions }
+  manifest: { options: ExportOptions }
+}>(job: T, options: ExportOptions | null) => {
+  if (!options) {
+    return job
+  }
+
+  job.request.options = options
+  job.manifest.options = options
+  return job
+}
+
 const captureReviewScreens = async ({
   page,
   captureDir,
@@ -799,6 +836,7 @@ const run = async () => {
     uploadAttempt: 0 | 1 | 2
     jobFetchCount: number
     themePreference: "dark" | "light"
+    exportOptions: ExportOptions | null
     uploadPayload: null | {
       providerKey: string
       providerFields: Record<string, UploadProviderValue>
@@ -808,6 +846,7 @@ const run = async () => {
     uploadAttempt: 0,
     jobFetchCount: 0,
     themePreference: "dark",
+    exportOptions: null,
     uploadPayload: null,
   }
 
@@ -874,8 +913,22 @@ const run = async () => {
     }
 
     if (pathname === "/api/export" && request.method() === "POST") {
+      const body = request.postDataJSON() as {
+        options?: ExportOptions
+      }
+      const defaults = body.options?.blockOutputs.defaults ?? {}
+
+      if (defaults["naver-se4:formula"]?.params?.inlineWrapper !== "\\(...\\)") {
+        throw new Error("export payload did not include the saved naver-se4 formula option")
+      }
+
+      if (Object.prototype.hasOwnProperty.call(defaults, "formula")) {
+        throw new Error("export payload included old block-type-only output option key")
+      }
+
       mockState.uploadAttempt = 0
       mockState.jobFetchCount = 0
+      mockState.exportOptions = body.options ?? null
       mockState.uploadPayload = null
       await route.fulfill(
         buildJsonResponse(
@@ -895,7 +948,7 @@ const run = async () => {
         const nextJob =
           mockState.jobFetchCount <= smokeJobFetchLimits.exportRunningMax ? createRunningJob() : createUploadReadyJob()
 
-        await route.fulfill(buildJsonResponse(applyCurrentOutputDir(nextJob, outputDir)))
+        await route.fulfill(buildJsonResponse(applyCurrentExportOptions(applyCurrentOutputDir(nextJob, outputDir), mockState.exportOptions)))
         return
       }
 
@@ -914,7 +967,7 @@ const run = async () => {
               outputDir,
             )
 
-      await route.fulfill(buildJsonResponse(nextJob))
+      await route.fulfill(buildJsonResponse(applyCurrentExportOptions(nextJob, mockState.exportOptions)))
       return
     }
 
@@ -958,8 +1011,8 @@ const run = async () => {
     if (pathname === "/api/export/job-smoke/manifest" && request.method() === "GET") {
       const manifest =
         mockState.uploadAttempt === 2
-          ? applyCurrentOutputDir(createUploadCompletedJob(), outputDir).manifest
-          : applyCurrentOutputDir(createUploadReadyJob(), outputDir).manifest
+          ? applyCurrentExportOptions(applyCurrentOutputDir(createUploadCompletedJob(), outputDir), mockState.exportOptions).manifest
+          : applyCurrentExportOptions(applyCurrentOutputDir(createUploadReadyJob(), outputDir), mockState.exportOptions).manifest
 
       await route.fulfill(buildJsonResponse(manifest))
       return
@@ -1183,7 +1236,7 @@ const run = async () => {
       throw new Error("removed markdown link card controls reappeared")
     }
 
-    if (!(await page.locator('[data-block-output-card="formula"]').count())) {
+    if (!(await page.locator('[data-block-output-card="naver-se4:formula"]').count())) {
       throw new Error("block output cards should appear in the markdown step")
     }
 
@@ -1192,7 +1245,12 @@ const run = async () => {
       trigger: "#markdown-linkStyle",
       value: "referenced",
     })
-    await page.fill("#blockOutputs-defaults-formula-inlineWrapper", "\\(...\\)")
+    const blockOutputSettingsSavePromise = waitForBlockOutputSettingsSave({
+      page,
+      baseUrl,
+    })
+    await page.fill("#blockOutputs-defaults-naver-se4-formula-inlineWrapper", "\\(...\\)")
+    await blockOutputSettingsSavePromise
     await page.click('button:has-text("Assets 설정")')
     await waitForStepView({
       page,
@@ -1609,6 +1667,7 @@ const run = async () => {
         status: string
         uploadedCount: number
       }
+      options: ExportOptions
       posts: Array<{
         outputPath: string | null
       }>
@@ -1632,6 +1691,14 @@ const run = async () => {
       manifest.upload.uploadedCount !== uploadTargetCount * uploadCandidatesPerPost
     ) {
       throw new Error("manifest did not reflect upload completion")
+    }
+
+    if (manifest.options.blockOutputs.defaults["naver-se4:formula"]?.params?.inlineWrapper !== "\\(...\\)") {
+      throw new Error("manifest did not preserve the naver-se4 formula option")
+    }
+
+    if (Object.prototype.hasOwnProperty.call(manifest.options.blockOutputs.defaults, "formula")) {
+      throw new Error("manifest included old block-type-only output option key")
     }
 
     const finalStatusText = await page.locator("#status-panel").textContent()

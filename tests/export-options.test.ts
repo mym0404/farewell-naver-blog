@@ -30,8 +30,8 @@ describe("export options", () => {
     expect(options.links.sameBlogPostMode).toBe("keep-source")
     expect(options.links.sameBlogPostCustomUrlTemplate).toBe("")
     expect(options.markdown.linkStyle).toBe("inlined")
-    expect(options.blockOutputs.defaults["formula"]?.params?.inlineWrapper).toBe("$")
-    expect(options.blockOutputs.defaults["formula"]?.params?.blockWrapper).toBe("$$")
+    expect(options.blockOutputs.defaults["naver-se4:formula"]?.params?.inlineWrapper).toBe("$")
+    expect(options.blockOutputs.defaults["naver-se4:formula"]?.params?.blockWrapper).toBe("$$")
     expect(Object.hasOwn(options, "unsupportedBlockCases")).toBe(false)
     expect(options.structure.groupByCategory).toBe(true)
     expect(options.structure.includeDateInPostFolderName).toBe(true)
@@ -63,14 +63,14 @@ describe("export options", () => {
     expect("videoStyle" in options.markdown).toBe(false)
   })
 
-  it("merges parser block output defaults", () => {
+  it("merges editor block output defaults", () => {
     const options = cloneExportOptions({
       blockOutputs: {
         defaults: {
-          "code": {
+          "naver-se4:code": {
             variant: "tilde-fence",
           },
-          "formula": {
+          "naver-se4:formula": {
             variant: "wrapper",
             params: {
               inlineWrapper: "\\(...\\)",
@@ -81,10 +81,33 @@ describe("export options", () => {
       },
     })
 
-    expect(options.blockOutputs.defaults["code"]?.variant).toBe("tilde-fence")
-    expect(options.blockOutputs.defaults["formula"]?.variant).toBe("wrapper")
-    expect(options.blockOutputs.defaults["formula"]?.params?.inlineWrapper).toBe("\\(...\\)")
-    expect(options.blockOutputs.defaults["formula"]?.params?.blockWrapper).toBe("\\[...\\]")
+    expect(options.blockOutputs.defaults["naver-se4:code"]?.variant).toBe("tilde-fence")
+    expect(options.blockOutputs.defaults["naver-se4:formula"]?.variant).toBe("wrapper")
+    expect(options.blockOutputs.defaults["naver-se4:formula"]?.params?.inlineWrapper).toBe("\\(...\\)")
+    expect(options.blockOutputs.defaults["naver-se4:formula"]?.params?.blockWrapper).toBe("\\[...\\]")
+  })
+
+  it("drops block-type-only output defaults from persisted options", () => {
+    const sanitized = sanitizePersistedExportOptions(
+      JSON.parse(`{
+        "blockOutputs": {
+          "defaults": {
+            "code": {
+              "variant": "tilde-fence"
+            },
+            "naver-se4:code": {
+              "variant": "tilde-fence"
+            }
+          }
+        }
+      }`),
+    )
+
+    expect(sanitized.blockOutputs?.defaults).toEqual({
+      "naver-se4:code": {
+        variant: "tilde-fence",
+      },
+    })
   })
 
   it("ignores legacy unsupported block representative-case selections", () => {
@@ -110,7 +133,7 @@ describe("export options", () => {
     const options = cloneExportOptions({
       blockOutputs: {
         defaults: {
-          "formula": {
+          "naver-se4:formula": {
             variant: "wrapper",
             params: {
               inlineOpen: "\\(",
@@ -124,6 +147,7 @@ describe("export options", () => {
     const selection = resolveBlockOutputSelection({
       blockType: "formula",
       blockOutputs: options.blockOutputs,
+      selectionKey: "naver-se4:formula",
     })
 
     expect(selection.params?.inlineWrapper).toBe("\\(...\\)")

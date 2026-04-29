@@ -1,15 +1,12 @@
 import type {
+  EditorBlockOutputSelectionKey,
   ExportOptions,
   FrontmatterFieldMeta,
   FrontmatterFieldName,
   OptionDescriptionMap,
 } from "./Types.js"
-import {
-  blockOutputFamilyOrder,
-  getBlockOutputFamilyDefinition,
-  resolveBlockOutputSelection,
-} from "./BlockRegistry.js"
-import type { BlockType } from "./Types.js"
+import { resolveBlockOutputSelection } from "./BlockRegistry.js"
+import { NaverBlog } from "../modules/blog/NaverBlog.js"
 
 export type PartialExportOptions = {
   scope?: Partial<ExportOptions["scope"]>
@@ -43,6 +40,8 @@ export const frontmatterFieldOrder: FrontmatterFieldName[] = [
   "exportedAt",
   "assetPaths",
 ]
+
+export const getDefaultBlockOutputDefinitions = () => new NaverBlog().getBlockOutputDefinitions()
 
 export const frontmatterFieldMeta: Record<FrontmatterFieldName, FrontmatterFieldMeta> = {
   title: {
@@ -364,9 +363,12 @@ export const sanitizePersistedExportOptions = (options?: PartialExportOptions): 
     const blockOutputs: NonNullable<PartialExportOptions["blockOutputs"]> = {}
 
     if (options.blockOutputs.defaults) {
+      const allowedSelectionKeys = new Set(
+        getDefaultBlockOutputDefinitions().map((definition) => definition.key),
+      )
       blockOutputs.defaults = Object.fromEntries(
-        Object.entries(options.blockOutputs.defaults).filter(([blockType]) =>
-          blockOutputFamilyOrder.includes(blockType as BlockType),
+        Object.entries(options.blockOutputs.defaults).filter(([selectionKey]) =>
+          allowedSelectionKeys.has(selectionKey as EditorBlockOutputSelectionKey),
         ),
       ) as NonNullable<PartialExportOptions["blockOutputs"]>["defaults"]
     }
@@ -405,21 +407,14 @@ const coerceAssetOptions = (options: ExportOptions["assets"]) => {
 
 const buildDefaultBlockOutputs = (options?: PartialExportOptions["blockOutputs"]) =>
   Object.fromEntries(
-    blockOutputFamilyOrder.flatMap((blockType) => {
-      const family = getBlockOutputFamilyDefinition(blockType)
-
-      return family
-        ? [
-            [
-              blockType,
-              resolveBlockOutputSelection({
-                blockType: family.astBlockType,
-                blockOutputs: options,
-              }),
-            ],
-          ]
-        : []
-    }),
+    getDefaultBlockOutputDefinitions().map((definition) => [
+      definition.key,
+      resolveBlockOutputSelection({
+        blockType: definition.astBlockType,
+        blockOutputs: options,
+        selectionKey: definition.key,
+      }),
+    ]),
   ) as ExportOptions["blockOutputs"]["defaults"]
 
 export const cloneExportOptions = (options?: PartialExportOptions) => {

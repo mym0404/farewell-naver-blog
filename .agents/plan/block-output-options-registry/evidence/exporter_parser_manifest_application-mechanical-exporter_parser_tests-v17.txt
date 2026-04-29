@@ -1,0 +1,8 @@
+✓ tests/export-job-manifest.test.ts (1 test) 3ms
+✓ tests/markdown-renderer.test.ts (14 tests) 17ms
+✓ tests/parser/post-parser.test.ts (5 tests) 80ms
+✓ tests/naver-blog-exporter.test.ts (14 tests) 231ms
+
+Test Files 4 passed (4)
+Tests 34 passed (34)
+exit code 0

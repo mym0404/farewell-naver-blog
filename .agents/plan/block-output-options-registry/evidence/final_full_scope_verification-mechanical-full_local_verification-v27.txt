@@ -1,0 +1,9 @@
+> farewell-naver-blog@0.1.0 check:full /Users/mj/projects/farewell-naver-blog
+> pnpm typecheck && pnpm test:offline && pnpm smoke:ui
+
+Test Files 36 passed (36)
+Tests 272 passed (272)
+vite build succeeded
+[run-ui-resume-smoke] resume smoke passed (8 scenarios, concurrency=3)
+[run-ui-smoke] smoke:ui passed (job-smoke)
+exit code 0

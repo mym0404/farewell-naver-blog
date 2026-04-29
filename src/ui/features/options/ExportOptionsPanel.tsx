@@ -1,19 +1,20 @@
 import type { ReactNode, SVGProps } from "react"
 
 import type {
+  EditorBlockOutputDefinition,
   ExportOptions,
   FrontmatterFieldMeta,
   FrontmatterFieldName,
   OptionDescriptionMap,
   PostSummary,
 } from "../../../shared/Types.js"
-import {
-  blockOutputFamilyDefinitions,
-  resolveBlockOutputSelection,
-} from "../../../shared/BlockRegistry.js"
+import { resolveBlockOutputSelection } from "../../../shared/BlockRegistry.js"
 import { renderBlockOutputPreview } from "../../../shared/BlockOutputPreview.js"
 import { formatCategorySegment } from "../../../shared/PathFormat.js"
-import { getDefaultSlugWhitespace } from "../../../shared/ExportOptions.js"
+import {
+  getDefaultBlockOutputDefinitions,
+  getDefaultSlugWhitespace,
+} from "../../../shared/ExportOptions.js"
 import {
   applyPostTemplate,
   buildPostFolderName,
@@ -479,6 +480,7 @@ const OptionSection = ({
 )
 
 const blockOutputCardClass = "field-card grid gap-4 rounded-[1.5rem] px-4 py-4 xl:col-span-2"
+const blockOutputDefinitions = getDefaultBlockOutputDefinitions()
 
 const isBlockOutputParamVisible = ({
   variant,
@@ -487,6 +489,33 @@ const isBlockOutputParamVisible = ({
   variant: string
   variants?: string[]
 }) => !variants || variants.includes(variant)
+
+const toBlockOutputDomKey = (key: string) => key.replace(/[^A-Za-z0-9_-]/g, "-")
+
+const groupBlockOutputDefinitionsByEditor = (definitions: EditorBlockOutputDefinition[]) =>
+  definitions.reduce(
+    (groups, definition) => {
+      const existingGroup = groups.find((group) => group.editorType === definition.editorType)
+
+      if (existingGroup) {
+        existingGroup.definitions.push(definition)
+        return groups
+      }
+
+      groups.push({
+        editorType: definition.editorType,
+        editorLabel: definition.editorLabel,
+        definitions: [definition],
+      })
+
+      return groups
+    },
+    [] as {
+      editorType: EditorBlockOutputDefinition["editorType"]
+      editorLabel: string
+      definitions: EditorBlockOutputDefinition[]
+    }[],
+  )
 
 const BlockOutputPreview = ({
   snippet,
@@ -507,12 +536,13 @@ const BlockOutputCard = ({
   onOptionsChange,
 }: {
   options: ExportOptions
-  family: (typeof blockOutputFamilyDefinitions)[number]
+  family: EditorBlockOutputDefinition
   onOptionsChange: (updater: (current: ExportOptions) => ExportOptions) => void
 }) => {
   const selection = resolveBlockOutputSelection({
     blockType: family.astBlockType,
     blockOutputs: options.blockOutputs,
+    selectionKey: family.key,
   })
   const previewSnippet = renderBlockOutputPreview({
     block: family.previewBlock,
@@ -521,12 +551,13 @@ const BlockOutputCard = ({
     includeImageCaptions: options.assets.includeImageCaptions,
     imageHandlingMode: options.assets.imageHandlingMode,
   })
-  const optionKeyPrefix = `blockOutputs-defaults-${family.astBlockType}`
+  const optionKeyPrefix = `blockOutputs-defaults-${toBlockOutputDomKey(family.key)}`
   const updateSelection = (updater: (current: NonNullable<typeof selection>) => NonNullable<typeof selection>) => {
     onOptionsChange((current) => {
       const currentSelection = resolveBlockOutputSelection({
         blockType: family.astBlockType,
         blockOutputs: current.blockOutputs,
+        selectionKey: family.key,
       })
       const nextSelection = updater(currentSelection)
 
@@ -536,7 +567,7 @@ const BlockOutputCard = ({
           ...current.blockOutputs,
           defaults: {
             ...current.blockOutputs.defaults,
-            [family.astBlockType]: nextSelection,
+            [family.key]: nextSelection,
           },
         },
       }
@@ -544,7 +575,12 @@ const BlockOutputCard = ({
   }
 
   return (
-    <Card className={blockOutputCardClass} data-block-output-card={family.astBlockType}>
+    <Card
+      className={blockOutputCardClass}
+      data-block-output-card={family.key}
+      data-block-output-block={family.astBlockType}
+      data-block-output-editor={family.editorType}
+    >
       <CardHeader className="gap-2 px-0 pb-0">
         <div className="flex items-start justify-between gap-3">
           <div className="grid gap-1">
@@ -1144,6 +1180,9 @@ export const ExportOptionsPanel = ({
     </OptionSection>
   )
 
+  const blockOutputGroups = groupBlockOutputDefinitionsByEditor(blockOutputDefinitions)
+  const showBlockOutputEditorGroups = blockOutputGroups.length > 1
+
   const markdownSection = (
     <OptionSection title="Markdown 규칙" note="링크 방식과 블록별 출력 결과를 정합니다. 아래 preview는 실제 export될 Markdown snippet 기준입니다.">
       <OptionField
@@ -1170,13 +1209,28 @@ export const ExportOptionsPanel = ({
           }
         />
       </OptionField>
-      {blockOutputFamilyDefinitions.map((family) => (
-        <BlockOutputCard
-          key={family.astBlockType}
-          options={options}
-          family={family}
-          onOptionsChange={onOptionsChange}
-        />
+      {blockOutputGroups.map((group) => (
+        <div
+          key={group.editorType}
+          className="grid gap-3 xl:col-span-2"
+          data-block-output-editor-group={group.editorType}
+        >
+          {showBlockOutputEditorGroups ? (
+            <div className="grid gap-1">
+              <h3 className="text-sm font-semibold text-foreground">{group.editorLabel}</h3>
+            </div>
+          ) : null}
+          <div className="grid gap-4 xl:grid-cols-2">
+            {group.definitions.map((family) => (
+              <BlockOutputCard
+                key={family.key}
+                options={options}
+                family={family}
+                onOptionsChange={onOptionsChange}
+              />
+            ))}
+          </div>
+        </div>
       ))}
     </OptionSection>
   )

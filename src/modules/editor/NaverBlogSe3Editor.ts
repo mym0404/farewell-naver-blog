@@ -1,4 +1,5 @@
 import type { ParsedPost } from "@shared/Types.js"
+import { blockOutputOptionsByType } from "@shared/BlockRegistry.js"
 import { unique } from "@shared/Utils.js"
 import { NaverSe3CodeBlock } from "../blocks/naver-se3/CodeBlock.js"
 import { NaverSe3DocumentTitleBlock } from "../blocks/naver-se3/DocumentTitleBlock.js"
@@ -16,14 +17,17 @@ const hasSmartEditorVersion = (html: string, version: number) =>
   String(version)
 
 export class NaverBlogSE3Editor extends BaseEditor {
+  override readonly type = "naver-se3"
+  override readonly label = "SmartEditor 3"
+
   protected override readonly supportedBlocks = [
     new NaverSe3DocumentTitleBlock(),
-    new NaverSe3TableBlock(),
-    new NaverSe3QuoteBlock(),
-    new NaverSe3CodeBlock(),
-    new NaverSe3ImageBlock(),
+    new NaverSe3TableBlock().withOutputOptions(blockOutputOptionsByType.table),
+    new NaverSe3QuoteBlock().withOutputOptions(blockOutputOptionsByType.quote),
+    new NaverSe3CodeBlock().withOutputOptions(blockOutputOptionsByType.code),
+    new NaverSe3ImageBlock().withOutputOptions(blockOutputOptionsByType.image),
     new NaverSe3RepresentativeUnsupportedBlock(),
-    new NaverSe3TextBlock(),
+    new NaverSe3TextBlock().withOutputOptions(blockOutputOptionsByType.paragraph),
     new NaverSe3FallbackBlock(),
   ]
 

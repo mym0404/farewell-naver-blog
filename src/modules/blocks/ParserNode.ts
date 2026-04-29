@@ -8,7 +8,7 @@ import type {
   UnknownRecord,
 } from "../../shared/Types.js"
 
-export type ParserBlockOptions = Pick<ExportOptions, "markdown"> &
+export type ParserBlockOptions = Pick<ExportOptions, "markdown" | "blockOutputs"> &
   {
     resolveLinkUrl?: (url: string) => string
   }

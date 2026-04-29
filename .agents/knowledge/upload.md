@@ -18,7 +18,7 @@
 
 ## Resume Source Of Truth
 - `src/server/ExportJobManifest.ts` reads and writes `manifest.json` as the recovery source.
-- `manifest.json.job` carries request, status, phase, logs, progress, items, scan result, and summary.
+- `manifest.json.job` carries request, status, phase, progress, upload snapshot, scan result, summary, timestamps, and optional error.
 - `src/server/HttpServer.ts` hydrates bootstrap state from the last output directory's `manifest.json`.
 - `src/server/JobStore.ts` keeps upload counters, item-level upload counters, and rewrite status in polling payloads.
 

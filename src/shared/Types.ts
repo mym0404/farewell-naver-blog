@@ -167,6 +167,56 @@ export type BlockOutputSelection<
   Block extends keyof BlockOutputSelectionByType = keyof BlockOutputSelectionByType,
 > = BlockOutputSelectionByType[Block]
 
+export type BlockOutputParamDefinition = {
+  key: string
+  label: string
+  description: string
+  input: "text" | "number"
+  whenVariants?: string[]
+}
+
+export type BlockOutputVariantDefinition = {
+  id: string
+  label: string
+  description: string
+}
+
+export type BlockOutputOptionDefinition<Block extends BlockType = BlockType> = {
+  blockId: string
+  astBlockType: Block
+  label: string
+  description: string
+  previewBlock: Extract<AstBlock, { type: Block }>
+  defaultSelection: BlockOutputSelection<Block>
+  variants: BlockOutputVariantDefinition[]
+  params?: BlockOutputParamDefinition[]
+}
+
+export type AnyBlockOutputOptionDefinition = {
+  [Key in BlockType]: BlockOutputOptionDefinition<Key>
+}[BlockType]
+
+export type EditorBlockOutputSelectionKey = string
+
+export type EditorBlockOutputDefinition = {
+  key: EditorBlockOutputSelectionKey
+  editorType: string
+  editorLabel: string
+  blockId: string
+  astBlockType: BlockType
+  label: string
+  description: string
+  previewBlock: AstBlock
+  defaultSelection: BlockOutputSelection
+  variants: BlockOutputVariantDefinition[]
+  params?: BlockOutputParamDefinition[]
+}
+
+export type AstBlockOutputSelection<Block extends keyof BlockOutputSelectionByType> = {
+  outputSelectionKey?: EditorBlockOutputSelectionKey
+  outputSelection?: BlockOutputSelection<Block>
+}
+
 export type ImageHandlingMode = "download" | "remote" | "download-and-upload"
 
 export type AssetDownloadFailureMode =
@@ -291,7 +341,7 @@ export type ExportOptions = {
   }
   blockOutputs: {
     defaults: Partial<{
-      [Key in keyof BlockOutputSelectionByType]: BlockOutputSelection<Key>
+      [Key in EditorBlockOutputSelectionKey]: BlockOutputSelection
     }>
   }
   assets: {
@@ -392,17 +442,17 @@ export type ImageData = {
 }
 
 export type AstBlock =
-  | { type: "paragraph"; text: string }
-  | { type: "heading"; level: number; text: string }
-  | { type: "quote"; text: string }
-  | { type: "divider"; outputSelection?: DividerBlockOutputSelection }
-  | { type: "code"; language: string | null; code: string }
-  | { type: "formula"; formula: string; display: boolean }
-  | { type: "image"; image: ImageData; outputSelection?: ImageBlockOutputSelection }
-  | { type: "imageGroup"; images: ImageData[] }
-  | { type: "video"; video: VideoData; outputSelection?: VideoBlockOutputSelection }
-  | { type: "linkCard"; card: LinkCardData; outputSelection?: LinkCardBlockOutputSelection }
-  | { type: "table"; rows: TableRow[]; html: string; complex: boolean }
+  | ({ type: "paragraph"; text: string } & AstBlockOutputSelection<"paragraph">)
+  | ({ type: "heading"; level: number; text: string } & AstBlockOutputSelection<"heading">)
+  | ({ type: "quote"; text: string } & AstBlockOutputSelection<"quote">)
+  | ({ type: "divider" } & AstBlockOutputSelection<"divider">)
+  | ({ type: "code"; language: string | null; code: string } & AstBlockOutputSelection<"code">)
+  | ({ type: "formula"; formula: string; display: boolean } & AstBlockOutputSelection<"formula">)
+  | ({ type: "image"; image: ImageData } & AstBlockOutputSelection<"image">)
+  | ({ type: "imageGroup"; images: ImageData[] } & AstBlockOutputSelection<"imageGroup">)
+  | ({ type: "video"; video: VideoData } & AstBlockOutputSelection<"video">)
+  | ({ type: "linkCard"; card: LinkCardData } & AstBlockOutputSelection<"linkCard">)
+  | ({ type: "table"; rows: TableRow[]; html: string; complex: boolean } & AstBlockOutputSelection<"table">)
 
 export type ParsedPostStructuredBodyNode = {
   kind: "block"

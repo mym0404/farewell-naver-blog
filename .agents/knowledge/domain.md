@@ -9,8 +9,8 @@
 - `blogIdOrUrl`: scan and export input.
 - `CategoryInfo`: category tree node with path and post count.
 - `ScanResult`: public post count, categories, and post summary snapshot.
-- `ExportOptions`: scope, structure, frontmatter, Markdown, asset, diagnostic, and upload-related export options.
-- `ParsedPost`: common AST blocks, tags, videos, and warnings. It does not carry editor identity metadata.
+- `ExportOptions`: scope, structure, frontmatter, Markdown, block output, asset, and link export options.
+- `ParsedPost`: common AST blocks, tags, videos, warnings, and optional per-block output selection metadata.
 - `ExportManifest`: post results, summary, upload summary, logs, and UI recovery job snapshot.
 - `ExportJobState`: server/UI state for export, upload, result, failure, and recovery.
 - `UploadCandidate`: local asset selected for post-export upload.
@@ -26,6 +26,7 @@
 - Naver media/link card/video blocks render as Markdown links when no richer Markdown form exists.
 - Simple tables render as GFM tables; complex tables can use HTML fallback.
 - Raw HTML fallback should preserve warning context and extracted text instead of silently dropping content.
+- Block output defaults use Editor+Block selection keys in `ExportOptions.blockOutputs.defaults`; `manifest.json.options` preserves those keys.
 
 ## Frontmatter Rules
 - `category` is a display string.

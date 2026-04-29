@@ -439,7 +439,7 @@ describe("http server", () => {
           }
           blockOutputs: {
             defaults: {
-              "formula"?: {
+              "naver-se4:formula"?: {
                 params?: {
                   blockWrapper?: string
                 }
@@ -467,7 +467,7 @@ describe("http server", () => {
       expect(body.options.structure.slugWhitespace).toBe("underscore")
       expect(body.options.structure.postFolderNameMode).toBe("preset")
       expect(body.options.structure.postFolderNameCustomTemplate).toBe("")
-      expect(body.options.blockOutputs.defaults["formula"]?.params?.blockWrapper).toBe("$$")
+      expect(body.options.blockOutputs.defaults["naver-se4:formula"]?.params?.blockWrapper).toBe("$$")
       expect(body.options.assets.stickerAssetMode).toBe("ignore")
       expect(body.lastOutputDir).toBe(outputDir)
       expect(body.resumedJob).toBeNull()

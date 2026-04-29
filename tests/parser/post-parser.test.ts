@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest"
 import { parsePostHtml } from "../../src/modules/parser/PostParser.js"
 import { defaultExportOptions } from "../../src/shared/ExportOptions.js"
 
+const testOptions = defaultExportOptions()
 const parserOptions = {
-  markdown: defaultExportOptions().markdown,
+  markdown: testOptions.markdown,
+  blockOutputs: testOptions.blockOutputs,
 }
 
 describe("post-parser routing", () => {
@@ -77,6 +79,64 @@ describe("post-parser routing", () => {
       options: parserOptions,
     })
     expect(parsed.blocks).toEqual([{ type: "paragraph", text: "SE3 text" }])
+  })
+
+  it("resolves same block output selections by editor", () => {
+    const options = defaultExportOptions()
+    options.blockOutputs.defaults["naver-se4:code"] = {
+      variant: "tilde-fence",
+    }
+    options.blockOutputs.defaults["naver-se3:code"] = {
+      variant: "backtick-fence",
+    }
+    const se4Parsed = parsePostHtml({
+      html: `
+        <script>var data = { smartEditorVersion: 4 }</script>
+        <div id="viewTypeSelector">
+          <div class="se-component se-code">
+            <script class="__se_module_data" data-module-v2='{"type":"v2_code"}'></script>
+            <pre class="__se_code_view language-typescript">const se4 = true</pre>
+          </div>
+        </div>
+      `,
+      sourceUrl: "https://blog.naver.com/mym0404/4",
+      options: {
+        markdown: options.markdown,
+        blockOutputs: options.blockOutputs,
+      },
+    })
+    const se3Parsed = parsePostHtml({
+      html: `
+        <script>var data = { smartEditorVersion: 3 }</script>
+        <div id="viewTypeSelector">
+          <div class="se_component_wrap sect_dsc">
+            <div class="se_component se_code">
+              <pre>const se3 = true</pre>
+            </div>
+          </div>
+        </div>
+      `,
+      sourceUrl: "https://blog.naver.com/mym0404/5",
+      options: {
+        markdown: options.markdown,
+        blockOutputs: options.blockOutputs,
+      },
+    })
+
+    expect(se4Parsed.blocks[0]).toMatchObject({
+      type: "code",
+      outputSelectionKey: "naver-se4:code",
+      outputSelection: {
+        variant: "tilde-fence",
+      },
+    })
+    expect(se3Parsed.blocks[0]).toMatchObject({
+      type: "code",
+      outputSelectionKey: "naver-se3:code",
+      outputSelection: {
+        variant: "backtick-fence",
+      },
+    })
   })
 
   it("routes legacy html to the SE2 parser", () => {

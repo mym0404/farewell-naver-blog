@@ -1,0 +1,7 @@
+✓ tests/export-options.test.ts (16 tests) 6ms
+✓ tests/single-post-cli.test.ts (15 tests) 22ms
+✓ tests/http-server.test.ts (33 tests) 2725ms
+
+Test Files 3 passed (3)
+Tests 64 passed (64)
+exit code 0

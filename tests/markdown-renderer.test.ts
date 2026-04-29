@@ -201,19 +201,30 @@ describe("renderMarkdownPost", () => {
 
   it("renders custom formula wrappers and image asset references", async () => {
     const options = defaultExportOptions()
-
-    options.blockOutputs.defaults["formula"] = {
+    const formulaSelection = {
       variant: "wrapper",
       params: {
         inlineWrapper: "\\(...\\)",
         blockWrapper: "\\[...\\]",
       },
-    }
+    } satisfies ParsedPost["blocks"][number]["outputSelection"]
+
+    options.blockOutputs.defaults["naver-se4:formula"] = formulaSelection
 
     const rendered = await renderMarkdownPost({
       post,
       category,
-      parsedPost,
+      parsedPost: createParsedPost({
+        blocks: parsedPostBlocks.map((block) =>
+          block.type === "formula"
+            ? {
+                ...block,
+                outputSelectionKey: "naver-se4:formula",
+                outputSelection: formulaSelection,
+              }
+            : block,
+        ),
+      }),
       markdownFilePath: testMarkdownFilePath,
       reviewedWarnings: [],
       options,
@@ -229,6 +240,54 @@ describe("renderMarkdownPost", () => {
     expect(rendered.markdown).toContain("\\(g(n)=n-1\\)")
     expect(rendered.markdown).toContain(`![one](${publicImagePath})`)
     expect(rendered.assetRecords.every((asset) => asset.storageMode === "relative")).toBe(true)
+  })
+
+  it("renders same block types from editor-specific output selections independently", async () => {
+    const options = defaultExportOptions()
+    options.blockOutputs.defaults["naver-se4:code"] = {
+      variant: "tilde-fence",
+    }
+    options.blockOutputs.defaults["naver-se3:code"] = {
+      variant: "backtick-fence",
+    }
+    const se4CodeBlock = {
+      type: "code",
+      language: "ts",
+      code: "const se4 = true",
+      outputSelectionKey: "naver-se4:code",
+      outputSelection: {
+        variant: "tilde-fence",
+      },
+    } satisfies ParsedPost["blocks"][number]
+    const se3CodeBlock = {
+      type: "code",
+      language: "ts",
+      code: "const se3 = true",
+      outputSelectionKey: "naver-se3:code",
+      outputSelection: {
+        variant: "backtick-fence",
+      },
+    } satisfies ParsedPost["blocks"][number]
+
+    const rendered = await renderMarkdownPost({
+      post,
+      category,
+      parsedPost: createParsedPost({
+        blocks: [se4CodeBlock, se3CodeBlock],
+      }),
+      markdownFilePath: testMarkdownFilePath,
+      reviewedWarnings: [],
+      options,
+      resolveAsset: async ({ kind, sourceUrl }) =>
+        createAssetRecord({
+          kind,
+          sourceUrl,
+          relativePath: null,
+        }),
+    })
+
+    expect(rendered.markdown).toContain("~~~ts\nconst se4 = true\n~~~")
+    expect(rendered.markdown).toContain("```ts\nconst se3 = true\n```")
   })
 
   it("preserves hard breaks inside paragraph markdown", async () => {
@@ -384,7 +443,7 @@ describe("renderMarkdownPost", () => {
 
     options.frontmatter.enabled = false
     options.markdown.linkStyle = "referenced"
-    options.blockOutputs.defaults["image"] = {
+    options.blockOutputs.defaults["naver-se4:image"] = {
       variant: "source-only",
     }
 
@@ -402,6 +461,10 @@ describe("renderMarkdownPost", () => {
               alt: "source only",
               caption: null,
               mediaKind: "image",
+            },
+            outputSelectionKey: "naver-se4:image",
+            outputSelection: {
+              variant: "source-only",
             },
           },
           {
@@ -441,19 +504,19 @@ describe("renderMarkdownPost", () => {
   it("renders fallback warnings for image-group and table edge cases while keeping videos as plain links", async () => {
     const options = defaultExportOptions()
 
-    options.blockOutputs.defaults["formula"] = {
+    options.blockOutputs.defaults["naver-se4:formula"] = {
       variant: "math-fence",
       params: {
         inlineWrapper: "$",
       },
     }
-    options.blockOutputs.defaults["code"] = {
+    options.blockOutputs.defaults["naver-se4:code"] = {
       variant: "tilde-fence",
     }
-    options.blockOutputs.defaults["divider"] = {
+    options.blockOutputs.defaults["naver-se4:divider"] = {
       variant: "asterisk-rule",
     }
-    options.blockOutputs.defaults["table"] = {
+    options.blockOutputs.defaults["naver-se4:table"] = {
       variant: "html-only",
     }
 
@@ -463,9 +526,34 @@ describe("renderMarkdownPost", () => {
       parsedPost: {
         ...parsedPost,
         blocks: [
-          { type: "divider" },
-          { type: "code", language: null, code: "plain" },
-          { type: "formula", formula: "x+y", display: true },
+          {
+            type: "divider",
+            outputSelectionKey: "naver-se4:divider",
+            outputSelection: {
+              variant: "asterisk-rule",
+            },
+          },
+          {
+            type: "code",
+            language: null,
+            code: "plain",
+            outputSelectionKey: "naver-se4:code",
+            outputSelection: {
+              variant: "tilde-fence",
+            },
+          },
+          {
+            type: "formula",
+            formula: "x+y",
+            display: true,
+            outputSelectionKey: "naver-se4:formula",
+            outputSelection: {
+              variant: "math-fence",
+              params: {
+                inlineWrapper: "$",
+              },
+            },
+          },
           {
             type: "imageGroup",
             images: [
@@ -502,6 +590,7 @@ describe("renderMarkdownPost", () => {
             kind: "block",
             block: {
               type: "divider",
+              outputSelectionKey: "naver-se4:divider",
               outputSelection: {
                 variant: "asterisk-rule",
               },
@@ -513,6 +602,10 @@ describe("renderMarkdownPost", () => {
               type: "code",
               language: "html",
               code: "<main></main>",
+              outputSelectionKey: "naver-se4:code",
+              outputSelection: {
+                variant: "tilde-fence",
+              },
             },
           },
           {
@@ -521,6 +614,13 @@ describe("renderMarkdownPost", () => {
               type: "formula",
               formula: "x+y",
               display: true,
+              outputSelectionKey: "naver-se4:formula",
+              outputSelection: {
+                variant: "math-fence",
+                params: {
+                  inlineWrapper: "$",
+                },
+              },
             },
           },
           {
@@ -560,6 +660,10 @@ describe("renderMarkdownPost", () => {
               complex: true,
               html: "<table><tr><td>cell</td></tr></table>",
               rows: [],
+              outputSelectionKey: "naver-se4:table",
+              outputSelection: {
+                variant: "html-only",
+              },
             },
           },
           {

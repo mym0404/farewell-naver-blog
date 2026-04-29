@@ -1,0 +1,1 @@
+package.json exists and contains test:network; exit code 0. Network e2e remains documented separately and was not run for local final verification.

@@ -12,11 +12,11 @@
 ## Runtime And Architecture
 - 서버 시작점은 `src/Server.ts`, HTTP API는 `src/server/HttpServer.ts`다.
 - export 파이프라인은 `src/modules/exporter/NaverBlogExporter.ts`에서 `fetch -> parse -> review -> render -> write -> manifest` 순서로 따라간다.
-- parser seam은 `src/modules/parser/PostParser.ts`, `src/modules/parser/editors/*`, `src/modules/parser/blocks/*`, `src/shared/BlockRegistry.ts`다.
+- parser seam은 `src/modules/parser/PostParser.ts`, `src/modules/blog/*`, `src/modules/editor/*`, `src/modules/blocks/*`, `src/shared/BlockRegistry.ts`다.
 - UI 셸은 `src/ui/App.tsx`, 공용 shell/hook/status는 `src/ui/features/common/*`, 전역 토큰은 `src/ui/styles/globals.css`다.
 
 ## Design System
-- UI 기준은 `.agents/knowledge/design.md`다.
+- UI 기준은 `.agents/knowledge/DESIGN.md`다.
 - theme/token source of truth는 `src/ui/styles/globals.css`, primitive layer는 `src/ui/components/ui/*`다.
 - dark-first single-column wizard, shadcn primitive 우선, 아이콘은 `@remixicon/react`만 유지한다.
 
@@ -40,5 +40,5 @@
 - Product domain and output rules: `.agents/knowledge/domain.md`
 - Sample fixtures: `.agents/knowledge/fixtures.md`
 - Upload and resume lifecycle: `.agents/knowledge/upload.md`
-- UI design system: `.agents/knowledge/design.md`
+- UI design system: `.agents/knowledge/DESIGN.md`
 - Code style and local workflow: `.agents/knowledge/code-style.md`

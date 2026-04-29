@@ -1,6 +1,6 @@
 import type { CheerioAPI } from "cheerio"
 
-import type { ExportOptions, ParsedPost } from "../../shared/Types.js"
+import type { EditorBlockOutputDefinition, ExportOptions, ParsedPost } from "../../shared/Types.js"
 import type { BaseEditor } from "../editor/BaseEditor.js"
 
 export type BlogPostParseInput = {
@@ -8,13 +8,17 @@ export type BlogPostParseInput = {
   html: string
   sourceUrl: string
   tags: string[]
-  options: Pick<ExportOptions, "markdown"> & {
+  options: Pick<ExportOptions, "markdown" | "blockOutputs"> & {
     resolveLinkUrl?: (url: string) => string
   }
 }
 
 export abstract class BaseBlog {
   abstract readonly editors: BaseEditor[]
+
+  getBlockOutputDefinitions(): EditorBlockOutputDefinition[] {
+    return this.editors.flatMap((editor) => editor.getBlockOutputDefinitions())
+  }
 
   parsePost(input: BlogPostParseInput): ParsedPost {
     const editor = this.editors.find((candidate) => candidate.canParse(input.html))

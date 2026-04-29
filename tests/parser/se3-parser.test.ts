@@ -4,8 +4,10 @@ import { describe, expect, it } from "vitest"
 import { NaverBlogSE3Editor } from "../../src/modules/editor/NaverBlogSe3Editor.js"
 import { defaultExportOptions } from "../../src/shared/ExportOptions.js"
 
+const testOptions = defaultExportOptions()
 const parserOptions = {
-  markdown: defaultExportOptions().markdown,
+  markdown: testOptions.markdown,
+  blockOutputs: testOptions.blockOutputs,
 }
 const se3Editor = new NaverBlogSE3Editor()
 
@@ -82,6 +84,10 @@ console.log(legacy)
         type: "code",
         language: null,
         code: "const legacy = true\nconsole.log(legacy)",
+        outputSelectionKey: "naver-se3:code",
+        outputSelection: {
+          variant: "backtick-fence",
+        },
       },
     ])
   })
@@ -129,6 +135,10 @@ console.log(legacy)
           alt: "se3 image",
           caption: null,
           mediaKind: "image",
+        },
+        outputSelectionKey: "naver-se3:image",
+        outputSelection: {
+          variant: "markdown-image",
         },
       },
     ])
@@ -248,7 +258,8 @@ console.log(legacy)
         </div>
       `],
       options: {
-        markdown: defaultExportOptions().markdown,
+        markdown: testOptions.markdown,
+        blockOutputs: testOptions.blockOutputs,
       },
     })
 

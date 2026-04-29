@@ -1,12 +1,12 @@
-phase: seed_review
+phase: complete
 current_task: null
 tasks:
-  registry_editor_block_contract: Todo
-  options_settings_api_contract: Todo
-  ui_editor_block_options_flow: Todo
-  exporter_parser_manifest_application: Todo
-  fixtures_snapshots_and_flow_regression: Todo
-  final_full_scope_verification: Todo
+  registry_editor_block_contract: Done
+  options_settings_api_contract: Done
+  ui_editor_block_options_flow: Done
+  exporter_parser_manifest_application: Done
+  fixtures_snapshots_and_flow_regression: Done
+  final_full_scope_verification: Done
 halt: null
 bundle_inspection:
   author:

@@ -1,0 +1,7 @@
+✓ tests/ui/api.test.ts (2 tests) 6ms
+✓ tests/ui/export-options-panel.test.tsx (14 tests) 1589ms
+✓ tests/ui/app.test.tsx (22 tests) 11682ms
+
+Test Files 3 passed (3)
+Tests 38 passed (38)
+exit code 0

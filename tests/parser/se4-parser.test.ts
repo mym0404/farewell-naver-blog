@@ -4,8 +4,10 @@ import { describe, expect, it } from "vitest"
 import { NaverBlogSE4Editor } from "../../src/modules/editor/NaverBlogSe4Editor.js"
 import { defaultExportOptions } from "../../src/shared/ExportOptions.js"
 
+const testOptions = defaultExportOptions()
 const parserOptions = {
-  markdown: defaultExportOptions().markdown,
+  markdown: testOptions.markdown,
+  blockOutputs: testOptions.blockOutputs,
 }
 
 const sourceUrl = "https://blog.naver.com/mym0404/123456789"
@@ -114,6 +116,14 @@ describe("NaverBlogSE4Editor", () => {
         type: "formula",
         formula: "x^2 + y^2 = z^2",
         display: true,
+        outputSelectionKey: "naver-se4:formula",
+        outputSelection: {
+          variant: "wrapper",
+          params: {
+            inlineWrapper: "$",
+            blockWrapper: "$$",
+          },
+        },
       },
     ])
   })
@@ -130,6 +140,14 @@ describe("NaverBlogSE4Editor", () => {
         type: "formula",
         formula: "x+y",
         display: false,
+        outputSelectionKey: "naver-se4:formula",
+        outputSelection: {
+          variant: "wrapper",
+          params: {
+            inlineWrapper: "$",
+            blockWrapper: "$$",
+          },
+        },
       },
     ])
   })
@@ -149,6 +167,10 @@ console.log(value)
         type: "code",
         language: "typescript",
         code: "const value = 1\nconsole.log(value)",
+        outputSelectionKey: "naver-se4:code",
+        outputSelection: {
+          variant: "backtick-fence",
+        },
       },
     ])
   })
@@ -350,6 +372,10 @@ console.log(value)
           caption: "image caption",
           mediaKind: "image",
         },
+        outputSelectionKey: "naver-se4:image",
+        outputSelection: {
+          variant: "markdown-image",
+        },
       },
     ])
   })
@@ -386,6 +412,10 @@ console.log(value)
           alt: "",
           caption: null,
           mediaKind: "image",
+        },
+        outputSelectionKey: "naver-se4:image",
+        outputSelection: {
+          variant: "markdown-image",
         },
       },
     ])
@@ -548,7 +578,15 @@ console.log(value)
       <div class="se-component se-horizontalLine"></div>
     `)
 
-    expect(parsed.blocks).toEqual([{ type: "divider" }])
+    expect(parsed.blocks).toEqual([
+      {
+        type: "divider",
+        outputSelectionKey: "naver-se4:divider",
+        outputSelection: {
+          variant: "dash-rule",
+        },
+      },
+    ])
   })
 
   it("keeps unsupported components with content as fallback html", () => {

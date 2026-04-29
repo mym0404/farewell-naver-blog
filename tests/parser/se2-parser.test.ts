@@ -4,8 +4,10 @@ import { describe, expect, it } from "vitest"
 import { NaverBlogSE2Editor } from "../../src/modules/editor/NaverBlogSe2Editor.js"
 import { defaultExportOptions } from "../../src/shared/ExportOptions.js"
 
+const testOptions = defaultExportOptions()
 const parserOptions = {
-  markdown: defaultExportOptions().markdown,
+  markdown: testOptions.markdown,
+  blockOutputs: testOptions.blockOutputs,
 }
 const se2Editor = new NaverBlogSE2Editor()
 
@@ -48,6 +50,10 @@ console.log(oldSchool)
         type: "code",
         language: null,
         code: "const oldSchool = true\nconsole.log(oldSchool)",
+        outputSelectionKey: "naver-se2:code",
+        outputSelection: {
+          variant: "backtick-fence",
+        },
       },
     ])
   })
@@ -165,7 +171,15 @@ console.log(oldSchool)
   it("parses hr tags into divider blocks", () => {
     const parsed = parseSe2Fixture("<hr />")
 
-    expect(parsed.blocks).toEqual([{ type: "divider" }])
+    expect(parsed.blocks).toEqual([
+      {
+        type: "divider",
+        outputSelectionKey: "naver-se2:divider",
+        outputSelection: {
+          variant: "dash-rule",
+        },
+      },
+    ])
   })
 
   it("skips standalone br tags instead of keeping rawHtml", () => {
@@ -211,6 +225,10 @@ console.log(oldSchool)
           alt: "legacy image",
           caption: null,
           mediaKind: "image",
+        },
+        outputSelectionKey: "naver-se2:image",
+        outputSelection: {
+          variant: "markdown-image",
         },
       },
     ])
