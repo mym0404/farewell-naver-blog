@@ -22,7 +22,6 @@ export type FrontmatterFieldName =
   | "tags"
   | "thumbnail"
   | "video"
-  | "warnings"
   | "exportedAt"
   | "assetPaths"
 
@@ -74,11 +73,7 @@ type AstBlockOutputSelection = {
 
 type ImageHandlingMode = "download" | "remote" | "download-and-upload"
 
-type AssetDownloadFailureMode =
-  | "warn-and-use-source"
-  | "use-source"
-  | "omit"
-  | "warn-and-omit"
+type AssetDownloadFailureMode = "fail" | "use-source" | "omit"
 
 type ThumbnailSource = "post-list-first" | "first-body-image" | "none"
 
@@ -319,7 +314,6 @@ export type ParsedPost = {
   tags: string[]
   body: ParsedPostBodyNode[]
   blocks: AstBlock[]
-  warnings: string[]
   videos: VideoData[]
 }
 
@@ -345,8 +339,6 @@ export type PostManifestEntry = {
   outputPath: string | null
   assetPaths: string[]
   upload: PostUploadSummary
-  warnings: string[]
-  warningCount: number
   error: string | null
 }
 
@@ -364,8 +356,6 @@ export type ExportJobItem = {
   outputPath: string | null
   assetPaths: string[]
   upload: PostUploadSummary
-  warnings: string[]
-  warningCount: number
   error: string | null
   updatedAt: string
 }
@@ -392,7 +382,6 @@ export type ExportJobState = {
     total: number
     completed: number
     failed: number
-    warnings: number
   }
   upload: UploadSummary
   items: ExportJobItem[]
@@ -440,7 +429,6 @@ export type ExportManifest = {
   totalPosts: number
   successCount: number
   failureCount: number
-  warningCount: number
   upload: UploadSummary
   categories: CategoryInfo[]
   posts: PostManifestEntry[]

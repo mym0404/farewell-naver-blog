@@ -194,13 +194,11 @@ export const rewriteUploadedAssets = async ({
           title: post.title,
           source: post.source,
           category: post.category,
-          status: post.status,
-          outputPath: post.outputPath,
-          assetPaths: post.assetPaths,
-          upload: post.upload,
-          warnings: post.warnings,
-          warningCount: post.warningCount,
-          error: post.error,
+            status: post.status,
+            outputPath: post.outputPath,
+            assetPaths: post.assetPaths,
+            upload: post.upload,
+            error: post.error,
           updatedAt: new Date().toISOString(),
         }))
   let nextManifest = {

@@ -315,8 +315,6 @@ const buildUploadItem = ({
       rewriteStatus,
       rewrittenAt,
     },
-    warnings: [],
-    warningCount: 0,
     error: null,
     externalPreviewUrl,
     updatedAt,
@@ -343,7 +341,6 @@ const createBaseJob = () => ({
     total: uploadTargetCount,
     completed: uploadTargetCount,
     failed: 0,
-    warnings: 0,
   },
   error: null,
 })
@@ -361,12 +358,11 @@ const buildUploadJob = ({
   jobStatus: "running" | "upload-ready" | "uploading" | "upload-failed" | "upload-completed"
   uploadStatus: "not-requested" | "upload-ready" | "uploading" | "upload-failed" | "upload-completed"
   perItemUploadedCounts: number[]
-  progress: {
-    total: number
-    completed: number
-    failed: number
-    warnings: number
-  }
+    progress: {
+      total: number
+      completed: number
+      failed: number
+    }
   finishedAt: string | null
   error: string | null
   logs: Array<{
@@ -430,7 +426,6 @@ const buildUploadJob = ({
       totalPosts: uploadTargetCount,
       successCount: uploadTargetCount,
       failureCount: 0,
-      warningCount: 0,
       upload: {
         status: uploadStatus,
         eligiblePostCount: uploadTargetCount,
@@ -458,7 +453,6 @@ const createRunningJob = () =>
       total: uploadTargetCount,
       completed: 7,
       failed: 0,
-      warnings: 0,
     },
     finishedAt: null,
     error: null,
@@ -483,7 +477,6 @@ const createUploadReadyJob = () =>
       total: uploadTargetCount,
       completed: uploadTargetCount,
       failed: 0,
-      warnings: 0,
     },
     finishedAt: null,
     error: null,
@@ -508,7 +501,6 @@ const createPartialUploadingJob = () =>
       total: uploadTargetCount,
       completed: uploadTargetCount,
       failed: 0,
-      warnings: 0,
     },
     finishedAt: null,
     error: null,
@@ -532,7 +524,6 @@ const createRewritePendingJob = () =>
       total: uploadTargetCount,
       completed: uploadTargetCount,
       failed: 0,
-      warnings: 0,
     },
     finishedAt: null,
     error: null,
@@ -553,7 +544,6 @@ const createUploadFailedJob = () =>
       total: uploadTargetCount,
       completed: uploadTargetCount,
       failed: 0,
-      warnings: 0,
     },
     finishedAt: null,
     error: "Image upload failed.",
@@ -581,7 +571,6 @@ const createUploadCompletedJob = () =>
       total: uploadTargetCount,
       completed: uploadTargetCount,
       failed: 0,
-      warnings: 0,
     },
     finishedAt: uploadTimelineTimestamps.finishedAt,
     error: null,
@@ -1693,7 +1682,7 @@ const run = async () => {
     }
 
     await page.waitForSelector("#job-file-tree [data-job-item-id]")
-    await page.click('[data-job-filter="errors"]')
+    await page.click('[data-job-filter="failed"]')
     await page.waitForTimeout(200)
 
     await page.click('[data-job-filter="all"]')

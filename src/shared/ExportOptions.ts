@@ -38,7 +38,6 @@ export const frontmatterFieldOrder: FrontmatterFieldName[] = [
   "tags",
   "thumbnail",
   "video",
-  "warnings",
   "exportedAt",
   "assetPaths",
 ]
@@ -99,11 +98,6 @@ export const frontmatterFieldMeta: Record<FrontmatterFieldName, FrontmatterField
     description: "추출된 비디오 메타데이터를 기록합니다.",
     defaultAlias: "video",
   },
-  warnings: {
-    label: "warnings",
-    description: "렌더링 중 발생한 경고 목록을 기록합니다.",
-    defaultAlias: "warnings",
-  },
   exportedAt: {
     label: "exportedAt",
     description: "내보낸 시각을 ISO 문자열로 기록합니다.",
@@ -132,7 +126,7 @@ export const optionDescriptions: OptionDescriptionMap = {
   "frontmatter-enabled": "YAML frontmatter 블록 자체를 Markdown 파일 상단에 넣을지 정합니다.",
   "assets-imageHandlingMode": "이미지를 로컬로 유지할지, 원본 URL을 유지할지, 내보낸 뒤 업로드까지 이어갈지 정합니다.",
   "assets-compressionEnabled": "다운로드한 로컬 이미지 파일에 안전한 압축을 적용할지 정합니다.",
-  "assets-downloadFailureMode": "이미지 다운로드가 실패했을 때 경고 후 원본 URL 유지, 경고 없이 원본 URL 유지, 경고 후 이미지 생략, 경고 없이 이미지 생략 중에서 정합니다.",
+  "assets-downloadFailureMode": "이미지 다운로드가 실패했을 때 글을 실패 처리할지, 원본 URL을 유지할지, 이미지를 생략할지 정합니다.",
   "assets-stickerAssetMode": "네이버 스티커를 기본적으로 무시할지, 원본 자산 URL로 내려받아 본문에 포함할지 정합니다.",
   "assets-downloadImages": "본문 이미지 파일을 실제로 다운로드할지 정합니다.",
   "assets-downloadThumbnails": "썸네일과 비디오 썸네일 파일을 실제로 다운로드할지 정합니다.",
@@ -151,6 +145,18 @@ export const getDefaultSlugWhitespace = (slugStyle: ExportOptions["structure"]["
     case "keep-title":
       return "keep-space" as const
   }
+}
+
+const pickFrontmatterRecord = <Value>(
+  values: Partial<Record<FrontmatterFieldName, Value>> | undefined,
+) => {
+  const entries = frontmatterFieldOrder.flatMap((fieldName) => {
+    const value = values?.[fieldName]
+
+    return value === undefined ? [] : [[fieldName, value] as const]
+  })
+
+  return Object.fromEntries(entries) as Partial<Record<FrontmatterFieldName, Value>>
 }
 
 export const getFrontmatterExportKey = ({
@@ -234,7 +240,6 @@ export const defaultExportOptions = (): ExportOptions => ({
       tags: true,
       thumbnail: true,
       video: true,
-      warnings: true,
       exportedAt: true,
       assetPaths: false,
     },
@@ -250,7 +255,6 @@ export const defaultExportOptions = (): ExportOptions => ({
       tags: "",
       thumbnail: "",
       video: "",
-      warnings: "",
       exportedAt: "",
       assetPaths: "",
     },
@@ -261,7 +265,7 @@ export const defaultExportOptions = (): ExportOptions => ({
   assets: {
     imageHandlingMode: "download-and-upload",
     compressionEnabled: true,
-    downloadFailureMode: "warn-and-use-source",
+    downloadFailureMode: "fail",
     stickerAssetMode: "ignore",
     downloadImages: true,
     downloadThumbnails: true,
@@ -330,14 +334,18 @@ export const sanitizePersistedExportOptions = (
     }
 
     if (options.frontmatter.fields) {
-      frontmatter.fields = {
-        ...options.frontmatter.fields,
+      const fields = pickFrontmatterRecord(options.frontmatter.fields)
+
+      if (Object.keys(fields).length > 0) {
+        frontmatter.fields = fields
       }
     }
 
     if (options.frontmatter.aliases) {
-      frontmatter.aliases = {
-        ...options.frontmatter.aliases,
+      const aliases = pickFrontmatterRecord(options.frontmatter.aliases)
+
+      if (Object.keys(aliases).length > 0) {
+        frontmatter.aliases = aliases
       }
     }
 
@@ -381,15 +389,24 @@ export const sanitizePersistedExportOptions = (
 }
 
 const coerceAssetOptions = (options: ExportOptions["assets"]) => {
-  if (options.imageHandlingMode === "download-and-upload") {
+  const downloadFailureMode =
+    options.downloadFailureMode === "use-source" || options.downloadFailureMode === "omit"
+      ? options.downloadFailureMode
+      : "fail"
+  const coercedOptions = {
+    ...options,
+    downloadFailureMode,
+  } satisfies ExportOptions["assets"]
+
+  if (coercedOptions.imageHandlingMode === "download-and-upload") {
     return {
-      ...options,
+      ...coercedOptions,
       downloadImages: true,
       downloadThumbnails: true,
     } satisfies ExportOptions["assets"]
   }
 
-  return options
+  return coercedOptions
 }
 
 const buildDefaultBlockOutputs = (
@@ -446,11 +463,11 @@ export const cloneExportOptions = (
       enabled: options?.frontmatter?.enabled ?? defaults.frontmatter.enabled,
       fields: {
         ...defaults.frontmatter.fields,
-        ...options?.frontmatter?.fields,
+        ...pickFrontmatterRecord(options?.frontmatter?.fields),
       },
       aliases: {
         ...defaults.frontmatter.aliases,
-        ...options?.frontmatter?.aliases,
+        ...pickFrontmatterRecord(options?.frontmatter?.aliases),
       },
     },
     blockOutputs: {

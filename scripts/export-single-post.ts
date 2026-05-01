@@ -104,14 +104,11 @@ export const runSinglePostCli = async ({
     renderSinglePostSummary({
       blogId: diagnostics.post.blogId,
       logNo: diagnostics.post.logNo,
-      blockTypes: diagnostics.blockTypes,
-      exporterMarkdownFilePath: diagnostics.markdownFilePath,
-      manualReviewMarkdownFilePath: resolvedManualReviewMarkdownPath,
-      parserWarnings: diagnostics.parserWarnings,
-      reviewerWarnings: diagnostics.reviewerWarnings,
-      renderWarnings: diagnostics.renderWarnings,
-      metadataCachePath: resolvedMetadataCachePath,
-    }),
+        blockTypes: diagnostics.blockTypes,
+        exporterMarkdownFilePath: diagnostics.markdownFilePath,
+        manualReviewMarkdownFilePath: resolvedManualReviewMarkdownPath,
+        metadataCachePath: resolvedMetadataCachePath,
+      }),
   )
 
   if (stdout) {

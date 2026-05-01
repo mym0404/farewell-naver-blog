@@ -138,7 +138,6 @@ const parsedPostBlocks: ParsedPost["blocks"] = [
 
 const parsedPost: ParsedPost = {
   tags: ["algo"],
-  warnings: [],
   videos: [
     {
       title: "Demo",
@@ -172,7 +171,6 @@ describe("renderMarkdownPost", () => {
       category,
       parsedPost,
       markdownFilePath: testMarkdownFilePath,
-      reviewedWarnings: [],
       options: defaultExportOptions(),
       resolveAsset: async ({ kind, sourceUrl }) =>
         createAssetRecord({
@@ -226,7 +224,6 @@ describe("renderMarkdownPost", () => {
         ),
       }),
       markdownFilePath: testMarkdownFilePath,
-      reviewedWarnings: [],
       options,
       resolveAsset: async ({ kind, sourceUrl }) =>
         createAssetRecord({
@@ -276,7 +273,6 @@ describe("renderMarkdownPost", () => {
         blocks: [se4CodeBlock, se3CodeBlock],
       }),
       markdownFilePath: testMarkdownFilePath,
-      reviewedWarnings: [],
       options,
       resolveAsset: async ({ kind, sourceUrl }) =>
         createAssetRecord({
@@ -298,7 +294,6 @@ describe("renderMarkdownPost", () => {
         blocks: [{ type: "paragraph", text: "**파이썬 웹 프로그래밍**  \n작가  \n김석훈" }],
       }),
       markdownFilePath: testMarkdownFilePath,
-      reviewedWarnings: [],
       options: defaultExportOptions(),
       resolveAsset: async ({ kind, sourceUrl }) =>
         createAssetRecord({
@@ -317,7 +312,6 @@ describe("renderMarkdownPost", () => {
       category,
       parsedPost: {
         ...parsedPost,
-        warnings: ["parser warning"],
         blocks: [
           {
             type: "image",
@@ -347,7 +341,6 @@ describe("renderMarkdownPost", () => {
         ],
       },
       markdownFilePath: testMarkdownFilePath,
-      reviewedWarnings: ["review warning"],
       options: defaultExportOptions(),
       resolveAsset: async ({ kind, sourceUrl }) =>
         createAssetRecord({
@@ -357,12 +350,9 @@ describe("renderMarkdownPost", () => {
         }),
     })
 
-    expect(rendered.markdown).toContain("## Export Diagnostics")
-    expect(rendered.markdown).toContain("> ⚠️ Warning: parser warning")
-    expect(rendered.markdown).toContain("> ⚠️ Warning: review warning")
+    expect(rendered.markdown).not.toContain("## Export Diagnostics")
     expect(rendered.markdown).not.toContain("sticker-original.gif")
     expect(rendered.markdown).not.toContain("스티커 asset 옵션이 ignore라서 본문에서 스티커를 생략했습니다.")
-    expect(rendered.warnings).toEqual(["parser warning", "review warning"])
   })
 
   it("renders frontmatter keys with configured aliases", async () => {
@@ -377,7 +367,6 @@ describe("renderMarkdownPost", () => {
       category,
       parsedPost,
       markdownFilePath: testMarkdownFilePath,
-      reviewedWarnings: [],
       options,
       resolveAsset: async ({ kind, sourceUrl }) =>
         createAssetRecord({
@@ -436,7 +425,6 @@ describe("renderMarkdownPost", () => {
         ],
       }),
       markdownFilePath: testMarkdownFilePath,
-      reviewedWarnings: [],
       options,
       resolveAsset: async ({ kind, sourceUrl }) =>
         createAssetRecord({
@@ -454,7 +442,7 @@ describe("renderMarkdownPost", () => {
     expect(rendered.markdown).not.toContain("---\n")
   })
 
-  it("renders fallback warnings for image-group and table edge cases while keeping videos as plain links", async () => {
+  it("renders fallback output for image-group and table edge cases while keeping videos as plain links", async () => {
     const options = defaultExportOptions()
 
     options.blockOutputs.defaults["naver-se4:formula"] = {
@@ -622,7 +610,6 @@ describe("renderMarkdownPost", () => {
         ],
       },
       markdownFilePath: testMarkdownFilePath,
-      reviewedWarnings: [],
       options,
       resolveAsset: async ({ kind, sourceUrl }) =>
         createAssetRecord({
@@ -659,7 +646,6 @@ describe("renderMarkdownPost", () => {
         ],
       }),
       markdownFilePath: testMarkdownFilePath,
-      reviewedWarnings: [],
       options: defaultExportOptions(),
       resolveAsset: async ({ kind, sourceUrl }) =>
         createAssetRecord({
@@ -674,78 +660,39 @@ describe("renderMarkdownPost", () => {
     expect(rendered.markdown).not.toContain("\nhttps://example.com/docs\n")
   })
 
+  it("fails when asset download fails and the asset option requests failure", async () => {
+    const options = defaultExportOptions()
+
+    options.assets.thumbnailSource = "none"
+
+    await expect(
+      renderMarkdownPost({
+        post,
+        category,
+        parsedPost: createParsedPost({
+          blocks: [
+            {
+              type: "image",
+              image: {
+                sourceUrl: "https://example.com/failing-image.png",
+                originalSourceUrl: null,
+                alt: "broken",
+                caption: "caption",
+                mediaKind: "image",
+              },
+            },
+          ],
+        }),
+        markdownFilePath: testMarkdownFilePath,
+        options,
+        resolveAsset: async () => {
+          throw new Error("network timeout")
+        },
+      }),
+    ).rejects.toThrow("자산 다운로드 실패: https://example.com/failing-image.png (network timeout)")
+  })
+
   it("omits images when asset download fails and the asset option requests omission", async () => {
-    const options = defaultExportOptions()
-
-    options.assets.downloadFailureMode = "warn-and-omit"
-
-    const rendered = await renderMarkdownPost({
-      post,
-      category,
-      parsedPost: createParsedPost({
-        blocks: [
-          {
-            type: "image",
-            image: {
-              sourceUrl: "https://example.com/failing-image.png",
-              originalSourceUrl: null,
-              alt: "broken",
-              caption: "caption",
-              mediaKind: "image",
-            },
-          },
-        ],
-      }),
-      markdownFilePath: testMarkdownFilePath,
-      reviewedWarnings: [],
-      options,
-      resolveAsset: async () => {
-        throw new Error("network timeout")
-      },
-    })
-
-    expect(rendered.markdown).not.toContain("![broken](")
-    expect(rendered.markdown).not.toContain("_caption_")
-    expect(rendered.warnings).toContain(
-      "자산 다운로드 실패: https://example.com/failing-image.png (network timeout)",
-    )
-  })
-
-  it("keeps source url without warnings when asset download fails and the asset option disables warnings", async () => {
-    const options = defaultExportOptions()
-
-    options.assets.downloadFailureMode = "use-source"
-
-    const rendered = await renderMarkdownPost({
-      post,
-      category,
-      parsedPost: createParsedPost({
-        blocks: [
-          {
-            type: "image",
-            image: {
-              sourceUrl: "https://example.com/failing-image.png",
-              originalSourceUrl: null,
-              alt: "broken",
-              caption: "caption",
-              mediaKind: "image",
-            },
-          },
-        ],
-      }),
-      markdownFilePath: testMarkdownFilePath,
-      reviewedWarnings: [],
-      options,
-      resolveAsset: async () => {
-        throw new Error("network timeout")
-      },
-    })
-
-    expect(rendered.markdown).toContain("![broken](https://example.com/failing-image.png)")
-    expect(rendered.warnings).toEqual([])
-  })
-
-  it("omits images without warnings when asset download fails and the asset option disables warnings", async () => {
     const options = defaultExportOptions()
 
     options.assets.downloadFailureMode = "omit"
@@ -768,7 +715,6 @@ describe("renderMarkdownPost", () => {
         ],
       }),
       markdownFilePath: testMarkdownFilePath,
-      reviewedWarnings: [],
       options,
       resolveAsset: async () => {
         throw new Error("network timeout")
@@ -776,6 +722,70 @@ describe("renderMarkdownPost", () => {
     })
 
     expect(rendered.markdown).not.toContain("![broken](")
-    expect(rendered.warnings).toEqual([])
+    expect(rendered.markdown).not.toContain("_caption_")
+  })
+
+  it("keeps source url when asset download fails and the asset option keeps source urls", async () => {
+    const options = defaultExportOptions()
+
+    options.assets.downloadFailureMode = "use-source"
+
+    const rendered = await renderMarkdownPost({
+      post,
+      category,
+      parsedPost: createParsedPost({
+        blocks: [
+          {
+            type: "image",
+            image: {
+              sourceUrl: "https://example.com/failing-image.png",
+              originalSourceUrl: null,
+              alt: "broken",
+              caption: "caption",
+              mediaKind: "image",
+            },
+          },
+        ],
+      }),
+      markdownFilePath: testMarkdownFilePath,
+      options,
+      resolveAsset: async () => {
+        throw new Error("network timeout")
+      },
+    })
+
+    expect(rendered.markdown).toContain("![broken](https://example.com/failing-image.png)")
+  })
+
+  it("omits images when asset download fails and the asset option omits images", async () => {
+    const options = defaultExportOptions()
+
+    options.assets.downloadFailureMode = "omit"
+
+    const rendered = await renderMarkdownPost({
+      post,
+      category,
+      parsedPost: createParsedPost({
+        blocks: [
+          {
+            type: "image",
+            image: {
+              sourceUrl: "https://example.com/failing-image.png",
+              originalSourceUrl: null,
+              alt: "broken",
+              caption: "caption",
+              mediaKind: "image",
+            },
+          },
+        ],
+      }),
+      markdownFilePath: testMarkdownFilePath,
+      options,
+      resolveAsset: async () => {
+        throw new Error("network timeout")
+      },
+    })
+
+    expect(rendered.markdown).not.toContain("![broken](")
   })
 })

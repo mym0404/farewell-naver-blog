@@ -1498,7 +1498,7 @@ export const ExportOptionsPanel = ({
   )
 
   const diagnosticsSection = (
-    <OptionSection title="진단" note="경고와 실패 처리 기준">
+    <OptionSection title="진단" note="실패 처리 기준">
       <OptionField
         optionKey="assets-downloadFailureMode"
         labelFor="assets-downloadFailureMode"
@@ -1509,13 +1509,12 @@ export const ExportOptionsPanel = ({
         <OptionSelectField
           inputId="assets-downloadFailureMode"
           value={options.assets.downloadFailureMode}
-          disabled={options.assets.imageHandlingMode === "remote"}
-          options={[
-            { value: "warn-and-use-source", label: "경고 후 원본 URL 유지" },
-            { value: "use-source", label: "경고 없이 원본 URL 유지" },
-            { value: "warn-and-omit", label: "경고 후 이미지 생략" },
-            { value: "omit", label: "경고 없이 이미지 생략" },
-          ]}
+            disabled={options.assets.imageHandlingMode === "remote"}
+            options={[
+              { value: "fail", label: "글 실패 처리" },
+              { value: "use-source", label: "원본 URL 유지" },
+              { value: "omit", label: "이미지 생략" },
+            ]}
           onValueChange={(downloadFailureMode) =>
             onOptionsChange((current) => ({
               ...current,

@@ -221,7 +221,6 @@ const completedJob: ExportJobState = {
     total: 1,
     completed: 1,
     failed: 0,
-    warnings: 1,
   },
   upload: {
     status: "not-requested",
@@ -255,9 +254,7 @@ const completedJob: ExportJobState = {
         rewriteStatus: "pending" as const,
         rewrittenAt: null,
       },
-      warnings: ["parser note"],
-      warningCount: 1,
-      error: null,
+        error: null,
       updatedAt: "2026-04-11T04:00:01.000Z",
     },
   ],
@@ -273,7 +270,6 @@ const runningJob: ExportJobState = {
     total: 5,
     completed: 2,
     failed: 0,
-    warnings: 0,
   },
   items: [
     completedJob.items[0]!,
@@ -778,7 +774,6 @@ describe("App", () => {
         total: 12,
         completed: 5,
         failed: 1,
-        warnings: 1,
       },
     }
 
@@ -847,7 +842,6 @@ describe("App", () => {
         total: 12,
         completed: 5,
         failed: 1,
-        warnings: 1,
       },
     }
 
@@ -1331,7 +1325,7 @@ describe("App", () => {
     expect(document.querySelector('[data-job-log-message]')?.textContent).toContain("작업을 큐에 등록했습니다.")
     expect((document.querySelector('#logs [data-slot="scroll-area-viewport"]') as HTMLElement | null)?.scrollTop).toBe(240)
 
-    const errorFilterButton = document.querySelector('[data-job-filter="errors"]') as HTMLButtonElement
+    const errorFilterButton = document.querySelector('[data-job-filter="failed"]') as HTMLButtonElement
     expect(errorFilterButton).not.toBeNull()
     await user.click(errorFilterButton)
 

@@ -29,21 +29,17 @@ export type ParserBlockContext = {
 export type ParserBlockConvertContext = ParserBlockContext & {
   outputSelection?: BlockOutputSelection
   appendBodyNodes: (nodes: ParsedPostBodyNode[]) => void
-  appendWarnings: (warnings: string[]) => void
 }
 
 export type ParserBlockResult =
-  | {
-      status: "handled"
-      blocks: AstBlock[]
-      warnings?: string[]
-    }
-  | {
-      status: "traverse"
-      nodes?: AnyNode[]
-      warnings?: string[]
-    }
-  | {
-      status: "skip"
-      warnings?: string[]
-    }
+    | {
+        status: "handled"
+        blocks: AstBlock[]
+      }
+    | {
+        status: "traverse"
+        nodes?: AnyNode[]
+      }
+    | {
+        status: "skip"
+      }

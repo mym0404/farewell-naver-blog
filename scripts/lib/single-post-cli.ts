@@ -34,7 +34,6 @@ const allowedFrontmatterFieldKeys = [
   "tags",
   "thumbnail",
   "video",
-  "warnings",
   "exportedAt",
   "assetPaths",
 ] as const
@@ -642,32 +641,23 @@ export const parseSinglePostCliArgs = (args: string[]) => {
 export const renderSinglePostSummary = ({
   blogId,
   logNo,
-  blockTypes,
-  exporterMarkdownFilePath,
-  manualReviewMarkdownFilePath,
-  metadataCachePath,
-  parserWarnings,
-  reviewerWarnings,
-  renderWarnings,
-}: {
+    blockTypes,
+    exporterMarkdownFilePath,
+    manualReviewMarkdownFilePath,
+    metadataCachePath,
+  }: {
   blogId: string
   logNo: string
-  blockTypes: string[]
-  exporterMarkdownFilePath: string
-  manualReviewMarkdownFilePath: string | null
-  metadataCachePath: string | null
-  parserWarnings: string[]
-  reviewerWarnings: string[]
-  renderWarnings: string[]
-}) =>
-  [
-    `blogId: ${blogId}`,
-    `logNo: ${logNo}`,
-    `blockTypes: ${blockTypes.join(", ") || "(none)"}`,
-    `parserWarnings: ${parserWarnings.length}`,
-    `reviewerWarnings: ${reviewerWarnings.length}`,
-    `renderWarnings: ${renderWarnings.length}`,
-    `exporterMarkdownFilePath: ${exporterMarkdownFilePath}`,
+    blockTypes: string[]
+    exporterMarkdownFilePath: string
+    manualReviewMarkdownFilePath: string | null
+    metadataCachePath: string | null
+  }) =>
+    [
+      `blogId: ${blogId}`,
+      `logNo: ${logNo}`,
+      `blockTypes: ${blockTypes.join(", ") || "(none)"}`,
+      `exporterMarkdownFilePath: ${exporterMarkdownFilePath}`,
     `manualReviewMarkdownFilePath: ${manualReviewMarkdownFilePath ?? "(not provided)"}`,
     `metadataCachePath: ${metadataCachePath ?? "(not provided)"}`,
   ].join("\n")

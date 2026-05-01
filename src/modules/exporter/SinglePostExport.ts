@@ -14,7 +14,6 @@ import { NaverBlog } from "../blog/NaverBlog.js"
 import { NaverBlogFetcher } from "../fetcher/NaverBlogFetcher.js"
 import { renderMarkdownPost } from "../converter/MarkdownRenderer.js"
 import { parsePostHtml } from "../parser/PostParser.js"
-import { reviewParsedPost } from "../reviewer/PostReviewer.js"
 import { AssetStore } from "./AssetStore.js"
 import { buildMarkdownFilePath, getCategoryForPost } from "./ExportPaths.js"
 import { buildPostLinkTargets, createSameBlogPostLinkResolver } from "./PostLinkRewriter.js"
@@ -38,14 +37,11 @@ export type SinglePostFetcher = {
 
 type ExportSinglePostDiagnostics = {
   post: PostSummary
-  markdown: string
-  markdownFilePath: string
-  blockTypes: AstBlock["type"][]
-  parserWarnings: string[]
-  reviewerWarnings: string[]
-  renderWarnings: string[]
-  assetPaths: string[]
-}
+    markdown: string
+    markdownFilePath: string
+    blockTypes: AstBlock["type"][]
+    assetPaths: string[]
+  }
 
 export const exportSinglePost = async ({
   blogId,
@@ -127,18 +123,15 @@ export const exportSinglePost = async ({
       resolveLinkUrl,
     },
   })
-  const review = reviewParsedPost(parsedPost)
   const rendered = await renderMarkdownPost({
     post,
     category,
     parsedPost,
     markdownFilePath,
-    reviewedWarnings: review.warnings,
     options: resolvedOptions,
     resolveAsset: async (input) => assetStore.saveAsset(input),
     resolveLinkUrl,
   })
-  const renderWarnings = rendered.warnings.filter((warning) => !review.warnings.includes(warning))
 
   await ensureDir(path.dirname(markdownFilePath))
   await writeFile(markdownFilePath, rendered.markdown, "utf8")
@@ -148,9 +141,6 @@ export const exportSinglePost = async ({
     markdown: rendered.markdown,
     markdownFilePath,
     blockTypes: getStructuredBodyBlocks(parsedPost).map((block) => block.type),
-    parserWarnings: parsedPost.warnings,
-    reviewerWarnings: review.warnings,
-    renderWarnings,
     assetPaths: rendered.assetRecords
       .map((asset) => asset.relativePath)
       .filter((assetPath): assetPath is string => Boolean(assetPath)),

@@ -26,14 +26,12 @@ const buildJobItemFromPost = (
   source: post.source,
   category: post.category,
   status: post.status,
-  outputPath: post.outputPath,
-  assetPaths: post.assetPaths,
-  upload: post.upload,
-  warnings: post.warnings,
-  warningCount: post.warningCount,
-  error: post.error,
-  updatedAt,
-})
+    outputPath: post.outputPath,
+    assetPaths: post.assetPaths,
+    upload: post.upload,
+    error: post.error,
+    updatedAt,
+  })
 
 const countUploadedCandidates = ({
   item,
@@ -85,12 +83,11 @@ export class JobStore {
       createdAt: new Date().toISOString(),
       startedAt: null,
       finishedAt: null,
-      progress: {
-        total: 0,
-        completed: 0,
-        failed: 0,
-        warnings: 0,
-      },
+        progress: {
+          total: 0,
+          completed: 0,
+          failed: 0,
+        },
       upload: {
         status: UPLOAD_STATUSES.NOT_REQUESTED,
         eligiblePostCount: 0,
@@ -172,9 +169,8 @@ export class JobStore {
     progress: {
       total: number
       completed: number
-      failed: number
-      warnings: number
-    },
+        failed: number
+      },
   ) {
     const job = this.mustGet(id)
     job.progress = progress
@@ -196,12 +192,11 @@ export class JobStore {
     const job = this.mustGet(id)
     job.manifest = manifest
     job.resumeAvailable = false
-    job.progress = {
-      total: manifest.totalPosts,
-      completed: manifest.successCount,
-      failed: manifest.failureCount,
-      warnings: manifest.warningCount,
-    }
+      job.progress = {
+        total: manifest.totalPosts,
+        completed: manifest.successCount,
+        failed: manifest.failureCount,
+      }
     job.upload = manifest.upload
     job.items = job.items.length > 0 ? job.items : manifest.posts.map((post) => buildJobItemFromPost(post, new Date().toISOString()))
 

@@ -260,7 +260,6 @@ const uploadReadyJob: ExportJobState = {
     total: 1,
     completed: 1,
     failed: 0,
-    warnings: 0,
   },
   upload: {
     status: "upload-ready",
@@ -281,25 +280,23 @@ const uploadReadyJob: ExportJobState = {
         name: "NestJS",
         path: ["NestJS"],
       },
-	      status: "success",
-	      outputPath: "posts/first/index.md",
-	      assetPaths: [],
-		      upload: {
-		        eligible: true,
-		        candidateCount: 2,
-		        uploadedCount: 0,
-		        failedCount: 0,
-		        candidates: [],
-		        uploadedUrls: [],
-		        rewriteStatus: "pending",
-		        rewrittenAt: null,
-		      },
-		      warnings: [],
-		      warningCount: 0,
-		      error: null,
-		      updatedAt: "2026-04-21T00:00:02.000Z",
-		    },
-		  ],
+      status: "success",
+      outputPath: "posts/first/index.md",
+      assetPaths: [],
+      upload: {
+        eligible: true,
+        candidateCount: 2,
+        uploadedCount: 0,
+        failedCount: 0,
+        candidates: [],
+        uploadedUrls: [],
+        rewriteStatus: "pending",
+        rewrittenAt: null,
+      },
+      error: null,
+      updatedAt: "2026-04-21T00:00:02.000Z",
+    },
+  ],
   manifest: null,
   error: null,
 }
@@ -421,10 +418,9 @@ describe("JobResultsPanel upload provider UX", () => {
     expect(within(resultsTable).getByRole("columnheader", { name: "상태" })).toBeInTheDocument()
     expect(within(resultsTable).getByRole("columnheader", { name: "액션" })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "전체 1" })).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "경고 0" })).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "에러 0" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "성공 1" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "실패 0" })).toBeInTheDocument()
     expect(within(resultsTable).queryByRole("columnheader", { name: "경로" })).not.toBeInTheDocument()
-    expect(within(resultsTable).queryByRole("columnheader", { name: "경고" })).not.toBeInTheDocument()
     expect(within(resultsTable).getByText("NestJS")).toBeInTheDocument()
     expect(within(resultsTable).getByText("first")).toBeInTheDocument()
     expect(within(resultsTable).queryByText("posts/first/index.md")).not.toBeInTheDocument()

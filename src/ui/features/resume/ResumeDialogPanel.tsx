@@ -57,7 +57,7 @@ export const ResumeDialogPanel = ({
             </p>
           </div>
           <Alert variant="destructive">
-            <AlertTitle>초기화 경고</AlertTitle>
+            <AlertTitle>초기화 주의</AlertTitle>
             <AlertDescription>
               작업 초기화를 실행하면 <strong>{resumeDialog.resumeSummary.outputDir}</strong> 경로의 작업내역과 output 파일을 함께 삭제합니다.
             </AlertDescription>

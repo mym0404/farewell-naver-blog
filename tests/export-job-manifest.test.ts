@@ -73,7 +73,6 @@ const job: ExportJobState = {
     total: 2,
     completed: 1,
     failed: 0,
-    warnings: 1,
   },
   upload: {
     status: "not-requested",
@@ -97,19 +96,17 @@ const job: ExportJobState = {
       status: "success",
       outputPath: "posts/post-1/index.md",
       assetPaths: [],
-      upload: {
-        eligible: false,
-        candidateCount: 0,
-        uploadedCount: 0,
-        failedCount: 0,
-        candidates: [],
-        uploadedUrls: [],
-        rewriteStatus: "pending",
-        rewrittenAt: null,
-      },
-      warnings: ["warn-1"],
-      warningCount: 1,
-      error: null,
+        upload: {
+          eligible: false,
+          candidateCount: 0,
+          uploadedCount: 0,
+          failedCount: 0,
+          candidates: [],
+          uploadedUrls: [],
+          rewriteStatus: "pending",
+          rewrittenAt: null,
+        },
+        error: null,
       updatedAt: "2026-04-22T07:43:23.550Z",
     },
   ],
@@ -124,7 +121,6 @@ describe("buildResumableExportManifest", () => {
       scanResult,
     })
 
-    expect(manifest.posts[0]?.warnings).toEqual(["warn-1"])
     expect(manifest.posts[0]).not.toHaveProperty("externalPreviewUrl")
     expect(manifest.job).not.toHaveProperty("logs")
     expect(manifest.job).not.toHaveProperty("items")

@@ -200,8 +200,6 @@ const buildUploadItem = ({
       rewriteStatus,
       rewrittenAt: rewriteStatus === "completed" ? updatedAt : null,
     },
-    warnings: [],
-    warningCount: 0,
     error: null,
     externalPreviewUrl: rewriteStatus === "completed" ? `https://preview.example.com/${logNo}` : null,
     updatedAt,
@@ -241,7 +239,6 @@ const buildExportRunningJob = ({
     total: 5,
     completed: 2,
     failed: 1,
-    warnings: 0,
   },
   upload: {
     status: "not-requested",
@@ -352,7 +349,6 @@ const buildUploadJob = ({
       total: 3,
       completed: 3,
       failed: 0,
-      warnings: 0,
     },
     upload: {
       status,
@@ -395,7 +391,6 @@ const buildCompletedJob = ({
     total: 3,
     completed: 3,
     failed: 0,
-    warnings: 1,
   },
   upload: {
     status: "not-requested",
@@ -437,7 +432,6 @@ const buildFailedJob = ({
     total: 3,
     completed: 1,
     failed: 1,
-    warnings: 0,
   },
   upload: {
     status: "not-requested",

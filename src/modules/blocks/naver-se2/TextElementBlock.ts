@@ -51,10 +51,6 @@ export class NaverSe2TextElementBlock extends LeafBlock {
       throw new Error(`SE2 text element block parsing failed: <${node.tagName.toLowerCase()}>`)
     }
 
-    return {
-      status: "handled",
-      blocks: [{ type: "paragraph", text }],
-      warnings: [`SE2 블록을 구조화하지 못해 텍스트로 축약했습니다: <${node.tagName.toLowerCase()}>`],
-    }
+    throw new Error(`SE2 text element block markdown conversion failed: <${node.tagName.toLowerCase()}>`)
   }
 }

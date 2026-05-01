@@ -31,7 +31,7 @@ export class NaverBlogSE3Editor extends BaseEditor {
 
   override parse({ $, tags, options }: BaseEditorParseInput): ParsedPost {
     const container = $("#viewTypeSelector .se_component_wrap.sect_dsc").first()
-    const { blocks, body, warnings } = this.runBlocks({
+    const { blocks, body } = this.runBlocks({
       $,
       nodes: container.children(".se_component").toArray(),
       tags,
@@ -42,7 +42,6 @@ export class NaverBlogSE3Editor extends BaseEditor {
       tags: unique(tags),
       body,
       blocks,
-      warnings: unique(warnings),
       videos: [],
     } satisfies ParsedPost
   }

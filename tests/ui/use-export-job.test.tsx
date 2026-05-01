@@ -78,7 +78,6 @@ describe("useExportJob", () => {
           total: 1,
           completed: 0,
           failed: 0,
-          warnings: 0,
         },
         upload: {
           status: "not-requested",
@@ -109,7 +108,6 @@ describe("useExportJob", () => {
           total: 1,
           completed: 1,
           failed: 0,
-          warnings: 0,
         },
         upload: {
           status: "not-requested",
@@ -192,7 +190,6 @@ describe("useExportJob", () => {
           total: 1,
           completed: 1,
           failed: 0,
-          warnings: 0,
         },
         upload: {
           status: "upload-ready",
@@ -223,7 +220,6 @@ describe("useExportJob", () => {
           total: 1,
           completed: 1,
           failed: 0,
-          warnings: 0,
         },
         upload: {
           status: "uploading",
@@ -299,7 +295,6 @@ describe("useExportJob", () => {
           total: 1,
           completed: 1,
           failed: 0,
-          warnings: 0,
         },
         upload: {
           status: "upload-ready",
@@ -330,7 +325,6 @@ describe("useExportJob", () => {
           total: 1,
           completed: 1,
           failed: 0,
-          warnings: 0,
         },
         upload: {
           status: "uploading",
@@ -361,7 +355,6 @@ describe("useExportJob", () => {
           total: 1,
           completed: 1,
           failed: 0,
-          warnings: 0,
         },
         upload: {
           status: "uploading",
@@ -441,7 +434,6 @@ describe("useExportJob", () => {
         total: 1,
         completed: 1,
         failed: 0,
-        warnings: 0,
       },
       upload: {
         status: "upload-ready" as const,
@@ -510,7 +502,6 @@ describe("useExportJob", () => {
         total: 1,
         completed: 1,
         failed: 0,
-        warnings: 0,
       },
       upload: {
         status: "upload-ready" as const,
@@ -612,7 +603,6 @@ describe("useExportJob", () => {
         total: 3,
         completed: 1,
         failed: 0,
-        warnings: 0,
       },
       upload: {
         status: "not-requested" as const,

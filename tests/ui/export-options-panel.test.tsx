@@ -648,9 +648,9 @@ describe("ExportOptionsPanel", () => {
       />,
     )
 
-    await selectOption({ user, trigger: "#assets-downloadFailureMode", value: "warn-and-omit" })
+    await selectOption({ user, trigger: "#assets-downloadFailureMode", value: "fail" })
 
-    expect(latestOptions.assets.downloadFailureMode).toBe("warn-and-omit")
+    expect(latestOptions.assets.downloadFailureMode).toBe("fail")
 
     await selectOption({ user, trigger: "#assets-downloadFailureMode", value: "use-source" })
 

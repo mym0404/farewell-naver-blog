@@ -45,8 +45,6 @@
   --color-sidebar-muted-foreground: var(--sidebar-muted-foreground);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
-  --color-warning: var(--warning);
-  --color-warning-foreground: var(--warning-foreground);
 }
 
 :root {
@@ -75,8 +73,6 @@
   --sidebar-muted-foreground: #a1a1aa;
   --success: #068f4d;
   --success-foreground: #f3fff8;
-  --warning: #a84d00;
-  --warning-foreground: #fff7ec;
   --panel: rgba(255, 255, 255, 0.9);
   --panel-muted: rgba(250, 250, 250, 0.96);
   --panel-foreground: #171717;
@@ -108,8 +104,6 @@
   --status-success-fg: #056437;
   --status-error-bg: rgba(255, 91, 79, 0.12);
   --status-error-fg: #b8271a;
-  --status-warning-bg: rgba(168, 77, 0, 0.12);
-  --status-warning-fg: #7a3800;
   --shell-gradient:
     radial-gradient(circle at top center, rgba(10, 114, 239, 0.1), transparent 30%),
     radial-gradient(circle at bottom left, rgba(3, 199, 90, 0.06), transparent 28%),
@@ -145,8 +139,6 @@
   --sidebar-muted-foreground: #a1a1aa;
   --success: #14ae5c;
   --success-foreground: #071b0e;
-  --warning: #de1d8d;
-  --warning-foreground: #220916;
   --panel: rgba(17, 17, 17, 0.92);
   --panel-muted: rgba(13, 13, 13, 0.96);
   --panel-foreground: #fafafa;
@@ -174,8 +166,6 @@
   --status-success-fg: #6deda1;
   --status-error-bg: rgba(255, 91, 79, 0.15);
   --status-error-fg: #ff9a90;
-  --status-warning-bg: rgba(255, 255, 255, 0.1);
-  --status-warning-fg: #f3f4f6;
   --shell-gradient:
     radial-gradient(circle at top center, rgba(10, 114, 239, 0.16), transparent 26%),
     radial-gradient(circle at 20% 80%, rgba(3, 199, 90, 0.12), transparent 28%),
@@ -492,11 +482,6 @@ pre,
   color: var(--status-error-fg);
 }
 
-.status-pill--warning {
-  background: var(--status-warning-bg);
-  color: var(--status-warning-fg);
-}
-
 .upload-badge--pending {
   border-color: color-mix(in srgb, var(--status-idle-fg) 22%, transparent);
   background: var(--status-idle-bg);
@@ -529,7 +514,7 @@ pre,
   color: var(--status-error-fg);
 }
 
-.warning-copy {
+.notice-copy {
   color: var(--status-ready-fg);
 }
 

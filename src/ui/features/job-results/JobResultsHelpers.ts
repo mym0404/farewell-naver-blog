@@ -11,22 +11,18 @@ import {
 
 const INDEX_MARKDOWN_FILE = "index.md"
 
-export type JobFilter = "all" | "warnings" | "errors"
+export type JobFilter = "all" | "success" | "failed"
 export type JobResultsMode = "running" | "upload" | "result"
-type JobItemSeverity = "success" | "warning" | "error"
+type JobItemSeverity = "success" | "error"
 
 export const severityMeta = {
   success: {
     badge: "secondary" as const,
-    label: "정상",
-  },
-  warning: {
-    badge: "outline" as const,
-    label: "경고",
+    label: "성공",
   },
   error: {
     badge: "destructive" as const,
-    label: "에러",
+    label: "실패",
   },
 }
 
@@ -99,10 +95,6 @@ export const buildGitHubJsDelivrCustomUrl = ({
 export const buildJobItemSeverity = (item: ExportJobState["items"][number]): JobItemSeverity => {
   if (item.status === "failed" || item.error) {
     return "error"
-  }
-
-  if (item.warningCount > 0) {
-    return "warning"
   }
 
   return "success"

@@ -24,12 +24,11 @@ export const createErrorJobState = ({
     createdAt: new Date().toISOString(),
     startedAt: new Date().toISOString(),
     finishedAt: new Date().toISOString(),
-    progress: {
-      total: 0,
-      completed: 0,
-      failed: 0,
-      warnings: 0,
-    },
+      progress: {
+        total: 0,
+        completed: 0,
+        failed: 0,
+      },
     upload: {
       status: UPLOAD_STATUSES.NOT_REQUESTED,
       eligiblePostCount: 0,

@@ -135,7 +135,6 @@ assetPaths:
       totalPosts: 1,
       successCount: 1,
       failureCount: 0,
-      warningCount: 0,
       upload: {
         status: "upload-ready" as const,
         eligiblePostCount: 1,
@@ -175,8 +174,6 @@ assetPaths:
             rewriteStatus: "pending" as const,
             rewrittenAt: null,
           },
-          warnings: [],
-          warningCount: 0,
           error: null,
         },
       ],
@@ -209,7 +206,6 @@ const createHtmlFragmentUploadReadyFixture = ({
       totalPosts: 1,
       successCount: 1,
       failureCount: 0,
-      warningCount: 0,
       upload: {
         status: "upload-ready" as const,
         eligiblePostCount: 1,
@@ -249,8 +245,6 @@ const createHtmlFragmentUploadReadyFixture = ({
             rewriteStatus: "pending" as const,
             rewrittenAt: null,
           },
-          warnings: [],
-          warningCount: 0,
           error: null,
         },
       ],
@@ -300,34 +294,31 @@ describe("NaverBlogExporter", () => {
     expect(manifest.failureCount).toBe(0)
     expect(manifest.upload.status).toBe("not-requested")
     expect(manifest.upload.candidateCount).toBe(0)
-    expect(manifest.posts[0]?.warningCount).toBeGreaterThanOrEqual(0)
-	    expect(onProgress).toHaveBeenCalledWith({
-	      total: 1,
-	      completed: 1,
-	      failed: 0,
-	      warnings: manifest.warningCount,
-	    })
-	    expect(onItem).toHaveBeenCalledTimes(1)
-	    expect(onItem.mock.calls[0]?.[0]).toMatchObject({
-	      status: "success",
-	      warningCount: expect.any(Number),
-	      upload: {
-	        eligible: false,
-	        candidateCount: 0,
-	        uploadedCount: 0,
-	        failedCount: 0,
-	        candidates: [],
-	      },
-	    })
-	    expect(onItem.mock.calls[0]?.[0]).not.toHaveProperty("externalPreviewUrl")
+    expect(onProgress).toHaveBeenCalledWith({
+      total: 1,
+      completed: 1,
+      failed: 0,
+    })
+    expect(onItem).toHaveBeenCalledTimes(1)
+    expect(onItem.mock.calls[0]?.[0]).toMatchObject({
+      status: "success",
+      upload: {
+        eligible: false,
+        candidateCount: 0,
+        uploadedCount: 0,
+        failedCount: 0,
+        candidates: [],
+      },
+    })
+      expect(onItem.mock.calls[0]?.[0]).not.toHaveProperty("externalPreviewUrl")
 
     const manifestPath = path.join(outputDir, "manifest.json")
     const writtenManifest = JSON.parse(await readFile(manifestPath, "utf8")) as typeof manifest
 
-	    expect(writtenManifest.successCount).toBe(1)
-	    expect(writtenManifest.posts[0]?.outputPath).toMatch(/index\.md$/)
-	    expect(writtenManifest.posts[0]?.upload.candidateCount).toBe(0)
-	    expect(writtenManifest.posts[0]).not.toHaveProperty("externalPreviewUrl")
+      expect(writtenManifest.successCount).toBe(1)
+      expect(writtenManifest.posts[0]?.outputPath).toMatch(/index\.md$/)
+      expect(writtenManifest.posts[0]?.upload.candidateCount).toBe(0)
+      expect(writtenManifest.posts[0]).not.toHaveProperty("externalPreviewUrl")
     expect(writtenManifest.options.blockOutputs.defaults["naver-se4:code"]).toMatchObject({
       variant: "backtick-fence",
     })
@@ -413,14 +404,11 @@ describe("NaverBlogExporter", () => {
 
       const manifest = await exporter.run()
 
-      expect(manifest.warningCount).toBe(0)
       expect(manifest.failureCount).toBe(1)
       expect(manifest.posts[0]).toMatchObject({
         logNo: se3Post.logNo,
         status: "failed",
         outputPath: null,
-        warnings: [],
-        warningCount: 0,
         error:
           "파싱 가능한 naver-se3 block이 없습니다: div class=\"se_component se_horizontalLine default\"",
       })
@@ -428,14 +416,11 @@ describe("NaverBlogExporter", () => {
         total: 1,
         completed: 0,
         failed: 1,
-        warnings: 0,
       })
       expect(onItem).toHaveBeenCalledWith(
         expect.objectContaining({
           logNo: se3Post.logNo,
           status: "failed",
-          warnings: [],
-          warningCount: 0,
           error:
             "파싱 가능한 naver-se3 block이 없습니다: div class=\"se_component se_horizontalLine default\"",
         }),
@@ -483,7 +468,6 @@ describe("NaverBlogExporter", () => {
       const manifest = await exporter.run()
       const postManifest = manifest.posts[0]!
 
-      expect(manifest.warningCount).toBe(0)
       expect(manifest.failureCount).toBe(1)
       expect(manifest.upload.status).toBe("skipped")
       expect(postManifest.status).toBe("failed")
@@ -560,20 +544,18 @@ describe("NaverBlogExporter", () => {
     expect(onItem.mock.calls.map((call) => call[0].logNo)).toEqual(
       parallelPosts.map((post) => post.logNo),
     )
-    expect(onProgress.mock.calls.map((call) => call[0])).toEqual([
-      {
-        total: 2,
-        completed: 1,
-        failed: 0,
-        warnings: manifest.posts[0]!.warningCount,
-      },
-      {
-        total: 2,
-        completed: 2,
-        failed: 0,
-        warnings: manifest.warningCount,
-      },
-    ])
+      expect(onProgress.mock.calls.map((call) => call[0])).toEqual([
+        {
+          total: 2,
+          completed: 1,
+          failed: 0,
+        },
+        {
+          total: 2,
+          completed: 2,
+          failed: 0,
+        },
+      ])
 
     await rm(outputDir, { recursive: true, force: true })
   })
@@ -644,14 +626,12 @@ describe("NaverBlogExporter", () => {
         total: 2,
         completed: 0,
         failed: 1,
-        warnings: 0,
       },
-      {
-        total: 2,
-        completed: 1,
-        failed: 1,
-        warnings: manifest.warningCount,
-      },
+        {
+          total: 2,
+          completed: 1,
+          failed: 1,
+        },
     ])
 
     await rm(outputDir, { recursive: true, force: true })
@@ -777,7 +757,6 @@ describe("NaverBlogExporter", () => {
     expect(writtenManifest.posts[0]).toMatchObject({
       status: "failed",
       error: "post fetch failed",
-      warningCount: 0,
       upload: {
         eligible: false,
         candidateCount: 0,
@@ -798,7 +777,6 @@ describe("NaverBlogExporter", () => {
       total: 1,
       completed: 0,
       failed: 1,
-      warnings: 0,
     })
     expect(logSink).toHaveBeenCalledWith(expect.stringContaining("출력 디렉터리 준비 완료"))
     expect(logSink).toHaveBeenCalledWith(expect.stringContaining("collected=1, expected=2"))
@@ -835,8 +813,6 @@ describe("NaverBlogExporter", () => {
             outputPath: fixture.manifest.posts[0]!.outputPath,
             assetPaths: fixture.manifest.posts[0]!.assetPaths,
             upload: fixture.manifest.posts[0]!.upload,
-            warnings: [],
-            warningCount: 0,
             error: null,
             updatedAt: "2026-04-17T04:00:01.000Z",
           },
@@ -850,20 +826,20 @@ describe("NaverBlogExporter", () => {
       })
 
       const rewrittenMarkdown = await readFile(fixture.markdownPath, "utf8")
-	      const writtenManifest = JSON.parse(
-	        await readFile(path.join(outputDir, "manifest.json"), "utf8"),
-	      ) as typeof rewritten.manifest
+        const writtenManifest = JSON.parse(
+          await readFile(path.join(outputDir, "manifest.json"), "utf8"),
+        ) as typeof rewritten.manifest
 
-	      expect(rewrittenMarkdown).toContain("thumbnail: https://cdn.example.com/shared.png")
-	      expect(rewrittenMarkdown).toContain("https://cdn.example.com/shared.png")
-	      expect(writtenManifest.upload.status).toBe("upload-completed")
-	      expect(writtenManifest.posts[0]?.assetPaths).toEqual(["https://cdn.example.com/shared.png"])
-	      expect(writtenManifest.posts[0]?.upload.uploadedUrls).toEqual(["https://cdn.example.com/shared.png"])
-	      expect(writtenManifest.posts[0]).not.toHaveProperty("externalPreviewUrl")
-	      expect(rewritten.items[0]?.assetPaths).toEqual(["https://cdn.example.com/shared.png"])
-	      expect(rewritten.items[0]?.upload.uploadedUrls).toEqual(["https://cdn.example.com/shared.png"])
-	      expect(rewritten.items[0]).not.toHaveProperty("externalPreviewUrl")
-	    } finally {
+        expect(rewrittenMarkdown).toContain("thumbnail: https://cdn.example.com/shared.png")
+        expect(rewrittenMarkdown).toContain("https://cdn.example.com/shared.png")
+        expect(writtenManifest.upload.status).toBe("upload-completed")
+        expect(writtenManifest.posts[0]?.assetPaths).toEqual(["https://cdn.example.com/shared.png"])
+        expect(writtenManifest.posts[0]?.upload.uploadedUrls).toEqual(["https://cdn.example.com/shared.png"])
+        expect(writtenManifest.posts[0]).not.toHaveProperty("externalPreviewUrl")
+        expect(rewritten.items[0]?.assetPaths).toEqual(["https://cdn.example.com/shared.png"])
+        expect(rewritten.items[0]?.upload.uploadedUrls).toEqual(["https://cdn.example.com/shared.png"])
+        expect(rewritten.items[0]).not.toHaveProperty("externalPreviewUrl")
+      } finally {
       await rm(outputDir, { recursive: true, force: true })
     }
   })

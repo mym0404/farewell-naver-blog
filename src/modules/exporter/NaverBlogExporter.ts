@@ -25,7 +25,6 @@ import { NaverBlog } from "../blog/NaverBlog.js"
 import { NaverBlogFetcher } from "../fetcher/NaverBlogFetcher.js"
 import { renderMarkdownPost } from "../converter/MarkdownRenderer.js"
 import { parsePostHtml } from "../parser/PostParser.js"
-import { reviewParsedPost } from "../reviewer/PostReviewer.js"
 import { AssetStore } from "./AssetStore.js"
 import { buildMarkdownFilePath, getCategoryForPost } from "./ExportPaths.js"
 import { buildPostLinkTargets, createSameBlogPostLinkResolver } from "./PostLinkRewriter.js"
@@ -36,7 +35,6 @@ const postExportConcurrency = 3
 type ProcessedPostResult = {
   manifestEntry: PostManifestEntry
   jobItem: ExportJobItem
-  warningCount: number
   uploadCandidateLocalPaths: string[]
   uploadEligible: boolean
 }
@@ -49,7 +47,6 @@ type ExportResumeState = {
 type ExportProgressState = {
   completed: number
   failed: number
-  warningCount: number
   uploadEligiblePostCount: number
   uploadCandidateMap: Map<string, true>
 }
@@ -88,7 +85,6 @@ const createInitialManifest = ({
         totalPosts,
         successCount: 0,
         failureCount: 0,
-        warningCount: 0,
         upload: {
           status: uploadEnabled ? UPLOAD_STATUSES.UPLOAD_READY : UPLOAD_STATUSES.NOT_REQUESTED,
           eligiblePostCount: 0,
@@ -104,7 +100,6 @@ const createInitialManifest = ({
 const createExportProgressState = (manifest: ExportManifest): ExportProgressState => ({
   completed: manifest.successCount,
   failed: manifest.failureCount,
-  warningCount: manifest.warningCount,
   uploadEligiblePostCount: manifest.posts.reduce(
     (count, post) => count + (post.status === "success" && post.upload.eligible ? 1 : 0),
     0,
@@ -135,7 +130,6 @@ export class NaverBlogExporter {
     total: number
     completed: number
     failed: number
-    warnings: number
   }) => void
   readonly onItem: ((item: ExportJobItem) => void) | null
   readonly cachedScanResult: ScanResult | null
@@ -157,7 +151,6 @@ export class NaverBlogExporter {
       total: number
       completed: number
       failed: number
-      warnings: number
     }) => void
     onItem?: (item: ExportJobItem) => void
     cachedScanResult?: ScanResult | null
@@ -209,7 +202,6 @@ export class NaverBlogExporter {
     markdownFilePath,
     assetPaths,
     upload,
-    warnings,
   }: {
     post: Awaited<ReturnType<NaverBlogFetcher["getAllPosts"]>>[number]
     category: ReturnType<typeof getCategoryForPost>
@@ -217,9 +209,7 @@ export class NaverBlogExporter {
     markdownFilePath: string
     assetPaths: string[]
     upload: ReturnType<typeof createPostUploadSummary>
-    warnings: PostManifestEntry["warnings"]
   }): ProcessedPostResult {
-    const warningCount = warnings.length
     const manifestEntry = {
       logNo: post.logNo,
       title: post.title,
@@ -233,8 +223,6 @@ export class NaverBlogExporter {
       outputPath: path.relative(outputDir, markdownFilePath).split(path.sep).join("/"),
       assetPaths,
       upload,
-      warnings,
-      warningCount,
       error: null,
     } satisfies PostManifestEntry
 
@@ -250,12 +238,9 @@ export class NaverBlogExporter {
         outputPath: manifestEntry.outputPath,
         assetPaths,
         upload,
-        warnings,
-        warningCount,
         error: null,
         updatedAt: new Date().toISOString(),
       },
-      warningCount,
       uploadCandidateLocalPaths: upload.candidates.map((candidate) => candidate.localPath),
       uploadEligible: upload.eligible,
     }
@@ -293,8 +278,6 @@ export class NaverBlogExporter {
       outputPath: null,
       assetPaths: [],
       upload,
-      warnings: [],
-      warningCount: 0,
       error: toErrorMessage(error),
     } satisfies PostManifestEntry
 
@@ -310,12 +293,9 @@ export class NaverBlogExporter {
         outputPath: null,
         assetPaths: [],
         upload,
-        warnings: [],
-        warningCount: 0,
         error: manifestEntry.error,
         updatedAt: new Date().toISOString(),
       },
-      warningCount: 0,
       uploadCandidateLocalPaths: [],
       uploadEligible: false,
     }
@@ -401,9 +381,7 @@ export class NaverBlogExporter {
 
         if (result.manifestEntry.status === "success") {
           progressState.completed += 1
-          progressState.warningCount += result.warningCount
           manifest.successCount = progressState.completed
-          manifest.warningCount = progressState.warningCount
 
           for (const candidateLocalPath of result.uploadCandidateLocalPaths) {
             progressState.uploadCandidateMap.set(candidateLocalPath, true)
@@ -423,7 +401,6 @@ export class NaverBlogExporter {
           total: filteredPosts.length,
           completed: progressState.completed,
           failed: progressState.failed,
-          warnings: progressState.warningCount,
         })
       }
     }
@@ -464,13 +441,11 @@ export class NaverBlogExporter {
               resolveLinkUrl,
             },
           })
-          const review = reviewParsedPost(parsedPost)
           const rendered = await renderMarkdownPost({
             post,
             category,
             parsedPost,
             markdownFilePath,
-            reviewedWarnings: review.warnings,
             options,
             resolveAsset: async (input) => assetStore.saveAsset(input),
             resolveLinkUrl,
@@ -504,7 +479,6 @@ export class NaverBlogExporter {
               markdownFilePath,
               assetPaths,
               upload,
-              warnings: rendered.warnings,
             }),
           )
         } catch (error) {
@@ -523,7 +497,6 @@ export class NaverBlogExporter {
     flushCompletedResults()
     manifest.successCount = progressState.completed
     manifest.failureCount = progressState.failed
-    manifest.warningCount = progressState.warningCount
 
     manifest.totalPosts = filteredPosts.length
     manifest.upload = uploadEnabled

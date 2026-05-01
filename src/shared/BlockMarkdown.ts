@@ -22,8 +22,6 @@ const compactMarkdownText = (value: string) =>
     .join("\n")
     .trim()
 
-const unique = <Type,>(values: Type[]) => [...new Set(values)]
-
 const escapeTableCell = (value: string) =>
   value.replace(/\|/g, "\\|").replace(/\n+/g, "<br>").trim() || " "
 
@@ -170,48 +168,6 @@ export const renderFormula = ({
     close: block.close,
     display: true,
   })
-}
-
-export type RenderDiagnostic = {
-  level: "warning" | "error"
-  message: string
-  detail?: string
-}
-
-const renderDiagnosticCallout = ({
-  level,
-  message,
-  detail,
-}: RenderDiagnostic) => {
-  const label = level === "error" ? "Error" : "Warning"
-  const icon = level === "error" ? "❌" : "⚠️"
-  const lines = [`> ${icon} ${label}: ${message}`]
-
-  if (detail?.trim()) {
-    lines.push(
-      ...detail
-        .split("\n")
-        .map((line) => line.trim())
-        .filter(Boolean)
-        .map((line) => `> ${line}`),
-    )
-  }
-
-  return lines.join("\n")
-}
-
-export const buildDiagnosticsSection = (diagnostics: RenderDiagnostic[]) => {
-  const uniqueDiagnostics = unique(
-    diagnostics.map((diagnostic) => JSON.stringify(diagnostic)),
-  ).map((diagnostic) => JSON.parse(diagnostic) as RenderDiagnostic)
-
-  if (uniqueDiagnostics.length === 0) {
-    return ""
-  }
-
-  return ["## Export Diagnostics", uniqueDiagnostics.map(renderDiagnosticCallout).join("\n\n")]
-    .filter(Boolean)
-    .join("\n\n")
 }
 
 export const renderLinkCardBlock = ({

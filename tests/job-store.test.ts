@@ -24,7 +24,6 @@ const manifest: ExportManifest = {
   totalPosts: 1,
   successCount: 1,
   failureCount: 0,
-  warningCount: 0,
   upload: {
     status: "not-requested",
     eligiblePostCount: 0,
@@ -57,8 +56,6 @@ const manifest: ExportManifest = {
         rewriteStatus: "pending",
         rewrittenAt: null,
       },
-      warnings: [],
-      warningCount: 0,
       error: null,
     },
   ],
@@ -75,7 +72,6 @@ const manifest: ExportManifest = {
       total: 1,
       completed: 1,
       failed: 0,
-      warnings: 0,
     },
     upload: {
       status: "not-requested",

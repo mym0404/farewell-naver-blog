@@ -112,13 +112,8 @@ export abstract class BaseEditor {
       hasQuote?: boolean
     }
   }) {
-    const warnings: string[] = []
     const blocks: AstBlock[] = []
     const body: ParsedPostBodyNode[] = []
-
-    const appendWarnings = (nextWarnings: string[]) => {
-      warnings.push(...nextWarnings)
-    }
 
     const appendBodyNodes = (nodes: ParsedPostBodyNode[]) => {
       body.push(...nodes)
@@ -173,10 +168,6 @@ export abstract class BaseEditor {
       result: ParserBlockResult
       parserBlock: BaseBlock
     }) => {
-      if (result.warnings) {
-        appendWarnings(result.warnings)
-      }
-
       if (result.status === "handled") {
         const selectedBlocks = result.blocks.map((parsedBlock) =>
           applyOutputSelection({
@@ -203,7 +194,6 @@ export abstract class BaseEditor {
         tags,
         options,
         appendBodyNodes,
-        appendWarnings,
         ...moduleContext?.(node),
       }
       const block = this.supportedBlocks.find((supportedBlock) => supportedBlock.match(context))
@@ -239,7 +229,6 @@ export abstract class BaseEditor {
     return {
       blocks,
       body,
-      warnings,
     }
   }
 }

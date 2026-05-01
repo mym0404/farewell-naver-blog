@@ -33,7 +33,7 @@ describe("export options", () => {
     expect(options.assets.stickerAssetMode).toBe("ignore")
     expect(options.assets.imageHandlingMode).toBe("download-and-upload")
     expect(options.assets.compressionEnabled).toBe(true)
-    expect(options.assets.downloadFailureMode).toBe("warn-and-use-source")
+    expect(options.assets.downloadFailureMode).toBe("fail")
     expect(options.links.sameBlogPostMode).toBe("keep-source")
     expect(options.links.sameBlogPostCustomUrlTemplate).toBe("")
     expect(Object.hasOwn(options, "markdown")).toBe(false)
@@ -111,6 +111,30 @@ describe("export options", () => {
       "naver-se4:code": {
         variant: "tilde-fence",
       },
+    })
+  })
+
+  it("drops unsupported frontmatter field keys from persisted options", () => {
+    const sanitized = sanitizePersistedExportOptions(
+      JSON.parse(`{
+        "frontmatter": {
+          "fields": {
+            "title": false,
+            "removedField": true
+          },
+          "aliases": {
+            "title": "postTitle",
+            "removedField": "removed"
+          }
+        }
+      }`),
+    )
+
+    expect(sanitized.frontmatter?.fields).toEqual({
+      title: false,
+    })
+    expect(sanitized.frontmatter?.aliases).toEqual({
+      title: "postTitle",
     })
   })
 
@@ -285,7 +309,6 @@ describe("export options", () => {
         tags: false,
         thumbnail: false,
         video: false,
-        warnings: false,
         exportedAt: false,
         assetPaths: false,
       },
@@ -301,7 +324,6 @@ describe("export options", () => {
         tags: "",
         thumbnail: "",
         video: "",
-        warnings: "",
         exportedAt: "",
         assetPaths: "dup",
       },

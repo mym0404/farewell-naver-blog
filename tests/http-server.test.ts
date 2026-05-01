@@ -503,7 +503,6 @@ describe("http server", () => {
             totalPosts: 3,
             successCount: 1,
             failureCount: 0,
-            warningCount: 0,
             upload: {
               status: "not-requested",
               eligiblePostCount: 0,
@@ -532,7 +531,6 @@ describe("http server", () => {
                 total: 3,
                 completed: 1,
                 failed: 0,
-                warnings: 0,
               },
               upload: {
                 status: "not-requested",
@@ -611,7 +609,6 @@ describe("http server", () => {
             totalPosts: 3,
             successCount: 1,
             failureCount: 0,
-            warningCount: 0,
             upload: {
               status: "not-requested",
               eligiblePostCount: 0,
@@ -640,7 +637,6 @@ describe("http server", () => {
                 total: 3,
                 completed: 1,
                 failed: 0,
-                warnings: 0,
               },
               upload: {
                 status: "not-requested",
@@ -727,7 +723,6 @@ describe("http server", () => {
             totalPosts: 3,
             successCount: 1,
             failureCount: 0,
-            warningCount: 0,
             upload: {
               status: "not-requested",
               eligiblePostCount: 0,
@@ -756,7 +751,6 @@ describe("http server", () => {
                 total: 3,
                 completed: 1,
                 failed: 0,
-                warnings: 0,
               },
               upload: {
                 status: "not-requested",
@@ -843,7 +837,6 @@ describe("http server", () => {
             totalPosts: 3,
             successCount: 1,
             failureCount: 0,
-            warningCount: 0,
             upload: {
               status: "not-requested",
               eligiblePostCount: 0,
@@ -872,7 +865,6 @@ describe("http server", () => {
                 total: 3,
                 completed: 1,
                 failed: 0,
-                warnings: 0,
               },
               upload: {
                 status: "not-requested",
@@ -969,7 +961,6 @@ describe("http server", () => {
             totalPosts: 1,
             successCount: 0,
             failureCount: 0,
-            warningCount: 0,
             upload: {
               status: "not-requested",
               eligiblePostCount: 0,
@@ -998,7 +989,6 @@ describe("http server", () => {
                 total: 1,
                 completed: 0,
                 failed: 0,
-                warnings: 0,
               },
               upload: {
                 status: "not-requested",
@@ -1074,7 +1064,6 @@ describe("http server", () => {
             totalPosts: 3,
             successCount: 1,
             failureCount: 0,
-            warningCount: 0,
             upload: {
               status: "not-requested",
               eligiblePostCount: 0,
@@ -1103,7 +1092,6 @@ describe("http server", () => {
                 total: 3,
                 completed: 1,
                 failed: 0,
-                warnings: 0,
               },
               upload: {
                 status: "not-requested",
@@ -1283,7 +1271,6 @@ describe("http server", () => {
       totalPosts: 3,
       successCount: 1,
       failureCount: 0,
-      warningCount: 0,
       upload: {
         status: "not-requested" as const,
         eligiblePostCount: 0,
@@ -1312,7 +1299,6 @@ describe("http server", () => {
           total: 3,
           completed: 1,
           failed: 0,
-          warnings: 0,
         },
         upload: {
           status: "not-requested" as const,

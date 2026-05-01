@@ -17,12 +17,10 @@ import type {
 import { resolveBlockOutputSelection } from "../../shared/BlockRegistry.js"
 import { getMarkdownLinkStyleFromSelection } from "../../shared/BlockOutputOptions.js"
 import {
-  buildDiagnosticsSection,
   createLinkFormatter,
   getDividerMarker,
   getHeadingLevelOffset,
   getHtmlConversionOptions,
-  type RenderDiagnostic,
   renderCodeBlock,
   renderFormula,
   renderGfmTable,
@@ -32,7 +30,6 @@ import {
   renderQuote,
 } from "../../shared/BlockMarkdown.js"
 import { getFrontmatterExportKey } from "../../shared/ExportOptions.js"
-import { unique } from "../../shared/Utils.js"
 import { getParsedPostBodyNodes } from "../blocks/BodyNodeUtils.js"
 
 const buildFrontmatter = ({
@@ -77,7 +74,6 @@ export const renderMarkdownPost = async ({
   category,
   parsedPost,
   markdownFilePath,
-  reviewedWarnings,
   options,
   resolveAsset,
   resolveLinkUrl,
@@ -86,7 +82,6 @@ export const renderMarkdownPost = async ({
   category: CategoryInfo
   parsedPost: ParsedPost
   markdownFilePath: string
-  reviewedWarnings: string[]
   options: ExportOptions
   resolveAsset: (input: {
     kind: "image" | "thumbnail"
@@ -96,12 +91,6 @@ export const renderMarkdownPost = async ({
   resolveLinkUrl?: (url: string) => string
 }) => {
   const bodyNodes = getParsedPostBodyNodes(parsedPost)
-  const initialWarnings = unique([...parsedPost.warnings, ...reviewedWarnings])
-  const warnings: string[] = [...initialWarnings]
-  const diagnostics: RenderDiagnostic[] = initialWarnings.map((warning) => ({
-    level: "warning",
-    message: warning,
-  }))
   const assetRecords: AssetRecord[] = []
   const sections: string[] = []
   const inlineLinkFormatter = createLinkFormatter({
@@ -157,23 +146,11 @@ export const renderMarkdownPost = async ({
       return assetRecord.reference
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      const warning = `자산 다운로드 실패: ${sourceUrl} (${message})`
-      const shouldWarn =
-        options.assets.downloadFailureMode === "warn-and-use-source" ||
-        options.assets.downloadFailureMode === "warn-and-omit"
-
-      if (shouldWarn) {
-        warnings.push(warning)
-        diagnostics.push({
-          level: "warning",
-          message: warning,
-        })
+      if (options.assets.downloadFailureMode === "fail") {
+        throw new Error(`자산 다운로드 실패: ${sourceUrl} (${message})`)
       }
 
-      return options.assets.downloadFailureMode === "warn-and-omit" ||
-        options.assets.downloadFailureMode === "omit"
-        ? null
-        : sourceUrl
+      return options.assets.downloadFailureMode === "omit" ? null : sourceUrl
     }
   }
 
@@ -416,7 +393,6 @@ export const renderMarkdownPost = async ({
     tags: parsedPost.tags,
     thumbnail: thumbnailPath,
     video: renderedVideos,
-    warnings: unique(warnings),
     exportedAt: new Date().toISOString(),
     assetPaths: assetRecords
       .map((asset) => asset.relativePath)
@@ -432,9 +408,8 @@ export const renderMarkdownPost = async ({
     : null
 
   const bodySections = sections.filter(Boolean).join("\n\n").trim()
-  const diagnosticsSection = buildDiagnosticsSection(diagnostics)
   const referenceSection = referenceLinkFormatter.renderReferenceSection()
-  const body = [diagnosticsSection, bodySections, referenceSection].filter(Boolean).join("\n\n")
+  const body = [bodySections, referenceSection].filter(Boolean).join("\n\n")
 
   const markdown = frontmatter
     ? `---\n${YAML.stringify(frontmatter)}---\n\n${body}\n`
@@ -443,6 +418,5 @@ export const renderMarkdownPost = async ({
   return {
     markdown,
     assetRecords,
-    warnings: unique(warnings),
   }
 }

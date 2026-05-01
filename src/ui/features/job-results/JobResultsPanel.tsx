@@ -166,30 +166,30 @@ export const JobResultsPanel = ({
 
       counts.all += 1
 
-      if (severity === "warning") {
-        counts.warnings += 1
+      if (severity === "success") {
+        counts.success += 1
       }
 
       if (severity === "error") {
-        counts.errors += 1
+        counts.failed += 1
       }
 
       return counts
     },
     {
       all: 0,
-      warnings: 0,
-      errors: 0,
+      success: 0,
+      failed: 0,
     } satisfies Record<JobFilter, number>,
   )
   const jobItems = allJobItems.filter((item) => {
     const severity = buildJobItemSeverity(item)
 
-    if (activeJobFilter === "warnings") {
-      return severity === "warning"
+    if (activeJobFilter === "success") {
+      return severity === "success"
     }
 
-    if (activeJobFilter === "errors") {
+    if (activeJobFilter === "failed") {
       return severity === "error"
     }
 
@@ -327,7 +327,6 @@ export const JobResultsPanel = ({
               items={[
                 { label: "총 글", value: String(job?.progress.total ?? 0) },
                 { label: "완료", value: String(job?.progress.completed ?? 0) },
-                { label: "경고", value: String(job?.progress.warnings ?? 0) },
                 { label: "실패", value: String(job?.progress.failed ?? 0) },
               ]}
               className="field-card rounded-2xl px-4 py-3"
@@ -536,7 +535,7 @@ export const JobResultsPanel = ({
                                 {rule.disabledReason ? (
                                   <span
                                     id={fieldDisabledReasonId}
-                                    className="warning-copy text-sm leading-6"
+                                    className="notice-copy text-sm leading-6"
                                   >
                                     {rule.disabledReason}
                                   </span>
@@ -594,7 +593,7 @@ export const JobResultsPanel = ({
                               {rule.disabledReason ? (
                                 <span
                                   id={fieldDisabledReasonId}
-                                  className="warning-copy text-sm leading-6"
+                                  className="notice-copy text-sm leading-6"
                                 >
                                   {rule.disabledReason}
                                 </span>
@@ -623,7 +622,7 @@ export const JobResultsPanel = ({
                             {rule.disabledReason ? (
                               <span
                                 id={fieldDisabledReasonId}
-                                className="warning-copy text-sm leading-6"
+                                className="notice-copy text-sm leading-6"
                               >
                                 {rule.disabledReason}
                               </span>
@@ -732,7 +731,6 @@ export const JobResultsPanel = ({
               items={[
                 { label: "총 글", value: String(job?.progress.total ?? 0) },
                 { label: "완료", value: String(job?.progress.completed ?? 0) },
-                { label: "경고", value: String(job?.progress.warnings ?? 0) },
                 { label: "실패", value: String(job?.progress.failed ?? 0) },
                 { label: "업로드", value: String(job?.upload.uploadedCount ?? 0) },
               ]}
@@ -759,7 +757,7 @@ export const JobResultsPanel = ({
                 role="tablist"
                 aria-label="완료 리스트 필터"
               >
-                {(["all", "warnings", "errors"] as const).map((filter) => (
+                {(["all", "success", "failed"] as const).map((filter) => (
                   <Button
                     key={filter}
                     type="button"
@@ -768,7 +766,7 @@ export const JobResultsPanel = ({
                     data-job-filter={filter}
                     onClick={() => onFilterChange(filter)}
                   >
-                    {filter === "all" ? "전체" : filter === "warnings" ? "경고" : "에러"}{" "}
+                    {filter === "all" ? "전체" : filter === "success" ? "성공" : "실패"}{" "}
                     {jobFilterCounts[filter]}
                   </Button>
                 ))}
@@ -848,9 +846,7 @@ export const JobResultsPanel = ({
                           key={item.id}
                           className={cn(
                             "last:border-b-0",
-                            severity === "warning"
-                              ? "bg-[color-mix(in_srgb,var(--status-warning-bg)_55%,transparent)]"
-                              : severity === "error"
+                            severity === "error"
                                 ? "bg-[var(--status-error-bg)]"
                                 : "",
                           )}

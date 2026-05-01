@@ -93,7 +93,7 @@ export const App = () => {
   const [categorySearch, setCategorySearch] = useState("")
   const [scanPending, setScanPending] = useState(false)
   const [setupStep, setSetupStep] = useState<SetupStep>("blog-input")
-  const [activeJobFilter, setActiveJobFilter] = useState<"all" | "warnings" | "errors">("all")
+  const [activeJobFilter, setActiveJobFilter] = useState<"all" | "success" | "failed">("all")
   const { job, submitting, uploadSubmitting, hydrateJob, resumeJob, setJob, startJob, startUpload } = useExportJob()
 
   const lastNotifiedJobKeyRef = useRef<string | null>(null)
