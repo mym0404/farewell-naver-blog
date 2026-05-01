@@ -35,6 +35,18 @@ type PostApiItem = {
   bothBuddyOpen: boolean;
 };
 
+export type NaverBlogFetcherCache = {
+  getPostHtml?: (input: {
+    blogId: string;
+    logNo: string;
+  }) => string | null | Promise<string | null>;
+  setPostHtml?: (input: {
+    blogId: string;
+    logNo: string;
+    html: string;
+  }) => void | Promise<void>;
+};
+
 const pageSize = 30;
 const postListConcurrency = 3;
 const defaultRetryDelays = [0, 1_000, 2_000, 4_000];
@@ -77,19 +89,23 @@ export class NaverBlogFetcher {
   readonly blogId: string;
   readonly requestTimeoutMs: number;
   readonly retryDelays: number[];
+  readonly cache?: NaverBlogFetcherCache;
 
   constructor({
     blogId,
     requestTimeoutMs,
     retryDelays,
+    cache,
   }: {
     blogId: string;
     requestTimeoutMs?: number;
     retryDelays?: number[];
+    cache?: NaverBlogFetcherCache;
   }) {
     this.blogId = blogId;
     this.requestTimeoutMs = requestTimeoutMs ?? defaultRequestTimeoutMs;
     this.retryDelays = retryDelays ?? defaultRetryDelays;
+    this.cache = cache;
   }
 
   async getPostCount() {
@@ -226,6 +242,15 @@ export class NaverBlogFetcher {
   }
 
   async fetchPostHtml(logNo: string) {
+    const cachedHtml = await this.cache?.getPostHtml?.({
+      blogId: this.blogId,
+      logNo,
+    });
+
+    if (typeof cachedHtml === 'string') {
+      return cachedHtml;
+    }
+
     const response = await HttpUtil.fetchResponseWithRetry({
       url: `https://m.blog.naver.com/PostView.naver?blogId=${this.blogId}&logNo=${logNo}`,
       headers: htmlHeaders({
@@ -236,7 +261,15 @@ export class NaverBlogFetcher {
       requestTimeoutMs: this.requestTimeoutMs,
     });
 
-    return response.text();
+    const html = await response.text();
+
+    await this.cache?.setPostHtml?.({
+      blogId: this.blogId,
+      logNo,
+      html,
+    });
+
+    return html;
   }
 
   async downloadBinary({

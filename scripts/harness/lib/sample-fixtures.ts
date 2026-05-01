@@ -4,6 +4,7 @@ import { parse as parseYaml } from "yaml"
 
 import { renderMarkdownPost } from "../../../src/modules/converter/MarkdownRenderer.js"
 import { NaverBlogFetcher } from "../../../src/modules/fetcher/NaverBlogFetcher.js"
+import type { NaverBlogFetcherCache } from "../../../src/modules/fetcher/NaverBlogFetcher.js"
 import { parsePostHtml } from "../../../src/modules/parser/PostParser.js"
 import { reviewParsedPost } from "../../../src/modules/reviewer/PostReviewer.js"
 import { defaultExportOptions } from "../../../src/shared/ExportOptions.js"
@@ -12,7 +13,7 @@ import type {
   ExportOptions,
   PostSummary,
 } from "../../../src/shared/Types.js"
-import { ensureHarnessDir, pathExists, readUtf8, repoPath } from "./paths.js"
+import { ensureHarnessDir, pathExists, readUtf8, repoPath, writeUtf8 } from "./paths.js"
 
 type SampleFixtureEntry = {
   id: string
@@ -100,6 +101,25 @@ const parseExpectedFrontmatter = (markdown: string): ExpectedFrontmatter => {
       typeof frontmatter.error === "string"
         ? frontmatter.error
         : undefined,
+  }
+}
+
+const createSamplePostHtmlCache = (cacheDir: string): NaverBlogFetcherCache => {
+  const getCachePath = ({ blogId, logNo }: { blogId: string; logNo: string }) =>
+    path.join(cacheDir, `${encodeURIComponent(blogId)}-${encodeURIComponent(logNo)}.html`)
+
+  return {
+    getPostHtml: async (input) => {
+      const cachePath = getCachePath(input)
+
+      return (await pathExists(cachePath)) ? readUtf8(cachePath) : null
+    },
+    setPostHtml: async ({ html, ...input }) => {
+      await writeUtf8({
+        targetPath: getCachePath(input),
+        content: html,
+      })
+    },
   }
 }
 
@@ -242,6 +262,7 @@ export const renderSampleFixture = async ({
 export const loadSampleFixture = async (sample: SampleFixtureEntry) => ({
   html: await new NaverBlogFetcher({
     blogId: sample.blogId,
+    cache: createSamplePostHtmlCache(await ensureHarnessDir("sample-post-html-cache")),
   }).fetchPostHtml(sample.logNo),
   expectedMarkdown: sample.expectedError
     ? undefined

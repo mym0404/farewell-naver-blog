@@ -183,6 +183,45 @@ describe("NaverBlogFetcher", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2)
   })
 
+  it("uses injected post html cache before fetching", async () => {
+    const fetchMock = vi.fn<typeof fetch>()
+
+    vi.stubGlobal("fetch", fetchMock)
+
+    const fetcher = new NaverBlogFetcher({
+      blogId: "mym0404",
+      cache: {
+        getPostHtml: async ({ blogId, logNo }) =>
+          blogId === "mym0404" && logNo === "223034929697" ? "<div>cached</div>" : null,
+      },
+    })
+
+    await expect(fetcher.fetchPostHtml("223034929697")).resolves.toBe("<div>cached</div>")
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it("stores fetched post html in the injected cache", async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(new Response("<div>fresh</div>", { status: 200 }))
+    const setPostHtml = vi.fn()
+
+    vi.stubGlobal("fetch", fetchMock)
+
+    const fetcher = new NaverBlogFetcher({
+      blogId: "mym0404",
+      cache: {
+        getPostHtml: async () => null,
+        setPostHtml,
+      },
+    })
+
+    await expect(fetcher.fetchPostHtml("223034929697")).resolves.toBe("<div>fresh</div>")
+    expect(setPostHtml).toHaveBeenCalledWith({
+      blogId: "mym0404",
+      logNo: "223034929697",
+      html: "<div>fresh</div>",
+    })
+  })
+
   it("retries binary fetches after a transient server error", async () => {
     const fetchMock = vi
       .fn<typeof fetch>()

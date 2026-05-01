@@ -5,6 +5,7 @@
 - Each sample must contain either `expected.md` or `expected-error.md`.
 - `tests/sample-fixtures.test.ts` discovers directories dynamically.
 - `scripts/harness/lib/sample-fixtures.ts` parses expected frontmatter, fetches the live Naver post HTML from `blogId` and `logNo`, and renders it with fixture export options.
+- Live sample HTML is cached under `tmp/harness/sample-post-html-cache` through the optional `NaverBlogFetcher` cache interface.
 
 ## Fixture Options
 - Sample fixture rendering uses `defaultExportOptions()`.
