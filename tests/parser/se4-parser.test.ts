@@ -54,6 +54,31 @@ describe("NaverBlogSE4Editor", () => {
     expect(parsed.blocks).toEqual([{ type: "paragraph", text: "첫 줄  \n둘째 줄" }])
   })
 
+  it("preserves unordered and ordered text lists", () => {
+    const parsed = parseSe4Fixture(`
+      <div class="se-component se-text">
+        ${createModuleScript({ type: "v2_text" })}
+        <div class="se-module-text">
+          <p class="se-text-paragraph">Intro</p>
+          <ul class="se-text-list se-text-list-type-bullet-disc">
+            <li class="se-text-list-item"><p class="se-text-paragraph">unordered list 1</p></li>
+            <li class="se-text-list-item"><p class="se-text-paragraph">2</p></li>
+          </ul>
+          <ol class="se-text-list se-text-list-type-decimal">
+            <li class="se-text-list-item"><p class="se-text-paragraph">orderedlist 1</p></li>
+            <li class="se-text-list-item"><p class="se-text-paragraph">2</p></li>
+          </ol>
+        </div>
+      </div>
+    `)
+
+    expect(parsed.blocks).toEqual([
+      { type: "paragraph", text: "Intro" },
+      { type: "paragraph", text: "- unordered list 1\n- 2" },
+      { type: "paragraph", text: "1. orderedlist 1\n2. 2" },
+    ])
+  })
+
   it("groups recommendation panel text dumps into a compact markdown list", () => {
     const parsed = parseSe4Fixture(`
       <div class="se-component se-text">

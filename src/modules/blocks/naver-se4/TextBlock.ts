@@ -1,3 +1,5 @@
+import type { AnyNode, Element } from "domhandler"
+
 import { convertHtmlToMarkdown } from "../../converter/HtmlFragmentConverter.js"
 import {
   getMarkdownLinkStyleFromSelection,
@@ -6,6 +8,11 @@ import {
 import { compactMarkdownText } from "../../../shared/Utils.js"
 import { LeafBlock } from "../BaseBlock.js"
 import type { ParserBlockContext } from "../ParserNode.js"
+
+type TextBlock = { type: "paragraph"; text: string }
+
+const isElementNode = (node: AnyNode | undefined): node is Element =>
+  node?.type === "tag" || node?.type === "script" || node?.type === "style"
 
 const recommendationHeaderPatterns = [/^추천트렌드/, /^이런 상품 어때요/]
 const recommendationNoisePatterns = [
@@ -81,10 +88,8 @@ const parseTextBlocks = ({
   options: ParserBlockContext["options"]
   outputSelection?: Parameters<LeafBlock["convert"]>[0]["outputSelection"]
 }) => {
-  const texts = $node
-    .find("p.se-text-paragraph")
-    .toArray()
-    .map((paragraph) =>
+  const convertParagraph = (paragraph: Element) =>
+    compactMarkdownText(
       convertHtmlToMarkdown({
         html: $node.find(paragraph).html() ?? "",
         options: {
@@ -93,19 +98,73 @@ const parseTextBlocks = ({
         resolveLinkUrl: options.resolveLinkUrl,
       }),
     )
-    .map((text) => compactMarkdownText(text))
+  const toParagraphBlock = (text: string): TextBlock[] =>
+    text ? [{ type: "paragraph", text }] : []
+  const parseParagraph = (paragraph: Element) => toParagraphBlock(convertParagraph(paragraph))
+  const parseList = (list: Element) => {
+    const $list = $node.find(list)
+    const ordered = $list.prop("tagName")?.toLowerCase() === "ol"
+    const lines = $list
+      .children("li")
+      .toArray()
+      .map((item, index) => {
+        const text = $node
+          .find(item)
+          .find("p.se-text-paragraph")
+          .toArray()
+          .map(convertParagraph)
+          .filter(Boolean)
+          .join("  \n")
+
+        return text ? (ordered ? `${index + 1}. ${text}` : `- ${text}`) : ""
+      })
+      .filter(Boolean)
+
+    return toParagraphBlock(lines.join("\n"))
+  }
+  const parseContainer = (container: Element) =>
+    $node
+      .find(container)
+      .contents()
+      .toArray()
+      .flatMap((child) => {
+        if (!isElementNode(child)) {
+          return []
+        }
+
+        const $child = $node.find(child)
+        const tagName = $child.prop("tagName")?.toLowerCase()
+
+        if (tagName === "p" && $child.hasClass("se-text-paragraph")) {
+          return parseParagraph(child)
+        }
+
+        if ((tagName === "ul" || tagName === "ol") && $child.hasClass("se-text-list")) {
+          return parseList(child)
+        }
+
+        return []
+      })
+
+  const textModules = $node.find(".se-module-text").toArray()
+  const blocks = (textModules.length > 0 ? textModules : [$node.get(0)])
+    .filter(isElementNode)
+    .flatMap(parseContainer)
+  const parsedBlocks = blocks.length > 0
+    ? blocks
+    : $node.find("p.se-text-paragraph").toArray().flatMap(parseParagraph)
+  const texts = parsedBlocks
+    .map((block) => block.text)
     .filter(Boolean)
 
-  const recommendationBlocks = parseRecommendationTextBlocks(texts)
+  const hasListBlock = parsedBlocks.some((block) => /^(- |\d+\. )/m.test(block.text))
+  const recommendationBlocks = hasListBlock ? null : parseRecommendationTextBlocks(texts)
 
   if (recommendationBlocks) {
     return recommendationBlocks
   }
 
-  return texts.map((text) => ({
-    type: "paragraph" as const,
-    text,
-  }))
+  return parsedBlocks
 }
 
 export class NaverSe4TextBlock extends LeafBlock {
