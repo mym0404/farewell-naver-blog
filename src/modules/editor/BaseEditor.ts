@@ -7,7 +7,6 @@ import type {
   EditorBlockOutputDefinition,
   ExportOptions,
   ParsedPost,
-  ParsedPostBodyNode,
   UnknownRecord,
 } from "@shared/Types.js"
 import { resolveBlockOutputSelection } from "@shared/BlockRegistry.js"
@@ -18,7 +17,6 @@ import type {
   ParserBlockContext,
   ParserBlockConvertContext,
   ParserBlockOptions,
-  ParserBlockResult,
 } from "../blocks/ParserNode.js"
 import type { BaseBlock } from "../blocks/BaseBlock.js"
 
@@ -112,13 +110,6 @@ export abstract class BaseEditor {
       hasQuote?: boolean
     }
   }) {
-    const blocks: AstBlock[] = []
-    const body: ParsedPostBodyNode[] = []
-
-    const appendBodyNodes = (nodes: ParsedPostBodyNode[]) => {
-      body.push(...nodes)
-    }
-
     const applyOutputSelection = ({
       parsedBlock,
       parserBlock,
@@ -161,39 +152,14 @@ export abstract class BaseEditor {
       }
     }
 
-    const handleResult = ({
-      result,
-      parserBlock,
-    }: {
-      result: ParserBlockResult
-      parserBlock: BaseBlock
-    }) => {
-      if (result.status === "handled") {
-        const selectedBlocks = result.blocks.map((parsedBlock) =>
-          applyOutputSelection({
-            parsedBlock,
-            parserBlock,
-          }),
-        )
-        blocks.push(...selectedBlocks)
-        body.push(...createBodyNodesFromStructuredBlocks(selectedBlocks))
-        return
-      }
-
-      if (result.status === "traverse") {
-        result.nodes?.forEach(appendBlocksFromNode)
-      }
-    }
-
-    const appendBlocksFromNode = (node: AnyNode) => {
-      const context: ParserBlockConvertContext = {
+    const matchNode = (node: AnyNode): AstBlock[] => {
+      const context: ParserBlockContext = {
         $,
         $node: $(node),
         node,
         sourceUrl,
         tags,
         options,
-        appendBodyNodes,
         ...moduleContext?.(node),
       }
       const block = this.supportedBlocks.find((supportedBlock) => supportedBlock.match(context))
@@ -216,19 +182,28 @@ export abstract class BaseEditor {
       const convertContext = {
         ...context,
         outputSelection,
+        matchNode,
+      } satisfies ParserBlockConvertContext
+
+      const result = block.convert(convertContext)
+
+      if (result.status === "skip") {
+        return []
       }
 
-      handleResult({
-        result: block.convert(convertContext),
-        parserBlock: block,
-      })
+      return result.blocks.map((parsedBlock) =>
+        applyOutputSelection({
+          parsedBlock,
+          parserBlock: block,
+        }),
+      )
     }
 
-    nodes.forEach(appendBlocksFromNode)
+    const blocks = nodes.flatMap(matchNode)
 
     return {
       blocks,
-      body,
+      body: createBodyNodesFromStructuredBlocks(blocks),
     }
   }
 }

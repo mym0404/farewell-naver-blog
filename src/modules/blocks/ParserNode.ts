@@ -3,7 +3,6 @@ import type { AnyNode } from "domhandler"
 
 import type {
   ExportOptions,
-  ParsedPostBodyNode,
   AstBlock,
   BlockOutputSelection,
   UnknownRecord,
@@ -28,17 +27,13 @@ export type ParserBlockContext = {
 
 export type ParserBlockConvertContext = ParserBlockContext & {
   outputSelection?: BlockOutputSelection
-  appendBodyNodes: (nodes: ParsedPostBodyNode[]) => void
+  matchNode: (node: AnyNode) => AstBlock[]
 }
 
 export type ParserBlockResult =
     | {
         status: "handled"
         blocks: AstBlock[]
-      }
-    | {
-        status: "traverse"
-        nodes?: AnyNode[]
       }
     | {
         status: "skip"

@@ -26,6 +26,8 @@
 - Blog parser ownership starts in `src/modules/blog/BaseBlog.ts` and `src/modules/blog/NaverBlog.ts`.
 - Editor classes hold `BaseBlock[]` instances directly; there is no string id registry between blog, editor, and parser block.
 - Editor `supportedBlocks` arrays are ordered first-match lists; unmatched nodes fail parsing.
+- `src/modules/editor/BaseEditor.ts` injects `matchNode` into parser block convert context so container blocks can recursively parse child nodes with the current editor's block list.
+- `ContainerBlock` recursively unwraps matched wrapper nodes by parsing their child nodes; `LeafBlock` owns concrete AST conversion.
 - Parser blocks may return `skip` only for intentionally ignored non-content nodes such as document titles, spacer nodes, empty text nodes, and top-level line breaks.
 - Parser blocks must throw when a matched content node cannot be converted.
 - Parser block classes own optional `BaseBlock.outputOptions` arrays. Each option describes the parser block output choice, preview, default marker, and params.

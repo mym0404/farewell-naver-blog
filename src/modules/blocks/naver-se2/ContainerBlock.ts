@@ -1,7 +1,7 @@
 import type { CheerioAPI } from "cheerio"
 
 import { ContainerBlock } from "../BaseBlock.js"
-import type { ParserBlockContext, ParserBlockResult } from "../ParserNode.js"
+import type { ParserBlockContext } from "../ParserNode.js"
 import { compactText } from "../../../shared/Utils.js"
 
 const nestedBlockContainerTags = new Set(["div", "span", "font"])
@@ -80,12 +80,5 @@ export class NaverSe2ContainerBlock extends ContainerBlock {
         tagName: node.tagName.toLowerCase(),
       })
     )
-  }
-
-  override convert({ $node }: Parameters<ContainerBlock["convert"]>[0]): ParserBlockResult {
-    return {
-      status: "traverse",
-      nodes: $node.contents().toArray(),
-    }
   }
 }

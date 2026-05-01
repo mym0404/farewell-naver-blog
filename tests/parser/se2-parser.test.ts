@@ -497,17 +497,27 @@ console.log(oldSchool)
     ])
   })
 
-  it("traverses malformed inline wrappers that only contain nested block nodes", () => {
+  it("unwraps malformed inline wrappers that only contain nested block nodes", () => {
     const parsed = parseSe2Fixture(`
       <span>
         <div><p>첫 문단</p></div>
         <div><p>둘째 문단</p></div>
+        <div><pre>const nested = true</pre></div>
       </span>
     `)
 
     expect(parsed.blocks).toEqual([
       { type: "paragraph", text: "첫 문단" },
       { type: "paragraph", text: "둘째 문단" },
+      {
+        type: "code",
+        language: null,
+        code: "const nested = true",
+        outputSelectionKey: "naver-se2:code",
+        outputSelection: {
+          variant: "backtick-fence",
+        },
+      },
     ])
   })
 })
