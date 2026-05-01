@@ -116,18 +116,10 @@ export const getJobItems = (job: ExportJobState | null) => {
   return job.items
 }
 
-const splitOutputPath = (outputPath: string | null) => {
-  if (!outputPath) {
-    return []
-  }
-
-  return outputPath.split("/").filter(Boolean)
-}
-
 export const buildJobItemPathMeta = (
   item: Pick<ExportJobState["items"][number], "logNo" | "outputPath">,
 ) => {
-  const pathSegments = splitOutputPath(item.outputPath)
+  const pathSegments = item.outputPath?.split("/").filter(Boolean) ?? []
 
   if (pathSegments.length === 0) {
     return {

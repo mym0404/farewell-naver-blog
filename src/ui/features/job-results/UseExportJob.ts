@@ -50,11 +50,6 @@ export const setExportJobPollingConfig = (config?: Partial<ExportJobPollingConfi
   }
 }
 
-const wait = (ms: number) =>
-  new Promise<void>((resolve) => {
-    window.setTimeout(resolve, ms)
-  })
-
 export const useExportJob = () => {
   const [jobId, setJobId] = useState<string | null>(null)
   const [job, setJob] = useState<ExportJobState | null>(null)
@@ -208,7 +203,9 @@ export const useExportJob = () => {
           break
         }
 
-        await wait(activeJobPollingConfig.uploadBurstPollMs)
+        await new Promise<void>((resolve) => {
+          window.setTimeout(resolve, activeJobPollingConfig.uploadBurstPollMs)
+        })
       }
 
       return response

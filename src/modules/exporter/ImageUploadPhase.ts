@@ -57,8 +57,6 @@ const createRuntimeClient = async (): Promise<RuntimeUploaderClient> => {
   return runtimeModule.PicGo.create(runtimeConfigPath)
 }
 
-const getUploadedUrl = (result: RuntimeUploadResponse) => result.imgUrl || result.url || null
-
 export const runImageUploadPhase = async (
   input: RunImageUploadPhaseInput,
   createClient: () => Promise<RuntimeUploaderClient> = createRuntimeClient,
@@ -99,7 +97,8 @@ export const runImageUploadPhase = async (
       )
     }
 
-    const uploadedUrl = getUploadedUrl(uploaded[0]!)
+    const uploadedResult = uploaded[0]!
+    const uploadedUrl = uploadedResult.imgUrl || uploadedResult.url || null
 
     if (!uploadedUrl) {
       throw new ImageUploadPhaseError(

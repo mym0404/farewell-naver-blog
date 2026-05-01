@@ -751,28 +751,6 @@ const assertStickyTop = async ({
   }
 }
 
-const assertFrameFlush = async ({
-  page,
-  selector,
-  label,
-}: {
-  page: import("playwright").Page
-  selector: string
-  label: string
-}) => {
-  const rect = await page.locator(selector).evaluate((element) => {
-    const bounds = element.getBoundingClientRect()
-    return {
-      left: bounds.left,
-      top: bounds.top,
-    }
-  })
-
-  if (Math.abs(rect.left) > 1.5 || Math.abs(rect.top) > 1.5) {
-    throw new Error(`${label} was not flush with the viewport`)
-  }
-}
-
 const waitForStepView = async ({
   page,
   step,

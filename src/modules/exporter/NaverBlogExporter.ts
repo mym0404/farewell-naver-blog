@@ -31,17 +31,6 @@ import { buildMarkdownFilePath, getCategoryForPost } from "./ExportPaths.js"
 import { buildPostLinkTargets, createSameBlogPostLinkResolver } from "./PostLinkRewriter.js"
 import { dedupeUploadCandidatesByLocalPath } from "./UploadCandidateUtils.js"
 
-const emptyPostUploadSummary = () => ({
-  eligible: false,
-  candidateCount: 0,
-  uploadedCount: 0,
-  failedCount: 0,
-  candidates: [],
-  uploadedUrls: [],
-  rewriteStatus: "pending" as const,
-  rewrittenAt: null,
-})
-
 const postExportConcurrency = 3
 
 type ProcessedPostResult = {
@@ -281,7 +270,16 @@ export class NaverBlogExporter {
     category: ReturnType<typeof getCategoryForPost>
     error: unknown
   }): ProcessedPostResult {
-    const upload = emptyPostUploadSummary()
+    const upload = {
+      eligible: false,
+      candidateCount: 0,
+      uploadedCount: 0,
+      failedCount: 0,
+      candidates: [],
+      uploadedUrls: [],
+      rewriteStatus: "pending" as const,
+      rewrittenAt: null,
+    }
     const manifestEntry = {
       logNo: post.logNo,
       title: post.title,

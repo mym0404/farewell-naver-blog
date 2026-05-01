@@ -28,20 +28,6 @@ export const slugifyTitle = (value: string) => {
   return slug || "post"
 }
 
-const applySlugWhitespace = (value: string, whitespace: SlugWhitespace) => {
-  switch (whitespace) {
-    case "dash":
-      return value.replace(multipleWhitespacePattern, "-").replace(multipleDashPattern, "-").replace(/^-|-$/g, "")
-    case "underscore":
-      return value
-        .replace(multipleWhitespacePattern, "_")
-        .replace(multipleUnderscorePattern, "_")
-        .replace(/^_+|_+$/g, "")
-    case "keep-space":
-      return value.replace(multipleWhitespacePattern, " ").trim()
-  }
-}
-
 export const formatTitleSegment = ({
   value,
   slugStyle,
@@ -53,8 +39,24 @@ export const formatTitleSegment = ({
 }) => {
   const sanitized = sanitizePathSegment(value)
   const normalized = slugStyle === "keep-title" ? sanitized : sanitized.toLowerCase()
+  const formatted = (() => {
+    switch (slugWhitespace) {
+      case "dash":
+        return normalized
+          .replace(multipleWhitespacePattern, "-")
+          .replace(multipleDashPattern, "-")
+          .replace(/^-|-$/g, "")
+      case "underscore":
+        return normalized
+          .replace(multipleWhitespacePattern, "_")
+          .replace(multipleUnderscorePattern, "_")
+          .replace(/^_+|_+$/g, "")
+      case "keep-space":
+        return normalized.replace(multipleWhitespacePattern, " ").trim()
+    }
+  })()
 
-  return applySlugWhitespace(normalized, slugWhitespace) || (slugStyle === "keep-title" ? "untitled" : "post")
+  return formatted || (slugStyle === "keep-title" ? "untitled" : "post")
 }
 
 export const formatCategorySegment = ({

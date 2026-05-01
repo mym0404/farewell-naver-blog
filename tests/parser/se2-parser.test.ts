@@ -10,11 +10,9 @@ const parserOptions = {
 }
 const se2Editor = new NaverBlogSE2Editor()
 
-const createSe2Html = (content: string) => `<div id="viewTypeSelector">${content}</div>`
-
 const parseSe2Fixture = (content: string) =>
   se2Editor.parse({
-    $: load(createSe2Html(content)),
+    $: load(`<div id="viewTypeSelector">${content}</div>`),
     tags: ["legacy", "legacy", "archive"],
     options: parserOptions,
   })

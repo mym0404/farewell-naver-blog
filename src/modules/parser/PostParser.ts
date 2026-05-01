@@ -4,17 +4,6 @@ import type { ExportOptions } from "../../shared/Types.js"
 import { unique } from "../../shared/Utils.js"
 import { NaverBlog } from "../blog/NaverBlog.js"
 
-const extractTags = (html: string) => {
-  const $ = load(html)
-
-  const tags = $(".post_tag a, .tag_area a, a[href*='PostTag']")
-    .toArray()
-    .map((node) => $(node).text().trim())
-    .filter(Boolean)
-
-  return unique(tags)
-}
-
 export const parsePostHtml = ({
   html,
   sourceUrl,
@@ -26,8 +15,13 @@ export const parsePostHtml = ({
     resolveLinkUrl?: (url: string) => string
   }
 }) => {
-  const tags = extractTags(html)
   const $ = load(html)
+  const tags = unique(
+    $(".post_tag a, .tag_area a, a[href*='PostTag']")
+      .toArray()
+      .map((node) => $(node).text().trim())
+      .filter(Boolean),
+  )
 
   return new NaverBlog().parsePost({
     $,

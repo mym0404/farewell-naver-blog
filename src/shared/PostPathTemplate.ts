@@ -30,8 +30,6 @@ type PostTemplateValues = Record<PostTemplateKey, string>
 
 const postTemplatePattern = /\{(slug|category|title|logNo|blogId|date|year|YYYY|YY|month|MM|M|day|DD|D)\}/g
 
-const toReadablePathToken = (value: string) => sanitizePathSegment(value).replace(/\s+/g, "-")
-
 export const buildPostTemplateValues = ({
   post,
   options,
@@ -57,7 +55,7 @@ export const buildPostTemplateValues = ({
       slugStyle: options.structure.slugStyle,
       slugWhitespace: options.structure.slugWhitespace,
     }),
-    title: toReadablePathToken(post.title),
+    title: sanitizePathSegment(post.title).replace(/\s+/g, "-"),
     logNo: post.logNo,
     blogId: post.blogId,
     date,

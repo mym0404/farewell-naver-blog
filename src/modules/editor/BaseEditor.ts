@@ -124,22 +124,6 @@ export abstract class BaseEditor {
       body.push(...nodes)
     }
 
-    const getParserBlockOutputSelection = (parserBlock: BaseBlock) => {
-      const outputOptions = parserBlock.outputOptions
-      const firstOutputOption = outputOptions?.[0]
-
-      if (!parserBlock.id || !outputOptions || outputOptions.length < 2 || !firstOutputOption) {
-        return undefined
-      }
-
-      return resolveBlockOutputSelection({
-        blockType: firstOutputOption.preview.type,
-        outputOptions,
-        blockOutputs: options.blockOutputs,
-        selectionKey: this.createBlockOutputSelectionKey(parserBlock.id),
-      })
-    }
-
     const applyOutputSelection = ({
       parsedBlock,
       parserBlock,
@@ -228,9 +212,20 @@ export abstract class BaseEditor {
         throw new Error(`파싱 가능한 ${this.type} block이 없습니다: ${describeParserNode(context)}`)
       }
 
+      const outputOptions = block.outputOptions
+      const firstOutputOption = outputOptions?.[0]
+      const outputSelection =
+        block.id && outputOptions && outputOptions.length >= 2 && firstOutputOption
+          ? resolveBlockOutputSelection({
+              blockType: firstOutputOption.preview.type,
+              outputOptions,
+              blockOutputs: options.blockOutputs,
+              selectionKey: this.createBlockOutputSelectionKey(block.id),
+            })
+          : undefined
       const convertContext = {
         ...context,
-        outputSelection: getParserBlockOutputSelection(block),
+        outputSelection,
       }
 
       handleResult({

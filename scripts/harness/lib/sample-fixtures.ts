@@ -8,11 +8,6 @@ import type { NaverBlogFetcherCache } from "../../../src/modules/fetcher/NaverBl
 import { parsePostHtml } from "../../../src/modules/parser/PostParser.js"
 import { reviewParsedPost } from "../../../src/modules/reviewer/PostReviewer.js"
 import { defaultExportOptions } from "../../../src/shared/ExportOptions.js"
-import type {
-  CategoryInfo,
-  ExportOptions,
-  PostSummary,
-} from "../../../src/shared/Types.js"
 import { ensureHarnessDir, pathExists, readUtf8, repoPath, writeUtf8 } from "./paths.js"
 
 type SampleFixtureEntry = {
@@ -62,14 +57,6 @@ const assertString = (value: unknown, key: string) => {
   return value
 }
 
-const assertStringArray = (value: unknown, key: string) => {
-  if (!Array.isArray(value) || !value.every((entry) => typeof entry === "string")) {
-    throw new Error(`sample fixture frontmatter ${key} must be a string array`)
-  }
-
-  return value
-}
-
 const parseExpectedFrontmatter = (markdown: string): ExpectedFrontmatter => {
   const frontmatterMatch = /^---\n([\s\S]*?)\n---\n/.exec(markdown)
 
@@ -85,6 +72,12 @@ const parseExpectedFrontmatter = (markdown: string): ExpectedFrontmatter => {
 
   const frontmatter = parsed as Record<string, unknown>
 
+  const categoryPath = frontmatter.categoryPath
+
+  if (!Array.isArray(categoryPath) || !categoryPath.every((entry): entry is string => typeof entry === "string")) {
+    throw new Error("sample fixture frontmatter categoryPath must be a string array")
+  }
+
   return {
     title: assertString(frontmatter.title, "title"),
     source: assertString(frontmatter.source, "source"),
@@ -92,7 +85,7 @@ const parseExpectedFrontmatter = (markdown: string): ExpectedFrontmatter => {
     logNo: String(frontmatter.logNo),
     publishedAt: assertString(frontmatter.publishedAt, "publishedAt"),
     category: assertString(frontmatter.category, "category"),
-    categoryPath: assertStringArray(frontmatter.categoryPath, "categoryPath"),
+    categoryPath,
     thumbnail:
       typeof frontmatter.thumbnail === "string"
         ? frontmatter.thumbnail
@@ -179,39 +172,6 @@ export const listSampleFixtures = async () => {
   return fixtureEntries
 }
 
-const createSampleVerificationOptions = (): ExportOptions => {
-  const options = defaultExportOptions()
-
-  options.assets.imageHandlingMode = "remote"
-  options.assets.downloadImages = false
-  options.assets.downloadThumbnails = false
-  options.frontmatter.fields.exportedAt = false
-
-  return options
-}
-
-const buildSamplePostSummary = (sample: SampleFixtureEntry): PostSummary => ({
-  blogId: sample.blogId,
-  logNo: sample.logNo,
-  title: sample.post.title,
-  publishedAt: sample.post.publishedAt,
-  categoryId: sample.post.categoryId,
-  categoryName: sample.post.categoryName,
-  source: sample.post.source,
-  thumbnailUrl: sample.post.thumbnailUrl,
-})
-
-const buildSampleCategory = (sample: SampleFixtureEntry): CategoryInfo => ({
-  id: sample.post.categoryId,
-  name: sample.post.categoryName,
-  parentId: null,
-  postCount: 0,
-  isDivider: false,
-  isOpen: true,
-  path: sample.post.categoryPath,
-  depth: Math.max(sample.post.categoryPath.length - 1, 0),
-})
-
 const normalizeMarkdownFixture = (markdown: string) =>
   `${markdown.replace(/\r\n/g, "\n").replace(/\n+$/g, "")}\n`
 
@@ -222,18 +182,40 @@ export const renderSampleFixture = async ({
   sample: SampleFixtureEntry
   html: string
 }) => {
-  const options = createSampleVerificationOptions()
+  const options = defaultExportOptions()
+  options.assets.imageHandlingMode = "remote"
+  options.assets.downloadImages = false
+  options.assets.downloadThumbnails = false
+  options.frontmatter.fields.exportedAt = false
+
   const markdownFilePath = path.join(await ensureHarnessDir("samples"), `${sample.id}.md`)
-  const parsedPostBeforeNormalization = parsePostHtml({
+  const parsedPost = parsePostHtml({
     html,
     sourceUrl: sample.post.source,
     options,
   })
-  const parsedPost = parsedPostBeforeNormalization
   const review = reviewParsedPost(parsedPost)
   const rendered = await renderMarkdownPost({
-    post: buildSamplePostSummary(sample),
-    category: buildSampleCategory(sample),
+    post: {
+      blogId: sample.blogId,
+      logNo: sample.logNo,
+      title: sample.post.title,
+      publishedAt: sample.post.publishedAt,
+      categoryId: sample.post.categoryId,
+      categoryName: sample.post.categoryName,
+      source: sample.post.source,
+      thumbnailUrl: sample.post.thumbnailUrl,
+    },
+    category: {
+      id: sample.post.categoryId,
+      name: sample.post.categoryName,
+      parentId: null,
+      postCount: 0,
+      isDivider: false,
+      isOpen: true,
+      path: sample.post.categoryPath,
+      depth: Math.max(sample.post.categoryPath.length - 1, 0),
+    },
     parsedPost,
     markdownFilePath,
     reviewedWarnings: review.warnings,

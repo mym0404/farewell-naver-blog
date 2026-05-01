@@ -1,4 +1,3 @@
-import type { CheerioAPI } from "cheerio"
 import type { AnyNode } from "domhandler"
 
 import type { AstBlock, ParsedPost, UnknownRecord } from "@shared/Types.js"
@@ -23,10 +22,6 @@ import { NaverSe4VideoBlock } from "../blocks/naver-se4/VideoBlock.js"
 import { BaseEditor } from "./BaseEditor.js"
 import type { BaseEditorParseInput } from "./BaseEditor.js"
 
-const hasSmartEditorVersion = (html: string, version: number) =>
-  html.replaceAll("&#034;", "\"").match(/smartEditorVersion["']?\s*:\s*["']?(\d+)["']?/i)?.[1] ===
-  String(version)
-
 const parseJsonAttribute = (value: string | undefined) => {
   if (!value) {
     return null
@@ -37,15 +32,6 @@ const parseJsonAttribute = (value: string | undefined) => {
   } catch {
     return null
   }
-}
-
-const getComponentModule = ($component: ReturnType<CheerioAPI>) => {
-  const moduleScript = $component.find("script.__se_module_data").first()
-
-  return (
-    parseJsonAttribute(moduleScript.attr("data-module-v2")) ??
-    parseJsonAttribute(moduleScript.attr("data-module"))
-  )
 }
 
 export class NaverBlogSE4Editor extends BaseEditor {
@@ -73,7 +59,10 @@ export class NaverBlogSE4Editor extends BaseEditor {
   ]
 
   override canParse(html: string) {
-    return hasSmartEditorVersion(html, 4) || html.includes('class="se-component')
+    return (
+      html.replaceAll("&#034;", "\"").match(/smartEditorVersion["']?\s*:\s*["']?(\d+)["']?/i)?.[1] ===
+        "4" || html.includes('class="se-component')
+    )
   }
 
   override parse({ $, sourceUrl = "", tags, options }: BaseEditorParseInput): ParsedPost {
@@ -85,7 +74,10 @@ export class NaverBlogSE4Editor extends BaseEditor {
       options,
       moduleContext: (node: AnyNode) => {
         const $component = $(node)
-        const moduleData = getComponentModule($component)
+        const moduleScript = $component.find("script.__se_module_data").first()
+        const moduleData =
+          parseJsonAttribute(moduleScript.attr("data-module-v2")) ??
+          parseJsonAttribute(moduleScript.attr("data-module"))
 
         return {
           moduleData,

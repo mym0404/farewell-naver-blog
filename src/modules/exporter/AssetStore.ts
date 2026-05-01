@@ -86,7 +86,6 @@ const inferMimeType = (value: string) => {
 }
 
 const normalizeOutputPath = (value: string) => value.split(path.sep).join("/")
-const buildAssetHash = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex")
 
 const isCompressionSafeMimeType = (contentType: string | null, sourceUrl: string) => {
   const resolvedContentType = (contentType || inferMimeType(sourceUrl)).toLowerCase()
@@ -236,7 +235,7 @@ export class AssetStore {
       const binary = await this.downloader.fetchBinary!({
         sourceUrl: normalizedSourceUrl,
       })
-      const contentHash = buildAssetHash(binary.bytes)
+      const contentHash = createHash("sha256").update(binary.bytes).digest("hex")
       const cachedByHash = this.cache.get(contentHash)
 
       if (cachedByHash) {

@@ -43,16 +43,6 @@ const ensureHttpUrl = (value: string) => {
   }
 }
 
-const replaceAll = ({
-  content,
-  search,
-  replacement,
-}: {
-  content: string
-  search: string
-  replacement: string
-}) => content.split(search).join(replacement)
-
 const writeFileAtomically = async ({
   finalPath,
   content,
@@ -84,9 +74,6 @@ const writeFileAtomically = async ({
   }
 }
 
-const buildUploadResultByLocalPath = (uploadResults: ImageUploadResult[]) =>
-  new Map(uploadResults.map((result) => [result.candidate.localPath, result]))
-
 export const rewriteImageUploadPost = async ({
   outputDir,
   post,
@@ -106,7 +93,9 @@ export const rewriteImageUploadPost = async ({
     throw new Error(`Missing output path for ${post.logNo}.`)
   }
 
-  const uploadResultByLocalPath = buildUploadResultByLocalPath(uploadResults)
+  const uploadResultByLocalPath = new Map(
+    uploadResults.map((result) => [result.candidate.localPath, result]),
+  )
   const markdownPath = path.join(outputDir, post.outputPath)
   const markdown = await fileOps.readFile(markdownPath, "utf8")
   let rewrittenMarkdown = markdown
@@ -126,11 +115,7 @@ export const rewriteImageUploadPost = async ({
       throw new Error(`Missing markdown reference for ${candidate.localPath}.`)
     }
 
-    rewrittenMarkdown = replaceAll({
-      content: rewrittenMarkdown,
-      search: candidate.markdownReference,
-      replacement: matchedResult.uploadedUrl,
-    })
+    rewrittenMarkdown = rewrittenMarkdown.split(candidate.markdownReference).join(matchedResult.uploadedUrl)
     resultByReference.set(candidate.markdownReference, matchedResult.uploadedUrl)
     uploadedUrls.push(matchedResult.uploadedUrl)
   }

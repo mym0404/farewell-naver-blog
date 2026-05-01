@@ -5,13 +5,11 @@ import type {
   ParsedPostStructuredBodyNode,
 } from "../../shared/Types.js"
 
-const createStructuredBodyNode = (block: AstBlock): ParsedPostStructuredBodyNode => ({
-  kind: "block",
-  block,
-})
-
 export const createBodyNodesFromStructuredBlocks = (blocks: AstBlock[]): ParsedPostBodyNode[] =>
-  blocks.map((block) => createStructuredBodyNode(block))
+  blocks.map((block) => ({
+    kind: "block",
+    block,
+  }))
 
 export const getParsedPostBodyNodes = (parsedPost: ParsedPost) => parsedPost.body
 

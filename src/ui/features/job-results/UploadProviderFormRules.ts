@@ -23,9 +23,6 @@ export const buildInitialProviderUiState = (): ProviderUiState => ({
   githubUseJsDelivr: false,
 })
 
-const isFilledTextValue = (value: string | number | boolean | undefined) =>
-  typeof value === "string" && value.trim().length > 0
-
 export const getUploadProviderFieldRule = ({
   providerKey,
   field,
@@ -43,6 +40,8 @@ export const getUploadProviderFieldRule = ({
     disabledReason: null,
     required: field.required,
   }
+  const hasPrivateKey =
+    typeof providerFields.privateKey === "string" && providerFields.privateKey.trim().length > 0
 
   if (
     providerKey === UPLOAD_PROVIDER_KEYS.GITHUB &&
@@ -109,7 +108,7 @@ export const getUploadProviderFieldRule = ({
   if (
     providerKey === UPLOAD_PROVIDER_KEYS.SFTP &&
     field.key === "passphrase" &&
-    !isFilledTextValue(providerFields.privateKey)
+    !hasPrivateKey
   ) {
     return {
       ...baseRule,

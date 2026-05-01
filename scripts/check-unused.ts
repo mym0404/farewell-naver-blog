@@ -82,8 +82,6 @@ const runCommand = (command: string, args: string[]): Promise<CommandResult> =>
     })
   })
 
-const toPos = (item: KnipIssueItem) => (item.line ? `:${item.line}${item.col ? `:${item.col}` : ""}` : "")
-
 const createKnipLine = ({
   type,
   file,
@@ -97,7 +95,9 @@ const createKnipLine = ({
     return `${type} ${file}`
   }
 
-  return `${type} ${file}${toPos(item)} ${item.name}`
+  const position = item.line ? `:${item.line}${item.col ? `:${item.col}` : ""}` : ""
+
+  return `${type} ${file}${position} ${item.name}`
 }
 
 const isAllowedKnipItem = ({

@@ -1,20 +1,8 @@
 import { linkCardOutputOptions } from "../../../shared/BlockOutputOptions.js"
-import type { UnknownRecord } from "../../../shared/Types.js"
 import { compactText, normalizeAssetUrl } from "../../../shared/Utils.js"
 import { LeafBlock } from "../BaseBlock.js"
 import type { ParserBlockContext } from "../ParserNode.js"
-
-const parseJsonAttribute = (value: string | undefined) => {
-  if (!value) {
-    return null
-  }
-
-  try {
-    return JSON.parse(value) as UnknownRecord
-  } catch {
-    return null
-  }
-}
+import { parseJsonAttribute } from "./JsonAttribute.js"
 
 export class NaverSe4MaterialBlock extends LeafBlock {
   override readonly id = "linkCard"

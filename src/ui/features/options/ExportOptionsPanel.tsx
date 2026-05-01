@@ -76,29 +76,6 @@ const structurePreviewSample = {
   ],
 }
 
-const buildStructurePreviewPostFolderName = ({
-  post,
-  options,
-}: {
-  post: (typeof structurePreviewSample.posts)[number]
-  options: ExportOptions["structure"]
-}) =>
-  buildPostFolderName({
-    post: {
-      blogId: "mym0404",
-      logNo: post.logNo,
-      title: post.title,
-      publishedAt: post.publishedAt,
-      categoryName: post.categoryPath.at(-1),
-    },
-    options: {
-      structure: options,
-    },
-  })
-
-const findFolderNode = (nodes: StructurePreviewTreeNode[], name: string) =>
-  nodes.find((node): node is Extract<StructurePreviewTreeNode, { kind: "folder" }> => node.kind === "folder" && node.name === name)
-
 const appendStructurePreviewPost = ({
   items,
   post,
@@ -110,9 +87,17 @@ const appendStructurePreviewPost = ({
 }) => {
   const postTree: StructurePreviewTreeNode = {
     kind: "folder",
-    name: buildStructurePreviewPostFolderName({
-      post,
-      options,
+    name: buildPostFolderName({
+      post: {
+        blogId: "mym0404",
+        logNo: post.logNo,
+        title: post.title,
+        publishedAt: post.publishedAt,
+        categoryName: post.categoryPath.at(-1),
+      },
+      options: {
+        structure: options,
+      },
     }),
     defaultOpen: true,
     items: [
@@ -136,7 +121,10 @@ const appendStructurePreviewPost = ({
       slugStyle: options.slugStyle,
       slugWhitespace: options.slugWhitespace,
     })
-    const existingFolder = findFolderNode(currentLevel, folderName)
+    const existingFolder = currentLevel.find(
+      (node): node is Extract<StructurePreviewTreeNode, { kind: "folder" }> =>
+        node.kind === "folder" && node.name === folderName,
+    )
 
     if (existingFolder) {
       currentLevel = existingFolder.items
@@ -491,19 +479,6 @@ const OptionSection = ({
 
 const blockOutputCardClass = "grid content-start gap-4 rounded-none border-0 bg-transparent p-0 shadow-none"
 
-const toBlockOutputDomKey = (key: string) => key.replace(/[^A-Za-z0-9_-]/g, "-")
-
-const getDefaultBlockOutputOption = (options: EditorBlockOutputDefinition["options"]) =>
-  options.find((option) => option.isDefault) ?? options[0]
-
-const getSelectedBlockOutputOption = ({
-  options,
-  variant,
-}: {
-  options: EditorBlockOutputDefinition["options"]
-  variant: string
-}) => options.find((option) => option.id === variant) ?? getDefaultBlockOutputOption(options)
-
 const groupBlockOutputDefinitionsByEditor = (definitions: EditorBlockOutputDefinition[]) =>
   definitions.reduce(
     (groups, definition) => {
@@ -529,19 +504,6 @@ const groupBlockOutputDefinitionsByEditor = (definitions: EditorBlockOutputDefin
     }[],
   )
 
-const BlockOutputPreview = ({
-  snippet,
-}: {
-  snippet: string
-}) => (
-  <div className="grid content-start gap-2 self-start">
-    <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Preview</span>
-    <pre className="block-output-preview-surface code-surface overflow-x-auto whitespace-pre-wrap rounded-2xl px-3 py-3 font-mono text-[0.8125rem] leading-6 text-foreground">
-      {snippet}
-    </pre>
-  </div>
-)
-
 const BlockOutputCard = ({
   options,
   family,
@@ -551,7 +513,7 @@ const BlockOutputCard = ({
   family: EditorBlockOutputDefinition
   onOptionsChange: (updater: (current: ExportOptions) => ExportOptions) => void
 }) => {
-  const defaultOption = getDefaultBlockOutputOption(family.options)
+  const defaultOption = family.options.find((option) => option.isDefault) ?? family.options[0]
 
   if (!defaultOption) {
     return null
@@ -563,17 +525,14 @@ const BlockOutputCard = ({
     blockOutputs: options.blockOutputs,
     selectionKey: family.key,
   })
-  const selectedOption = getSelectedBlockOutputOption({
-    options: family.options,
-    variant: selection.variant,
-  }) ?? defaultOption
+  const selectedOption = family.options.find((option) => option.id === selection.variant) ?? defaultOption
   const previewSnippet = renderBlockOutputPreview({
     block: selectedOption.preview,
     selection,
     includeImageCaptions: options.assets.includeImageCaptions,
     imageHandlingMode: options.assets.imageHandlingMode,
   })
-  const optionKeyPrefix = `blockOutputs-defaults-${toBlockOutputDomKey(family.key)}`
+  const optionKeyPrefix = `blockOutputs-defaults-${family.key.replace(/[^A-Za-z0-9_-]/g, "-")}`
   const updateSelection = (updater: (current: NonNullable<typeof selection>) => NonNullable<typeof selection>) => {
     onOptionsChange((current) => {
       const currentSelection = resolveBlockOutputSelection({
@@ -666,7 +625,12 @@ const BlockOutputCard = ({
             ))}
         </div>
 
-        <BlockOutputPreview snippet={previewSnippet} />
+        <div className="grid content-start gap-2 self-start">
+          <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Preview</span>
+          <pre className="block-output-preview-surface code-surface overflow-x-auto whitespace-pre-wrap rounded-2xl px-3 py-3 font-mono text-[0.8125rem] leading-6 text-foreground">
+            {previewSnippet}
+          </pre>
+        </div>
       </div>
     </section>
   )

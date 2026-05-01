@@ -9,10 +9,6 @@ import { NaverSe3TextBlock } from "../blocks/naver-se3/TextBlock.js"
 import { BaseEditor } from "./BaseEditor.js"
 import type { BaseEditorParseInput } from "./BaseEditor.js"
 
-const hasSmartEditorVersion = (html: string, version: number) =>
-  html.replaceAll("&#034;", "\"").match(/smartEditorVersion["']?\s*:\s*["']?(\d+)["']?/i)?.[1] ===
-  String(version)
-
 export class NaverBlogSE3Editor extends BaseEditor {
   override readonly type = "naver-se3"
   override readonly label = "SmartEditor 3"
@@ -27,7 +23,10 @@ export class NaverBlogSE3Editor extends BaseEditor {
   ]
 
   override canParse(html: string) {
-    return hasSmartEditorVersion(html, 3) || html.includes('class="se_component')
+    return (
+      html.replaceAll("&#034;", "\"").match(/smartEditorVersion["']?\s*:\s*["']?(\d+)["']?/i)?.[1] ===
+        "3" || html.includes('class="se_component')
+    )
   }
 
   override parse({ $, tags, options }: BaseEditorParseInput): ParsedPost {

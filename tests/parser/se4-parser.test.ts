@@ -15,12 +15,9 @@ const se4Editor = new NaverBlogSE4Editor()
 const createModuleScript = (module: Record<string, unknown>) =>
   `<script class="__se_module_data" data-module-v2='${JSON.stringify(module)}'></script>`
 
-const createSe4Html = (...components: string[]) =>
-  `<div id="viewTypeSelector">${components.join("")}</div>`
-
 const parseSe4Fixture = (...components: string[]) =>
   se4Editor.parse({
-    $: load(createSe4Html(...components)),
+    $: load(`<div id="viewTypeSelector">${components.join("")}</div>`),
     sourceUrl,
     tags: ["algo", "algo", "math"],
     options: parserOptions,
