@@ -8,6 +8,7 @@
 
 ## Primary Commands
 - `pnpm check:local`: `pnpm typecheck && pnpm test:offline`. Run after ordinary repository file changes.
+- `pnpm check:unused`: `bun scripts/check-unused.ts`. Run when removing, exporting, moving, or intentionally keeping source/test/script code that may be unused. This command is not part of `check:local`.
 - `pnpm check:full`: `pnpm check:local && pnpm smoke:ui`. Run when user flow, UI state, exporter output, or shared runtime behavior may be affected.
 - `pnpm smoke:ui`: `pnpm build:ui && bun scripts/harness/run-ui-smoke-suite.ts`. Verifies mock-based scan, export, upload, theme persistence, and resume UI.
 - `pnpm test:network`: builds UI once, then runs live resume export, SE2 table resume export, and live upload e2e. It needs external network and upload credentials and creates remote state.
@@ -22,8 +23,21 @@
 - `pnpm dev`: user-facing HMR server on the default development port. Harnesses should not reuse it.
 - `pnpm start`: builds UI and serves `dist/client` through `src/Server.ts`.
 
+## Unused Code Verification
+- `pnpm check:unused` succeeds only when `scripts/check-unused.ts` reports no unresolved `knip`, `tsc noUnused`, or `tsserver` unused diagnostics.
+- `knip` runs with `--include files,exports,types,nsExports,nsTypes,enumMembers,namespaceMembers,duplicates --no-progress`.
+- `tsc noUnused` runs `tsc -p tsconfig.json --noEmit --noUnusedLocals --noUnusedParameters --pretty false`.
+- `tsserver` opens `src/Server.ts`, reads the configured project file list with `projectInfo`, then checks `src`, `tests`, and `scripts` TypeScript files with `semanticDiagnosticsSync` and `suggestionDiagnosticsSync`.
+- The unused script filters tsserver diagnostics to TypeScript unused diagnostic codes: `6133`, `6138`, `6192`, `6196`, `6198`, `6199`.
+- Static false positives are allowed only inside `scripts/check-unused.ts` allowlists when the file or export is a real runtime entrypoint that static analysis cannot see.
+- Current allowlisted file entrypoints are `scripts/harness/run-live-server.ts`, `scripts/harness/run-ui-resume-smoke.ts`, and `scripts/harness/run-ui-smoke.ts`.
+- Current allowlisted export entrypoint is `scripts/export-single-post.ts:runSinglePostExportCli`.
+- The command covers source/test/script dead code. It does not check unused package dependencies because the `knip` invocation intentionally excludes dependency categories.
+- A syntax or type error in the TypeScript project can make `check:unused` fail before dead-code cleanup is meaningful; restore the type baseline first, then interpret unused diagnostics.
+
 ## Coverage And Blind Spots
 - Sample fixtures prove current code matches live Naver post HTML for the recorded fixture URLs.
+- `pnpm check:unused` proves no known unused source/test/script items remain under its configured analyzers and allowlists, but it does not prove runtime reachability for dynamic external integrations.
 - `pnpm smoke:ui` uses mock flows and does not prove live Naver fetch or external upload behavior.
 - `pnpm test:network:resume-export` proves live fetch and resume export, but not external upload.
 - `pnpm test:network:upload` is the only bundled command that proves external upload state. It creates remote state.
@@ -36,6 +50,7 @@
 
 ## Task Loops
 - Knowledge-only changes still need path and command spot checks. Run `pnpm check:local` when practical.
+- Dead-code cleanup needs `pnpm check:unused`; use `pnpm check:local` separately for the normal type and test baseline.
 - Parser block, editor dispatch, or sample fixture changes need `pnpm test:offline` at minimum.
 - Exporter, renderer, manifest, upload, resume, or UI state changes need `pnpm smoke:ui`.
 - Live resume or upload changes need the matching `pnpm test:network:*` command.

@@ -29,6 +29,7 @@
 
 ## Validation Routes
 - `pnpm check:local`: 저장소 파일 변경 뒤 기본 기준선이다. `typecheck`, offline tests를 실행한다.
+- `pnpm check:unused`: source, test, script 코드의 dead code 기준선이다. `check:local`에는 포함되지 않는다.
 - `pnpm check:full`: `check:local`에 Playwright smoke UI를 더한 넓은 로컬 회귀다.
 - `pnpm smoke:ui`: mock 기반 UI 흐름과 복구 경로를 확인한다. 코어 사용자 흐름이나 상태 전이를 바꾼 뒤 실행한다.
 - `pnpm test:network`: live resume export, SE2 table resume export, live upload e2e를 순서대로 실행한다. 외부 네트워크와 upload secret이 필요하고 remote state를 만든다.
