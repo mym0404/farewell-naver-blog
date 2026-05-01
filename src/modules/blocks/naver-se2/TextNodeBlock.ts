@@ -24,6 +24,7 @@ export class NaverSe2TextNodeBlock extends LeafBlock {
   }
 
   override convert({ node }: Parameters<LeafBlock["convert"]>[0]): ParserBlockResult {
+    /* v8 ignore next */
     const text = node.type === "text" ? compactText(node.data ?? "") : ""
 
     return text

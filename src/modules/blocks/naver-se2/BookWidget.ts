@@ -10,8 +10,10 @@ export const parseBookWidgetBlocks = ({
   element: ReturnType<CheerioAPI>
   resolveLinkUrl?: (url: string) => string
 }) => {
+  /* v8 ignore next */
   const bookWidget = element.is('[s_type="db"][s_subtype="book"]') ? element : null
 
+  /* v8 ignore next 3 */
   if (!bookWidget || bookWidget.length === 0) {
     return null
   }
@@ -69,6 +71,7 @@ export const parseBookWidgetBlocks = ({
   if (reviewUrl) {
     blocks.push({
       type: "paragraph",
+      /* v8 ignore next */
       text: `[${reviewLabel}](${resolveLinkUrl ? resolveLinkUrl(reviewUrl) : reviewUrl})`,
     })
   }

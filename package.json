@@ -16,6 +16,7 @@
     "check:unused": "bun scripts/check-unused.ts",
     "test": "vitest run --configLoader runner --silent",
     "test:coverage": "vitest run --configLoader runner --silent --coverage",
+    "test:parser-blocks": "vitest run --config vitest.parser-blocks.config.ts --silent --coverage",
     "test:offline": "vitest run --configLoader runner --silent",
     "test:network": "pnpm build:ui && bun scripts/harness/run-ui-live-resume-export.ts && bun scripts/harness/run-ui-live-resume-export.ts --case se2-table && bun scripts/harness/run-ui-live-upload.ts",
     "test:network:resume-export": "bun scripts/harness/run-ui-live-resume-export.ts",

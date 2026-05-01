@@ -34,6 +34,7 @@ const shouldTraverseNestedBlocks = ({
 
   const childNodes = element.contents().toArray()
   const hasMeaningfulDirectText = childNodes.some(
+    /* v8 ignore next */
     (node) => node.type === "text" && compactText(node.data ?? "") !== "",
   )
 

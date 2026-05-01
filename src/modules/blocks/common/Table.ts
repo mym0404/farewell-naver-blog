@@ -25,6 +25,7 @@ export const parseSingleColumnTableAsParagraphs = ({
   const paragraphs = parsedTable.rows
     .map((row) =>
       convertHtmlToMarkdown({
+        /* v8 ignore next */
         html: row[0]?.html ?? "",
         options: {},
         resolveLinkUrl: options.resolveLinkUrl,

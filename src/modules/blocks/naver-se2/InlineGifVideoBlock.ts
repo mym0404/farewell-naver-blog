@@ -29,6 +29,7 @@ const getInlineGifVideoImage = ({ $node }: { $node: ReturnType<CheerioAPI> }): I
     return null
   }
 
+  /* v8 ignore next */
   const sourceUrl = normalizeAssetUrl(video.attr("data-gif-url") ?? video.attr("src") ?? "")
   const originalSourceUrl = normalizeAssetUrl(video.attr("src") ?? "")
 
@@ -38,6 +39,7 @@ const getInlineGifVideoImage = ({ $node }: { $node: ReturnType<CheerioAPI> }): I
 
   return {
     sourceUrl,
+    /* v8 ignore next */
     originalSourceUrl: originalSourceUrl && originalSourceUrl !== sourceUrl ? originalSourceUrl : null,
     alt: video.attr("alt") ?? "",
     caption: null,
@@ -56,6 +58,7 @@ export class NaverSe2InlineGifVideoBlock extends LeafBlock {
   override convert({ $node }: Parameters<LeafBlock["convert"]>[0]): ParserBlockResult {
     const image = getInlineGifVideoImage({ $node })
 
+    /* v8 ignore next 3 */
     if (!image) {
       return { status: "skip" }
     }

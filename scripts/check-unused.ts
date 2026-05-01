@@ -56,6 +56,7 @@ const allowedKnipFileEntries: Record<string, string> = {
   "scripts/harness/run-live-server.ts": "spawned by live resume harness",
   "scripts/harness/run-ui-resume-smoke.ts": "spawned by smoke suite",
   "scripts/harness/run-ui-smoke.ts": "spawned by smoke suite",
+  "vitest.parser-blocks.config.ts": "parser block coverage config entrypoint",
 }
 const allowedKnipExports: Record<string, string> = {
   "scripts/export-single-post.ts:runSinglePostExportCli": "script entrypoint alias",

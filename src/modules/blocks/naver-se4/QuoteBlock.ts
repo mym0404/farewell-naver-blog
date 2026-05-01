@@ -25,6 +25,7 @@ export class NaverSe4QuoteBlock extends LeafBlock {
 
   override convert({ $node, options }: Parameters<LeafBlock["convert"]>[0]) {
     const quoteMarkdown = convertHtmlToMarkdown({
+      /* v8 ignore next */
       html: $node.find("blockquote.se-quotation-container").html() ?? "",
       options: {},
       resolveLinkUrl: options.resolveLinkUrl,

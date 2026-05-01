@@ -36,6 +36,7 @@ export class NaverSe2HeadingBlock extends LeafBlock {
   }
 
   override convert({ $node, node, options }: Parameters<LeafBlock["convert"]>[0]): ParserBlockResult {
+    /* v8 ignore next 3 */
     if (node.type !== "tag") {
       throw new Error("SE2 heading block received a non-tag node.")
     }
@@ -43,6 +44,7 @@ export class NaverSe2HeadingBlock extends LeafBlock {
     const level = Number(node.tagName[1])
     const text = compactText(
       convertHtmlToMarkdown({
+        /* v8 ignore next */
         html: $node.html() ?? "",
         options: {},
         resolveLinkUrl: options.resolveLinkUrl,

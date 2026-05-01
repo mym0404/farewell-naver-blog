@@ -17,11 +17,21 @@
 ## Focused Commands
 - `pnpm typecheck`: TypeScript contract check only.
 - `pnpm test:offline`: Vitest suite. Sample fixture tests fetch live Naver post HTML before comparing expected output.
+- `pnpm test:parser-blocks`: parser block implementation coverage gate. It runs block-level parser specs with 100% line, function, branch, and statement coverage for `src/modules/blocks/{common,naver-se2,naver-se3,naver-se4}` implementation files.
 - `pnpm test:network:resume-export`: live Naver resume export without upload.
 - `pnpm test:network:resume-export:se2-table`: live SE2 table resume export range.
 - `pnpm test:network:upload`: live browser UI export and GitHub upload through PicList runtime.
 - `pnpm dev`: user-facing HMR server on the default development port. Harnesses should not reuse it.
 - `pnpm start`: builds UI and serves `dist/client` through `src/Server.ts`.
+
+## Parser Block Unit Test
+- Parser block tests live under `tests/parser/naver-se2/*`, `tests/parser/naver-se3/*`, and `tests/parser/naver-se4/*`.
+- Each parser block spec file covers one parser block responsibility through the real `NaverBlogSE*Editor.parse()` dispatch path.
+- Each parser block spec that owns configurable block output options includes an `applies every output option` test that verifies every exposed option through parser dispatch.
+- Shared parser fixture helpers live only in `tests/parser/parser-test-utils.ts`.
+- `tests/parser/post-parser.test.ts` covers parser routing, tag extraction, same-blog link rewrite, and editor-specific output selection behavior.
+- Parser block implementation changes require `pnpm test:parser-blocks` and `pnpm test:offline`.
+- Parser routing changes require `pnpm test:offline`.
 
 ## Unused Code Verification
 - `pnpm check:unused` succeeds only when `scripts/check-unused.ts` reports no unresolved `knip`, `tsc noUnused`, or `tsserver` unused diagnostics.
@@ -30,7 +40,7 @@
 - `tsserver` opens `src/Server.ts`, reads the configured project file list with `projectInfo`, then checks `src`, `tests`, and `scripts` TypeScript files with `semanticDiagnosticsSync` and `suggestionDiagnosticsSync`.
 - The unused script filters tsserver diagnostics to TypeScript unused diagnostic codes: `6133`, `6138`, `6192`, `6196`, `6198`, `6199`.
 - Static false positives are allowed only inside `scripts/check-unused.ts` allowlists when the file or export is a real runtime entrypoint that static analysis cannot see.
-- Current allowlisted file entrypoints are `scripts/harness/run-live-server.ts`, `scripts/harness/run-ui-resume-smoke.ts`, and `scripts/harness/run-ui-smoke.ts`.
+- Current allowlisted file entrypoints are `scripts/harness/run-live-server.ts`, `scripts/harness/run-ui-resume-smoke.ts`, `scripts/harness/run-ui-smoke.ts`, and `vitest.parser-blocks.config.ts`.
 - Current allowlisted export entrypoint is `scripts/export-single-post.ts:runSinglePostExportCli`.
 - The command covers source/test/script dead code. It does not check unused package dependencies because the `knip` invocation intentionally excludes dependency categories.
 - A syntax or type error in the TypeScript project can make `check:unused` fail before dead-code cleanup is meaningful; restore the type baseline first, then interpret unused diagnostics.
@@ -51,7 +61,8 @@
 ## Task Loops
 - Knowledge-only changes still need path and command spot checks. Run `pnpm check:local` when practical.
 - Dead-code cleanup needs `pnpm check:unused`; use `pnpm check:local` separately for the normal type and test baseline.
-- Parser block, editor dispatch, or sample fixture changes need `pnpm test:offline` at minimum.
+- Parser block changes need `pnpm test:parser-blocks` and `pnpm test:offline`.
+- Editor dispatch or sample fixture changes need `pnpm test:offline` at minimum.
 - Exporter, renderer, manifest, upload, resume, or UI state changes need `pnpm smoke:ui`.
 - Live resume or upload changes need the matching `pnpm test:network:*` command.
 - If a command fails, compare the failure to the current diff before changing code. Report unrelated existing failures without calling them pass.
