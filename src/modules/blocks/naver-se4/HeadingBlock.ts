@@ -42,11 +42,13 @@ export class NaverSe4HeadingBlock extends LeafBlock {
       }),
     )
 
-    return title
-      ? {
-          status: "handled" as const,
-          blocks: [{ type: "heading" as const, level: 2 as const, text: title }],
-        }
-      : { status: "skip" as const }
+    if (!title) {
+      throw new Error("SE4 heading block parsing failed.")
+    }
+
+    return {
+      status: "handled" as const,
+      blocks: [{ type: "heading" as const, level: 2 as const, text: title }],
+    }
   }
 }

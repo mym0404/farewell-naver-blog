@@ -51,7 +51,7 @@ export class NaverSe2TableBlock extends LeafBlock {
     {
       id: "gfm-or-html",
       label: "GFM 우선",
-      description: "단순 표는 GFM, 복잡한 표는 HTML fallback으로 처리합니다.",
+      description: "단순 표는 GFM, 복잡한 표는 HTML fragment로 처리합니다.",
       preview: {
         type: "table",
         complex: false,
@@ -97,7 +97,7 @@ export class NaverSe2TableBlock extends LeafBlock {
     }
 
     if ($node.hasClass("colorscripter-code-table") && compactText($node.text()) === "") {
-      return { status: "skip" }
+      throw new Error("SE2 Color Scripter table parsing failed.")
     }
 
     const parsedTable = parseHtmlTable({ $, table: $node })

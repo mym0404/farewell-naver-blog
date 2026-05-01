@@ -61,11 +61,13 @@ export class NaverSe4ImageBlock extends LeafBlock {
   override convert({ $node }: Parameters<LeafBlock["convert"]>[0]): ParserBlockResult {
     const image = parseImageLink($node.find(se4ImageLinkSelector).first())
 
-    return image
-      ? {
-          status: "handled",
-          blocks: [{ type: "image", image }],
-        }
-      : { status: "skip" }
+    if (!image) {
+      throw new Error("SE4 image block parsing failed.")
+    }
+
+    return {
+      status: "handled",
+      blocks: [{ type: "image", image }],
+    }
   }
 }

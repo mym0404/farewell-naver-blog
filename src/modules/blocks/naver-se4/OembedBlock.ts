@@ -26,10 +26,7 @@ export class NaverSe4OembedBlock extends LeafBlock {
     const url = data.inputUrl ?? iframeUrl ?? data.providerUrl ?? ""
 
     if (!url) {
-      return {
-        status: "skip",
-        warnings: ["oEmbed 블록을 해석하지 못해 건너뛰었습니다."],
-      }
+      throw new Error("SE4 oEmbed block parsing failed.")
     }
 
     return {

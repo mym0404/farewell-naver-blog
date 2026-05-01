@@ -374,7 +374,7 @@ describe("NaverBlogExporter", () => {
     await rm(outputDir, { recursive: true, force: true })
   })
 
-  it("renders normalized unsupported representative cases as fallback html with warnings in bulk exports", async () => {
+  it("records unsupported representative cases as failed bulk export items", async () => {
     const outputDir = await mkdtemp(path.join(tmpdir(), "bulk-export-"))
     const onProgress = vi.fn()
     const onItem = vi.fn()
@@ -412,50 +412,40 @@ describe("NaverBlogExporter", () => {
       })
 
       const manifest = await exporter.run()
-      const markdownPath = path.join(outputDir, manifest.posts[0]!.outputPath!)
-      const writtenMarkdown = await readFile(markdownPath, "utf8")
 
-      expect(manifest.warningCount).toBe(4)
+      expect(manifest.warningCount).toBe(0)
+      expect(manifest.failureCount).toBe(1)
       expect(manifest.posts[0]).toMatchObject({
         logNo: se3Post.logNo,
-        warnings: [
-          "SE3 대표 미지원 블록을 원본 HTML로 보존했습니다: se_component se_horizontalLine default",
-          "SE3 대표 미지원 블록을 원본 HTML로 보존했습니다: se_component se_horizontalLine line5",
-          "SE3 대표 미지원 블록을 원본 HTML로 보존했습니다: se_component se_oglink og_bSize ",
-          "fallback HTML 블록 3개가 포함됩니다.",
-        ],
-        warningCount: 4,
+        status: "failed",
+        outputPath: null,
+        warnings: [],
+        warningCount: 0,
+        error:
+          "파싱 가능한 naver-se3 block이 없습니다: div class=\"se_component se_horizontalLine default\"",
       })
       expect(onProgress).toHaveBeenCalledWith({
         total: 1,
-        completed: 1,
-        failed: 0,
-        warnings: 4,
+        completed: 0,
+        failed: 1,
+        warnings: 0,
       })
       expect(onItem).toHaveBeenCalledWith(
         expect.objectContaining({
           logNo: se3Post.logNo,
-          warnings: [
-            "SE3 대표 미지원 블록을 원본 HTML로 보존했습니다: se_component se_horizontalLine default",
-            "SE3 대표 미지원 블록을 원본 HTML로 보존했습니다: se_component se_horizontalLine line5",
-            "SE3 대표 미지원 블록을 원본 HTML로 보존했습니다: se_component se_oglink og_bSize ",
-            "fallback HTML 블록 3개가 포함됩니다.",
-          ],
-          warningCount: 4,
+          status: "failed",
+          warnings: [],
+          warningCount: 0,
+          error:
+            "파싱 가능한 naver-se3 block이 없습니다: div class=\"se_component se_horizontalLine default\"",
         }),
       )
-      expect(writtenMarkdown).toContain("본문 시작입니다.")
-      expect(writtenMarkdown).toContain("se_component se_horizontalLine default")
-      expect(writtenMarkdown).toContain("se_component se_horizontalLine line5")
-      expect(writtenMarkdown).toContain("se_component se_oglink og_bSize")
-      expect(writtenMarkdown).toContain("비타는 삶이다")
-      expect(writtenMarkdown).toContain("## Export Diagnostics")
     } finally {
       await rm(outputDir, { recursive: true, force: true })
     }
   })
 
-  it("keeps normalized unsupported html fragments literal without upload candidates", async () => {
+  it("does not create upload candidates for failed unsupported html exports", async () => {
     const outputDir = await mkdtemp(path.join(tmpdir(), "bulk-export-"))
     const options = defaultExportOptions()
     const se3Post = {
@@ -492,14 +482,18 @@ describe("NaverBlogExporter", () => {
 
       const manifest = await exporter.run()
       const postManifest = manifest.posts[0]!
-      const markdownPath = path.join(outputDir, postManifest.outputPath!)
-      const writtenMarkdown = await readFile(markdownPath, "utf8")
 
-      expect(manifest.warningCount).toBe(4)
+      expect(manifest.warningCount).toBe(0)
+      expect(manifest.failureCount).toBe(1)
+      expect(manifest.upload.status).toBe("skipped")
+      expect(postManifest.status).toBe("failed")
+      expect(postManifest.outputPath).toBeNull()
       expect(postManifest.assetPaths).toEqual([])
       expect(postManifest.upload.candidateCount).toBe(0)
       expect(postManifest.upload.candidates).toEqual([])
-      expect(writtenMarkdown).toContain('<img src="https://dthumb-phinf.pstatic.net/sample.jpg?type=ff500_300" alt="">')
+      expect(postManifest.error).toBe(
+        "파싱 가능한 naver-se3 block이 없습니다: div class=\"se_component se_horizontalLine default\"",
+      )
     } finally {
       await rm(outputDir, { recursive: true, force: true })
     }

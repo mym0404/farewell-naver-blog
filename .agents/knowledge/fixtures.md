@@ -2,9 +2,9 @@
 
 ## Source Of Truth
 - Sample fixture directories live under `tests/fixtures/samples/*`.
-- Each sample must contain `source.html` and `expected.md`.
+- Each sample must contain `source.html` and either `expected.md` or `expected-error.md`.
 - `tests/sample-fixtures.test.ts` discovers directories dynamically.
-- `scripts/harness/lib/sample-fixtures.ts` parses `expected.md` frontmatter and renders `source.html` with fixture export options.
+- `scripts/harness/lib/sample-fixtures.ts` parses expected frontmatter and renders `source.html` with fixture export options.
 
 ## Fixture Options
 - Sample fixture rendering uses `defaultExportOptions()`.
@@ -28,11 +28,12 @@
 - `se4-video-table`
 
 ## Operating Rules
-- Add or update `source.html` and `expected.md` together.
-- `expected.md` must start with YAML frontmatter containing title, source, blogId, logNo, publishedAt, category, and categoryPath.
+- Add or update `source.html` and its expected output file together.
+- `expected.md` and `expected-error.md` must start with YAML frontmatter containing title, source, blogId, logNo, publishedAt, category, and categoryPath.
+- `expected-error.md` must include an `error` frontmatter string.
 - Fixture ids should describe editor and dominant block coverage.
 - A parser block without a public sample should be covered by focused parser tests until a durable sample exists.
-- Parser block, renderer, or export option changes that alter Markdown output must update the affected `expected.md` files intentionally.
+- Parser block, renderer, or export option changes that alter Markdown output or parser failure behavior must update the affected expected files intentionally.
 
 ## Verification
 - `pnpm test:offline`: runs sample fixture regression with the rest of the offline suite.

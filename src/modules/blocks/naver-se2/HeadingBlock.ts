@@ -36,7 +36,7 @@ export class NaverSe2HeadingBlock extends LeafBlock {
 
   override convert({ $node, node, options }: Parameters<LeafBlock["convert"]>[0]): ParserBlockResult {
     if (node.type !== "tag") {
-      return { status: "skip" }
+      throw new Error("SE2 heading block received a non-tag node.")
     }
 
     const level = Number(node.tagName[1])
@@ -48,11 +48,13 @@ export class NaverSe2HeadingBlock extends LeafBlock {
       }),
     )
 
-    return text
-      ? {
-          status: "handled",
-          blocks: [{ type: "heading", level, text }],
-        }
-      : { status: "skip" }
+    if (!text) {
+      throw new Error(`SE2 heading block parsing failed: <${node.tagName.toLowerCase()}>`)
+    }
+
+    return {
+      status: "handled",
+      blocks: [{ type: "heading", level, text }],
+    }
   }
 }

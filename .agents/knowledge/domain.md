@@ -24,8 +24,8 @@
 - Same bytes share one asset file even when source URLs differ.
 - `manifest.json` is both final result record and resume/bootstrap state.
 - Naver media/link card/video blocks render as Markdown links when no richer Markdown form exists.
-- Simple tables render as GFM tables; complex tables can use HTML fallback.
-- Raw HTML fallback should preserve warning context and extracted text instead of silently dropping content.
+- Simple tables render as GFM tables; complex parsed tables can render as HTML fragments.
+- Parsing fails when a content node is unsupported or cannot be converted.
 - Block output defaults use Editor+ParserBlock selection keys in `ExportOptions.blockOutputs.defaults`; `manifest.json.options` preserves those keys.
 
 ## Frontmatter Rules

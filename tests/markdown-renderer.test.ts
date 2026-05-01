@@ -344,12 +344,6 @@ describe("renderMarkdownPost", () => {
               },
             },
           },
-          {
-            kind: "fallbackHtml",
-            html: "<div><strong>raw</strong> text</div>",
-            reason: "fallback",
-            warnings: [],
-          },
         ],
       },
       markdownFilePath: testMarkdownFilePath,
@@ -366,14 +360,9 @@ describe("renderMarkdownPost", () => {
     expect(rendered.markdown).toContain("## Export Diagnostics")
     expect(rendered.markdown).toContain("> ⚠️ Warning: parser warning")
     expect(rendered.markdown).toContain("> ⚠️ Warning: review warning")
-    expect(rendered.markdown).toContain("<div><strong>raw</strong> text</div>")
     expect(rendered.markdown).not.toContain("sticker-original.gif")
     expect(rendered.markdown).not.toContain("스티커 asset 옵션이 ignore라서 본문에서 스티커를 생략했습니다.")
-    expect(rendered.warnings).toEqual([
-      "parser warning",
-      "review warning",
-      "fallback HTML 블록을 원본 HTML로 보존했습니다: fallback",
-    ])
+    expect(rendered.warnings).toEqual(["parser warning", "review warning"])
   })
 
   it("renders frontmatter keys with configured aliases", async () => {
@@ -401,41 +390,6 @@ describe("renderMarkdownPost", () => {
     expect(rendered.markdown).toContain("postTitle: 테스트 글")
     expect(rendered.markdown).toContain("published_on: 2023-03-04T13:00:00+09:00")
     expect(rendered.markdown).not.toContain("\nsource: https://blog.naver.com/mym0404/223034929697")
-  })
-
-  it("renders fallback html literally with warnings", async () => {
-    const options = defaultExportOptions()
-
-    const rendered = await renderMarkdownPost({
-      post,
-      category,
-      parsedPost: {
-        ...parsedPost,
-        warnings: [],
-        blocks: [],
-        body: [
-          {
-            kind: "fallbackHtml",
-            html: "<div><strong>raw</strong> text</div>",
-            reason: "fallback",
-            warnings: [],
-          },
-        ],
-      },
-      markdownFilePath: testMarkdownFilePath,
-      reviewedWarnings: [],
-      options,
-      resolveAsset: async ({ kind, sourceUrl }) =>
-        createAssetRecord({
-          kind,
-          sourceUrl,
-          relativePath: publicImagePath,
-        }),
-    })
-
-    expect(rendered.markdown).toContain("<div><strong>raw</strong> text</div>")
-    expect(rendered.markdown).toContain("## Export Diagnostics")
-    expect(rendered.warnings).toEqual(["fallback HTML 블록을 원본 HTML로 보존했습니다: fallback"])
   })
 
   it("renders referenced links, quotes, and plain video links without frontmatter", async () => {
@@ -666,12 +620,6 @@ describe("renderMarkdownPost", () => {
               },
             },
           },
-          {
-            kind: "fallbackHtml",
-            html: "<iframe src=\"https://example.com/embed\"></iframe>",
-            reason: "iframe-only",
-            warnings: [],
-          },
         ],
       },
       markdownFilePath: testMarkdownFilePath,
@@ -692,92 +640,6 @@ describe("renderMarkdownPost", () => {
     expect(rendered.markdown).not.toContain("![HTML Demo]")
     expect(rendered.markdown).not.toContain("Open Original Post")
     expect(rendered.markdown).toContain("<table><tr><td>cell</td></tr></table>")
-    expect(rendered.markdown).toContain("> ⚠️ Warning: fallback HTML 블록을 원본 HTML로 보존했습니다: iframe-only")
-    expect(rendered.markdown).toContain('<iframe src="https://example.com/embed"></iframe>')
-  })
-
-  it("renders html fragments literally with fallback diagnostics", async () => {
-    const rendered = await renderMarkdownPost({
-      post,
-      category,
-      parsedPost: {
-        ...parsedPost,
-        warnings: [],
-        blocks: [
-          {
-            type: "image",
-            image: {
-              sourceUrl: "https://example.com/poster.png",
-              originalSourceUrl: "https://example.com/original.mp4",
-              alt: "gif poster",
-              caption: null,
-              mediaKind: "image",
-            },
-            outputSelection: {
-              variant: "linked-image",
-            },
-          },
-          {
-            type: "divider",
-            outputSelection: {
-              variant: "asterisk-rule",
-            },
-          },
-        ],
-        body: [
-          {
-            kind: "block",
-            block: {
-              type: "image",
-              image: {
-                sourceUrl: "https://example.com/poster.png",
-                originalSourceUrl: "https://example.com/original.mp4",
-                alt: "gif poster",
-                caption: null,
-                mediaKind: "image",
-              },
-              outputSelection: {
-                variant: "linked-image",
-              },
-            },
-          },
-          {
-            kind: "block",
-            block: {
-              type: "divider",
-              outputSelection: {
-                variant: "asterisk-rule",
-              },
-            },
-          },
-          {
-            kind: "fallbackHtml",
-            html: '<a href="https://blog.naver.com/mym0404/223034929697"><img src="https://example.com/card.png" alt=""><strong>카드 제목</strong></a>',
-            reason: "html-fragment",
-            warnings: [],
-          },
-        ],
-      },
-      markdownFilePath: testMarkdownFilePath,
-      reviewedWarnings: [],
-      options: defaultExportOptions(),
-      resolveAsset: async ({ kind, sourceUrl }) =>
-        createAssetRecord({
-          kind,
-          sourceUrl,
-          relativePath: publicImagePath,
-        }),
-      resolveLinkUrl: (url) =>
-        url === "https://blog.naver.com/mym0404/223034929697" ? "../linked-post" : url,
-    })
-
-    expect(rendered.markdown).toContain(`[![gif poster](${publicImagePath})](https://example.com/original.mp4)`)
-    expect(rendered.markdown).toContain("***")
-    expect(rendered.markdown).toContain(
-      '<a href="https://blog.naver.com/mym0404/223034929697"><img src="https://example.com/card.png" alt=""><strong>카드 제목</strong></a>',
-    )
-    expect(rendered.markdown).toContain("## Export Diagnostics")
-    expect(rendered.warnings).toEqual(["fallback HTML 블록을 원본 HTML로 보존했습니다: html-fragment"])
   })
 
   it("keeps description only for non-preview link cards without duplicating bare urls", async () => {

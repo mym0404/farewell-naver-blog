@@ -11,7 +11,7 @@
 - `src/modules/parser/PostParser.ts` builds a `src/modules/blog/NaverBlog.ts` instance and lets its editor instances choose the matching parser through `canParse`.
 - Editor classes own block ordering, output-option visibility order, and source-level context. Block-specific `match` and `convert` logic stays in `src/modules/blocks/*`.
 - `src/modules/reviewer/PostReviewer.ts` normalizes parse warnings before rendering.
-- `src/modules/converter/MarkdownRenderer.ts` renders AST blocks, frontmatter, image references, tables, callouts, and fallback HTML into Markdown.
+- `src/modules/converter/MarkdownRenderer.ts` renders AST blocks, frontmatter, image references, tables, and callouts into Markdown.
 - `src/modules/exporter/ExportPaths.ts`, `AssetStore.ts`, `PostLinkRewriter.ts`, and `ExportJobManifest.ts` handle output paths, deduped assets, post links, and `manifest.json`.
 
 ## Module Boundaries
@@ -27,7 +27,9 @@
 ## Parser Block Contract
 - Blog parser ownership starts in `src/modules/blog/BaseBlog.ts` and `src/modules/blog/NaverBlog.ts`.
 - Editor classes hold `BaseBlock[]` instances directly; there is no string id registry between blog, editor, and parser block.
-- Editor `supportedBlocks` arrays are ordered first-match lists; place more specific blocks before broader fallback blocks.
+- Editor `supportedBlocks` arrays are ordered first-match lists; unmatched nodes fail parsing.
+- Parser blocks may return `skip` only for intentionally ignored non-content nodes such as document titles, spacer nodes, empty text nodes, and top-level line breaks.
+- Parser blocks must throw when a matched content node cannot be converted.
 - Parser block classes own optional `BaseBlock.outputOptions` arrays. Each option describes the parser block output choice, preview, default marker, and params.
 - `src/shared/Types.ts` `AstBlock` union is the source of truth for block type strings; `BlockType` is derived from `AstBlock["type"]`.
 - `src/modules/blog/BaseBlog.ts` derives selectable output definitions from its editors, and `src/modules/editor/BaseEditor.ts` filters to blocks with at least two output options and keys selections as `editorType:blockId`.

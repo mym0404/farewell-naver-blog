@@ -38,17 +38,19 @@ export class NaverSe4CodeBlock extends LeafBlock {
     const languageMatch = classNames.match(/language-([\w-]+)/)
     const code = sourceNode.text().trimEnd()
 
-    return code
-      ? {
-          status: "handled" as const,
-          blocks: [
-            {
-              type: "code" as const,
-              language: languageMatch?.[1] ?? null,
-              code,
-            },
-          ],
-        }
-      : { status: "skip" as const }
+    if (!code) {
+      throw new Error("SE4 code block parsing failed.")
+    }
+
+    return {
+      status: "handled" as const,
+      blocks: [
+        {
+          type: "code" as const,
+          language: languageMatch?.[1] ?? null,
+          code,
+        },
+      ],
+    }
   }
 }

@@ -13,14 +13,30 @@ import type {
 import { resolveBlockOutputSelection } from "@shared/BlockRegistry.js"
 import {
   createBodyNodesFromStructuredBlocks,
-  createFallbackHtmlBodyNode,
 } from "../blocks/BodyNodeUtils.js"
 import type {
+  ParserBlockContext,
   ParserBlockConvertContext,
   ParserBlockOptions,
   ParserBlockResult,
 } from "../blocks/ParserNode.js"
 import type { BaseBlock } from "../blocks/BaseBlock.js"
+
+const describeParserNode = ({ $node, node, moduleType }: ParserBlockContext) => {
+  const tagName = node.type === "tag" ? node.tagName.toLowerCase() : node.type
+  const className = $node.attr("class")
+  const parts = [tagName]
+
+  if (className) {
+    parts.push(`class="${className}"`)
+  }
+
+  if (moduleType) {
+    parts.push(`moduleType="${moduleType}"`)
+  }
+
+  return parts.join(" ")
+}
 
 export type BaseEditorParseInput = {
   $: CheerioAPI
@@ -155,17 +171,6 @@ export abstract class BaseEditor {
         return
       }
 
-      if (result.status === "fallback") {
-        body.push(
-          createFallbackHtmlBodyNode({
-            html: result.html,
-            reason: result.reason,
-            warnings: result.warnings,
-          }),
-        )
-        return
-      }
-
       if (result.status === "traverse") {
         result.nodes?.forEach(appendBlocksFromNode)
       }
@@ -186,7 +191,7 @@ export abstract class BaseEditor {
       const block = this.supportedBlocks.find((supportedBlock) => supportedBlock.match(context))
 
       if (!block) {
-        return
+        throw new Error(`파싱 가능한 ${this.type} block이 없습니다: ${describeParserNode(context)}`)
       }
 
       handleResult({

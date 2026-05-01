@@ -175,45 +175,31 @@ console.log(legacy)
     ])
   })
 
-  it("keeps unsupported blocks with content as fallback html", () => {
-    const parsed = parseSe3Fixture(`
+  it("throws when unsupported blocks with content cannot be parsed", () => {
+    expect(() =>
+      parseSe3Fixture(`
       <div class="se_component se_unknown">
         <div><strong>Fallback</strong> block</div>
       </div>
-    `)
-
-    expect(parsed.blocks).toEqual([])
-    expect(parsed.body?.[0]).toMatchObject({
-      kind: "fallbackHtml",
-      reason: "se3:se_component se_unknown",
-      warnings: ["SE3 블록을 구조화하지 못해 원본 HTML로 보존했습니다: se_component se_unknown"],
-    })
-    expect(parsed.body?.[0]?.kind === "fallbackHtml" ? parsed.body[0].html : "").toContain("<strong>Fallback</strong>")
-    expect(parsed.warnings).toContain(
-      "SE3 블록을 구조화하지 못해 원본 HTML로 보존했습니다: se_component se_unknown",
-    )
+    `),
+    ).toThrow("파싱 가능한 naver-se3 block이 없습니다: div class=\"se_component se_unknown\"")
   })
 
-  it("captures horizontal line fallback blocks as fallback html", () => {
-    const parsed = parseSe3Fixture(`
+  it("throws when horizontal line blocks cannot be parsed", () => {
+    expect(() =>
+      parseSe3Fixture(`
       <div class="se_component se_horizontalLine line5">
         <div class="se_horizontalLineView">
           <div class="se_hr"><hr></div>
         </div>
       </div>
-    `)
-
-    expect(parsed.blocks).toEqual([])
-    expect(parsed.body?.[0]).toMatchObject({
-      kind: "fallbackHtml",
-      reason: "se3:se_component se_horizontalLine line5",
-      warnings: ["SE3 대표 미지원 블록을 원본 HTML로 보존했습니다: se_component se_horizontalLine line5"],
-    })
-    expect(parsed.body?.[0]?.kind === "fallbackHtml" ? parsed.body[0].html : "").toContain("<hr>")
+    `),
+    ).toThrow("파싱 가능한 naver-se3 block이 없습니다: div class=\"se_component se_horizontalLine line5\"")
   })
 
-  it("captures oglink fallback blocks as fallback html", () => {
-    const parsed = parseSe3Fixture(`
+  it("throws when oglink blocks cannot be parsed", () => {
+    expect(() =>
+      parseSe3Fixture(`
       <div class="se_component se_oglink og_bSize ">
         <div class="se_viewArea se_og_wrap">
           <a class="se_og_box" href="https://blog.naver.com/is02019/221072284462" target="_blank">
@@ -228,20 +214,14 @@ console.log(legacy)
           </a>
         </div>
       </div>
-    `)
-
-    expect(parsed.blocks).toEqual([])
-    expect(parsed.body?.[0]).toMatchObject({
-      kind: "fallbackHtml",
-      reason: "se3:se_component se_oglink og_bSize ",
-      warnings: ["SE3 대표 미지원 블록을 원본 HTML로 보존했습니다: se_component se_oglink og_bSize "],
-    })
-    expect(parsed.body?.[0]?.kind === "fallbackHtml" ? parsed.body[0].html : "").toContain("비타는 삶이다")
+    `),
+    ).toThrow("파싱 가능한 naver-se3 block이 없습니다: div class=\"se_component se_oglink og_bSize \"")
   })
 
-  it("ignores oglink unsupported candidate selections and keeps fallback html", () => {
-    const parsed = parseSe3FixtureWithOptions({
-      components: [`
+  it("throws for oglink blocks regardless of unsupported candidate selections", () => {
+    expect(() =>
+      parseSe3FixtureWithOptions({
+        components: [`
         <div class="se_component se_oglink og_bSize ">
           <div class="se_viewArea se_og_wrap">
             <a class="se_og_box" href="https://blog.naver.com/is02019/221072284462" target="_blank">
@@ -257,27 +237,19 @@ console.log(legacy)
           </div>
         </div>
       `],
-      options: {
-        markdown: testOptions.markdown,
-        blockOutputs: testOptions.blockOutputs,
-      },
-    })
-
-    expect(parsed.blocks).toEqual([])
-    expect(parsed.body?.[0]).toMatchObject({
-      kind: "fallbackHtml",
-      reason: "se3:se_component se_oglink og_bSize ",
-    })
+        options: {
+          markdown: testOptions.markdown,
+          blockOutputs: testOptions.blockOutputs,
+        },
+      }),
+    ).toThrow("파싱 가능한 naver-se3 block이 없습니다: div class=\"se_component se_oglink og_bSize \"")
   })
 
-  it("warns and skips unsupported empty blocks", () => {
-    const parsed = parseSe3Fixture(`
+  it("throws when unsupported empty blocks cannot be parsed", () => {
+    expect(() =>
+      parseSe3Fixture(`
       <div class="se_component se_unknown"></div>
-    `)
-
-    expect(parsed.blocks).toEqual([])
-    expect(parsed.warnings).toContain(
-      "SE3 블록을 구조화하지 못해 원본 HTML로 보존했습니다: se_component se_unknown",
-    )
+    `),
+    ).toThrow("파싱 가능한 naver-se3 block이 없습니다: div class=\"se_component se_unknown\"")
   })
 })

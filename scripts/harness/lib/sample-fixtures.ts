@@ -3,6 +3,7 @@ import { readdir } from "node:fs/promises"
 import { parse as parseYaml } from "yaml"
 
 import { renderMarkdownPost } from "../../../src/modules/converter/MarkdownRenderer.js"
+import { NaverBlogFetcher } from "../../../src/modules/fetcher/NaverBlogFetcher.js"
 import { parsePostHtml } from "../../../src/modules/parser/PostParser.js"
 import { reviewParsedPost } from "../../../src/modules/reviewer/PostReviewer.js"
 import { defaultExportOptions } from "../../../src/shared/ExportOptions.js"
@@ -17,6 +18,7 @@ type SampleFixtureEntry = {
   id: string
   blogId: string
   logNo: string
+  expectedError?: string
   post: {
     title: string
     publishedAt: string
@@ -37,6 +39,7 @@ type ExpectedFrontmatter = {
   category: string
   categoryPath: string[]
   thumbnail?: string | null
+  error?: string
 }
 
 export const getSampleFixtureDir = (sampleId: string) =>
@@ -44,11 +47,11 @@ export const getSampleFixtureDir = (sampleId: string) =>
 
 export const getSampleFixtureRoot = () => repoPath("tests", "fixtures", "samples")
 
-export const getSampleSourceHtmlPath = (sampleId: string) =>
-  path.join(getSampleFixtureDir(sampleId), "source.html")
-
 export const getSampleExpectedMarkdownPath = (sampleId: string) =>
   path.join(getSampleFixtureDir(sampleId), "expected.md")
+
+export const getSampleExpectedErrorPath = (sampleId: string) =>
+  path.join(getSampleFixtureDir(sampleId), "expected-error.md")
 
 const assertString = (value: unknown, key: string) => {
   if (typeof value !== "string") {
@@ -93,17 +96,30 @@ const parseExpectedFrontmatter = (markdown: string): ExpectedFrontmatter => {
       typeof frontmatter.thumbnail === "string"
         ? frontmatter.thumbnail
         : null,
+    error:
+      typeof frontmatter.error === "string"
+        ? frontmatter.error
+        : undefined,
   }
 }
 
 export const readSampleFixtureEntry = async (sampleId: string): Promise<SampleFixtureEntry> => {
-  const expectedMarkdown = await readUtf8(getSampleExpectedMarkdownPath(sampleId))
+  const expectedMarkdownPath = getSampleExpectedMarkdownPath(sampleId)
+  const expectedErrorPath = getSampleExpectedErrorPath(sampleId)
+  const hasExpectedMarkdown = await pathExists(expectedMarkdownPath)
+  const hasExpectedError = await pathExists(expectedErrorPath)
+  const expectedMarkdown = await readUtf8(hasExpectedError ? expectedErrorPath : expectedMarkdownPath)
   const frontmatter = parseExpectedFrontmatter(expectedMarkdown)
+
+  if (hasExpectedError && !frontmatter.error) {
+    throw new Error(`sample fixture ${sampleId} expected-error.md must include error`)
+  }
 
   return {
     id: sampleId,
     blogId: frontmatter.blogId,
     logNo: frontmatter.logNo,
+    expectedError: frontmatter.error,
     post: {
       title: frontmatter.title,
       publishedAt: frontmatter.publishedAt,
@@ -126,11 +142,15 @@ export const listSampleFixtures = async () => {
     .sort()
   const fixtureEntries = await Promise.all(
     sampleIds.map(async (sampleId) => {
-      const hasSource = await pathExists(getSampleSourceHtmlPath(sampleId))
-      const hasExpected = await pathExists(getSampleExpectedMarkdownPath(sampleId))
+      const hasExpectedMarkdown = await pathExists(getSampleExpectedMarkdownPath(sampleId))
+      const hasExpectedError = await pathExists(getSampleExpectedErrorPath(sampleId))
 
-      if (!hasSource || !hasExpected) {
-        throw new Error(`sample fixture ${sampleId} must include source.html and expected.md`)
+      if (!hasExpectedMarkdown && !hasExpectedError) {
+        throw new Error(`sample fixture ${sampleId} must include expected output`)
+      }
+
+      if (hasExpectedMarkdown && hasExpectedError) {
+        throw new Error(`sample fixture ${sampleId} must not include both expected.md and expected-error.md`)
       }
 
       return readSampleFixtureEntry(sampleId)
@@ -220,8 +240,11 @@ export const renderSampleFixture = async ({
 }
 
 export const loadSampleFixture = async (sample: SampleFixtureEntry) => ({
-  html: await readUtf8(getSampleSourceHtmlPath(sample.id)),
-  expectedMarkdown: normalizeMarkdownFixture(
-    await readUtf8(getSampleExpectedMarkdownPath(sample.id)),
-  ),
+  html: await new NaverBlogFetcher({
+    blogId: sample.blogId,
+  }).fetchPostHtml(sample.logNo),
+  expectedMarkdown: sample.expectedError
+    ? undefined
+    : normalizeMarkdownFixture(await readUtf8(getSampleExpectedMarkdownPath(sample.id))),
+  expectedError: sample.expectedError,
 })

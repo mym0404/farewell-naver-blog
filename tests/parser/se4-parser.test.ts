@@ -300,23 +300,15 @@ console.log(value)
     })
   })
 
-  it("keeps table fallback as ordered fallback html when a table component has no table element", () => {
-    const parsed = parseSe4Fixture(`
+  it("throws when a table component has no table element", () => {
+    expect(() =>
+      parseSe4Fixture(`
       <div class="se-component se-table">
         ${createModuleScript({ type: "v2_table" })}
         <div class="se-table-placeholder"></div>
       </div>
-    `)
-
-    expect(parsed.blocks).toEqual([])
-    expect(parsed.body?.[0]).toMatchObject({
-      kind: "fallbackHtml",
-      reason: "table-fallback",
-    })
-    expect(parsed.body?.[0]?.kind === "fallbackHtml" ? parsed.body[0].html : "").toContain(
-      '<div class="se-table-placeholder"></div>',
-    )
-    expect(parsed.warnings).toContain("표 블록을 표로 해석하지 못해 원본 HTML로 보존했습니다.")
+    `),
+    ).toThrow("SE4 table block parsing failed.")
   })
 
   it("parses material components into link cards", () => {
@@ -589,41 +581,23 @@ console.log(value)
     ])
   })
 
-  it("keeps unsupported components with content as fallback html", () => {
-    const parsed = parseSe4Fixture(`
+  it("throws when unsupported components with content cannot be parsed", () => {
+    expect(() =>
+      parseSe4Fixture(`
       <div class="se-component se-unsupported">
         <p>Unsupported <strong>content</strong></p>
       </div>
-    `)
-
-    expect(parsed.blocks).toEqual([])
-    expect(parsed.body?.[0]).toMatchObject({
-      kind: "fallbackHtml",
-      reason: "unsupported:se-component se-unsupported",
-    })
-    expect(parsed.body?.[0]?.kind === "fallbackHtml" ? parsed.body[0].html : "").toContain(
-      "Unsupported <strong>content</strong>",
-    )
-    expect(parsed.warnings).toContain(
-      "지원하지 않는 SE4 블록을 원본 HTML로 보존했습니다: se-component se-unsupported",
-    )
+    `),
+    ).toThrow("파싱 가능한 naver-se4 block이 없습니다: div class=\"se-component se-unsupported\"")
   })
 
-  it("keeps unsupported empty components as fallback html", () => {
-    const parsed = parseSe4Fixture(`
+  it("throws when unsupported empty components cannot be parsed", () => {
+    expect(() =>
+      parseSe4Fixture(`
       <div class="se-component se-empty">
         <div></div>
       </div>
-    `)
-
-    expect(parsed.blocks).toEqual([])
-    expect(parsed.body?.[0]).toMatchObject({
-      kind: "fallbackHtml",
-      reason: "unsupported:se-component se-empty",
-    })
-    expect(parsed.body?.[0]?.kind === "fallbackHtml" ? parsed.body[0].html : "").toContain("<div></div>")
-    expect(parsed.warnings).toContain(
-      "지원하지 않는 SE4 블록을 원본 HTML로 보존했습니다: se-component se-empty",
-    )
+    `),
+    ).toThrow("파싱 가능한 naver-se4 block이 없습니다: div class=\"se-component se-empty\"")
   })
 })

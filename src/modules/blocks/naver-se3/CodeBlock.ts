@@ -36,11 +36,13 @@ export class NaverSe3CodeBlock extends LeafBlock {
   override convert({ $node }: Parameters<LeafBlock["convert"]>[0]): ParserBlockResult {
     const code = $node.find("pre").first().text().trimEnd()
 
-    return code
-      ? {
-          status: "handled" as const,
-          blocks: [{ type: "code" as const, language: null, code }],
-        }
-      : { status: "skip" as const }
+    if (!code) {
+      throw new Error("SE3 code block parsing failed.")
+    }
+
+    return {
+      status: "handled" as const,
+      blocks: [{ type: "code" as const, language: null, code }],
+    }
   }
 }

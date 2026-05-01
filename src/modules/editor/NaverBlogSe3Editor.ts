@@ -2,10 +2,8 @@ import type { ParsedPost } from "@shared/Types.js"
 import { unique } from "@shared/Utils.js"
 import { NaverSe3CodeBlock } from "../blocks/naver-se3/CodeBlock.js"
 import { NaverSe3DocumentTitleBlock } from "../blocks/naver-se3/DocumentTitleBlock.js"
-import { NaverSe3FallbackBlock } from "../blocks/naver-se3/FallbackBlock.js"
 import { NaverSe3ImageBlock } from "../blocks/naver-se3/ImageBlock.js"
 import { NaverSe3QuoteBlock } from "../blocks/naver-se3/QuoteBlock.js"
-import { NaverSe3RepresentativeUnsupportedBlock } from "../blocks/naver-se3/RepresentativeUnsupportedBlock.js"
 import { NaverSe3TableBlock } from "../blocks/naver-se3/TableBlock.js"
 import { NaverSe3TextBlock } from "../blocks/naver-se3/TextBlock.js"
 import { BaseEditor } from "./BaseEditor.js"
@@ -25,9 +23,7 @@ export class NaverBlogSE3Editor extends BaseEditor {
     new NaverSe3QuoteBlock(),
     new NaverSe3CodeBlock(),
     new NaverSe3ImageBlock(),
-    new NaverSe3RepresentativeUnsupportedBlock(),
     new NaverSe3TextBlock(),
-    new NaverSe3FallbackBlock(),
   ]
 
   override canParse(html: string) {

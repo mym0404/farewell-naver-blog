@@ -1,20 +1,7 @@
-import { parseHtmlTable } from "../../parser/TableParser.js"
 import type { OutputOption } from "../../../shared/Types.js"
 import { LeafBlock } from "../BaseBlock.js"
 import type { ParserBlockContext } from "../ParserNode.js"
-
-const getComponentHtml = ({
-  $,
-  $node,
-}: {
-  $: Parameters<LeafBlock["convert"]>[0]["$"]
-  $node: Parameters<LeafBlock["convert"]>[0]["$node"]
-}) => {
-  const clone = $node.clone()
-  clone.find("script.__se_module_data").remove()
-
-  return $.html(clone).trim()
-}
+import { parseHtmlTable } from "../../parser/TableParser.js"
 
 export class NaverSe4TableBlock extends LeafBlock {
   override readonly outputId = "table"
@@ -22,7 +9,7 @@ export class NaverSe4TableBlock extends LeafBlock {
     {
       id: "gfm-or-html",
       label: "GFM 우선",
-      description: "단순 표는 GFM, 복잡한 표는 HTML fallback으로 처리합니다.",
+      description: "단순 표는 GFM, 복잡한 표는 HTML fragment로 처리합니다.",
       preview: {
         type: "table",
         complex: false,
@@ -58,12 +45,7 @@ export class NaverSe4TableBlock extends LeafBlock {
     const table = $node.find("table").first()
 
     if (table.length === 0) {
-      return {
-        status: "fallback" as const,
-        html: getComponentHtml({ $, $node }),
-        reason: "table-fallback",
-        warnings: ["표 블록을 표로 해석하지 못해 원본 HTML로 보존했습니다."],
-      }
+      throw new Error("SE4 table block parsing failed.")
     }
 
     const parsedTable = parseHtmlTable({ $, table })

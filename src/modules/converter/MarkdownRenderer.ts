@@ -10,7 +10,6 @@ import type {
   FrontmatterFieldName,
   ImageData,
   UnknownRecord,
-  ParsedPostFallbackHtmlBodyNode,
   ParsedPost,
   PostSummary,
   AstBlock,
@@ -33,10 +32,7 @@ import {
 } from "../../shared/BlockMarkdown.js"
 import { getFrontmatterExportKey } from "../../shared/ExportOptions.js"
 import { unique } from "../../shared/Utils.js"
-import {
-  getFallbackHtmlBodyNodeWarnings,
-  getParsedPostBodyNodes,
-} from "../blocks/BodyNodeUtils.js"
+import { getParsedPostBodyNodes } from "../blocks/BodyNodeUtils.js"
 
 const buildFrontmatter = ({
   fields,
@@ -99,10 +95,7 @@ export const renderMarkdownPost = async ({
   resolveLinkUrl?: (url: string) => string
 }) => {
   const bodyNodes = getParsedPostBodyNodes(parsedPost)
-  const fallbackHtmlWarnings = bodyNodes.flatMap((node) =>
-    node.kind === "fallbackHtml" ? getFallbackHtmlBodyNodeWarnings(node) : [],
-  )
-  const initialWarnings = unique([...parsedPost.warnings, ...reviewedWarnings, ...fallbackHtmlWarnings])
+  const initialWarnings = unique([...parsedPost.warnings, ...reviewedWarnings])
   const warnings: string[] = [...initialWarnings]
   const diagnostics: RenderDiagnostic[] = initialWarnings.map((warning) => ({
     level: "warning",
@@ -236,8 +229,6 @@ export const renderMarkdownPost = async ({
     })
   }
 
-  const renderFallbackHtmlBodyNode = (node: ParsedPostFallbackHtmlBodyNode) => node.html.trim()
-
   const renderVideoBlock = async (block: Extract<AstBlock, { type: "video" }>) => {
     renderedVideos.push({
       title: block.video.title,
@@ -273,11 +264,6 @@ export const renderMarkdownPost = async ({
   }
 
   for (const bodyNode of bodyNodes) {
-    if (bodyNode.kind === "fallbackHtml") {
-      sections.push(renderFallbackHtmlBodyNode(bodyNode))
-      continue
-    }
-
     const block = bodyNode.block
 
     if (block.type === "paragraph") {

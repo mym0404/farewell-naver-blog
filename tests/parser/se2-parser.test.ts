@@ -378,23 +378,15 @@ console.log(oldSchool)
     expect(parsed.blocks).toEqual([{ type: "paragraph", text: "**Fallback** html" }])
   })
 
-  it("keeps unsupported html as ordered fallback body nodes", () => {
-    const parsed = parseSe2Fixture("<section></section>")
-
-    expect(parsed.blocks).toEqual([])
-    expect(parsed.body).toEqual([
-      {
-        kind: "fallbackHtml",
-        html: "<section></section>",
-        reason: "se2:section",
-        warnings: ["SE2 블록을 구조화하지 못해 원본 HTML로 보존했습니다: <section>"],
-      },
-    ])
-    expect(parsed.warnings).toContain("SE2 블록을 구조화하지 못해 원본 HTML로 보존했습니다: <section>")
+  it("throws when unsupported html cannot be parsed", () => {
+    expect(() => parseSe2Fixture("<section></section>")).toThrow(
+      "파싱 가능한 naver-se2 block이 없습니다: section",
+    )
   })
 
-  it("keeps inline gif video fallback as ordered fallback html", () => {
-    const parsed = parseSe2Fixture(`
+  it("throws when inline gif video blocks cannot be parsed", () => {
+    expect(() =>
+      parseSe2Fixture(`
       <p>
         <video
           src="https://mblogvideo-phinf.pstatic.net/sample.gif?type=mp4w800"
@@ -402,16 +394,8 @@ console.log(oldSchool)
           data-gif-url="https://mblogthumb-phinf.pstatic.net/sample.gif?type=w210"
         ></video>&nbsp;
       </p>
-    `)
-
-    expect(parsed.blocks).toEqual([])
-    expect(parsed.body?.[0]).toMatchObject({
-      kind: "fallbackHtml",
-      reason: "se2:inline-gif-video",
-      warnings: ["SE2 GIF video 블록을 구조화하지 못해 원본 HTML로 보존했습니다."],
-    })
-    expect(parsed.body?.[0]?.kind === "fallbackHtml" ? parsed.body[0].html : "").toContain("<video")
-    expect(parsed.warnings).toEqual(["SE2 GIF video 블록을 구조화하지 못해 원본 HTML로 보존했습니다."])
+    `),
+    ).toThrow("SE2 inline GIF video block parsing failed.")
   })
 
   it("skips empty styled spacer paragraphs instead of keeping rawHtml", () => {

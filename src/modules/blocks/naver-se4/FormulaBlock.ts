@@ -62,7 +62,7 @@ export class NaverSe4FormulaBlock extends LeafBlock {
 
   override convert({ $node, moduleData }: Parameters<LeafBlock["convert"]>[0]) {
     if (!moduleData) {
-      return { status: "skip" as const }
+      throw new Error("SE4 formula block metadata is missing.")
     }
 
     const data = (moduleData.data ?? {}) as UnknownRecord & {
@@ -102,10 +102,7 @@ export class NaverSe4FormulaBlock extends LeafBlock {
       .sort((left, right) => right.length - left.length)[0]
 
     if (!formula) {
-      return {
-        status: "skip" as const,
-        warnings: ["수식 블록을 해석하지 못해 건너뛰었습니다."],
-      }
+      throw new Error("SE4 formula block parsing failed.")
     }
 
     return {

@@ -44,11 +44,13 @@ export class NaverSe4ImageGroupBlock extends LeafBlock {
       .map((node): ImageData | null => parseImageLink($node.find(node)))
       .filter((image): image is ImageData => image !== null)
 
-    return images.length > 0
-      ? {
-          status: "handled",
-          blocks: [{ type: "imageGroup", images }],
-        }
-      : { status: "skip" }
+    if (images.length === 0) {
+      throw new Error("SE4 image group block parsing failed.")
+    }
+
+    return {
+      status: "handled",
+      blocks: [{ type: "imageGroup", images }],
+    }
   }
 }

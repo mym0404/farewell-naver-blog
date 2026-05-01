@@ -37,12 +37,6 @@ export type ParserBlockResult =
       warnings?: string[]
     }
   | {
-      status: "fallback"
-      html: string
-      reason: string
-      warnings?: string[]
-    }
-  | {
       status: "traverse"
       nodes?: AnyNode[]
       warnings?: string[]

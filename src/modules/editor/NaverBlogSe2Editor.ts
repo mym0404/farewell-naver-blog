@@ -4,10 +4,9 @@ import { NaverSe2BookWidgetBlock } from "../blocks/naver-se2/BookWidgetBlock.js"
 import { NaverSe2CodeBlock } from "../blocks/naver-se2/CodeBlock.js"
 import { NaverSe2ContainerBlock } from "../blocks/naver-se2/ContainerBlock.js"
 import { NaverSe2DividerBlock } from "../blocks/naver-se2/DividerBlock.js"
-import { NaverSe2FallbackBlock } from "../blocks/naver-se2/FallbackBlock.js"
 import { NaverSe2HeadingBlock } from "../blocks/naver-se2/HeadingBlock.js"
 import { NaverSe2ImageBlock } from "../blocks/naver-se2/ImageBlock.js"
-import { NaverSe2InlineGifVideoFallbackBlock } from "../blocks/naver-se2/InlineGifVideoFallbackBlock.js"
+import { NaverSe2InlineGifVideoBlock } from "../blocks/naver-se2/InlineGifVideoBlock.js"
 import { NaverSe2LineBreakBlock } from "../blocks/naver-se2/LineBreakBlock.js"
 import { NaverSe2QuoteBlock } from "../blocks/naver-se2/QuoteBlock.js"
 import { NaverSe2SpacerBlock } from "../blocks/naver-se2/SpacerBlock.js"
@@ -31,11 +30,10 @@ export class NaverBlogSE2Editor extends BaseEditor {
     new NaverSe2QuoteBlock(),
     new NaverSe2HeadingBlock(),
     new NaverSe2CodeBlock(),
-    new NaverSe2InlineGifVideoFallbackBlock(),
+    new NaverSe2InlineGifVideoBlock(),
     new NaverSe2ImageBlock(),
     new NaverSe2SpacerBlock(),
     new NaverSe2TextElementBlock(),
-    new NaverSe2FallbackBlock(),
   ]
 
   override canParse(html: string) {

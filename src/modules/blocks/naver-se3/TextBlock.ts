@@ -25,6 +25,10 @@ export class NaverSe3TextBlock extends LeafBlock {
   override convert({ $, $node, options }: Parameters<LeafBlock["convert"]>[0]): ParserBlockResult {
     const blocks = parseTextBlocks({ $, $component: $node, options })
 
-    return blocks.length > 0 ? { status: "handled", blocks } : { status: "skip" }
+    if (blocks.length === 0) {
+      throw new Error("SE3 text block parsing failed.")
+    }
+
+    return { status: "handled", blocks }
   }
 }

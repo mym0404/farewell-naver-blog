@@ -10,7 +10,7 @@ export class NaverSe3TableBlock extends LeafBlock {
     {
       id: "gfm-or-html",
       label: "GFM 우선",
-      description: "단순 표는 GFM, 복잡한 표는 HTML fallback으로 처리합니다.",
+      description: "단순 표는 GFM, 복잡한 표는 HTML fragment로 처리합니다.",
       preview: {
         type: "table",
         complex: false,

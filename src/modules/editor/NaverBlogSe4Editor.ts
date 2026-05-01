@@ -6,7 +6,6 @@ import { unique } from "@shared/Utils.js"
 import { NaverSe4CodeBlock } from "../blocks/naver-se4/CodeBlock.js"
 import { NaverSe4DividerBlock } from "../blocks/naver-se4/DividerBlock.js"
 import { NaverSe4DocumentTitleBlock } from "../blocks/naver-se4/DocumentTitleBlock.js"
-import { NaverSe4FallbackBlock } from "../blocks/naver-se4/FallbackBlock.js"
 import { NaverSe4FormulaBlock } from "../blocks/naver-se4/FormulaBlock.js"
 import { NaverSe4HeadingBlock } from "../blocks/naver-se4/HeadingBlock.js"
 import { NaverSe4ImageBlock } from "../blocks/naver-se4/ImageBlock.js"
@@ -71,7 +70,6 @@ export class NaverBlogSE4Editor extends BaseEditor {
     new NaverSe4QuoteBlock(),
     new NaverSe4TextBlock(),
     new NaverSe4MaterialBlock(),
-    new NaverSe4FallbackBlock(),
   ]
 
   override canParse(html: string) {

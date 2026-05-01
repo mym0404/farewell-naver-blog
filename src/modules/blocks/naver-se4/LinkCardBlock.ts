@@ -32,7 +32,7 @@ export class NaverSe4LinkCardBlock extends LeafBlock {
     const url = infoNode.attr("href") ?? $node.find(".se-oglink-thumbnail").attr("href") ?? ""
 
     if (!url) {
-      return { status: "skip" }
+      throw new Error("SE4 link card block parsing failed.")
     }
 
     return {

@@ -30,11 +30,13 @@ export class NaverSe2QuoteBlock extends LeafBlock {
       resolveLinkUrl: options.resolveLinkUrl,
     })
 
-    return markdown
-      ? {
-          status: "handled",
-          blocks: [{ type: "quote", text: markdown }],
-        }
-      : { status: "skip" }
+    if (!markdown) {
+      throw new Error("SE2 quote block parsing failed.")
+    }
+
+    return {
+      status: "handled",
+      blocks: [{ type: "quote", text: markdown }],
+    }
   }
 }

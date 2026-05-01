@@ -16,6 +16,17 @@ describe("sample fixtures", () => {
   describe.each(samples)("$id", (sample) => {
     it("renders the expected markdown", async () => {
       const fixture = await loadSampleFixture(sample)
+
+      if (fixture.expectedError) {
+        await expect(
+          renderSampleFixture({
+            sample,
+            html: fixture.html,
+          }),
+        ).rejects.toThrow(fixture.expectedError)
+        return
+      }
+
       const rendered = await renderSampleFixture({
         sample,
         html: fixture.html,

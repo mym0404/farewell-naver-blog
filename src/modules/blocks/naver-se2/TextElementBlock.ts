@@ -33,7 +33,7 @@ export class NaverSe2TextElementBlock extends LeafBlock {
 
   override convert({ $, $node, node, options }: Parameters<LeafBlock["convert"]>[0]): ParserBlockResult {
     if (node.type !== "tag") {
-      return { status: "skip" }
+      throw new Error("SE2 text element block received a non-tag node.")
     }
 
     const html = $.html($node) ?? ""
@@ -52,12 +52,14 @@ export class NaverSe2TextElementBlock extends LeafBlock {
 
     const text = compactText($node.text())
 
-    return text
-      ? {
-          status: "handled",
-          blocks: [{ type: "paragraph", text }],
-          warnings: [`SE2 블록을 구조화하지 못해 텍스트로 축약했습니다: <${node.tagName.toLowerCase()}>`],
-        }
-      : { status: "skip" }
+    if (!text) {
+      throw new Error(`SE2 text element block parsing failed: <${node.tagName.toLowerCase()}>`)
+    }
+
+    return {
+      status: "handled",
+      blocks: [{ type: "paragraph", text }],
+      warnings: [`SE2 블록을 구조화하지 못해 텍스트로 축약했습니다: <${node.tagName.toLowerCase()}>`],
+    }
   }
 }

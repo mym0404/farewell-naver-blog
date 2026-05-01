@@ -329,14 +329,7 @@ export type ParsedPostStructuredBodyNode = {
   block: AstBlock
 }
 
-export type ParsedPostFallbackHtmlBodyNode = {
-  kind: "fallbackHtml"
-  html: string
-  reason: string
-  warnings: string[]
-}
-
-export type ParsedPostBodyNode = ParsedPostStructuredBodyNode | ParsedPostFallbackHtmlBodyNode
+export type ParsedPostBodyNode = ParsedPostStructuredBodyNode
 
 export type BlockType = AstBlock["type"]
 

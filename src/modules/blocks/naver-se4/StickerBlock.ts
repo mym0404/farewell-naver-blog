@@ -18,7 +18,7 @@ export class NaverSe4StickerBlock extends LeafBlock {
       ?.trim()
 
     if (!sourceUrl) {
-      return { status: "skip" }
+      throw new Error("SE4 sticker block parsing failed.")
     }
 
     return {

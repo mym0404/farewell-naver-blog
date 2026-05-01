@@ -1,6 +1,6 @@
 import { LeafBlock } from "../BaseBlock.js"
 import type { ParserBlockContext, ParserBlockResult } from "../ParserNode.js"
-import { isSpacerBlock } from "./ContainerUtils.js"
+import { isSpacerBlock } from "./ContainerBlock.js"
 
 export class NaverSe2SpacerBlock extends LeafBlock {
   override match({ node, $node }: ParserBlockContext) {

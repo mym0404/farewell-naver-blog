@@ -13,6 +13,10 @@ export class NaverSe2BookWidgetBlock extends LeafBlock {
       resolveLinkUrl: options.resolveLinkUrl,
     })
 
-    return blocks ? { status: "handled", blocks } : { status: "skip" }
+    if (!blocks) {
+      throw new Error("SE2 book widget block parsing failed.")
+    }
+
+    return { status: "handled", blocks }
   }
 }

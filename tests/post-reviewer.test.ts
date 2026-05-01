@@ -17,7 +17,7 @@ const createParsedPost = (overrides: Partial<ParsedPost> = {}): ParsedPost => {
 }
 
 describe("reviewParsedPost", () => {
-  it("keeps parser warnings and adds fallback html diagnostics", () => {
+  it("keeps parser warnings", () => {
     const reviewed = reviewParsedPost(
       createParsedPost({
         warnings: ["parser warning"],
@@ -25,22 +25,12 @@ describe("reviewParsedPost", () => {
           { type: "paragraph", text: "body" },
         ],
         body: [
-          {
-            kind: "fallbackHtml",
-            html: "<div>raw</div>",
-            reason: "fallback",
-            warnings: [],
-          },
           { kind: "block", block: { type: "paragraph", text: "body" } },
         ],
       }),
     )
 
-    expect(reviewed.warnings).toEqual([
-      "parser warning",
-      "fallback HTML 블록을 원본 HTML로 보존했습니다: fallback",
-      "fallback HTML 블록 1개가 포함됩니다.",
-    ])
+    expect(reviewed.warnings).toEqual(["parser warning"])
   })
 
   it("warns when the parsed body is empty", () => {

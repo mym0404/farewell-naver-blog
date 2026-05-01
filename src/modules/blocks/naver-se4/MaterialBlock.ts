@@ -26,10 +26,7 @@ export class NaverSe4MaterialBlock extends LeafBlock {
     const url = materialLink.attr("href") ?? (typeof linkData?.link === "string" ? linkData.link : "")
 
     if (!url) {
-      return {
-        status: "skip" as const,
-        warnings: ["material 블록을 해석하지 못해 건너뛰었습니다."],
-      }
+      throw new Error("SE4 material block parsing failed.")
     }
 
     const description = materialLink

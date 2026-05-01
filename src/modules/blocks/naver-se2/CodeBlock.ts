@@ -35,11 +35,13 @@ export class NaverSe2CodeBlock extends LeafBlock {
   override convert({ $node }: Parameters<LeafBlock["convert"]>[0]): ParserBlockResult {
     const code = $node.text().trimEnd()
 
-    return code
-      ? {
-          status: "handled",
-          blocks: [{ type: "code", language: null, code }],
-        }
-      : { status: "skip" }
+    if (!code) {
+      throw new Error("SE2 code block parsing failed.")
+    }
+
+    return {
+      status: "handled",
+      blocks: [{ type: "code", language: null, code }],
+    }
   }
 }
