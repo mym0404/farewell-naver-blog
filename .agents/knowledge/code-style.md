@@ -25,7 +25,8 @@
 - Keep `createX` helpers for pure value construction, binding construction, or test/harness fixtures.
 - Parser block implementations should extend `ContainerBlock` or `LeafBlock` and return literal parser results with `as const` when inference would widen status or block types.
 - Keep editor and parser block relationships as direct `BaseBlock` instances inside each editor class.
-- Keep one-block parser helper logic inside the concrete parser block file when it improves locality; split helpers only when reuse or readability clearly benefits.
+- Keep small helpers that only support one concrete parser block's `match` or `convert` logic inside that parser block file.
+- Split parser helper files only when at least two parser blocks reuse them or when the parsing logic is large enough that a separate file is easier to read.
 
 ## Date And Time
 - Store manifest, job, and export timestamps as ISO strings from `new Date().toISOString()`.

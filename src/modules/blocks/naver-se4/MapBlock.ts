@@ -2,7 +2,9 @@ import { compactText } from "../../../shared/Utils.js"
 import { LeafBlock } from "../BaseBlock.js"
 import type { ParserBlockContext, ParserBlockResult } from "../ParserNode.js"
 import { parseJsonAttribute } from "./JsonAttribute.js"
-import { buildNaverMapSearchUrl } from "./MapUrl.js"
+
+const buildNaverMapSearchUrl = (query: string) =>
+  `https://map.naver.com/p/search/${encodeURIComponent(query)}`
 
 export class NaverSe4MapBlock extends LeafBlock {
   override match({ $node, moduleType }: ParserBlockContext) {

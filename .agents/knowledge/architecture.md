@@ -37,8 +37,8 @@
 - Output option metadata stays on concrete parser block classes, even when labels or defaults are duplicated across SE2, SE3, and SE4 blocks. `src/shared/BlockRegistry.ts` only resolves selection values from parser-provided options and stored export options.
 - Server bootstrap includes `BaseBlog`-derived block output definitions for the UI. Shared export option code receives those definitions from server/exporter/CLI callers instead of importing blog or editor classes.
 - Parser block base classes are in `src/modules/blocks/BaseBlock.ts`; parser context/result types are in `src/modules/blocks/ParserNode.ts`.
-- Shared helpers live in `src/modules/blocks/common` only when reused across multiple parser blocks.
-- Helpers that serve one concrete parser block can stay inside that block file, even when the file becomes denser than a one-class wrapper.
+- Small helpers that serve one concrete parser block stay inside that block file.
+- Parser helper files are for cross-block reuse or large parsing routines; `src/modules/blocks/common` is for helpers reused across parser families.
 - SE2 blocks live under `src/modules/blocks/naver-se2`.
 - SE3 blocks live under `src/modules/blocks/naver-se3`.
 - SE4 blocks live under `src/modules/blocks/naver-se4`.
