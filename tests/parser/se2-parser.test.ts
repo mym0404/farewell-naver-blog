@@ -92,7 +92,6 @@ console.log(oldSchool)
         ),
       },
     ])
-    expect(parsed.warnings).toEqual([])
   })
 
   it("ignores Color Scripter footer markup when extracting code blocks", () => {
@@ -136,7 +135,6 @@ console.log(oldSchool)
         code: ["typedef struct _node", "{"].join("\n"),
       },
     ])
-    expect(parsed.warnings).toEqual([])
   })
 
   it("parses mobile Color Scripter markup that stores styles in _foo", () => {
@@ -162,7 +160,67 @@ console.log(oldSchool)
         code: ["void ListInit(List * plist);", "int LCount(List *plist);"].join("\n"),
       },
     ])
-    expect(parsed.warnings).toEqual([])
+  })
+
+  it("parses searched Color Scripter tables without line number columns", () => {
+    const parsed = parseSe2Fixture(`
+      <table class="colorscripter-code-table" cellspacing="0" cellpadding="0">
+        <tr>
+          <td style="padding:6px 0">
+            <div _foo="margin:0; padding:0; color:#010101">
+              <div _foo="padding:0 6px; white-space:pre"><span _foo="color:#a71d5d">class</span>&nbsp;Person</div>
+              <div _foo="padding:0 6px; white-space:pre">var&nbsp;person&nbsp;<span _foo="color:#a71d5d">=</span>&nbsp;Person()</div>
+            </div>
+          </td>
+          <td><a href="http://colorscripter.com/info#e" class="con_link">cs</a></td>
+        </tr>
+      </table>
+    `)
+
+    expect(parsed.blocks).toEqual([
+      {
+        type: "code",
+        language: null,
+        code: ["class Person", "var person = Person()"].join("\n"),
+      },
+    ])
+  })
+
+  it("parses searched Color Scripter div wrappers", () => {
+    const parsed = parseSe2Fixture(`
+      <div class="colorscripter-code-table" style="margin:0">
+        <div style="padding:0 6px; white-space:pre">#include&nbsp;&lt;stdio.h&gt;</div>
+        <div style="padding:0 6px; white-space:pre">printf(<span>"hello"</span>);</div>
+        <a href="http://colorscripter.com/info#e" class="con_link">cs</a>
+      </div>
+    `)
+
+    expect(parsed.blocks).toEqual([
+      {
+        type: "code",
+        language: null,
+        code: ['#include <stdio.h>', 'printf("hello");'].join("\n"),
+      },
+    ])
+  })
+
+  it("skips empty Color Scripter tables from live failure samples", () => {
+    const parsed = parseSe2Fixture(`
+      <p>before</p>
+      <table class="colorscripter-code-table" cellspacing="0" cellpadding="0">
+        <tr><td style="padding:6px 0"></td></tr>
+      </table>
+      <table class="colorscripter-code-table" cellspacing="0" cellpadding="0"></table>
+      <table class="colorscripter-code-table" cellspacing="0" cellpadding="0">
+        <tr><td style="padding:6px"></td><td style="padding:6px 0"></td></tr>
+      </table>
+      <p>after</p>
+    `)
+
+    expect(parsed.blocks).toEqual([
+      { type: "paragraph", text: "before" },
+      { type: "paragraph", text: "after" },
+    ])
   })
 
   it("parses hr tags into divider blocks", () => {
@@ -183,7 +241,6 @@ console.log(oldSchool)
     const parsed = parseSe2Fixture("<br /><br />")
 
     expect(parsed.blocks).toEqual([])
-    expect(parsed.warnings).toEqual([])
   })
 
   it("parses table tags into table blocks", () => {
@@ -381,9 +438,8 @@ console.log(oldSchool)
     )
   })
 
-  it("throws when inline gif video blocks cannot be parsed", () => {
-    expect(() =>
-      parseSe2Fixture(`
+  it("parses inline gif video blocks into image blocks", () => {
+    const parsed = parseSe2Fixture(`
       <p>
         <video
           src="https://mblogvideo-phinf.pstatic.net/sample.gif?type=mp4w800"
@@ -391,8 +447,20 @@ console.log(oldSchool)
           data-gif-url="https://mblogthumb-phinf.pstatic.net/sample.gif?type=w210"
         ></video>&nbsp;
       </p>
-    `),
-    ).toThrow("SE2 inline GIF video block parsing failed.")
+    `)
+
+    expect(parsed.blocks).toEqual([
+      {
+        type: "image",
+        image: {
+          sourceUrl: "https://mblogthumb-phinf.pstatic.net/sample.gif?type=w210",
+          originalSourceUrl: "https://mblogvideo-phinf.pstatic.net/sample.gif?type=mp4w800",
+          alt: "",
+          caption: null,
+          mediaKind: "image",
+        },
+      },
+    ])
   })
 
   it("skips empty styled spacer paragraphs instead of keeping rawHtml", () => {
@@ -403,7 +471,6 @@ console.log(oldSchool)
     `)
 
     expect(parsed.blocks).toEqual([])
-    expect(parsed.warnings).toEqual([])
   })
 
   it("skips empty inline spacer wrappers instead of keeping rawHtml", () => {
@@ -414,7 +481,6 @@ console.log(oldSchool)
     `)
 
     expect(parsed.blocks).toEqual([])
-    expect(parsed.warnings).toEqual([])
   })
 
   it("flattens single-column layout tables into paragraph blocks", () => {
@@ -443,6 +509,5 @@ console.log(oldSchool)
       { type: "paragraph", text: "첫 문단" },
       { type: "paragraph", text: "둘째 문단" },
     ])
-    expect(parsed.warnings).toEqual([])
   })
 })

@@ -23,8 +23,8 @@ export class NaverBlogSE2Editor extends BaseEditor {
   protected override readonly supportedBlocks = [
     new NaverSe2TextNodeBlock(),
     new NaverSe2BookWidgetBlock(),
-    new NaverSe2ContainerBlock(),
     new NaverSe2TableBlock(),
+    new NaverSe2ContainerBlock(),
     new NaverSe2DividerBlock(),
     new NaverSe2LineBreakBlock(),
     new NaverSe2QuoteBlock(),
@@ -42,7 +42,7 @@ export class NaverBlogSE2Editor extends BaseEditor {
 
   override parse({ $, tags, options }: BaseEditorParseInput): ParsedPost {
     const container = $("#viewTypeSelector").first()
-    const { blocks, body, warnings } = this.runBlocks({
+    const { blocks, body } = this.runBlocks({
       $,
       nodes: container.contents().toArray(),
       tags,
@@ -57,7 +57,6 @@ export class NaverBlogSE2Editor extends BaseEditor {
       tags: unique(tags),
       body,
       blocks,
-      warnings: unique(warnings),
       videos,
     } satisfies ParsedPost
   }

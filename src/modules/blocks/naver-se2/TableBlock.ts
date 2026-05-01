@@ -19,13 +19,7 @@ const parseColorScripterCodeBlock = ({
     return null
   }
 
-  const codeCell = element.find("tr").first().children("td").eq(1)
-
-  if (codeCell.length === 0) {
-    return null
-  }
-
-  const lineNodes = codeCell
+  const lineNodes = element
     .find('div[style*="white-space:pre"], div[_foo*="white-space:pre"], pre')
     .toArray()
   const code = lineNodes
@@ -80,8 +74,11 @@ export class NaverSe2TableBlock extends LeafBlock {
     },
   ] satisfies OutputOption<"table">[]
 
-  override match({ node }: ParserBlockContext) {
-    return node.type === "tag" && node.tagName.toLowerCase() === "table"
+  override match({ node, $node }: ParserBlockContext) {
+    return (
+      node.type === "tag" &&
+      (node.tagName.toLowerCase() === "table" || $node.hasClass("colorscripter-code-table"))
+    )
   }
 
   override convert({ $, $node, options }: Parameters<LeafBlock["convert"]>[0]): ParserBlockResult {
@@ -98,7 +95,14 @@ export class NaverSe2TableBlock extends LeafBlock {
     }
 
     if ($node.hasClass("colorscripter-code-table") && compactText($node.text()) === "") {
-      throw new Error("SE2 Color Scripter table parsing failed.")
+      return {
+        status: "handled",
+        blocks: [],
+      }
+    }
+
+    if (!$node.is("table")) {
+      return { status: "skip" }
     }
 
     const parsedTable = parseHtmlTable({ $, table: $node })

@@ -6,7 +6,6 @@ import { renderMarkdownPost } from "../../../src/modules/converter/MarkdownRende
 import { NaverBlogFetcher } from "../../../src/modules/fetcher/NaverBlogFetcher.js"
 import type { NaverBlogFetcherCache } from "../../../src/modules/fetcher/NaverBlogFetcher.js"
 import { parsePostHtml } from "../../../src/modules/parser/PostParser.js"
-import { reviewParsedPost } from "../../../src/modules/reviewer/PostReviewer.js"
 import { defaultExportOptions } from "../../../src/shared/ExportOptions.js"
 import { ensureHarnessDir, pathExists, readUtf8, repoPath, writeUtf8 } from "./paths.js"
 
@@ -48,6 +47,9 @@ const getSampleExpectedMarkdownPath = (sampleId: string) =>
 
 const getSampleExpectedErrorPath = (sampleId: string) =>
   path.join(getSampleFixtureDir(sampleId), "expected-error.md")
+
+const getSamplePostHtmlPath = (sampleId: string) =>
+  path.join(getSampleFixtureDir(sampleId), "post.html")
 
 const assertString = (value: unknown, key: string) => {
   if (typeof value !== "string") {
@@ -194,7 +196,6 @@ export const renderSampleFixture = async ({
     sourceUrl: sample.post.source,
     options,
   })
-  const review = reviewParsedPost(parsedPost)
   const rendered = await renderMarkdownPost({
     post: {
       blogId: sample.blogId,
@@ -218,7 +219,6 @@ export const renderSampleFixture = async ({
     },
     parsedPost,
     markdownFilePath,
-    reviewedWarnings: review.warnings,
     options,
     resolveAsset: async ({
       kind,
@@ -234,17 +234,18 @@ export const renderSampleFixture = async ({
   })
   return {
     parsedPost,
-    reviewWarnings: review.warnings,
     rendered,
     normalizedMarkdown: normalizeMarkdownFixture(rendered.markdown),
   }
 }
 
 export const loadSampleFixture = async (sample: SampleFixtureEntry) => ({
-  html: await new NaverBlogFetcher({
-    blogId: sample.blogId,
-    cache: createSamplePostHtmlCache(await ensureHarnessDir("sample-post-html-cache")),
-  }).fetchPostHtml(sample.logNo),
+  html: (await pathExists(getSamplePostHtmlPath(sample.id)))
+    ? await readUtf8(getSamplePostHtmlPath(sample.id))
+    : await new NaverBlogFetcher({
+        blogId: sample.blogId,
+        cache: createSamplePostHtmlCache(await ensureHarnessDir("sample-post-html-cache")),
+      }).fetchPostHtml(sample.logNo),
   expectedMarkdown: sample.expectedError
     ? undefined
     : normalizeMarkdownFixture(await readUtf8(getSampleExpectedMarkdownPath(sample.id))),

@@ -150,9 +150,6 @@ describe("exportSinglePost", () => {
       expect(diagnostics.post).toEqual(post)
       expect(diagnostics.markdownFilePath).toBe(expectedMarkdownFilePath)
       expect(diagnostics.blockTypes).toEqual(["paragraph", "image"])
-      expect(diagnostics.parserWarnings).toEqual([])
-      expect(diagnostics.reviewerWarnings).toEqual([])
-      expect(diagnostics.renderWarnings).toEqual([])
       expect(diagnostics.assetPaths).toHaveLength(1)
       expect(diagnostics.assetPaths[0]).toBe(`../../../public/${expectedHash}.png`)
       expect(diagnostics.markdown).toContain("title: Single post")
@@ -168,7 +165,7 @@ describe("exportSinglePost", () => {
     }
   })
 
-  it("throws when unsupported representative cases cannot be parsed", async () => {
+  it("writes inline GIF video blocks as markdown images", async () => {
     const outputDir = await mkdtemp(path.join(tmpdir(), "single-post-export-"))
     const options = defaultExportOptions()
 
@@ -198,20 +195,22 @@ describe("exportSinglePost", () => {
     `
 
     try {
-      await expect(
-        exportSinglePost({
-          blogId: inputBlogUrl,
-          logNo,
-          outputDir,
-          options,
-          createFetcher: ({ blogId: normalizedBlogId }) =>
-            createFetcher({
-              blogId: normalizedBlogId,
-              posts: [post],
-              html,
-            }),
-        }),
-      ).rejects.toThrow("SE2 inline GIF video block parsing failed.")
+      const diagnostics = await exportSinglePost({
+        blogId: inputBlogUrl,
+        logNo,
+        outputDir,
+        options,
+        createFetcher: ({ blogId: normalizedBlogId }) =>
+          createFetcher({
+            blogId: normalizedBlogId,
+            posts: [post],
+            html,
+          }),
+      })
+
+      expect(diagnostics.blockTypes).toEqual(["paragraph", "image"])
+      expect(diagnostics.markdown).toContain("인트로입니다.")
+      expect(diagnostics.markdown).toContain(`![](${diagnostics.assetPaths[0]})`)
     } finally {
       await rm(outputDir, { recursive: true, force: true })
     }
