@@ -28,7 +28,7 @@
 - commit, push, PR 생성은 사용자가 명시적으로 요청한 경우에만 수행한다.
 
 ## Validation Routes
-- `pnpm check:local`: 저장소 파일 변경 뒤 기본 기준선이다. `typecheck`, offline tests를 실행한다.
+- `pnpm check:local`: 저장소 파일 변경 뒤 기본 기준선이다. `typecheck`, `test:offline`을 실행한다. 샘플 fixture 테스트는 live Naver HTML을 캐시하며 필요 시 네트워크를 쓴다.
 - `pnpm check:unused`: source, test, script 코드의 dead code 기준선이다. `check:local`에는 포함되지 않는다.
 - `pnpm check:full`: `check:local`에 Playwright smoke UI를 더한 넓은 로컬 회귀다.
 - `pnpm smoke:ui`: mock 기반 UI 흐름과 복구 경로를 확인한다. 코어 사용자 흐름이나 상태 전이를 바꾼 뒤 실행한다.
@@ -42,4 +42,6 @@
 - Sample fixtures: `.agents/knowledge/fixtures.md`
 - Upload and resume lifecycle: `.agents/knowledge/upload.md`
 - UI design system: `.agents/knowledge/DESIGN.md`
+- Browser/manual UI verification: `.agents/knowledge/browser-verification.md`
+- Single post verification: `.agents/knowledge/single-post-verification.md`
 - Code style and local workflow: `.agents/knowledge/code-style.md`
