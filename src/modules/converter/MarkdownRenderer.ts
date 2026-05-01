@@ -15,6 +15,7 @@ import type {
   AstBlock,
 } from "../../shared/Types.js"
 import { resolveBlockOutputSelection } from "../../shared/BlockRegistry.js"
+import { getMarkdownLinkStyleFromSelection } from "../../shared/BlockOutputOptions.js"
 import {
   buildDiagnosticsSection,
   createLinkFormatter,
@@ -103,12 +104,19 @@ export const renderMarkdownPost = async ({
   }))
   const assetRecords: AssetRecord[] = []
   const sections: string[] = []
-  const linkFormatter = createLinkFormatter({
-    style: options.markdown.linkStyle,
+  const inlineLinkFormatter = createLinkFormatter({
+    style: "inlined",
     resolveLinkUrl,
   })
+  const referenceLinkFormatter = createLinkFormatter({
+    style: "referenced",
+    resolveLinkUrl,
+  })
+  const getLinkFormatter = (selection?: BlockOutputSelection) =>
+    getMarkdownLinkStyleFromSelection(selection) === "referenced"
+      ? referenceLinkFormatter
+      : inlineLinkFormatter
   const htmlConversionOptions = getHtmlConversionOptions({
-    linkStyle: options.markdown.linkStyle,
     dividerSelection: resolveBlockOutputSelection({
       blockType: "divider",
       blockOutputs: options.blockOutputs,
@@ -224,7 +232,7 @@ export const renderMarkdownPost = async ({
       },
       assetPath,
       selection,
-      formatLink: linkFormatter.formatLink,
+      formatLink: inlineLinkFormatter.formatLink,
       includeImageCaptions: options.assets.includeImageCaptions,
     })
   }
@@ -236,7 +244,7 @@ export const renderMarkdownPost = async ({
       thumbnail: block.video.thumbnailUrl,
     })
 
-    return linkFormatter.formatLink({
+    return inlineLinkFormatter.formatLink({
       label: block.video.title || block.video.sourceUrl,
       url: block.video.sourceUrl,
     })
@@ -369,10 +377,14 @@ export const renderMarkdownPost = async ({
     }
 
     if (block.type === "linkCard") {
+      const selection = block.outputSelection ?? resolveBlockOutputSelection({
+        blockType: "linkCard",
+        blockOutputs: options.blockOutputs,
+      })
       sections.push(
         renderLinkCardBlock({
           block,
-          formatLink: linkFormatter.formatLink,
+          formatLink: getLinkFormatter(selection).formatLink,
         }),
       )
       continue
@@ -421,7 +433,7 @@ export const renderMarkdownPost = async ({
 
   const bodySections = sections.filter(Boolean).join("\n\n").trim()
   const diagnosticsSection = buildDiagnosticsSection(diagnostics)
-  const referenceSection = linkFormatter.renderReferenceSection()
+  const referenceSection = referenceLinkFormatter.renderReferenceSection()
   const body = [diagnosticsSection, bodySections, referenceSection].filter(Boolean).join("\n\n")
 
   const markdown = frontmatter

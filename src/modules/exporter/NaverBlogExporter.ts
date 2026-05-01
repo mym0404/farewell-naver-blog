@@ -462,7 +462,6 @@ export class NaverBlogExporter {
             html,
             sourceUrl: post.source,
             options: {
-              markdown: options.markdown,
               blockOutputs: options.blockOutputs,
               resolveLinkUrl,
             },

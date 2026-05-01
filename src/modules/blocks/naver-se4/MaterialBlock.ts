@@ -1,3 +1,4 @@
+import { linkCardOutputOptions } from "../../../shared/BlockOutputOptions.js"
 import type { UnknownRecord } from "../../../shared/Types.js"
 import { compactText, normalizeAssetUrl } from "../../../shared/Utils.js"
 import { LeafBlock } from "../BaseBlock.js"
@@ -16,6 +17,9 @@ const parseJsonAttribute = (value: string | undefined) => {
 }
 
 export class NaverSe4MaterialBlock extends LeafBlock {
+  override readonly outputId = "linkCard"
+  override readonly outputOptions = linkCardOutputOptions
+
   override match({ $node }: ParserBlockContext) {
     return $node.hasClass("se-material")
   }

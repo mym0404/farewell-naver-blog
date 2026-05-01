@@ -6,7 +6,6 @@ import { defaultExportOptions } from "../../src/shared/ExportOptions.js"
 
 const testOptions = defaultExportOptions()
 const parserOptions = {
-  markdown: testOptions.markdown,
   blockOutputs: testOptions.blockOutputs,
 }
 const se3Editor = new NaverBlogSE3Editor()
@@ -238,7 +237,6 @@ console.log(legacy)
         </div>
       `],
         options: {
-          markdown: testOptions.markdown,
           blockOutputs: testOptions.blockOutputs,
         },
       }),

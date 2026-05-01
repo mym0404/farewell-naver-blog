@@ -33,7 +33,8 @@
 - Parser block classes own optional `BaseBlock.outputOptions` arrays. Each option describes the parser block output choice, preview, default marker, and params.
 - `src/shared/Types.ts` `AstBlock` union is the source of truth for block type strings; `BlockType` is derived from `AstBlock["type"]`.
 - `src/modules/blog/BaseBlog.ts` derives selectable output definitions from its editors, and `src/modules/editor/BaseEditor.ts` filters to blocks with at least two output options and keys selections as `editorType:blockId`.
-- `src/modules/editor/BaseEditor.ts` stamps selectable AST blocks with `outputSelectionKey` and `outputSelection`; `src/modules/converter/MarkdownRenderer.ts` uses that per-block selection before renderer defaults.
+- `src/modules/editor/BaseEditor.ts` resolves selectable AST block output choices by `editorType:blockId`; explicit selections are stamped onto AST blocks when render-time metadata is needed.
+- Paragraph link style is not a global Markdown option. Text parser blocks read their editor-specific paragraph output selection before HTML-to-Markdown conversion.
 - Output option metadata stays on concrete parser block classes, even when labels or defaults are duplicated across SE2, SE3, and SE4 blocks. `src/shared/BlockRegistry.ts` only resolves selection values from parser-provided options and stored export options.
 - Server bootstrap includes `BaseBlog`-derived block output definitions for the UI. Shared export option code receives those definitions from server/exporter/CLI callers instead of importing blog or editor classes.
 - Parser block base classes are in `src/modules/blocks/BaseBlock.ts`; parser context/result types are in `src/modules/blocks/ParserNode.ts`.

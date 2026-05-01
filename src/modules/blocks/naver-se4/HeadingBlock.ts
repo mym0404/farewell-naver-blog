@@ -37,7 +37,7 @@ export class NaverSe4HeadingBlock extends LeafBlock {
     const title = compactText(
       convertHtmlToMarkdown({
         html: $node.find(".se-module-text").html() ?? "",
-        options,
+        options: {},
         resolveLinkUrl: options.resolveLinkUrl,
       }),
     )

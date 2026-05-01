@@ -6,7 +6,6 @@ import { defaultExportOptions } from "../../src/shared/ExportOptions.js"
 
 const testOptions = defaultExportOptions()
 const parserOptions = {
-  markdown: testOptions.markdown,
   blockOutputs: testOptions.blockOutputs,
 }
 const se2Editor = new NaverBlogSE2Editor()

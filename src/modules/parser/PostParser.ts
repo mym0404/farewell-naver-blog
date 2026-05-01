@@ -22,7 +22,7 @@ export const parsePostHtml = ({
 }: {
   html: string
   sourceUrl: string
-  options: Pick<ExportOptions, "markdown" | "blockOutputs"> & {
+  options: Pick<ExportOptions, "blockOutputs"> & {
     resolveLinkUrl?: (url: string) => string
   }
 }) => {

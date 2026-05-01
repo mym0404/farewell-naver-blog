@@ -26,7 +26,7 @@ export class NaverSe2QuoteBlock extends LeafBlock {
   override convert({ $node, options }: Parameters<LeafBlock["convert"]>[0]): ParserBlockResult {
     const markdown = convertHtmlToMarkdown({
       html: $node.html() ?? "",
-      options,
+      options: {},
       resolveLinkUrl: options.resolveLinkUrl,
     })
 

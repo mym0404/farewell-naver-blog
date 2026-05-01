@@ -10,6 +10,7 @@
     "build:server": "tsc -p tsconfig.json",
     "build": "pnpm build:ui && pnpm build:server",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "check:unused": "tsx scripts/check-unused.ts",
     "test": "vitest run --configLoader runner --silent",
     "test:coverage": "vitest run --configLoader runner --silent --coverage",
     "test:offline": "vitest run --configLoader runner --silent",
@@ -19,7 +20,7 @@
     "test:network:upload": "pnpm build:ui && node --import tsx ./scripts/harness/run-ui-live-upload.ts",
     "smoke:ui": "pnpm build:ui && node --import tsx ./scripts/harness/run-ui-smoke-suite.ts",
     "check:local": "pnpm typecheck && pnpm test:offline",
-    "check:full": "pnpm typecheck && pnpm test:offline && pnpm smoke:ui"
+    "check:full": "pnpm check:local && pnpm smoke:ui"
   },
   "dependencies": {
     "@radix-ui/react-scroll-area": "^1.2.10",
@@ -53,6 +54,7 @@
     "@vitejs/plugin-react": "^6.0.1",
     "@vitest/coverage-v8": "^3.2.4",
     "jsdom": "^26.1.0",
+    "knip": "6.9.0",
     "playwright": "^1.59.1",
     "tailwindcss": "^4.2.2",
     "tsx": "^4.20.6",

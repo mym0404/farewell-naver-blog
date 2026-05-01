@@ -533,9 +533,6 @@ export const App = () => {
 
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-5 px-4 py-5 xl:px-6 xl:py-6">
         <WizardHeader
-          isSetupStep={isSetupStep}
-          setupStepIndex={setupStepIndex}
-          setupStepCount={setupSteps.length}
           title={stepMeta[currentStep].title}
           themePreference={themePreference}
           headerStatus={headerStatus}

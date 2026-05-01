@@ -42,7 +42,7 @@ export type BaseEditorParseInput = {
   $: CheerioAPI
   sourceUrl?: string
   tags: string[]
-  options: Pick<ExportOptions, "markdown" | "blockOutputs"> &
+  options: Pick<ExportOptions, "blockOutputs"> &
     {
       resolveLinkUrl?: (url: string) => string
     }
@@ -59,23 +59,33 @@ export abstract class BaseEditor {
   abstract parse(input: BaseEditorParseInput): ParsedPost
 
   getBlockOutputDefinitions(): EditorBlockOutputDefinition[] {
-    return this.supportedBlocks.flatMap((block) => {
+    const definitions: EditorBlockOutputDefinition[] = []
+    const seenKeys = new Set<string>()
+
+    this.supportedBlocks.forEach((block) => {
       const outputOptions = block.outputOptions
 
       if (!block.outputId || !outputOptions || outputOptions.length < 2) {
-        return []
+        return
       }
 
-      return [
-        {
-          key: this.createBlockOutputSelectionKey(block.outputId),
-          editorType: this.type,
-          editorLabel: this.label,
-          blockId: block.outputId,
-          options: [...outputOptions],
-        },
-      ]
+      const key = this.createBlockOutputSelectionKey(block.outputId)
+
+      if (seenKeys.has(key)) {
+        return
+      }
+
+      seenKeys.add(key)
+      definitions.push({
+        key,
+        editorType: this.type,
+        editorLabel: this.label,
+        blockId: block.outputId,
+        options: [...outputOptions],
+      })
     })
+
+    return definitions
   }
 
   private createBlockOutputSelectionKey(blockId: string) {
@@ -113,6 +123,22 @@ export abstract class BaseEditor {
       body.push(...nodes)
     }
 
+    const getParserBlockOutputSelection = (parserBlock: BaseBlock) => {
+      const outputOptions = parserBlock.outputOptions
+      const firstOutputOption = outputOptions?.[0]
+
+      if (!parserBlock.outputId || !outputOptions || outputOptions.length < 2 || !firstOutputOption) {
+        return undefined
+      }
+
+      return resolveBlockOutputSelection({
+        blockType: firstOutputOption.preview.type,
+        outputOptions,
+        blockOutputs: options.blockOutputs,
+        selectionKey: this.createBlockOutputSelectionKey(parserBlock.outputId),
+      })
+    }
+
     const applyOutputSelection = ({
       parsedBlock,
       parserBlock,
@@ -132,6 +158,13 @@ export abstract class BaseEditor {
       }
 
       const selectionKey = this.createBlockOutputSelectionKey(parserBlock.outputId)
+
+      if (
+        (parserBlock.outputId === "paragraph" || parserBlock.outputId === "linkCard") &&
+        !options.blockOutputs.defaults?.[selectionKey]
+      ) {
+        return parsedBlock
+      }
 
       return {
         ...parsedBlock,
@@ -194,8 +227,13 @@ export abstract class BaseEditor {
         throw new Error(`파싱 가능한 ${this.type} block이 없습니다: ${describeParserNode(context)}`)
       }
 
+      const convertContext = {
+        ...context,
+        outputSelection: getParserBlockOutputSelection(block),
+      }
+
       handleResult({
-        result: block.convert(context),
+        result: block.convert(convertContext),
         parserBlock: block,
       })
     }

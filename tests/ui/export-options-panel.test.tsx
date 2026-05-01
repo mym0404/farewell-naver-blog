@@ -156,7 +156,7 @@ describe("ExportOptionsPanel", () => {
       />,
     )
 
-    await selectOption({ user, trigger: "#markdown-linkStyle", value: "referenced" })
+    await selectOption({ user, trigger: "#blockOutputs-defaults-naver-se4-paragraph-variant", value: "reference-links" })
     fireEvent.change(query<HTMLInputElement>("#blockOutputs-defaults-naver-se4-formula-inlineWrapper"), {
       target: {
         value: "\\(...\\)",
@@ -268,7 +268,7 @@ describe("ExportOptionsPanel", () => {
     expect(latestOptions.frontmatter.enabled).toBe(false)
     expect(latestOptions.frontmatter.fields.title).toBe(false)
     expect(latestOptions.frontmatter.aliases.title).toBe("headline")
-    expect(latestOptions.markdown.linkStyle).toBe("referenced")
+    expect(latestOptions.blockOutputs.defaults["naver-se4:paragraph"]?.variant).toBe("reference-links")
     expect(latestOptions.blockOutputs.defaults["naver-se4:formula"]?.params?.inlineWrapper).toBe("\\(...\\)")
     expect(latestOptions.blockOutputs.defaults["naver-se4:formula"]?.params?.blockWrapper).toBe("\\[...\\]")
     expect(latestOptions.blockOutputs.defaults["naver-se4:image"]?.variant).toBe("linked-image")
@@ -428,27 +428,37 @@ describe("ExportOptionsPanel", () => {
       />,
     )
 
-    expect(Array.from(document.querySelectorAll("[data-block-output-editor-group]")).map((group) => group.getAttribute("data-block-output-editor-group"))).toEqual([
+    const editorGroups = Array.from(document.querySelectorAll("[data-block-output-editor-group]"))
+
+    expect(screen.queryByText("Markdown 규칙")).not.toBeInTheDocument()
+    expect(screen.queryByText("링크 방식과 블록별 출력 결과를 정합니다. 아래 preview는 실제 export될 Markdown snippet 기준입니다.")).not.toBeInTheDocument()
+    expect(editorGroups.map((group) => group.getAttribute("data-block-output-editor-group"))).toEqual([
       "naver-se4",
       "naver-se3",
       "naver-se2",
     ])
+    expect(editorGroups.every((group) => group.classList.contains("field-card"))).toBe(true)
+    expect(query<HTMLElement>('[data-block-output-card="naver-se4:formula"]')).not.toHaveClass("field-card")
     expect(screen.getByText("SmartEditor 4")).toBeInTheDocument()
     expect(screen.getByText("SmartEditor 3")).toBeInTheDocument()
     expect(screen.getByText("SmartEditor 2")).toBeInTheDocument()
     expect(Array.from(document.querySelectorAll("[data-block-output-card]")).map((card) => card.getAttribute("data-block-output-card"))).toEqual([
       "naver-se4:formula",
       "naver-se4:code",
+      "naver-se4:linkCard",
       "naver-se4:table",
       "naver-se4:image",
       "naver-se4:divider",
+      "naver-se4:paragraph",
       "naver-se3:table",
       "naver-se3:code",
       "naver-se3:image",
+      "naver-se3:paragraph",
       "naver-se2:table",
       "naver-se2:divider",
       "naver-se2:code",
       "naver-se2:image",
+      "naver-se2:paragraph",
     ])
   })
 
@@ -523,6 +533,7 @@ describe("ExportOptionsPanel", () => {
     expect(twoColumnLayout).toHaveClass("items-start")
     expect(optionField).toHaveClass("content-start", "self-start")
     expect(preview?.parentElement).toHaveClass("content-start", "self-start")
+    expect(preview).toHaveClass("block-output-preview-surface")
   })
 
   it("renders image preview with local asset paths unless remote mode is selected", () => {

@@ -206,9 +206,6 @@ export type ExportOptions = {
     fields: Record<FrontmatterFieldName, boolean>
     aliases: Record<FrontmatterFieldName, string>
   }
-  markdown: {
-    linkStyle: MarkdownLinkStyle
-  }
   blockOutputs: {
     defaults: Partial<{
       [Key in string]: BlockOutputSelection

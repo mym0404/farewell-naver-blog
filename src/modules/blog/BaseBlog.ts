@@ -8,7 +8,7 @@ export type BlogPostParseInput = {
   html: string
   sourceUrl: string
   tags: string[]
-  options: Pick<ExportOptions, "markdown" | "blockOutputs"> & {
+  options: Pick<ExportOptions, "blockOutputs"> & {
     resolveLinkUrl?: (url: string) => string
   }
 }

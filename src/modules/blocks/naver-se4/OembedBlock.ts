@@ -1,11 +1,15 @@
 import { load } from "cheerio"
 
+import { linkCardOutputOptions } from "../../../shared/BlockOutputOptions.js"
 import type { UnknownRecord } from "../../../shared/Types.js"
 import { compactText, normalizeAssetUrl } from "../../../shared/Utils.js"
 import { LeafBlock } from "../BaseBlock.js"
 import type { ParserBlockContext, ParserBlockResult } from "../ParserNode.js"
 
 export class NaverSe4OembedBlock extends LeafBlock {
+  override readonly outputId = "linkCard"
+  override readonly outputOptions = linkCardOutputOptions
+
   override match({ $node, moduleType }: ParserBlockContext) {
     return moduleType === "v2_oembed" || $node.hasClass("se-oembed")
   }

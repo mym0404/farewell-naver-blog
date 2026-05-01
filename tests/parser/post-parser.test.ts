@@ -5,7 +5,6 @@ import { defaultExportOptions } from "../../src/shared/ExportOptions.js"
 
 const testOptions = defaultExportOptions()
 const parserOptions = {
-  markdown: testOptions.markdown,
   blockOutputs: testOptions.blockOutputs,
 }
 
@@ -101,7 +100,6 @@ describe("post-parser routing", () => {
       `,
       sourceUrl: "https://blog.naver.com/mym0404/4",
       options: {
-        markdown: options.markdown,
         blockOutputs: options.blockOutputs,
       },
     })
@@ -118,7 +116,6 @@ describe("post-parser routing", () => {
       `,
       sourceUrl: "https://blog.naver.com/mym0404/5",
       options: {
-        markdown: options.markdown,
         blockOutputs: options.blockOutputs,
       },
     })
@@ -135,6 +132,38 @@ describe("post-parser routing", () => {
       outputSelectionKey: "naver-se3:code",
       outputSelection: {
         variant: "backtick-fence",
+      },
+    })
+  })
+
+  it("applies editor paragraph link output selections before markdown is finalized", () => {
+    const options = defaultExportOptions()
+    options.blockOutputs.defaults["naver-se4:paragraph"] = {
+      variant: "reference-links",
+    }
+
+    const parsed = parsePostHtml({
+      html: `
+        <script>var data = { smartEditorVersion: 4 }</script>
+        <div id="viewTypeSelector">
+          <div class="se-component se-text">
+            <script class="__se_module_data" data-module-v2='{"type":"v2_text"}'></script>
+            <p class="se-text-paragraph">See <a href="https://example.com">docs</a></p>
+          </div>
+        </div>
+      `,
+      sourceUrl: "https://blog.naver.com/mym0404/6",
+      options: {
+        blockOutputs: options.blockOutputs,
+      },
+    })
+
+    expect(parsed.blocks[0]).toMatchObject({
+      type: "paragraph",
+      text: "See [docs][1]\n\n[1]: https://example.com",
+      outputSelectionKey: "naver-se4:paragraph",
+      outputSelection: {
+        variant: "reference-links",
       },
     })
   })

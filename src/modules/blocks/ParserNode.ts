@@ -5,10 +5,11 @@ import type {
   ExportOptions,
   ParsedPostBodyNode,
   AstBlock,
+  BlockOutputSelection,
   UnknownRecord,
 } from "../../shared/Types.js"
 
-export type ParserBlockOptions = Pick<ExportOptions, "markdown" | "blockOutputs"> &
+export type ParserBlockOptions = Pick<ExportOptions, "blockOutputs"> &
   {
     resolveLinkUrl?: (url: string) => string
   }
@@ -26,6 +27,7 @@ export type ParserBlockContext = {
 }
 
 export type ParserBlockConvertContext = ParserBlockContext & {
+  outputSelection?: BlockOutputSelection
   appendBodyNodes: (nodes: ParsedPostBodyNode[]) => void
   appendWarnings: (warnings: string[]) => void
 }

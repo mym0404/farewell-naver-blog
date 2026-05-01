@@ -1,23 +1,15 @@
 import { convertHtmlToMarkdown } from "../../converter/HtmlFragmentConverter.js"
-import type { OutputOption } from "../../../shared/Types.js"
+import {
+  getMarkdownLinkStyleFromSelection,
+  paragraphOutputOptions,
+} from "../../../shared/BlockOutputOptions.js"
 import { compactText } from "../../../shared/Utils.js"
 import { LeafBlock } from "../BaseBlock.js"
 import type { ParserBlockContext, ParserBlockResult } from "../ParserNode.js"
 
 export class NaverSe2TextElementBlock extends LeafBlock {
   override readonly outputId = "paragraph"
-  override readonly outputOptions = [
-    {
-      id: "markdown-paragraph",
-      label: "Markdown 문단",
-      description: "정규화된 문단 텍스트를 그대로 출력합니다.",
-      preview: {
-        type: "paragraph",
-        text: "첫 줄입니다.\n\n둘째 문단입니다.",
-      },
-      isDefault: true,
-    },
-  ] satisfies OutputOption<"paragraph">[]
+  override readonly outputOptions = paragraphOutputOptions
 
   override match({ node, $node }: ParserBlockContext) {
     if (node.type !== "tag") {
@@ -31,7 +23,7 @@ export class NaverSe2TextElementBlock extends LeafBlock {
     return !["table", "hr", "br", "blockquote", "pre"].includes(node.tagName.toLowerCase())
   }
 
-  override convert({ $, $node, node, options }: Parameters<LeafBlock["convert"]>[0]): ParserBlockResult {
+  override convert({ $, $node, node, options, outputSelection }: Parameters<LeafBlock["convert"]>[0]): ParserBlockResult {
     if (node.type !== "tag") {
       throw new Error("SE2 text element block received a non-tag node.")
     }
@@ -39,7 +31,9 @@ export class NaverSe2TextElementBlock extends LeafBlock {
     const html = $.html($node) ?? ""
     const markdown = convertHtmlToMarkdown({
       html,
-      options,
+      options: {
+        linkStyle: getMarkdownLinkStyleFromSelection(outputSelection),
+      },
       resolveLinkUrl: options.resolveLinkUrl,
     })
 

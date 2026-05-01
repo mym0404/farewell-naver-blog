@@ -7,7 +7,7 @@ import type {
 } from "./Types.js"
 
 const fallbackBlockOutputSelections: Record<BlockType, BlockOutputSelection> = {
-  paragraph: { variant: "markdown-paragraph" },
+  paragraph: { variant: "inline-links" },
   heading: {
     variant: "markdown-heading",
     params: {

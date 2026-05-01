@@ -19,7 +19,6 @@ export type PartialExportOptions = {
     fields?: Partial<Record<FrontmatterFieldName, boolean>>
     aliases?: Partial<Record<FrontmatterFieldName, string>>
   }
-  markdown?: Partial<ExportOptions["markdown"]>
   blockOutputs?: {
     defaults?: Partial<ExportOptions["blockOutputs"]["defaults"]>
   }
@@ -131,7 +130,6 @@ export const optionDescriptions: OptionDescriptionMap = {
   "structure-postFolderNameMode": "기본 규칙을 쓸지, 지원 변수를 조합한 커스텀 템플릿으로 글 폴더 이름을 만들지 정합니다.",
   "structure-postFolderNameCustomTemplate": "지원 변수 {slug}, {category}, {title}, {logNo}, {blogId}, {date}, {year}, {YYYY}, {YY}, {month}, {MM}, {M}, {day}, {DD}, {D}를 조합해 글 폴더 이름을 만듭니다.",
   "frontmatter-enabled": "YAML frontmatter 블록 자체를 Markdown 파일 상단에 넣을지 정합니다.",
-  "markdown-linkStyle": "일반 링크를 inline 형식으로 쓸지 reference 형식으로 분리할지 정합니다.",
   "assets-imageHandlingMode": "이미지를 로컬로 유지할지, 원본 URL을 유지할지, 내보낸 뒤 업로드까지 이어갈지 정합니다.",
   "assets-compressionEnabled": "다운로드한 로컬 이미지 파일에 안전한 압축을 적용할지 정합니다.",
   "assets-downloadFailureMode": "이미지 다운로드가 실패했을 때 경고 후 원본 URL 유지, 경고 없이 원본 URL 유지, 경고 후 이미지 생략, 경고 없이 이미지 생략 중에서 정합니다.",
@@ -257,9 +255,6 @@ export const defaultExportOptions = (): ExportOptions => ({
       assetPaths: "",
     },
   },
-  markdown: {
-    linkStyle: "inlined",
-  },
   blockOutputs: {
     defaults: {},
   },
@@ -348,18 +343,6 @@ export const sanitizePersistedExportOptions = (
 
     if (Object.keys(frontmatter).length > 0) {
       sanitized.frontmatter = frontmatter
-    }
-  }
-
-  if (options?.markdown) {
-    const markdown: PartialExportOptions["markdown"] = {}
-
-    if (options.markdown.linkStyle) {
-      markdown.linkStyle = options.markdown.linkStyle
-    }
-
-    if (Object.keys(markdown).length > 0) {
-      sanitized.markdown = markdown
     }
   }
 
@@ -469,9 +452,6 @@ export const cloneExportOptions = (
         ...defaults.frontmatter.aliases,
         ...options?.frontmatter?.aliases,
       },
-    },
-    markdown: {
-      linkStyle: options?.markdown?.linkStyle ?? defaults.markdown.linkStyle,
     },
     blockOutputs: {
       defaults: resolvedBlockOutputDefaults,

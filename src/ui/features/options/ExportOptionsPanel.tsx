@@ -23,13 +23,7 @@ import {
 
 import { Alert, AlertDescription, AlertTitle } from "../../components/ui/Alert.js"
 import { Badge } from "../../components/ui/Badge.js"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/Card.js"
+import { Card, CardContent } from "../../components/ui/Card.js"
 import {
   Collapsible,
   CollapsibleContent,
@@ -313,9 +307,14 @@ const StructurePreviewTree = ({
   )
 }
 
-const optionFieldClass = "field-card grid min-h-[6.25rem] content-start gap-1.5 self-start rounded-2xl px-3 py-3"
+const optionFieldCardClass = "field-card grid min-h-[6.25rem] content-start gap-1.5 self-start rounded-2xl px-3 py-3"
+const optionFieldPlainClass = "grid min-h-0 content-start gap-1.5 self-start"
 const checkFieldClass = "field-card flex flex-col rounded-2xl px-3 py-3"
-const optionSectionClass = "option-section subtle-panel grid gap-3 rounded-[1.35rem] p-3.5"
+const optionSectionClass = "option-section grid gap-4"
+const optionEmbeddedFieldClass = "field grid min-h-0 gap-2 rounded-xl border border-border bg-muted/20 px-3 py-3"
+const optionEmbeddedPanelClass = "grid gap-3 rounded-xl border border-border bg-muted/20 px-3 py-3"
+const optionEmbeddedTileClass = "grid gap-2 rounded-lg border border-border bg-background/30 px-3 py-3"
+const editorOutputCardClass = "field-card grid gap-4 rounded-2xl px-4 py-4 xl:col-span-2"
 type SelectOption = {
   value: string
   label: string
@@ -328,6 +327,7 @@ const OptionField = ({
   description,
   children,
   disabled = false,
+  surface = "card",
 }: {
   optionKey: string
   labelFor?: string
@@ -335,8 +335,13 @@ const OptionField = ({
   description?: string
   children: ReactNode
   disabled?: boolean
+  surface?: "card" | "plain"
 }) => (
-  <div className={cn(optionFieldClass, disabled && "opacity-60")} data-option-key={optionKey} aria-disabled={disabled}>
+  <div
+    className={cn(surface === "card" ? optionFieldCardClass : optionFieldPlainClass, disabled && "opacity-60")}
+    data-option-key={optionKey}
+    aria-disabled={disabled}
+  >
     <label htmlFor={labelFor} className="text-sm font-semibold text-foreground">
       {label}
     </label>
@@ -468,17 +473,17 @@ const OptionSection = ({
   children: ReactNode
 }) => (
   <section className={optionSectionClass}>
-    <div className="option-section-header flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+    <div className="option-section-header flex flex-col gap-2 border-b border-border pb-3 sm:flex-row sm:items-start sm:justify-between">
       <div>
         <h3 className="text-lg font-semibold tracking-[-0.03em] text-foreground">{title}</h3>
         <p className="mt-0.5 text-[13px] leading-5 text-muted-foreground">{note}</p>
       </div>
     </div>
-    <div className="option-grid grid items-start gap-3 xl:grid-cols-2">{children}</div>
+    <div className="option-grid grid items-start gap-4 xl:grid-cols-2">{children}</div>
   </section>
 )
 
-const blockOutputCardClass = "field-card grid gap-4 rounded-[1.5rem] px-4 py-4 xl:col-span-2"
+const blockOutputCardClass = "grid content-start gap-4 rounded-none border-0 bg-transparent p-0 shadow-none"
 
 const toBlockOutputDomKey = (key: string) => key.replace(/[^A-Za-z0-9_-]/g, "-")
 
@@ -525,7 +530,7 @@ const BlockOutputPreview = ({
 }) => (
   <div className="grid content-start gap-2 self-start">
     <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Preview</span>
-    <pre className="code-surface overflow-x-auto whitespace-pre-wrap rounded-2xl px-3 py-3 font-mono text-[0.8125rem] leading-6 text-foreground">
+    <pre className="block-output-preview-surface code-surface overflow-x-auto whitespace-pre-wrap rounded-2xl px-3 py-3 font-mono text-[0.8125rem] leading-6 text-foreground">
       {snippet}
     </pre>
   </div>
@@ -559,7 +564,6 @@ const BlockOutputCard = ({
   const previewSnippet = renderBlockOutputPreview({
     block: selectedOption.preview,
     selection,
-    linkStyle: options.markdown.linkStyle,
     includeImageCaptions: options.assets.includeImageCaptions,
     imageHandlingMode: options.assets.imageHandlingMode,
   })
@@ -588,83 +592,81 @@ const BlockOutputCard = ({
   }
 
   return (
-    <Card
+    <section
       className={blockOutputCardClass}
       data-block-output-card={family.key}
       data-block-output-block={selectedOption.preview.type}
       data-block-output-editor={family.editorType}
     >
-      <CardHeader className="gap-2 px-0 pb-0">
-        <div className="flex items-start justify-between gap-3">
-          <div className="grid gap-1">
-            <CardTitle className="text-base tracking-[-0.03em]">
-              {selectedOption.label}
-            </CardTitle>
-            <CardDescription className="text-sm leading-6">
-              {selectedOption.description}
-            </CardDescription>
-          </div>
+      <div className="flex items-start justify-between gap-3">
+        <div className="grid gap-1">
+          <h4 className="text-base font-semibold tracking-[-0.03em] text-foreground">
+            {selectedOption.label}
+          </h4>
+          <p className="text-sm leading-6 text-muted-foreground">
+            {selectedOption.description}
+          </p>
         </div>
-      </CardHeader>
-      <CardContent className="grid content-start gap-4 px-0 pb-0">
-        <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)]">
-          <div className="grid content-start gap-4 self-start">
-            {family.options.length > 1 ? (
+      </div>
+      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)]">
+        <div className="grid content-start gap-4 self-start">
+          {family.options.length > 1 ? (
+            <OptionField
+              optionKey={`${optionKeyPrefix}-variant`}
+              labelFor={`${optionKeyPrefix}-variant`}
+              label="출력 방식"
+              surface="plain"
+            >
+              <OptionSelectField
+                inputId={`${optionKeyPrefix}-variant`}
+                value={selection.variant}
+                options={family.options.map((option) => ({
+                  value: option.id,
+                  label: option.label,
+                }))}
+                onValueChange={(variant) =>
+                  updateSelection((current) => ({
+                    ...current,
+                    variant,
+                  }))
+                }
+              />
+            </OptionField>
+          ) : null}
+
+          {selectedOption.params
+            ?.map((param) => (
               <OptionField
-                optionKey={`${optionKeyPrefix}-variant`}
-                labelFor={`${optionKeyPrefix}-variant`}
-                label="출력 방식"
+                key={`${optionKeyPrefix}-${param.key}`}
+                optionKey={`${optionKeyPrefix}-${param.key}`}
+                label={param.label}
+                description={param.description}
+                surface="plain"
               >
-                <OptionSelectField
-                  inputId={`${optionKeyPrefix}-variant`}
-                  value={selection.variant}
-                  options={family.options.map((option) => ({
-                    value: option.id,
-                    label: option.label,
-                  }))}
-                  onValueChange={(variant) =>
+                <Input
+                  id={`${optionKeyPrefix}-${param.key}`}
+                  type={param.input === "number" ? "number" : "text"}
+                  value={String(selection.params?.[param.key] ?? "")}
+                  onChange={(event) =>
                     updateSelection((current) => ({
                       ...current,
-                      variant,
+                      params: {
+                        ...(current.params ?? {}),
+                        [param.key]:
+                          param.input === "number"
+                            ? Number(event.target.value || "0")
+                            : event.target.value,
+                      },
                     }))
                   }
                 />
               </OptionField>
-            ) : null}
-
-            {selectedOption.params
-              ?.map((param) => (
-                <OptionField
-                  key={`${optionKeyPrefix}-${param.key}`}
-                  optionKey={`${optionKeyPrefix}-${param.key}`}
-                  label={param.label}
-                  description={param.description}
-                >
-                  <Input
-                    id={`${optionKeyPrefix}-${param.key}`}
-                    type={param.input === "number" ? "number" : "text"}
-                    value={String(selection.params?.[param.key] ?? "")}
-                    onChange={(event) =>
-                      updateSelection((current) => ({
-                        ...current,
-                        params: {
-                          ...(current.params ?? {}),
-                          [param.key]:
-                            param.input === "number"
-                              ? Number(event.target.value || "0")
-                              : event.target.value,
-                        },
-                      }))
-                    }
-                  />
-                </OptionField>
-              ))}
-          </div>
-
-          <BlockOutputPreview snippet={previewSnippet} />
+            ))}
         </div>
-      </CardContent>
-    </Card>
+
+        <BlockOutputPreview snippet={previewSnippet} />
+      </div>
+    </section>
   )
 }
 
@@ -947,7 +949,7 @@ export const ExportOptionsPanel = ({
           >
             {options.structure.postFolderNameMode === "custom-template" ? (
               <div className="grid gap-3 pl-7">
-                <label className="subtle-panel field grid min-h-0 gap-2 rounded-2xl px-4 py-4">
+                <label className={optionEmbeddedFieldClass}>
                   <span className="text-sm font-semibold text-foreground">폴더명 템플릿</span>
                   <Input
                     id="structure-postFolderNameCustomTemplate"
@@ -968,7 +970,7 @@ export const ExportOptionsPanel = ({
                   </small>
                 </label>
 
-                <div className="field-card grid gap-3 rounded-2xl px-4 py-4">
+                <div className={optionEmbeddedPanelClass}>
                   <div className="grid gap-1">
                     <span className="text-sm font-semibold text-foreground">실시간 폴더명 예시</span>
                     <p className="text-sm leading-6 text-muted-foreground">
@@ -994,7 +996,7 @@ export const ExportOptionsPanel = ({
                   </div>
                 </div>
 
-                <div className="field-card grid gap-3 rounded-2xl px-4 py-4">
+                <div className={optionEmbeddedPanelClass}>
                   <div className="grid gap-1">
                     <span className="text-sm font-semibold text-foreground">사용 가능한 변수</span>
                     <p className="text-sm leading-6 text-muted-foreground">
@@ -1010,7 +1012,7 @@ export const ExportOptionsPanel = ({
                       return (
                         <div
                           key={`structure-${key}`}
-                          className="subtle-panel grid gap-2 rounded-2xl px-3 py-3"
+                          className={optionEmbeddedTileClass}
                         >
                           <div className="flex items-center gap-2">
                             <span className="rounded-md bg-[var(--status-running-bg)] px-1.5 py-0.5 font-mono text-sm text-[var(--status-running-fg)]">
@@ -1044,7 +1046,7 @@ export const ExportOptionsPanel = ({
               현재 옵션 기준으로 여러 글이 저장되는 예시입니다.
             </p>
           </div>
-          <div className="subtle-panel rounded-xl p-2">
+          <div className="rounded-xl border border-border bg-muted/20 p-2">
             <StructurePreviewTree node={structurePreviewTree} />
           </div>
         </div>
@@ -1190,45 +1192,15 @@ export const ExportOptionsPanel = ({
   )
 
   const blockOutputGroups = groupBlockOutputDefinitionsByEditor(blockOutputDefinitions)
-  const showBlockOutputEditorGroups = blockOutputGroups.length > 1
-
   const markdownSection = (
-    <OptionSection title="Markdown 규칙" note="링크 방식과 블록별 출력 결과를 정합니다. 아래 preview는 실제 export될 Markdown snippet 기준입니다.">
-      <OptionField
-        optionKey="markdown-linkStyle"
-        labelFor="markdown-linkStyle"
-        label="링크 형식"
-        description={description("markdown-linkStyle")}
-      >
-        <OptionSelectField
-          inputId="markdown-linkStyle"
-          value={options.markdown.linkStyle}
-          options={[
-            { value: "inlined", label: "inline links" },
-            { value: "referenced", label: "reference links" },
-          ]}
-          onValueChange={(linkStyle) =>
-            onOptionsChange((current) => ({
-              ...current,
-              markdown: {
-                ...current.markdown,
-                linkStyle,
-              },
-            }))
-          }
-        />
-      </OptionField>
+    <section className="option-section grid gap-4">
       {blockOutputGroups.map((group) => (
         <div
           key={group.editorType}
-          className="grid gap-3 xl:col-span-2"
+          className={editorOutputCardClass}
           data-block-output-editor-group={group.editorType}
         >
-          {showBlockOutputEditorGroups ? (
-            <div className="grid gap-1">
-              <h3 className="text-sm font-semibold text-foreground">{group.editorLabel}</h3>
-            </div>
-          ) : null}
+          <h3 className="text-base font-semibold tracking-[-0.03em] text-foreground">{group.editorLabel}</h3>
           <div className="grid gap-4 xl:grid-cols-2">
             {group.definitions.map((family) => (
               <BlockOutputCard
@@ -1241,7 +1213,7 @@ export const ExportOptionsPanel = ({
           </div>
         </div>
       ))}
-    </OptionSection>
+    </section>
   )
 
   const assetsSection = (
@@ -1450,7 +1422,7 @@ export const ExportOptionsPanel = ({
         >
           {options.links.sameBlogPostMode === "custom-url" ? (
             <div className="grid gap-3 pl-7">
-              <label className="field subtle-panel grid min-h-0 gap-2 rounded-2xl px-4 py-4">
+              <label className={optionEmbeddedFieldClass}>
                 <span className="text-sm font-semibold text-foreground">URL 템플릿</span>
                 <Input
                   id="links-sameBlogPostCustomUrlTemplate"
@@ -1471,7 +1443,7 @@ export const ExportOptionsPanel = ({
                 </small>
               </label>
 
-              <div className="field-card grid gap-3 rounded-2xl px-4 py-4">
+              <div className={optionEmbeddedPanelClass}>
                 <div className="grid gap-1">
                   <span className="text-sm font-semibold text-foreground">실시간 변환 예시</span>
                   <p className="text-sm leading-6 text-muted-foreground">
@@ -1499,7 +1471,7 @@ export const ExportOptionsPanel = ({
                 </div>
               </div>
 
-              <div className="field-card grid gap-3 rounded-2xl px-4 py-4">
+              <div className={optionEmbeddedPanelClass}>
                 <div className="grid gap-1">
                   <span className="text-sm font-semibold text-foreground">사용 가능한 변수</span>
                   <p className="text-sm leading-6 text-muted-foreground">
@@ -1515,7 +1487,7 @@ export const ExportOptionsPanel = ({
                     return (
                       <div
                         key={key}
-                        className="subtle-panel grid gap-2 rounded-2xl px-3 py-3"
+                        className={optionEmbeddedTileClass}
                       >
                         <div className="flex items-center gap-2">
                           <Badge variant="outline" className="w-fit rounded-md font-mono text-xs">

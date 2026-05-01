@@ -124,7 +124,6 @@ export const exportSinglePost = async ({
     html,
     sourceUrl: post.source,
     options: {
-      markdown: resolvedOptions.markdown,
       blockOutputs: resolvedOptions.blockOutputs,
       resolveLinkUrl,
     },

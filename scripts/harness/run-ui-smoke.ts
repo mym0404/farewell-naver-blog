@@ -1245,8 +1245,8 @@ const run = async () => {
 
     await chooseSelectOption({
       page,
-      trigger: "#markdown-linkStyle",
-      value: "referenced",
+      trigger: "#blockOutputs-defaults-naver-se4-paragraph-variant",
+      value: "reference-links",
     })
     const blockOutputSettingsSavePromise = waitForBlockOutputSettingsSave({
       page,

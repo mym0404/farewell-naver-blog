@@ -1,3 +1,4 @@
+import { linkCardOutputOptions } from "../../../shared/BlockOutputOptions.js"
 import { compactText } from "../../../shared/Utils.js"
 import { LeafBlock } from "../BaseBlock.js"
 import type { ParserBlockContext, ParserBlockResult } from "../ParserNode.js"
@@ -7,6 +8,9 @@ const buildNaverMapSearchUrl = (query: string) =>
   `https://map.naver.com/p/search/${encodeURIComponent(query)}`
 
 export class NaverSe4MapBlock extends LeafBlock {
+  override readonly outputId = "linkCard"
+  override readonly outputOptions = linkCardOutputOptions
+
   override match({ $node, moduleType }: ParserBlockContext) {
     return moduleType === "v2_map" || $node.hasClass("se-placesMap")
   }

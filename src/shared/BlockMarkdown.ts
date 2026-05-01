@@ -358,13 +358,11 @@ export const composeRawHtmlPreview = ({
 }
 
 export const getHtmlConversionOptions = ({
-  linkStyle,
   dividerSelection,
 }: {
-  linkStyle: ExportOptions["markdown"]["linkStyle"]
   dividerSelection: BlockOutputSelection
 }) =>
   ({
-    linkStyle,
+    linkStyle: "inlined",
     dividerMarker: getDividerMarker(dividerSelection),
   }) as const

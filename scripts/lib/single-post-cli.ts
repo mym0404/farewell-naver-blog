@@ -8,7 +8,7 @@ import type {
 
 const entrypoint = "pnpm exec tsx scripts/export-single-post.ts"
 
-const allowedTopLevelOptionKeys = ["scope", "structure", "frontmatter", "markdown", "blockOutputs", "unsupportedBlockCases", "assets", "links"] as const
+const allowedTopLevelOptionKeys = ["scope", "structure", "frontmatter", "blockOutputs", "unsupportedBlockCases", "assets", "links"] as const
 const allowedScopeKeys = ["categoryIds", "categoryMode", "dateFrom", "dateTo"] as const
 const allowedStructureKeys = [
   "groupByCategory",
@@ -38,9 +38,6 @@ const allowedFrontmatterFieldKeys = [
   "exportedAt",
   "assetPaths",
 ] as const
-const allowedMarkdownKeys = [
-  "linkStyle",
-] as const
 const allowedBlockOutputsKeys = ["defaults"] as const
 const allowedAssetsKeys = [
   "imageHandlingMode",
@@ -57,7 +54,6 @@ const categoryModes = ["selected-and-descendants", "exact-selected"] as const
 const slugStyles = ["kebab", "snake", "keep-title"] as const
 const slugWhitespaces = ["dash", "underscore", "keep-space"] as const
 const postFolderNameModes = ["preset", "custom-template"] as const
-const linkStyles = ["inlined", "referenced"] as const
 const imageHandlingModes = ["download", "remote", "download-and-upload"] as const
 const stickerAssetModes = ["ignore", "download-original"] as const
 const thumbnailSources = ["post-list-first", "first-body-image", "none"] as const
@@ -320,21 +316,6 @@ const validateFrontmatterOptions = (value: unknown, optionsPath: string) => {
   return frontmatter
 }
 
-const validateMarkdownOptions = (value: unknown, optionsPath: string) => {
-  assertPlainObject(value, "markdown", optionsPath)
-  assertAllowedKeys(value, allowedMarkdownKeys, "markdown", optionsPath)
-
-  const markdown = defaultExportOptions().markdown
-
-  if ("linkStyle" in value) {
-    const linkStyle = value.linkStyle
-    assertEnum(linkStyle, linkStyles, "markdown.linkStyle", optionsPath)
-    markdown.linkStyle = linkStyle
-  }
-
-  return markdown
-}
-
 const validateBlockOutputSelection = ({
   value,
   context,
@@ -549,10 +530,6 @@ const validateSinglePostOptionsJson = (value: unknown, optionsPath: string): Exp
 
   if ("frontmatter" in value) {
     options.frontmatter = validateFrontmatterOptions(value.frontmatter, optionsPath)
-  }
-
-  if ("markdown" in value) {
-    options.markdown = validateMarkdownOptions(value.markdown, optionsPath)
   }
 
   if ("blockOutputs" in value) {

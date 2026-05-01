@@ -36,7 +36,7 @@ describe("export options", () => {
     expect(options.assets.downloadFailureMode).toBe("warn-and-use-source")
     expect(options.links.sameBlogPostMode).toBe("keep-source")
     expect(options.links.sameBlogPostCustomUrlTemplate).toBe("")
-    expect(options.markdown.linkStyle).toBe("inlined")
+    expect(Object.hasOwn(options, "markdown")).toBe(false)
     expect(options.blockOutputs.defaults["naver-se4:formula"]?.params?.inlineWrapper).toBe("$")
     expect(options.blockOutputs.defaults["naver-se4:formula"]?.params?.blockWrapper).toBe("$$")
     expect(Object.hasOwn(options, "unsupportedBlockCases")).toBe(false)
@@ -52,7 +52,7 @@ describe("export options", () => {
     expect(Object.hasOwn(options.assets, "imageContentMode")).toBe(false)
   })
 
-  it("drops removed legacy markdown block output options while keeping supported fields", () => {
+  it("drops removed legacy markdown option containers", () => {
     const legacyOptions = JSON.parse(`{
       "markdown": {
         "linkStyle": "referenced",
@@ -64,10 +64,7 @@ describe("export options", () => {
 
     const options = cloneExportOptions(legacyOptions)
 
-    expect(options.markdown.linkStyle).toBe("referenced")
-    expect("headingLevelOffset" in options.markdown).toBe(false)
-    expect("linkCardStyle" in options.markdown).toBe(false)
-    expect("videoStyle" in options.markdown).toBe(false)
+    expect(Object.hasOwn(options, "markdown")).toBe(false)
   })
 
   it("merges editor block output defaults", () => {
@@ -344,7 +341,7 @@ describe("export options", () => {
     expect(optionDescriptions["links-sameBlogPostCustomUrlTemplate"]).toContain("{YYYY}")
     expect(optionDescriptions["structure-postFolderNameCustomTemplate"]).toContain("{MM}")
     expect(optionDescriptions["assets-imageContentMode"]).toBeUndefined()
-    expect(optionDescriptions["markdown-linkStyle"]).toContain("reference")
+    expect(optionDescriptions["markdown-linkStyle"]).toBeUndefined()
     expect(optionDescriptions["assets-assetPathMode"]).toBeUndefined()
   })
 })

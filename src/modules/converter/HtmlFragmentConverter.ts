@@ -2,18 +2,14 @@ import TurndownService, { type Node as TurndownNode } from "turndown"
 import { gfm } from "turndown-plugin-gfm"
 import { JSDOM } from "jsdom"
 
-import type { ExportOptions, MarkdownLinkStyle } from "../../shared/Types.js"
+import type { MarkdownLinkStyle } from "../../shared/Types.js"
 
 const createDocument = (html: string) => new JSDOM(`<body>${html}</body>`).window.document
 
 export type HtmlFragmentConversionOptions = {
-  linkStyle: MarkdownLinkStyle
+  linkStyle?: MarkdownLinkStyle
   dividerMarker?: "---" | "***"
 }
-
-type HtmlFragmentConversionInput =
-  | HtmlFragmentConversionOptions
-  | Pick<ExportOptions, "markdown">
 
 const createService = ({
   options,
@@ -26,7 +22,7 @@ const createService = ({
     emDelimiter: "_",
     headingStyle: "atx",
     hr: options.dividerMarker ?? "---",
-    linkStyle: options.linkStyle,
+    linkStyle: options.linkStyle ?? "inlined",
   })
 
   service.use(gfm)
@@ -66,15 +62,9 @@ export const convertHtmlToMarkdown = ({
   resolveLinkUrl,
 }: {
   html: string
-  options: HtmlFragmentConversionInput
+  options: HtmlFragmentConversionOptions
   resolveLinkUrl?: (url: string) => string
 }) => {
-  const normalizedOptions =
-    "markdown" in options
-      ? {
-          linkStyle: options.markdown.linkStyle,
-        }
-      : options
   const sanitized = sanitizeHtmlFragment(html)
   const document = createDocument(sanitized)
 
@@ -91,7 +81,7 @@ export const convertHtmlToMarkdown = ({
   }
 
   const turndownService = createService({
-    options: normalizedOptions,
+    options,
   })
   const markdown = turndownService.turndown(document.body)
 

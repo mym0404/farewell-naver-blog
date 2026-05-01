@@ -3,6 +3,7 @@ import type {
   BlockOutputSelection,
   ExportOptions,
 } from "./Types.js"
+import { getMarkdownLinkStyleFromSelection } from "./BlockOutputOptions.js"
 import {
   composeSnippetWithReferences,
   createLinkFormatter,
@@ -151,17 +152,15 @@ const renderResolvedPreviewBlock = ({
 
 export const renderResolvedBlocksPreview = ({
   blocks,
-  linkStyle,
   includeImageCaptions,
   imageHandlingMode,
 }: {
   blocks: AstBlock[]
-  linkStyle: ExportOptions["markdown"]["linkStyle"]
   includeImageCaptions: boolean
   imageHandlingMode: ExportOptions["assets"]["imageHandlingMode"]
 }) => {
   const linkFormatter = createLinkFormatter({
-    style: linkStyle,
+    style: "inlined",
   })
   const body = blocks
     .map((block) =>
@@ -184,18 +183,16 @@ export const renderResolvedBlocksPreview = ({
 export const renderBlockOutputPreview = ({
   block,
   selection,
-  linkStyle,
   includeImageCaptions,
   imageHandlingMode,
 }: {
   block: AstBlock
   selection: BlockOutputSelection
-  linkStyle: ExportOptions["markdown"]["linkStyle"]
   includeImageCaptions: boolean
   imageHandlingMode: ExportOptions["assets"]["imageHandlingMode"]
 }) => {
   const linkFormatter = createLinkFormatter({
-    style: linkStyle,
+    style: getMarkdownLinkStyleFromSelection(selection),
   })
 
   if (block.type === "paragraph") {

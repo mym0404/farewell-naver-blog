@@ -392,11 +392,10 @@ describe("renderMarkdownPost", () => {
     expect(rendered.markdown).not.toContain("\nsource: https://blog.naver.com/mym0404/223034929697")
   })
 
-  it("renders referenced links, quotes, and plain video links without frontmatter", async () => {
+  it("renders per-block referenced link cards and inline media links without frontmatter", async () => {
     const options = defaultExportOptions()
 
     options.frontmatter.enabled = false
-    options.markdown.linkStyle = "referenced"
     options.blockOutputs.defaults["naver-se4:image"] = {
       variant: "source-only",
     }
@@ -422,15 +421,16 @@ describe("renderMarkdownPost", () => {
             },
           },
           {
-            type: "video",
-            video: {
+            type: "linkCard",
+            card: {
               title: "Reference Demo",
-              thumbnailUrl: null,
-              sourceUrl: "https://example.com/watch",
-              vid: null,
-              inkey: null,
-              width: null,
-              height: null,
+              description: "",
+              url: "https://example.com/watch",
+              imageUrl: null,
+            },
+            outputSelectionKey: "naver-se4:linkCard",
+            outputSelection: {
+              variant: "reference-link",
             },
           },
         ],
@@ -448,10 +448,9 @@ describe("renderMarkdownPost", () => {
 
     expect(rendered.markdown).toContain("> 인용문")
     expect(rendered.markdown).toContain("> 둘째 줄")
-    expect(rendered.markdown).toContain("[source only][ref-1]")
-    expect(rendered.markdown).toContain("[Reference Demo][ref-2]")
-    expect(rendered.markdown).toContain(`[ref-1]: ${publicImagePath}`)
-    expect(rendered.markdown).toContain("[ref-2]: https://example.com/watch")
+    expect(rendered.markdown).toContain(`[source only](${publicImagePath})`)
+    expect(rendered.markdown).toContain("[Reference Demo][ref-1]")
+    expect(rendered.markdown).toContain("[ref-1]: https://example.com/watch")
     expect(rendered.markdown).not.toContain("---\n")
   })
 

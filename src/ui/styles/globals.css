@@ -365,6 +365,14 @@ pre,
   border-radius: var(--radius-md);
 }
 
+.block-output-preview-surface {
+  border-color: color-mix(in srgb, var(--primary) 42%, var(--border));
+  background: color-mix(in srgb, var(--primary) 16%, var(--muted));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--primary) 12%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 10%, transparent);
+}
+
 .empty-state-surface {
   border: 1px dashed var(--border);
   background: color-mix(in srgb, var(--muted) 82%, transparent);

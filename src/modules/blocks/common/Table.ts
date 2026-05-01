@@ -1,5 +1,5 @@
 import { convertHtmlToMarkdown } from "../../converter/HtmlFragmentConverter.js"
-import type { ExportOptions, AstBlock } from "../../../shared/Types.js"
+import type { AstBlock } from "../../../shared/Types.js"
 import { parseHtmlTable } from "../../parser/TableParser.js"
 
 export const parseSingleColumnTableAsParagraphs = ({
@@ -7,7 +7,7 @@ export const parseSingleColumnTableAsParagraphs = ({
   options,
 }: {
   parsedTable: ReturnType<typeof parseHtmlTable>
-  options: Pick<ExportOptions, "markdown"> & {
+  options: {
     resolveLinkUrl?: (url: string) => string
   }
 }) => {
@@ -26,7 +26,7 @@ export const parseSingleColumnTableAsParagraphs = ({
     .map((row) =>
       convertHtmlToMarkdown({
         html: row[0]?.html ?? "",
-        options,
+        options: {},
         resolveLinkUrl: options.resolveLinkUrl,
       }),
     )

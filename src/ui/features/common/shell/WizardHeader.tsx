@@ -7,18 +7,12 @@ import { ToggleGroup, ToggleGroupItem } from "../../../components/ui/ToggleGroup
 import { getStatusPillClassName } from "../status/StatusPill.js"
 
 export const WizardHeader = ({
-  isSetupStep,
-  setupStepIndex,
-  setupStepCount,
   title,
   themePreference,
   headerStatus,
   summaryCards,
   onThemeChange,
 }: {
-  isSetupStep: boolean
-  setupStepIndex: number
-  setupStepCount: number
   title: string
   themePreference: ThemePreference
   headerStatus: string
@@ -29,9 +23,6 @@ export const WizardHeader = ({
     <CardContent className="grid gap-4 p-5">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 items-start">
         <div className="wizard-heading grid gap-1.5">
-          <span className="wizard-step-label wizard-kicker">
-            {isSetupStep ? `단계 ${setupStepIndex + 1} / ${setupStepCount}` : "현재 단계"}
-          </span>
           <h1 className="wizard-title text-[clamp(1.7rem,2.5vw,2.4rem)] leading-[1.04]">{title}</h1>
         </div>
 

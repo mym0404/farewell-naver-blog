@@ -43,7 +43,7 @@ export class NaverSe2HeadingBlock extends LeafBlock {
     const text = compactText(
       convertHtmlToMarkdown({
         html: $node.html() ?? "",
-        options,
+        options: {},
         resolveLinkUrl: options.resolveLinkUrl,
       }),
     )

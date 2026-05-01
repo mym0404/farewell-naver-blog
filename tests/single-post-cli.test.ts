@@ -436,7 +436,7 @@ describe("single-post cli", () => {
     }
   })
 
-  it("fails fast when removed markdown options are present in options JSON", async () => {
+  it("fails fast when a removed markdown option container is present in options JSON", async () => {
     const rootDir = await mkdtemp(path.join(tmpdir(), "single-post-cli-"))
     const outputDir = path.join(rootDir, "output")
     const optionsPath = path.join(rootDir, "options.json")
@@ -463,7 +463,7 @@ describe("single-post cli", () => {
           stdoutWrite: vi.fn(),
           stderrWrite: vi.fn(),
         }),
-      ).rejects.toThrow("markdown contains unsupported keys: videoStyle")
+      ).rejects.toThrow("root contains unsupported keys: markdown")
 
       expect(exportSinglePost).not.toHaveBeenCalled()
     } finally {
