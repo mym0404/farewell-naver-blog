@@ -2,9 +2,9 @@
 
 ## Source Of Truth
 - Sample fixture directories live under `tests/fixtures/samples/*`.
-- Each sample must contain `source.html` and either `expected.md` or `expected-error.md`.
+- Each sample must contain either `expected.md` or `expected-error.md`.
 - `tests/sample-fixtures.test.ts` discovers directories dynamically.
-- `scripts/harness/lib/sample-fixtures.ts` parses expected frontmatter and renders `source.html` with fixture export options.
+- `scripts/harness/lib/sample-fixtures.ts` parses expected frontmatter, fetches the live Naver post HTML from `blogId` and `logNo`, and renders it with fixture export options.
 
 ## Fixture Options
 - Sample fixture rendering uses `defaultExportOptions()`.
@@ -28,7 +28,7 @@
 - `se4-video-table`
 
 ## Operating Rules
-- Add or update `source.html` and its expected output file together.
+- Add or update the expected output file for each sample.
 - `expected.md` and `expected-error.md` must start with YAML frontmatter containing title, source, blogId, logNo, publishedAt, category, and categoryPath.
 - `expected-error.md` must include an `error` frontmatter string.
 - Fixture ids should describe editor and dominant block coverage.
@@ -36,5 +36,5 @@
 - Parser block, renderer, or export option changes that alter Markdown output or parser failure behavior must update the affected expected files intentionally.
 
 ## Verification
-- `pnpm test:offline`: runs sample fixture regression with the rest of the offline suite.
-- `pnpm check:local`: includes typecheck and offline fixture regression.
+- `pnpm test:offline`: runs sample fixture live-fetch regression with the rest of the Vitest suite.
+- `pnpm check:local`: includes typecheck and sample fixture live-fetch regression.

@@ -15,7 +15,7 @@
 
 ## Focused Commands
 - `pnpm typecheck`: TypeScript contract check only.
-- `pnpm test:offline`: Vitest offline suite, including sample fixture regression.
+- `pnpm test:offline`: Vitest suite. Sample fixture tests fetch live Naver post HTML before comparing expected output.
 - `pnpm test:network:resume-export`: live Naver resume export without upload.
 - `pnpm test:network:resume-export:se2-table`: live SE2 table resume export range.
 - `pnpm test:network:upload`: live browser UI export and GitHub upload through PicList runtime.
@@ -23,8 +23,7 @@
 - `pnpm start`: builds UI and serves `dist/client` through `src/Server.ts`.
 
 ## Coverage And Blind Spots
-- `pnpm test:offline` does not prove live Naver HTML still matches saved fixture reality.
-- Sample fixtures prove current code matches saved `source.html -> expected.md`; they do not prove every parser block has a real public sample.
+- Sample fixtures prove current code matches live Naver post HTML for the recorded fixture URLs.
 - `pnpm smoke:ui` uses mock flows and does not prove live Naver fetch or external upload behavior.
 - `pnpm test:network:resume-export` proves live fetch and resume export, but not external upload.
 - `pnpm test:network:upload` is the only bundled command that proves external upload state. It creates remote state.

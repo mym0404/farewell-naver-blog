@@ -42,7 +42,7 @@
 - SE2 blocks live under `src/modules/blocks/naver-se2`.
 - SE3 blocks live under `src/modules/blocks/naver-se3`.
 - SE4 blocks live under `src/modules/blocks/naver-se4`.
-- Fixture-backed sample coverage lives in `tests/fixtures/samples/*` and `tests/sample-fixtures.test.ts`.
+- Live-fetch sample coverage lives in `tests/fixtures/samples/*` and `tests/sample-fixtures.test.ts`.
 
 ## Important Seams
 - Parser block changes usually touch `BaseBlock.outputOptions`, an editor's `supportedBlocks`, `src/modules/blocks/*`, focused parser tests, and `.agents/knowledge/fixtures.md`.
