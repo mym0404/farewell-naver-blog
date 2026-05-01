@@ -1,0 +1,27 @@
+{
+  "sourceRoots": [
+    "src"
+  ],
+  "ignore": {
+    "generatedPaths": [
+      ".git/**",
+      ".worktrees/**",
+      "build/**",
+      "node_modules/**",
+      "dist/**",
+      "out/**",
+      ".eye/**",
+      "coverage/**",
+      ".next/**",
+      ".turbo/**",
+      ".cache/**",
+      "output/**",
+      "outputs/**"
+    ],
+    "additionalPaths": []
+  },
+  "indexing": {
+    "workerConcurrency": 4,
+    "includeHidden": true
+  }
+}
