@@ -6,26 +6,14 @@ import { compactText } from "../../../shared/Utils.js"
 
 const nestedBlockContainerTags = new Set(["div", "span", "font"])
 const spacerContainerTags = new Set(["p", "div", "span", "font", "b", "strong", "i", "em", "u"])
-const nestedBlockTags = new Set([
-  "p",
-  "div",
-  "table",
-  "blockquote",
-  "hr",
-  "pre",
-  "h1",
-  "h2",
-  "h3",
-  "h4",
-  "h5",
-  "h6",
-])
 
-const shouldTraverseNestedBlocks = ({
+const shouldUnwrapNestedBlocks = ({
   element,
+  matchLeafNode,
   tagName,
 }: {
   element: ReturnType<CheerioAPI>
+  matchLeafNode: ParserBlockContext["matchLeafNode"]
   tagName: string
 }) => {
   if (!nestedBlockContainerTags.has(tagName)) {
@@ -42,9 +30,7 @@ const shouldTraverseNestedBlocks = ({
     return false
   }
 
-  return childNodes.some(
-    (node) => node.type === "tag" && nestedBlockTags.has(node.tagName.toLowerCase()),
-  )
+  return childNodes.some((node) => node.type === "tag" && matchLeafNode(node))
 }
 
 export const isSpacerBlock = ({
@@ -73,11 +59,12 @@ export class NaverSe2ContainerBlock extends ContainerBlock {
   override readonly id = "container"
   override readonly label = "중첩 컨테이너"
 
-  override match({ node, $node }: ParserBlockContext) {
+  override match({ node, $node, matchLeafNode }: ParserBlockContext) {
     return (
       node.type === "tag" &&
-      shouldTraverseNestedBlocks({
+      shouldUnwrapNestedBlocks({
         element: $node,
+        matchLeafNode,
         tagName: node.tagName.toLowerCase(),
       })
     )

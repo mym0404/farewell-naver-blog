@@ -23,6 +23,7 @@ export type ParserBlockContext = {
   moduleData?: UnknownRecord | null
   moduleType?: string | null
   hasQuote?: boolean
+  matchLeafNode: (node: AnyNode) => boolean
 }
 
 export type ParserBlockConvertContext = ParserBlockContext & {

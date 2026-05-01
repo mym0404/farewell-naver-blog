@@ -18,7 +18,7 @@ import type {
   ParserBlockConvertContext,
   ParserBlockOptions,
 } from "../blocks/ParserNode.js"
-import type { BaseBlock } from "../blocks/BaseBlock.js"
+import { LeafBlock, type BaseBlock } from "../blocks/BaseBlock.js"
 
 const describeParserNode = ({ $node, node, moduleType }: ParserBlockContext) => {
   const tagName = node.type === "tag" ? node.tagName.toLowerCase() : node.type
@@ -152,16 +152,27 @@ export abstract class BaseEditor {
       }
     }
 
+    const createBlockContext = (node: AnyNode): ParserBlockContext => ({
+      $,
+      $node: $(node),
+      node,
+      sourceUrl,
+      tags,
+      options,
+      matchLeafNode,
+      ...moduleContext?.(node),
+    })
+
+    const matchLeafNode = (node: AnyNode) => {
+      const context = createBlockContext(node)
+
+      return this.supportedBlocks.some(
+        (supportedBlock) => supportedBlock instanceof LeafBlock && supportedBlock.match(context),
+      )
+    }
+
     const matchNode = (node: AnyNode): AstBlock[] => {
-      const context: ParserBlockContext = {
-        $,
-        $node: $(node),
-        node,
-        sourceUrl,
-        tags,
-        options,
-        ...moduleContext?.(node),
-      }
+      const context = createBlockContext(node)
       const block = this.supportedBlocks.find((supportedBlock) => supportedBlock.match(context))
 
       if (!block) {
