@@ -4,7 +4,8 @@ import type { ParserBlockContext, ParserBlockResult } from "../ParserNode.js"
 import { parseImageLink, se4ImageLinkSelector } from "./ImageLink.js"
 
 export class NaverSe4ImageGroupBlock extends LeafBlock {
-  override readonly outputId = "imageGroup"
+  override readonly id = "imageGroup"
+  override readonly label = "이미지 그룹"
   override readonly outputOptions = [
     {
       id: "split-images",

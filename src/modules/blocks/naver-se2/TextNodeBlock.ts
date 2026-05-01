@@ -4,7 +4,8 @@ import { LeafBlock } from "../BaseBlock.js"
 import type { ParserBlockContext, ParserBlockResult } from "../ParserNode.js"
 
 export class NaverSe2TextNodeBlock extends LeafBlock {
-  override readonly outputId = "paragraph"
+  override readonly id = "paragraph"
+  override readonly label = "문단"
   override readonly outputOptions = [
     {
       id: "markdown-paragraph",

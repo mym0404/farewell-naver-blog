@@ -318,6 +318,7 @@ const editorOutputCardClass = "field-card grid gap-4 rounded-2xl px-4 py-4 xl:co
 type SelectOption = {
   value: string
   label: string
+  description?: string
 }
 
 const OptionField = ({
@@ -377,7 +378,12 @@ const OptionSelectField = <T extends string,>({
       <SelectGroup>
         {options.map((option) => (
           <SelectItem key={`${inputId}:${option.value}`} value={option.value}>
-            {option.label}
+            <span className="min-w-0 truncate">
+              {option.label}
+              {option.description ? (
+                <span className="text-muted-foreground"> {option.description}</span>
+              ) : null}
+            </span>
           </SelectItem>
         ))}
       </SelectGroup>
@@ -599,14 +605,9 @@ const BlockOutputCard = ({
       data-block-output-editor={family.editorType}
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="grid gap-1">
-          <h4 className="text-base font-semibold tracking-[-0.03em] text-foreground">
-            {selectedOption.label}
-          </h4>
-          <p className="text-sm leading-6 text-muted-foreground">
-            {selectedOption.description}
-          </p>
-        </div>
+        <h4 className="text-base font-semibold tracking-[-0.03em] text-foreground">
+          {family.blockLabel}
+        </h4>
       </div>
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)]">
         <div className="grid content-start gap-4 self-start">
@@ -623,6 +624,7 @@ const BlockOutputCard = ({
                 options={family.options.map((option) => ({
                   value: option.id,
                   label: option.label,
+                  description: option.description,
                 }))}
                 onValueChange={(variant) =>
                   updateSelection((current) => ({
@@ -1573,6 +1575,16 @@ export const ExportOptionsPanel = ({
     diagnostics: diagnosticsSection,
   }
 
+  const formContent = (
+    <div id="export-form" className="form-stack grid gap-5">
+      {contentByStep[step]}
+    </div>
+  )
+
+  if (step === "markdown") {
+    return formContent
+  }
+
   return (
     <Card
       variant="panel"
@@ -1580,9 +1592,7 @@ export const ExportOptionsPanel = ({
       id="export-panel"
     >
       <CardContent className="panel-body grid gap-4 p-5">
-        <div id="export-form" className="form-stack grid gap-5">
-          {contentByStep[step]}
-        </div>
+        {formContent}
       </CardContent>
     </Card>
   )

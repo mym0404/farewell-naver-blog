@@ -4,7 +4,8 @@ import type { ParserBlockContext } from "../ParserNode.js"
 import { parseHtmlTable } from "../../parser/TableParser.js"
 
 export class NaverSe4TableBlock extends LeafBlock {
-  override readonly outputId = "table"
+  override readonly id = "table"
+  override readonly label = "표"
   override readonly outputOptions = [
     {
       id: "gfm-or-html",

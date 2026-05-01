@@ -28,6 +28,9 @@ const hasInlineGifVideo = ({ $node }: { $node: ReturnType<CheerioAPI> }) => {
 }
 
 export class NaverSe2InlineGifVideoBlock extends LeafBlock {
+  override readonly id = "inlineGifVideo"
+  override readonly label = "인라인 GIF 비디오"
+
   override match({ node, $node }: ParserBlockContext) {
     return node.type === "tag" && hasInlineGifVideo({ $node })
   }

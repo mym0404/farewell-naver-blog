@@ -79,6 +79,7 @@ export type EditorBlockOutputDefinition = {
   editorType: string
   editorLabel: string
   blockId: string
+  blockLabel: string
   options: OutputOption[]
 }
 

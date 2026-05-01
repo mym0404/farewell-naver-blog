@@ -3,7 +3,8 @@ import type { OutputOption } from "../../../shared/Types.js"
 import type { ParserBlockContext, ParserBlockResult } from "../ParserNode.js"
 
 export class NaverSe4DividerBlock extends LeafBlock {
-  override readonly outputId = "divider"
+  override readonly id = "divider"
+  override readonly label = "구분선"
   override readonly outputOptions = [
     {
       id: "dash-rule",

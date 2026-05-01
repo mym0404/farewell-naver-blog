@@ -49,7 +49,8 @@ const getStandaloneImages = ({
 }
 
 export class NaverSe2ImageBlock extends LeafBlock {
-  override readonly outputId = "image"
+  override readonly id = "image"
+  override readonly label = "이미지"
   override readonly outputOptions = [
     {
       id: "markdown-image",

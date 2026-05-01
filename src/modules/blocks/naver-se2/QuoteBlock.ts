@@ -5,7 +5,8 @@ import type { ParserBlockContext } from "../ParserNode.js"
 import type { OutputOption } from "../../../shared/Types.js"
 
 export class NaverSe2QuoteBlock extends LeafBlock {
-  override readonly outputId = "quote"
+  override readonly id = "quote"
+  override readonly label = "인용문"
   override readonly outputOptions = [
     {
       id: "blockquote",

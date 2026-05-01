@@ -6,7 +6,8 @@ import { LeafBlock } from "../BaseBlock.js"
 import type { ParserBlockContext } from "../ParserNode.js"
 
 export class NaverSe4FormulaBlock extends LeafBlock {
-  override readonly outputId = "formula"
+  override readonly id = "formula"
+  override readonly label = "수식"
   override readonly outputOptions = [
     {
       id: "wrapper",

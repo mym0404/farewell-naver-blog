@@ -40,7 +40,8 @@ const parseTextBlocks = ({
     }))
 
 export class NaverSe3TextBlock extends LeafBlock {
-  override readonly outputId = "paragraph"
+  override readonly id = "paragraph"
+  override readonly label = "문단"
   override readonly outputOptions = paragraphOutputOptions
 
   override match({ $node }: ParserBlockContext) {

@@ -69,6 +69,9 @@ export const isSpacerBlock = ({
 }
 
 export class NaverSe2ContainerBlock extends ContainerBlock {
+  override readonly id = "container"
+  override readonly label = "중첩 컨테이너"
+
   override match({ node, $node }: ParserBlockContext) {
     return (
       node.type === "tag" &&

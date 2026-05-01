@@ -6,8 +6,9 @@ import type {
 import type { OutputOption } from "../../shared/Types.js"
 
 export abstract class BaseBlock {
-  readonly outputId?: string
+  abstract readonly id: string
   readonly outputOptions?: readonly OutputOption[]
+  abstract readonly label: string
 
   abstract match(context: ParserBlockContext): boolean
 

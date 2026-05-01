@@ -7,7 +7,8 @@ import { LeafBlock } from "../BaseBlock.js"
 import type { ParserBlockContext, ParserBlockResult } from "../ParserNode.js"
 
 export class NaverSe4OembedBlock extends LeafBlock {
-  override readonly outputId = "linkCard"
+  override readonly id = "linkCard"
+  override readonly label = "임베드"
   override readonly outputOptions = linkCardOutputOptions
 
   override match({ $node, moduleType }: ParserBlockContext) {

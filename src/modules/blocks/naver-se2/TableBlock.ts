@@ -46,7 +46,8 @@ const parseColorScripterCodeBlock = ({
 }
 
 export class NaverSe2TableBlock extends LeafBlock {
-  override readonly outputId = "table"
+  override readonly id = "table"
+  override readonly label = "표"
   override readonly outputOptions = [
     {
       id: "gfm-or-html",

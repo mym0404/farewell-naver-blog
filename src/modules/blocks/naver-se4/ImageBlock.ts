@@ -4,7 +4,8 @@ import type { ParserBlockContext, ParserBlockResult } from "../ParserNode.js"
 import { parseImageLink, se4ImageLinkSelector } from "./ImageLink.js"
 
 export class NaverSe4ImageBlock extends LeafBlock {
-  override readonly outputId = "image"
+  override readonly id = "image"
+  override readonly label = "이미지"
   override readonly outputOptions = [
     {
       id: "markdown-image",

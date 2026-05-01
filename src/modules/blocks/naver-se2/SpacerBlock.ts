@@ -3,6 +3,9 @@ import type { ParserBlockContext, ParserBlockResult } from "../ParserNode.js"
 import { isSpacerBlock } from "./ContainerBlock.js"
 
 export class NaverSe2SpacerBlock extends LeafBlock {
+  override readonly id = "spacer"
+  override readonly label = "빈 줄"
+
   override match({ node, $node }: ParserBlockContext) {
     return (
       node.type === "tag" &&

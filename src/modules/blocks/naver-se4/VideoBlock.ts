@@ -4,7 +4,8 @@ import { LeafBlock } from "../BaseBlock.js"
 import type { ParserBlockContext } from "../ParserNode.js"
 
 export class NaverSe4VideoBlock extends LeafBlock {
-  override readonly outputId = "video"
+  override readonly id = "video"
+  override readonly label = "비디오"
   override readonly outputOptions = [
     {
       id: "source-link",

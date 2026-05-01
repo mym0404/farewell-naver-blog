@@ -3,7 +3,8 @@ import type { OutputOption } from "../../../shared/Types.js"
 import type { ParserBlockResult } from "../ParserNode.js"
 
 export class NaverSe2CodeBlock extends LeafBlock {
-  override readonly outputId = "code"
+  override readonly id = "code"
+  override readonly label = "코드"
   override readonly outputOptions = [
     {
       id: "backtick-fence",

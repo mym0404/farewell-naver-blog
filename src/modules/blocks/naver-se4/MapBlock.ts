@@ -8,7 +8,8 @@ const buildNaverMapSearchUrl = (query: string) =>
   `https://map.naver.com/p/search/${encodeURIComponent(query)}`
 
 export class NaverSe4MapBlock extends LeafBlock {
-  override readonly outputId = "linkCard"
+  override readonly id = "linkCard"
+  override readonly label = "지도"
   override readonly outputOptions = linkCardOutputOptions
 
   override match({ $node, moduleType }: ParserBlockContext) {

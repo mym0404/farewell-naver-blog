@@ -4,6 +4,9 @@ import type { ParserBlockContext, ParserBlockResult } from "../ParserNode.js"
 import { parseJsonAttribute } from "./JsonAttribute.js"
 
 export class NaverSe4StickerBlock extends LeafBlock {
+  override readonly id = "sticker"
+  override readonly label = "스티커"
+
   override match({ $node }: ParserBlockContext) {
     return $node.hasClass("se-sticker")
   }

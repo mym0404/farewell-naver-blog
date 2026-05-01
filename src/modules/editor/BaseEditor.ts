@@ -65,11 +65,11 @@ export abstract class BaseEditor {
     this.supportedBlocks.forEach((block) => {
       const outputOptions = block.outputOptions
 
-      if (!block.outputId || !outputOptions || outputOptions.length < 2) {
+      if (!block.id || !outputOptions || outputOptions.length < 2) {
         return
       }
 
-      const key = this.createBlockOutputSelectionKey(block.outputId)
+      const key = this.createBlockOutputSelectionKey(block.id)
 
       if (seenKeys.has(key)) {
         return
@@ -80,7 +80,8 @@ export abstract class BaseEditor {
         key,
         editorType: this.type,
         editorLabel: this.label,
-        blockId: block.outputId,
+        blockId: block.id,
+        blockLabel: block.label,
         options: [...outputOptions],
       })
     })
@@ -127,7 +128,7 @@ export abstract class BaseEditor {
       const outputOptions = parserBlock.outputOptions
       const firstOutputOption = outputOptions?.[0]
 
-      if (!parserBlock.outputId || !outputOptions || outputOptions.length < 2 || !firstOutputOption) {
+      if (!parserBlock.id || !outputOptions || outputOptions.length < 2 || !firstOutputOption) {
         return undefined
       }
 
@@ -135,7 +136,7 @@ export abstract class BaseEditor {
         blockType: firstOutputOption.preview.type,
         outputOptions,
         blockOutputs: options.blockOutputs,
-        selectionKey: this.createBlockOutputSelectionKey(parserBlock.outputId),
+        selectionKey: this.createBlockOutputSelectionKey(parserBlock.id),
       })
     }
 
@@ -149,7 +150,7 @@ export abstract class BaseEditor {
       const outputOptions = parserBlock.outputOptions
 
       if (
-        !parserBlock.outputId ||
+        !parserBlock.id ||
         !outputOptions ||
         outputOptions.length < 2 ||
         !outputOptions.some((option) => option.preview.type === parsedBlock.type)
@@ -157,10 +158,10 @@ export abstract class BaseEditor {
         return parsedBlock
       }
 
-      const selectionKey = this.createBlockOutputSelectionKey(parserBlock.outputId)
+      const selectionKey = this.createBlockOutputSelectionKey(parserBlock.id)
 
       if (
-        (parserBlock.outputId === "paragraph" || parserBlock.outputId === "linkCard") &&
+        (parserBlock.id === "paragraph" || parserBlock.id === "linkCard") &&
         !options.blockOutputs.defaults?.[selectionKey]
       ) {
         return parsedBlock

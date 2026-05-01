@@ -17,7 +17,8 @@ const parseJsonAttribute = (value: string | undefined) => {
 }
 
 export class NaverSe4MaterialBlock extends LeafBlock {
-  override readonly outputId = "linkCard"
+  override readonly id = "linkCard"
+  override readonly label = "자료 링크"
   override readonly outputOptions = linkCardOutputOptions
 
   override match({ $node }: ParserBlockContext) {

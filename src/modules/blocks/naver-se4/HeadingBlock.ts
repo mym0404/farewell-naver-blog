@@ -5,7 +5,8 @@ import { LeafBlock } from "../BaseBlock.js"
 import type { ParserBlockContext } from "../ParserNode.js"
 
 export class NaverSe4HeadingBlock extends LeafBlock {
-  override readonly outputId = "heading"
+  override readonly id = "heading"
+  override readonly label = "제목"
   override readonly outputOptions = [
     {
       id: "markdown-heading",

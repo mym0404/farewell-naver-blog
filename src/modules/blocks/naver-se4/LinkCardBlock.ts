@@ -4,7 +4,8 @@ import { LeafBlock } from "../BaseBlock.js"
 import type { ParserBlockContext, ParserBlockResult } from "../ParserNode.js"
 
 export class NaverSe4LinkCardBlock extends LeafBlock {
-  override readonly outputId = "linkCard"
+  override readonly id = "linkCard"
+  override readonly label = "링크 카드"
   override readonly outputOptions = linkCardOutputOptions
 
   override match({ $node, moduleType }: ParserBlockContext) {

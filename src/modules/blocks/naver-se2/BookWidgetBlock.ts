@@ -3,6 +3,9 @@ import type { ParserBlockContext, ParserBlockResult } from "../ParserNode.js"
 import { parseBookWidgetBlocks } from "./BookWidget.js"
 
 export class NaverSe2BookWidgetBlock extends LeafBlock {
+  override readonly id = "bookWidget"
+  override readonly label = "책 위젯"
+
   override match({ node, $node }: ParserBlockContext) {
     return node.type === "tag" && $node.is('[s_type="db"][s_subtype="book"]')
   }

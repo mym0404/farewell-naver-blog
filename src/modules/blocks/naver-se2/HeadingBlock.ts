@@ -6,7 +6,8 @@ import type { OutputOption } from "../../../shared/Types.js"
 import { compactText } from "../../../shared/Utils.js"
 
 export class NaverSe2HeadingBlock extends LeafBlock {
-  override readonly outputId = "heading"
+  override readonly id = "heading"
+  override readonly label = "제목"
   override readonly outputOptions = [
     {
       id: "markdown-heading",
