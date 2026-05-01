@@ -10,14 +10,12 @@
 - Blog scan and post HTML fetch start in `src/modules/fetcher/NaverBlogFetcher.ts`.
 - `src/modules/parser/PostParser.ts` builds a `src/modules/blog/NaverBlog.ts` instance and lets its editor instances choose the matching parser through `canParse`.
 - Editor classes own block ordering, output-option visibility order, and source-level context. Block-specific `match` and `convert` logic stays in `src/modules/blocks/*`.
-- `src/modules/reviewer/PostReviewer.ts` normalizes parse warnings before rendering.
 - `src/modules/converter/MarkdownRenderer.ts` renders AST blocks, frontmatter, image references, tables, and callouts into Markdown.
 - `src/modules/exporter/ExportPaths.ts`, `AssetStore.ts`, `PostLinkRewriter.ts`, and `ExportJobManifest.ts` handle output paths, deduped assets, post links, and `manifest.json`.
 
 ## Module Boundaries
 - `src/modules/fetcher`: Naver mobile API, post HTML fetch, and fetcher HTTP utilities.
 - `src/modules/parser`: SE2, SE3, SE4 HTML structures to common AST.
-- `src/modules/reviewer`: parse warning cleanup and review output.
 - `src/modules/converter`: AST to Markdown and frontmatter.
 - `src/modules/exporter`: export orchestration, asset persistence, upload/rewrite phase, single-post export.
 - `src/server`: local HTTP server, job store, local state/cache, upload provider catalog.

@@ -4,8 +4,9 @@
 
 ## 요구 사항
 
-- Node.js 20+
+- Node.js 24 LTS
 - pnpm
+- Bun
 
 ## 설치
 
@@ -25,11 +26,13 @@ pnpm dev
 ## 주요 검증 명령
 
 - `pnpm check:local`: 저장소 파일 변경 뒤 기본 회귀
-- `pnpm check:full`: 네트워크, sample export, UI smoke까지 포함한 전체 회귀
-- `pnpm parser:check`: parser capability와 sample 계약 확인
-- `pnpm samples:verify`: sample export 결과 확인
+- `pnpm check:unused`: source, test, script 코드의 unused 기준선 확인
+- `pnpm check:full`: `check:local`과 mock UI smoke 회귀 확인
+- `pnpm typecheck`: TypeScript 계약 확인
+- `pnpm test:offline`: Vitest와 sample fixture export 결과 확인
 - `pnpm smoke:ui`: scan -> export -> upload 결과 화면 확인
-- `pnpm quality:report`: parser/sample 품질 리포트 재생성
+- `pnpm test:network:resume-export`: live Naver resume export 확인
+- `pnpm test:network:resume-export:se2-table`: live SE2 table resume export 확인
 - `pnpm test:coverage`: coverage 게이트 확인
 
 ## 업로드 E2E 검증
@@ -60,13 +63,12 @@ pnpm test:network:upload
 
 ## 프로젝트 구조
 
-- `src/modules/blog-fetcher`: 네이버 블로그 스캔, 글/자산 fetch
+- `src/modules/fetcher`: 네이버 블로그 스캔, 글/자산 fetch
 - `src/modules/parser`: SE2, SE3, SE4 본문 파싱
-- `src/modules/reviewer`: 파싱 경고 정리
 - `src/modules/converter`: Markdown, frontmatter 렌더링
 - `src/modules/exporter`: export workflow와 Image Upload/rewrite
 - `src/server`: HTTP API, job 상태 관리
 - `src/ui`: React 로컬 웹 UI
-- `src/shared`: 타입, 옵션, parser capability, sample corpus
+- `src/shared`: 타입, 옵션, block output 선택, job 상태
 - `scripts/export-single-post.ts`: 단건 검증 CLI
 - `scripts/harness/*`: parser/sample/UI 검증 harness

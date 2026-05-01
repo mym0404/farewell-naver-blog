@@ -26,6 +26,7 @@
 - Parser block implementations should extend `ContainerBlock` or `LeafBlock` and return literal parser results with `as const` when inference would widen status or block types.
 - Keep editor and parser block relationships as direct `BaseBlock` instances inside each editor class.
 - Keep small helpers that only support one concrete parser block's `match` or `convert` logic inside that parser block file.
+- Inline single-use helpers when they only pass caller context through or hide a short expression; keep helpers when they name reused logic, a public/exported boundary, a test fixture factory, or a substantial domain step.
 - Split parser helper files only when at least two parser blocks reuse them or when the parsing logic is large enough that a separate file is easier to read.
 
 ## Date And Time

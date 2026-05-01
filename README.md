@@ -133,13 +133,14 @@ UI에서 아래 5개 옵션 묶음을 조절할 수 있습니다.
 - 자산 옵션: 이미지 다운로드, 썸네일 처리, 압축, 캡션, 업로드 방식
 
 ## 검증
-: 지원 범위와 샘플 검증 계약 확인
+- `pnpm typecheck`: TypeScript 계약 확인
 - `pnpm test:offline`: 대표 샘플 글을 실제 네이버에서 받아와 export 결과를 검증
+- `pnpm check:unused`: source, test, script 코드의 unused 기준선 확인
 - `pnpm smoke:ui`: Playwright 기반 UI 흐름과 작업 복구 회귀 확인
 - `pnpm test:network:resume-export`: 실제 네이버 export 중단 후 `manifest.json` 기반 resume export 회귀 확인
 - `pnpm test:network:resume-export:se2-table`: 실제 네이버 SE2 표 본문(`blogpeople`, 2013-06-26~2013-06-27, category 21)에서 output dir resume 회귀 확인
 - `pnpm check:local`: 저장소 파일 변경 뒤 기본 로컬 기준선 확인
-- `pnpm check:full`: 전체 기본 회귀 확인
+- `pnpm check:full`: `check:local`과 mock UI smoke 회귀 확인
 
 ## Upload Providers
 

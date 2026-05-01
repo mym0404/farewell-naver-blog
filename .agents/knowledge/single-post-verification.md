@@ -18,7 +18,7 @@ bun scripts/export-single-post.ts \
 - Open the public post in a browser.
 - Record visible editor version clues, block types, and unusual structure.
 - Run the CLI with a `tmp/manual-audit/<logNo>/` output.
-- Compare browser structure, `post.md`, `report.json`, and parser warnings.
+- Compare browser structure, `post.md`, and `report.json`.
 - Record whether the result is `as-expected`, `mismatch`, `error`, or `not-checked`.
 
 ## Code Anchors

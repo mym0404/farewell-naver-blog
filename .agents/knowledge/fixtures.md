@@ -26,6 +26,7 @@
 - `se4-image-group`
 - `se4-image-legacy-link`
 - `se4-quote-formula-code`
+- `se4-text-lists-nestjs`
 - `se4-video-table`
 
 ## Operating Rules
