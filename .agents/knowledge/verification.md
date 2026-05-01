@@ -8,8 +8,8 @@
 
 ## Primary Commands
 - `pnpm check:local`: `pnpm typecheck && pnpm test:offline`. Run after ordinary repository file changes.
-- `pnpm check:full`: `pnpm typecheck && pnpm test:offline && pnpm smoke:ui`. Run when user flow, UI state, exporter output, or shared runtime behavior may be affected.
-- `pnpm smoke:ui`: `pnpm build:ui && node --import tsx ./scripts/harness/run-ui-smoke-suite.ts`. Verifies mock-based scan, export, upload, theme persistence, and resume UI.
+- `pnpm check:full`: `pnpm check:local && pnpm smoke:ui`. Run when user flow, UI state, exporter output, or shared runtime behavior may be affected.
+- `pnpm smoke:ui`: `pnpm build:ui && bun scripts/harness/run-ui-smoke-suite.ts`. Verifies mock-based scan, export, upload, theme persistence, and resume UI.
 - `pnpm test:network`: builds UI once, then runs live resume export, SE2 table resume export, and live upload e2e. It needs external network and upload credentials and creates remote state.
 - `pnpm test:coverage`: runs Vitest with V8 coverage.
 
@@ -31,7 +31,7 @@
 
 ## CI
 - `.github/workflows/required-checks.yml` runs on non-draft pull requests.
-- CI uses Node.js 20 and pnpm 10.
+- CI uses Node.js 24, pnpm 10, and Bun 1.3.13.
 - CI runs `pnpm check:full`, writes `.env` with `FAREWELL_UPLOAD_E2E=1`, runs `pnpm test:network:upload`, runs `pnpm test:coverage`, then uploads `coverage/lcov.info` to Codecov.
 
 ## Task Loops

@@ -5,7 +5,7 @@
 
 ## Command Shape
 ```bash
-pnpm exec tsx scripts/export-single-post.ts \
+bun scripts/export-single-post.ts \
   --blogId mym0404 \
   --logNo 223034929697 \
   --outputDir tmp/manual-audit/223034929697/output \

@@ -56,7 +56,7 @@ describe("single-post cli", () => {
 
   it("shows the real pnpm exec entrypoint in the usage string", () => {
       expect(singlePostCliUsage()).toBe(
-      "Usage: pnpm exec tsx scripts/export-single-post.ts --blogId my-blog --logNo 123456789012 --outputDir ./output [--report ./output/report.json] [--manualReviewMarkdownPath ./output/post.md] [--metadataCachePath ./output/metadata-cache.json] [--options ./config/single-post.json] [--stdout]",
+      "Usage: bun scripts/export-single-post.ts --blogId my-blog --logNo 123456789012 --outputDir ./output [--report ./output/report.json] [--manualReviewMarkdownPath ./output/post.md] [--metadataCachePath ./output/metadata-cache.json] [--options ./config/single-post.json] [--stdout]",
       )
     })
 

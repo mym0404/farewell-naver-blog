@@ -5,7 +5,7 @@
 - 로컬 웹 UI, 단건 export CLI, fixture-first regression, Playwright UI smoke, live network e2e를 함께 유지한다.
 
 ## Tech Stack
-- `pnpm` 단일 저장소에서 Node.js ESM, TypeScript, `tsx`를 사용한다.
+- `pnpm` 단일 저장소에서 Node.js 24 LTS, Node.js ESM, TypeScript, Bun 기반 TS 실행을 사용한다.
 - 웹 UI는 React, Vite, Tailwind CSS v4, shadcn/Radix, Sonner로 구성된다.
 - 검증은 Vitest, Playwright, `scripts/harness/*`가 맡는다.
 

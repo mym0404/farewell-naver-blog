@@ -196,7 +196,7 @@ const startServer = async ({
   delayedLogNos?: string[]
   delayMs?: number
 }) => {
-  const child = spawn("pnpm", ["exec", "tsx", "scripts/harness/run-live-server.ts"], {
+  const child = spawn("bun", ["scripts/harness/run-live-server.ts"], {
     cwd: repoRoot,
     detached: true,
     env: {

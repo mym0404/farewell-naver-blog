@@ -6,7 +6,7 @@ import type {
   ExportOptions,
 } from "../../src/shared/Types.js"
 
-const entrypoint = "pnpm exec tsx scripts/export-single-post.ts"
+const entrypoint = "bun scripts/export-single-post.ts"
 
 const allowedTopLevelOptionKeys = ["scope", "structure", "frontmatter", "blockOutputs", "unsupportedBlockCases", "assets", "links"] as const
 const allowedScopeKeys = ["categoryIds", "categoryMode", "dateFrom", "dateTo"] as const

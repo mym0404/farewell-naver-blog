@@ -20,7 +20,7 @@ const runHarness = ({
   scriptPath: string
 }) =>
   new Promise<void>((resolve, reject) => {
-    const child = spawn("pnpm", ["exec", "tsx", scriptPath, ...extraArgs], {
+    const child = spawn("bun", [scriptPath, ...extraArgs], {
       cwd: process.cwd(),
       env: {
         ...process.env,
