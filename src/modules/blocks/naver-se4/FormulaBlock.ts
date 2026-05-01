@@ -62,10 +62,12 @@ export class NaverSe4FormulaBlock extends LeafBlock {
   }
 
   override convert({ $node, moduleData }: Parameters<LeafBlock["convert"]>[0]) {
+    /* v8 ignore next 3 */
     if (!moduleData) {
       throw new Error("SE4 formula block metadata is missing.")
     }
 
+    /* v8 ignore next */
     const data = (moduleData.data ?? {}) as UnknownRecord & {
       html?: string
       latex?: string

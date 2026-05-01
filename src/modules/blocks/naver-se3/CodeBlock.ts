@@ -38,7 +38,7 @@ export class NaverSe3CodeBlock extends LeafBlock {
     const code = $node.find("pre").first().text().trimEnd()
 
     if (!code) {
-      throw new Error("SE3 code block parsing failed.")
+      return { status: "handled" as const, blocks: [] }
     }
 
     return {

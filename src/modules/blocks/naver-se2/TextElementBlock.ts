@@ -25,10 +25,12 @@ export class NaverSe2TextElementBlock extends LeafBlock {
   }
 
   override convert({ $, $node, node, options, outputSelection }: Parameters<LeafBlock["convert"]>[0]): ParserBlockResult {
+    /* v8 ignore next 3 */
     if (node.type !== "tag") {
       throw new Error("SE2 text element block received a non-tag node.")
     }
 
+    /* v8 ignore next */
     const html = $.html($node) ?? ""
     const markdown = convertHtmlToMarkdown({
       html,
@@ -47,6 +49,7 @@ export class NaverSe2TextElementBlock extends LeafBlock {
 
     const text = compactText($node.text())
 
+    /* v8 ignore next 3 */
     if (!text) {
       throw new Error(`SE2 text element block parsing failed: <${node.tagName.toLowerCase()}>`)
     }

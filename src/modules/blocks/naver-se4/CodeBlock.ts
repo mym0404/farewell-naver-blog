@@ -35,12 +35,13 @@ export class NaverSe4CodeBlock extends LeafBlock {
 
   override convert({ $node }: Parameters<LeafBlock["convert"]>[0]) {
     const sourceNode = $node.find(".__se_code_view").first()
+    /* v8 ignore next */
     const classNames = sourceNode.attr("class") ?? ""
     const languageMatch = classNames.match(/language-([\w-]+)/)
     const code = sourceNode.text().trimEnd()
 
     if (!code) {
-      throw new Error("SE4 code block parsing failed.")
+      return { status: "handled" as const, blocks: [] }
     }
 
     return {

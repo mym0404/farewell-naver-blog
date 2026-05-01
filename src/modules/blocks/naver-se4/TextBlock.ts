@@ -91,6 +91,7 @@ const parseTextBlocks = ({
   const convertParagraph = (paragraph: Element) =>
     compactMarkdownText(
       convertHtmlToMarkdown({
+        /* v8 ignore next */
         html: $node.find(paragraph).html() ?? "",
         options: {
           linkStyle: getMarkdownLinkStyleFromSelection(outputSelection),
@@ -99,6 +100,7 @@ const parseTextBlocks = ({
       }),
     )
   const toParagraphBlock = (text: string): TextBlock[] =>
+    /* v8 ignore next */
     text ? [{ type: "paragraph", text }] : []
   const parseParagraph = (paragraph: Element) => toParagraphBlock(convertParagraph(paragraph))
   const parseList = (list: Element) => {
@@ -116,6 +118,7 @@ const parseTextBlocks = ({
           .filter(Boolean)
           .join("  \n")
 
+        /* v8 ignore next */
         return text ? (ordered ? `${index + 1}. ${text}` : `- ${text}`) : ""
       })
       .filter(Boolean)

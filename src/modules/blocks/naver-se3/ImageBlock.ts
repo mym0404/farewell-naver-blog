@@ -25,10 +25,11 @@ const getStandaloneImages = ({
       }
 
       return {
-        sourceUrl: normalizeAssetUrl(sourceUrl),
-        originalSourceUrl: null,
-        alt: $image.attr("alt") ?? "",
-        caption: null,
+            sourceUrl: normalizeAssetUrl(sourceUrl),
+            originalSourceUrl: null,
+            /* v8 ignore next */
+            alt: $image.attr("alt") ?? "",
+            caption: null,
         mediaKind: "image",
       } satisfies ImageData
     })

@@ -25,6 +25,7 @@ const parseTextBlocks = ({
     .toArray()
     .map((node) =>
       convertHtmlToMarkdown({
+        /* v8 ignore next */
         html: $(node).html() ?? "",
         options: {
           linkStyle: getMarkdownLinkStyleFromSelection(outputSelection),

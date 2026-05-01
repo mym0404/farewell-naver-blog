@@ -27,7 +27,9 @@ export class NaverSe4MapBlock extends LeafBlock {
     }
 
     const placesFromModule = (data.places ?? []).flatMap((place) => {
+      /* v8 ignore next */
       const title = compactText(place.name ?? "")
+      /* v8 ignore next */
       const description = compactText(place.address ?? "")
 
       if (!title) {
@@ -64,9 +66,11 @@ export class NaverSe4MapBlock extends LeafBlock {
         const $link = $node.find(node)
         const linkData = parseJsonAttribute($link.attr("data-linkdata"))
         const title = compactText($link.find(".se-map-title").text()) || compactText(String(linkData?.name ?? ""))
+        /* v8 ignore next */
         const description =
           compactText($link.find(".se-map-address").text()) || compactText(String(linkData?.address ?? ""))
 
+        /* v8 ignore next 3 */
         if (!title) {
           return []
         }

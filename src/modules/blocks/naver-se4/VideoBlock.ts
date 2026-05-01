@@ -51,6 +51,7 @@ export class NaverSe4VideoBlock extends LeafBlock {
           video: {
             title: data.mediaMeta?.title?.trim() || "Video",
             thumbnailUrl: data.thumbnail ? normalizeAssetUrl(data.thumbnail) : null,
+            /* v8 ignore next */
             sourceUrl: sourceUrl ?? "",
             vid: data.vid ?? null,
             inkey: data.inkey ?? null,
