@@ -6,7 +6,6 @@ import type {
 } from "../../../shared/Types.js"
 import {
   DEFAULT_UPLOAD_PROVIDER_KEY,
-  EMPTY_SELECT_VALUE,
   UPLOAD_PROVIDER_KEYS,
 } from "../../../shared/UploadProviderKeys.js"
 
@@ -14,8 +13,7 @@ const INDEX_MARKDOWN_FILE = "index.md"
 
 export type JobFilter = "all" | "warnings" | "errors"
 export type JobResultsMode = "running" | "upload" | "result"
-export type JobItemSeverity = "success" | "warning" | "error"
-export type UploadRowStatus = "pending" | "partial" | "complete" | "failed"
+type JobItemSeverity = "success" | "warning" | "error"
 
 export const severityMeta = {
   success: {
@@ -234,4 +232,3 @@ export const buildUploadedLinkMeta = (item: ExportJobState["items"][number]) =>
 
 export const isGitHubProvider = (providerKey: string) => providerKey === UPLOAD_PROVIDER_KEYS.GITHUB
 export const isAListProvider = (providerKey: string) => providerKey === UPLOAD_PROVIDER_KEYS.ALIST
-export const getEmptySelectValue = () => EMPTY_SELECT_VALUE

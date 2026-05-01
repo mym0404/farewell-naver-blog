@@ -1,4 +1,4 @@
-export const exportOptionsSteps = [
+const exportOptionsSteps = [
   "structure",
   "frontmatter",
   "markdown",

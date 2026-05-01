@@ -36,7 +36,7 @@ export class ImageUploadPhaseError extends Error {
   }
 }
 
-export type RunImageUploadPhaseInput = {
+type RunImageUploadPhaseInput = {
   outputDir: string
   candidates: UploadCandidate[]
   uploaderKey: string

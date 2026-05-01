@@ -9,7 +9,6 @@ import type {
   OptionDescriptionMap,
   ScanResult,
   ThemePreference,
-  UploadProviderCatalogResponse,
 } from "../../shared/Types.js"
 
 export type ExportBootstrapResponse = {
@@ -126,5 +125,3 @@ export const postUploadJson = <T>(input: RequestInfo | URL, body: unknown) =>
     },
     body: JSON.stringify(body),
   })
-
-export type ExportJobResponse = Pick<ExportJobState, "id" | "status">

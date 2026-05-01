@@ -43,15 +43,15 @@ type ExpectedFrontmatter = {
   error?: string
 }
 
-export const getSampleFixtureDir = (sampleId: string) =>
+const getSampleFixtureDir = (sampleId: string) =>
   repoPath("tests", "fixtures", "samples", sampleId)
 
-export const getSampleFixtureRoot = () => repoPath("tests", "fixtures", "samples")
+const getSampleFixtureRoot = () => repoPath("tests", "fixtures", "samples")
 
-export const getSampleExpectedMarkdownPath = (sampleId: string) =>
+const getSampleExpectedMarkdownPath = (sampleId: string) =>
   path.join(getSampleFixtureDir(sampleId), "expected.md")
 
-export const getSampleExpectedErrorPath = (sampleId: string) =>
+const getSampleExpectedErrorPath = (sampleId: string) =>
   path.join(getSampleFixtureDir(sampleId), "expected-error.md")
 
 const assertString = (value: unknown, key: string) => {
@@ -123,10 +123,9 @@ const createSamplePostHtmlCache = (cacheDir: string): NaverBlogFetcherCache => {
   }
 }
 
-export const readSampleFixtureEntry = async (sampleId: string): Promise<SampleFixtureEntry> => {
+const readSampleFixtureEntry = async (sampleId: string): Promise<SampleFixtureEntry> => {
   const expectedMarkdownPath = getSampleExpectedMarkdownPath(sampleId)
   const expectedErrorPath = getSampleExpectedErrorPath(sampleId)
-  const hasExpectedMarkdown = await pathExists(expectedMarkdownPath)
   const hasExpectedError = await pathExists(expectedErrorPath)
   const expectedMarkdown = await readUtf8(hasExpectedError ? expectedErrorPath : expectedMarkdownPath)
   const frontmatter = parseExpectedFrontmatter(expectedMarkdown)
@@ -180,7 +179,7 @@ export const listSampleFixtures = async () => {
   return fixtureEntries
 }
 
-export const createSampleVerificationOptions = (): ExportOptions => {
+const createSampleVerificationOptions = (): ExportOptions => {
   const options = defaultExportOptions()
 
   options.assets.imageHandlingMode = "remote"
@@ -191,7 +190,7 @@ export const createSampleVerificationOptions = (): ExportOptions => {
   return options
 }
 
-export const buildSamplePostSummary = (sample: SampleFixtureEntry): PostSummary => ({
+const buildSamplePostSummary = (sample: SampleFixtureEntry): PostSummary => ({
   blogId: sample.blogId,
   logNo: sample.logNo,
   title: sample.post.title,
@@ -202,7 +201,7 @@ export const buildSamplePostSummary = (sample: SampleFixtureEntry): PostSummary 
   thumbnailUrl: sample.post.thumbnailUrl,
 })
 
-export const buildSampleCategory = (sample: SampleFixtureEntry): CategoryInfo => ({
+const buildSampleCategory = (sample: SampleFixtureEntry): CategoryInfo => ({
   id: sample.post.categoryId,
   name: sample.post.categoryName,
   parentId: null,
@@ -213,7 +212,7 @@ export const buildSampleCategory = (sample: SampleFixtureEntry): CategoryInfo =>
   depth: Math.max(sample.post.categoryPath.length - 1, 0),
 })
 
-export const normalizeMarkdownFixture = (markdown: string) =>
+const normalizeMarkdownFixture = (markdown: string) =>
   `${markdown.replace(/\r\n/g, "\n").replace(/\n+$/g, "")}\n`
 
 export const renderSampleFixture = async ({

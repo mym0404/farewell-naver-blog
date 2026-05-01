@@ -116,7 +116,7 @@ export const frontmatterFieldMeta: Record<FrontmatterFieldName, FrontmatterField
   },
 }
 
-export const frontmatterAliasPattern = /^[A-Za-z_][A-Za-z0-9_-]*$/
+const frontmatterAliasPattern = /^[A-Za-z_][A-Za-z0-9_-]*$/
 
 export const optionDescriptions: OptionDescriptionMap = {
   "scope-categoryMode": "선택한 카테고리만 내보낼지, 하위 카테고리까지 함께 포함할지 정합니다.",

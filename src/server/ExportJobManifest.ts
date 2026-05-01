@@ -82,7 +82,7 @@ const buildFallbackManifest = ({
   posts: job.items.map((item) => buildPostManifestEntryFromItem(item)),
 })
 
-export const getExportManifestPath = (outputDir: string) =>
+const getExportManifestPath = (outputDir: string) =>
   path.join(resolveRepoPath(outputDir), manifestFileName)
 
 export const readExportManifest = async (outputDir: string) => {

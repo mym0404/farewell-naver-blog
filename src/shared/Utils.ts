@@ -5,7 +5,6 @@ import { fileURLToPath } from "node:url"
 export {
   formatCategorySegment,
   formatTitleSegment,
-  getDateSlug,
   sanitizeCategoryName,
   sanitizePathSegment,
   slugifyTitle,

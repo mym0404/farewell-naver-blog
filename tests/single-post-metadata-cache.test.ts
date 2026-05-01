@@ -2,7 +2,7 @@ import { mkdtemp, readFile, rm } from "node:fs/promises"
 import path from "node:path"
 import { tmpdir } from "node:os"
 
-import { describe, expect, it, vi } from "vitest"
+import { describe, expect, it } from "vitest"
 
 import { createSinglePostMetadataCachingFetcher } from "../scripts/lib/single-post-metadata-cache.js"
 

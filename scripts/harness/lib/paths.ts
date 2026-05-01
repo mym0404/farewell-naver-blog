@@ -1,16 +1,13 @@
 import path from "node:path"
-import { access, mkdir, readdir, readFile, writeFile } from "node:fs/promises"
+import { access, mkdir, readFile, writeFile } from "node:fs/promises"
 import { constants } from "node:fs"
 import { fileURLToPath } from "node:url"
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 
-export const repoRoot = path.resolve(here, "../../..")
+const repoRoot = path.resolve(here, "../../..")
 
 export const repoPath = (...segments: string[]) => path.join(repoRoot, ...segments)
-
-export const toRepoRelativePath = (absolutePath: string) =>
-  path.relative(repoRoot, absolutePath).split(path.sep).join("/")
 
 export const pathExists = async (targetPath: string) => {
   try {
@@ -19,25 +16,6 @@ export const pathExists = async (targetPath: string) => {
   } catch {
     return false
   }
-}
-
-export const walkFiles = async (targetPath: string): Promise<string[]> => {
-  const entries = await readdir(targetPath, {
-    withFileTypes: true,
-  })
-  const nested = await Promise.all(
-    entries.map(async (entry) => {
-      const absolutePath = path.join(targetPath, entry.name)
-
-      if (entry.isDirectory()) {
-        return walkFiles(absolutePath)
-      }
-
-      return [absolutePath]
-    }),
-  )
-
-  return nested.flat()
 }
 
 export const readUtf8 = (targetPath: string) => readFile(targetPath, "utf8")

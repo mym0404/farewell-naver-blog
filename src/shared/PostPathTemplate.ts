@@ -24,9 +24,9 @@ export const postTemplateKeys = [
   "D",
 ] as const
 
-export type PostTemplateKey = (typeof postTemplateKeys)[number]
+type PostTemplateKey = (typeof postTemplateKeys)[number]
 
-export type PostTemplateValues = Record<PostTemplateKey, string>
+type PostTemplateValues = Record<PostTemplateKey, string>
 
 const postTemplatePattern = /\{(slug|category|title|logNo|blogId|date|year|YYYY|YY|month|MM|M|day|DD|D)\}/g
 

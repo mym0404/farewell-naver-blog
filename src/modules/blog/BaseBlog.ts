@@ -3,7 +3,7 @@ import type { CheerioAPI } from "cheerio"
 import type { EditorBlockOutputDefinition, ExportOptions, ParsedPost } from "../../shared/Types.js"
 import type { BaseEditor } from "../editor/BaseEditor.js"
 
-export type BlogPostParseInput = {
+type BlogPostParseInput = {
   $: CheerioAPI
   html: string
   sourceUrl: string

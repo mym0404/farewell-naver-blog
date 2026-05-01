@@ -6,7 +6,7 @@ import type { SinglePostFetcher } from "../../src/modules/exporter/SinglePostExp
 import { log } from "../../src/shared/Logger.js"
 import type { PostSummary, ScanResult } from "../../src/shared/Types.js"
 
-export type SinglePostMetadataCacheFile = {
+type SinglePostMetadataCacheFile = {
   blogId: string
   scan: ScanResult
   posts: PostSummary[]

@@ -6,7 +6,7 @@ import type { MarkdownLinkStyle } from "../../shared/Types.js"
 
 const createDocument = (html: string) => new JSDOM(`<body>${html}</body>`).window.document
 
-export type HtmlFragmentConversionOptions = {
+type HtmlFragmentConversionOptions = {
   linkStyle?: MarkdownLinkStyle
   dividerMarker?: "---" | "***"
 }
@@ -38,7 +38,7 @@ const createService = ({
   return service
 }
 
-export const sanitizeHtmlFragment = (html: string) => {
+const sanitizeHtmlFragment = (html: string) => {
   const document = createDocument(html)
 
   document.querySelectorAll("script, style, noscript").forEach((node) => {

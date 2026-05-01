@@ -20,7 +20,7 @@ export const setupSteps = [
 export type SetupStep = (typeof setupSteps)[number]
 export type WizardStep = SetupStep | "running" | "upload" | "result"
 
-export type SummaryCard = {
+type SummaryCard = {
   label: string
   value: string
 }

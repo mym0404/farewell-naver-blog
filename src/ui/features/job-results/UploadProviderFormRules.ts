@@ -11,7 +11,7 @@ export type ProviderUiState = {
   githubUseJsDelivr: boolean
 }
 
-export type UploadProviderFieldRule = {
+type UploadProviderFieldRule = {
   description: string
   disabled: boolean
   disabledReason: string | null

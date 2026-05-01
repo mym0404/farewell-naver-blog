@@ -1,7 +1,6 @@
 import type {
   AstBlock,
   BlockOutputSelection,
-  ExportOptions,
   ImageData,
   MarkdownLinkStyle,
 } from "./Types.js"
@@ -84,7 +83,7 @@ export const createLinkFormatter = ({
 
 const isDegenerateMarkdownLine = (line: string) => /^[*_~`]+$/.test(line.trim())
 
-export const normalizeMarkdownText = (text: string) =>
+const normalizeMarkdownText = (text: string) =>
   compactMarkdownText(text.replace(/([^\s*])\*{4,}([^\s*])/g, "$1**$2"))
     .split("\n")
     .filter((line) => line.trim() && !isDegenerateMarkdownLine(line))
@@ -179,7 +178,7 @@ export type RenderDiagnostic = {
   detail?: string
 }
 
-export const renderDiagnosticCallout = ({
+const renderDiagnosticCallout = ({
   level,
   message,
   detail,
@@ -334,27 +333,6 @@ export const composeSnippetWithReferences = ({
   const referenceSection = linkFormatter.renderReferenceSection()
 
   return [body, referenceSection].filter(Boolean).join("\n\n")
-}
-
-export type RawHtmlRenderPreview = {
-  body: string
-  diagnostics: RenderDiagnostic[]
-}
-
-export const composeRawHtmlPreview = ({
-  body,
-  diagnostics,
-  linkFormatter,
-}: RawHtmlRenderPreview & {
-  linkFormatter: Pick<ReturnType<typeof createLinkFormatter>, "renderReferenceSection">
-}) => {
-  return [
-    buildDiagnosticsSection(diagnostics),
-    body,
-    linkFormatter.renderReferenceSection(),
-  ]
-    .filter(Boolean)
-    .join("\n\n")
 }
 
 export const getHtmlConversionOptions = ({

@@ -1,14 +1,14 @@
-export type ExportProfile = "gfm"
+type ExportProfile = "gfm"
 
 export type ThemePreference = "dark" | "light"
 
-export type CategorySelectionMode = "selected-and-descendants" | "exact-selected"
+type CategorySelectionMode = "selected-and-descendants" | "exact-selected"
 
 export type SlugStyle = "kebab" | "snake" | "keep-title"
 
 export type SlugWhitespace = "dash" | "underscore" | "keep-space"
 
-export type PostFolderNameMode = "preset" | "custom-template"
+type PostFolderNameMode = "preset" | "custom-template"
 
 export type FrontmatterFieldName =
   | "title"
@@ -34,22 +34,6 @@ export type FrontmatterFieldMeta = {
 
 export type MarkdownLinkStyle = "inlined" | "referenced"
 
-export type FormulaInlineStyle = "wrapper"
-
-export type FormulaBlockStyle = "wrapper" | "math-fence"
-
-export type TableStyle = "gfm-or-html" | "html-only"
-
-export type ImageStyle = "markdown-image" | "linked-image" | "source-only"
-
-export type ImageGroupStyle = "split-images" | "html"
-
-export type RawHtmlPolicy = "keep" | "omit"
-
-export type DividerStyle = "dash" | "asterisk"
-
-export type CodeFenceStyle = "backtick" | "tilde"
-
 export type BlockOutputParamValue = string | number | boolean
 
 export type BlockOutputSelection = {
@@ -57,7 +41,7 @@ export type BlockOutputSelection = {
   params?: Record<string, BlockOutputParamValue>
 }
 
-export type OutputOptionParam = {
+type OutputOptionParam = {
   key: string
   label: string
   description: string
@@ -83,24 +67,24 @@ export type EditorBlockOutputDefinition = {
   options: OutputOption[]
 }
 
-export type AstBlockOutputSelection = {
+type AstBlockOutputSelection = {
   outputSelectionKey?: string
   outputSelection?: BlockOutputSelection
 }
 
-export type ImageHandlingMode = "download" | "remote" | "download-and-upload"
+type ImageHandlingMode = "download" | "remote" | "download-and-upload"
 
-export type AssetDownloadFailureMode =
+type AssetDownloadFailureMode =
   | "warn-and-use-source"
   | "use-source"
   | "omit"
   | "warn-and-omit"
 
-export type ThumbnailSource = "post-list-first" | "first-body-image" | "none"
+type ThumbnailSource = "post-list-first" | "first-body-image" | "none"
 
-export type StickerAssetMode = "ignore" | "download-original"
+type StickerAssetMode = "ignore" | "download-original"
 
-export type SameBlogPostLinkMode = "keep-source" | "custom-url" | "relative-filepath"
+type SameBlogPostLinkMode = "keep-source" | "custom-url" | "relative-filepath"
 
 export type OptionDescriptionMap = Record<string, string>
 export type UnknownRecord = Record<string, unknown>
@@ -108,11 +92,11 @@ export type UnknownRecord = Record<string, unknown>
 export type UploadProviderValue = string | number | boolean
 export type UploadProviderFields = Record<string, UploadProviderValue>
 
-export type UploadProviderInputType = "text" | "password" | "number" | "select" | "checkbox"
+type UploadProviderInputType = "text" | "password" | "number" | "select" | "checkbox"
 
 export type UploadProviderOptionValue = string | number
 
-export type UploadProviderFieldOption = {
+type UploadProviderFieldOption = {
   label: string
   value: UploadProviderOptionValue
 }
@@ -147,9 +131,9 @@ export type ExportJobPollingConfig = {
   uploadBurstAttempts: number
 }
 
-export type UploadTerminalReason = "skipped-no-candidates"
+type UploadTerminalReason = "skipped-no-candidates"
 
-export type UploadRewriteStatus = "pending" | "completed" | "failed"
+type UploadRewriteStatus = "pending" | "completed" | "failed"
 
 export type UploadStatus =
   | "not-requested"
@@ -159,7 +143,7 @@ export type UploadStatus =
   | "upload-failed"
   | "skipped"
 
-export type UploadSummary = {
+type UploadSummary = {
   status: UploadStatus
   eligiblePostCount: number
   candidateCount: number
@@ -175,7 +159,7 @@ export type UploadCandidate = {
   markdownReference: string
 }
 
-export type PostUploadSummary = {
+type PostUploadSummary = {
   eligible: boolean
   candidateCount: number
   uploadedCount: number
@@ -245,7 +229,7 @@ export type JobStatus =
   | "completed"
   | "failed"
 
-export type JobLog = {
+type JobLog = {
   timestamp: string
   message: string
 }
@@ -272,14 +256,14 @@ export type PostSummary = {
   thumbnailUrl: string | null
 }
 
-export type LinkCardData = {
+type LinkCardData = {
   title: string
   description: string
   url: string
   imageUrl: string | null
 }
 
-export type VideoData = {
+type VideoData = {
   title: string
   thumbnailUrl: string | null
   sourceUrl: string
@@ -289,7 +273,7 @@ export type VideoData = {
   height: number | null
 }
 
-export type TableCell = {
+type TableCell = {
   text: string
   html: string
   colspan: number
@@ -299,7 +283,7 @@ export type TableCell = {
 
 export type TableRow = TableCell[]
 
-export type MediaKind = "image" | "sticker"
+type MediaKind = "image" | "sticker"
 
 export type ImageData = {
   sourceUrl: string
@@ -430,7 +414,7 @@ export type ExportResumeSummary = {
 
 export type ExportManifestScanResult = Pick<ScanResult, "blogId" | "totalPostCount">
 
-export type ExportManifestJobState = {
+type ExportManifestJobState = {
   id: string
   phase: ExportResumePhase
   request: ExportRequest

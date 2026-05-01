@@ -5,7 +5,6 @@ import { cloneExportOptions } from "../../shared/ExportOptions.js"
 import { isPostWithinScope } from "../../shared/ExportScope.js"
 import type {
   ExportOptions,
-  ParsedPost,
   PostSummary,
   ScanResult,
   AstBlock,
@@ -37,7 +36,7 @@ export type SinglePostFetcher = {
   }>
 }
 
-export type ExportSinglePostDiagnostics = {
+type ExportSinglePostDiagnostics = {
   post: PostSummary
   markdown: string
   markdownFilePath: string
