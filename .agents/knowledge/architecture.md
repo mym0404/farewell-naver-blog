@@ -23,30 +23,13 @@
 - `src/ui`: React wizard, scan/options/results/resume surfaces, shadcn primitives, API client.
 
 ## Parser Block Contract
-- Blog parser ownership starts in `src/modules/blog/BaseBlog.ts` and `src/modules/blog/NaverBlog.ts`.
-- Editor classes hold `BaseBlock[]` instances directly; there is no string id registry between blog, editor, and parser block.
-- Editor `supportedBlocks` arrays are ordered first-match lists; unmatched nodes fail parsing.
-- `src/modules/editor/BaseEditor.ts` injects `matchLeafNode` into parser block match context and `matchNode` into convert context so container blocks use the current editor's parser block list.
-- `ContainerBlock` matches wrapper nodes by checking whether direct child elements match any current `LeafBlock`, then recursively parses those child nodes; `LeafBlock` owns concrete AST conversion.
-- Parser blocks may return `skip` only for intentionally ignored non-content nodes such as document titles, spacer nodes, empty text nodes, and top-level line breaks.
-- Parser blocks must throw when a matched content node cannot be converted.
-- Parser block classes own optional `BaseBlock.outputOptions` arrays. Each option describes the parser block output choice, preview, default marker, and params.
-- `src/shared/Types.ts` `AstBlock` union is the source of truth for block type strings; `BlockType` is derived from `AstBlock["type"]`.
-- `src/modules/blog/BaseBlog.ts` derives selectable output definitions from its editors, and `src/modules/editor/BaseEditor.ts` filters to blocks with at least two output options and keys selections as `editorType:blockId`.
-- `src/modules/editor/BaseEditor.ts` resolves selectable AST block output choices by `editorType:blockId`; explicit selections are stamped onto AST blocks when render-time metadata is needed.
-- Paragraph link style is not a global Markdown option. Text parser blocks read their editor-specific paragraph output selection before HTML-to-Markdown conversion.
-- Output option metadata stays on concrete parser block classes, even when labels or defaults are duplicated across SE2, SE3, and SE4 blocks. `src/shared/BlockRegistry.ts` only resolves selection values from parser-provided options and stored export options.
-- Server bootstrap includes `BaseBlog`-derived block output definitions for the UI. Shared export option code receives those definitions from server/exporter/CLI callers instead of importing blog or editor classes.
-- Parser block base classes are in `src/modules/blocks/BaseBlock.ts`; parser context/result types are in `src/modules/blocks/ParserNode.ts`.
-- Small helpers that serve one concrete parser block stay inside that block file.
-- Parser helper files are for cross-block reuse or large parsing routines; `src/modules/blocks/common` is for helpers reused across parser families.
-- SE2 blocks live under `src/modules/blocks/naver-se2`.
-- SE3 blocks live under `src/modules/blocks/naver-se3`.
-- SE4 blocks live under `src/modules/blocks/naver-se4`.
-- Live-fetch sample coverage lives in `tests/fixtures/samples/*` and `tests/helpers/sample-fixtures.spec.ts`.
+- Blog -> editor -> parser block routing and file layout rules live in `.agents/knowledge/parser-architecture.md`.
+- Parser block role, Container/Leaf behavior, output option ownership, and failure rules live in `.agents/knowledge/parser-blocks.md`.
+- Editor-specific behavior notes live in `.agents/knowledge/editor-se2.md`, `.agents/knowledge/editor-se3.md`, and `.agents/knowledge/editor-se4.md`.
 
 ## Important Seams
-- Parser block changes usually touch `BaseBlock.outputOptions`, an editor's `supportedBlocks`, `src/modules/blocks/*`, focused parser tests, and `.agents/knowledge/fixtures.md`.
+- Parser block changes usually touch `BaseBlock.outputOptions`, an editor's `supportedBlocks`, `src/modules/blocks/*`, and focused parser tests.
+- Parser/editor knowledge changes only when ownership, routing shape, output contract, or validation policy changes. Exact block inventories stay in code and tests.
 - Renderer or exporter output changes usually affect `tests/fixtures/samples/*/expected.md`, `src/modules/converter/MarkdownRenderer.spec.ts`, `src/modules/exporter/NaverBlogExporter.spec.ts`, and UI result assumptions.
 - Job lifecycle changes usually affect `src/server/HttpServer.ts`, `src/server/JobStore.ts`, `src/server/ExportJobManifest.ts`, `src/ui/features/job-results/*`, and `.agents/knowledge/upload.md`.
 - UI shell changes usually affect `src/ui/App.tsx`, `src/ui/features/common/*`, `src/ui/styles/globals.css`, and `.agents/knowledge/DESIGN.md`.

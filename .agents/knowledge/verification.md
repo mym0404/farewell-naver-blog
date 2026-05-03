@@ -40,8 +40,7 @@
 - `tsserver` opens `src/Server.ts`, reads the configured project file list with `projectInfo`, then checks `src`, `tests`, and `scripts` TypeScript files with `semanticDiagnosticsSync` and `suggestionDiagnosticsSync`.
 - The unused script filters tsserver diagnostics to TypeScript unused diagnostic codes: `6133`, `6138`, `6192`, `6196`, `6198`, `6199`.
 - Static false positives are allowed only inside `scripts/check-unused.ts` allowlists when the file or export is a real runtime entrypoint that static analysis cannot see.
-- Current allowlisted file entrypoints are `tests/e2e/lib/run-live-server.ts`, `tests/e2e/run-ui-resume-smoke.ts`, `tests/e2e/run-ui-smoke.ts`, and `vitest.parser-blocks.config.ts`.
-- Current allowlisted export entrypoint is `scripts/export-single-post.ts:runSinglePostExportCli`.
+- Exact allowlisted file and export entrypoints live in `scripts/check-unused.ts`.
 - The command covers source/test/script dead code. It does not check unused package dependencies because the `knip` invocation intentionally excludes dependency categories.
 - A syntax or type error in the TypeScript project can make `check:unused` fail before dead-code cleanup is meaningful; restore the type baseline first, then interpret unused diagnostics.
 

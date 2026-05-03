@@ -53,4 +53,6 @@
 - Evergreen repo knowledge lives in shallow `.agents/knowledge/*.md` files.
 - `AGENTS.md` is the only router.
 - Keep old/new narration, task logs, and cleanup history out of evergreen docs unless they describe a current operating constraint.
-- Update relevant knowledge when parser block, sample fixture, renderer/exporter, upload/resume, or UI design contracts change.
+- Knowledge should explain stable ownership, contracts, and validation paths, not exhaustive code inventories.
+- Do not mirror exact parser block lists, selectors, output keys, or file-by-file behavior in knowledge when code and tests already own them.
+- Update relevant knowledge when parser/editor structure, sample fixture policy, renderer/exporter contract, upload/resume lifecycle, or UI design contract changes.

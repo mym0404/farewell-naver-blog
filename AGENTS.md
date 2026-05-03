@@ -24,7 +24,10 @@
 - source of truth 우선순위는 사용자 지시, 루트 `AGENTS.md`, 코드/설정/테스트, `.agents/knowledge/*.md`, reference 문서다.
 - 영속 UI 설정과 서버 파일 캐시는 `.cache/` 아래에 저장한다. 작업 산출물 폴더에는 runtime 산출물만 둔다.
 - AI agent, test, harness가 서버를 띄울 때는 사용자 `pnpm dev`와 공유 `.cache/export-ui-settings.json`을 피하고, 별도 `FAREWELL_SETTINGS_PATH`, `FAREWELL_SCAN_CACHE_PATH`, 비기본 `PORT` 또는 `listen(0)`을 쓴다.
-- parser block, sample fixture, renderer/exporter 계약이 바뀌면 관련 knowledge를 함께 갱신한다.
+- knowledge는 코드 목록을 복제하지 않고 책임 경계, 현재 운영 계약, 검증 기준만 둔다.
+- 정확한 block 목록, selector, output key, sample 목록, allowlist, 파일별 세부 동작은 코드와 테스트를 source of truth로 둔다.
+- parser/editor 지식은 새 block 하나나 파일 하나가 추가될 때마다 갱신하지 않고, 구조·책임·검증 기준이 바뀔 때만 갱신한다.
+- sample fixture, renderer/exporter 계약처럼 문서화된 운영 기준이 바뀌면 관련 knowledge를 함께 갱신한다.
 - commit, push, PR 생성은 사용자가 명시적으로 요청한 경우에만 수행한다.
 
 ## Validation Routes
@@ -37,6 +40,11 @@
 
 ## Knowledge Router
 - Architecture: `.agents/knowledge/architecture.md`
+- Parser architecture and file layout: `.agents/knowledge/parser-architecture.md`
+- Parser block contract: `.agents/knowledge/parser-blocks.md`
+- SE2 editor behavior: `.agents/knowledge/editor-se2.md`
+- SE3 editor behavior: `.agents/knowledge/editor-se3.md`
+- SE4 editor behavior: `.agents/knowledge/editor-se4.md`
 - Verification: `.agents/knowledge/verification.md`
 - Product domain and output rules: `.agents/knowledge/domain.md`
 - Sample fixtures: `.agents/knowledge/fixtures.md`

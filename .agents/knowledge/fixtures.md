@@ -15,24 +15,10 @@
 - Fixture rendering disables image and thumbnail downloads.
 - Fixture rendering disables `exportedAt` frontmatter so expected Markdown stays stable.
 
-## Current Samples
-- `se2-code-image-autolayout`
-- `se2-inline-gif-video-wrapper`
-- `se2-legacy`
-- `se2-table-rawhtml-navigation`
-- `se2-thumburl-image-group`
-- `se3-legacy`
-- `se3-quote-imagegroup-note9`
-- `se3-quote-table-vita`
-- `se4-formula-code-linkcard`
-- `se4-file-attachment`
-- `se4-heading-itinerary`
-- `se4-image-group`
-- `se4-image-legacy-link`
-- `se4-quote-formula-code`
-- `se4-mr-blog`
-- `se4-text-lists-nestjs`
-- `se4-video-table`
+## Sample Inventory
+- The fixture directory tree is the source of truth for the current sample list.
+- Do not mirror every fixture id in knowledge.
+- Use `rg --files tests/fixtures/samples` or `tests/helpers/sample-fixtures.spec.ts` discovery behavior when the exact current set matters.
 
 ## Operating Rules
 - Add or update the expected output file for each sample.
