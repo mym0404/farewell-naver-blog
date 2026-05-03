@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto"
 import { readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
 
@@ -151,8 +152,12 @@ const createCaptureFilename = ({
 }) => {
   const targetSegment =
     target.kind === "post" ? "post" : `path-${safeEvidencePathSegment(target.path)}`
+  const evidenceId = createHash("sha256")
+    .update([blogId, logNo, targetSegment, kind].join("\n"))
+    .digest("hex")
+    .slice(0, 12)
 
-  return `${safeEvidencePathSegment(blogId)}-${safeEvidencePathSegment(logNo)}-${targetSegment}-${kind}.png`
+  return `evidence-${evidenceId}-${targetSegment}-${kind}.png`
 }
 
 const renderEvidenceMarkdown = async ({
