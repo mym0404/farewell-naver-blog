@@ -20,6 +20,21 @@
 > [!NOTE]
 > 위 Skill이 매끄럽게 작동하지 않을 수 있습니다. 피드백을 주시면 감사하겠습니다.
 
+## Rule-based HTML Parser 는 점점 강해집니다 🚀
+
+다음과 같은 루틴을 통해 이 저장소의 Parser는 점점 진화하고 강해집니다.
+
+[PR List](https://github.com/mym0404/goodbye-naver-blog/pulls?q=is%3Apr+label%3Aai-generated)
+
+- AI는 automation을 통해 스스로 부족하다고 생각하는 부분을 많이 담고 있을 것 같은 Blog를 탐색
+- 파싱이 되지 않는 블록들을 Unit으로 나눠 구조화
+- 각 Unit마다 다음과 같은 작업 실행
+  - 그 블록들에 대한 지원 코드 작성
+  - Fixture, Coverage 검증을 통해 회귀 방지
+  - PR 생성
+- AI는 PR 목록 중 중복되거나 쓸모없다고 판단되는 Task는 과감히 삭제
+- PR 을 보고 사람이 판단하여 마크다운 Export Option을 더 다양화하거나 삭제
+
 ## 무엇을 할 수 있나요?
 
 - ✅ SE2, SE3, ONE(SE4) 모든 블로그 에디터 타입을 지원
@@ -28,7 +43,7 @@
   2. 다운로드, 압축 후 로컬 경로로 변환하기
   3. **다운로드, 압축 후 PicList 로 커스텀 Provider 업로드 후 URI 변경하기**
 - ✅ 동일한 이미지는 비교 후 **중복 다운로드 하지 않음** (예를 들어, 특정 카테고리의 고정된 썸네일들이 중복 다운로드 되거나 업로드되지 않음)
-- ✅ 수백 가지의 Html parsing ruleset
+- ✅ 수백 가지의 Html parsing ruleset 이 점점 강해집니다?
 - ✅ 각 블록에 대한 여러 마크다운 Export 옵션
 - ✅ Frontmatter 지원
 - ✅ 같은 블로그에 있는 다른 글 백링크를 자유 형식으로 변환 가능(예를 들어, 새로운 블로그로 이전한다고 할 때 그 블로그의 https 주소나 상대 경로로 변경 가능)
