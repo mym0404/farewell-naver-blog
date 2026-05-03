@@ -13,13 +13,13 @@ describe("NaverSe4QuoteBlock", () => {
     expect(parsed.blocks).toEqual([{ type: "quote", text: "Quoted **text**" }])
   })
 
-  it("throws when a quotation has no markdown content", () => {
-    expect(() =>
-      parseSe4Blocks(`
-        <div class="se-component se-quotation">
-          <blockquote class="se-quotation-container"><br /></blockquote>
-        </div>
-      `),
-    ).toThrow("SE4 quote block parsing failed.")
+  it("skips quotations with no markdown content", () => {
+    const parsed = parseSe4Blocks(`
+      <div class="se-component se-quotation">
+        <blockquote class="se-quotation-container"><br /></blockquote>
+      </div>
+    `)
+
+    expect(parsed.blocks).toEqual([])
   })
 })
