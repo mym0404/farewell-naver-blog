@@ -9,7 +9,7 @@ import {
   createSupportUnitPrCheck,
   extractDiscoveredSupportUnits,
   type SupportUnitClaimPullRequest,
-} from "../../../../scripts/lib/ingest-pr-check.js"
+} from "./lib/ingest-pr-check.js"
 import { resolveRepoPath } from "../../../../src/shared/Utils.js"
 
 type CheckArgs = {
