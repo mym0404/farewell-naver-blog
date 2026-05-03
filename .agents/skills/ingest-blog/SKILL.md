@@ -131,14 +131,34 @@ An `ingest-blog` invocation is PR creation intent. After code, fixtures, knowled
 Do not offer `pr=ask`, `pr=none`, or other PR modes.
 If there are no code or fixture changes for the focused support unit because it is safely deferred, do not create an empty PR; report the deferral instead.
 
-Write the PR title and body in Korean, except fixed markers, command names, code identifiers, paths, labels, and source excerpts.
-Include the focused `report.md` summary and `evidence.md` content in the PR body.
+The visible PR body must use exactly these three top-level sections and no extra visible sections:
+
+````markdown
+# New Block Parser Arrival
+
+- Blog `Naver`
+- Editor: `<editorType>`
+- Parser Block: `<ParserBlockClass>`
+- [Original Post](<sourceUrl>)
+
+# Evidence
+
+<raw-GitHub evidence image and rendered Markdown evidence>
+
+# Original Html
+
+```html
+<HTML that failed before the parser change>
+```
+````
+
+Do not add visible summary, root cause, changes, validation, notes, report, backlog, or full-blog sections to the PR body.
+Keep the hidden claim marker as an HTML comment if needed for duplicate checks, but do not add another visible section for it.
 For a focused support-unit PR:
 
 - Title must start with `[📦 New Block]`.
 - Add or create GitHub labels `ai-generated` and `failure-block:<failureBlockHash>`.
-- Include only the focused unit summary, representative fixture, verification, and `evidence.md` content.
-- Do not include full-blog ingest counts, other support unit keys, or backlog details.
+- Include only the fixed three-section body above.
 - Include a hidden claim marker: `<!-- ingest-blog:supportUnitKey=<key> -->`.
 - Re-run the open/draft PR duplicate check immediately before creating the PR.
 - PR evidence images must render on GitHub. Commit `figure` assets first, push the branch, then replace local or repo-relative image paths with `https://raw.githubusercontent.com/<owner>/<repo>/<headCommitSha>/<path>` URLs in the PR body.

@@ -58,9 +58,12 @@ bun .agents/skills/ingest-blog/scripts/write-sample-fixture.ts \
 - Before starting or creating a PR, fetch `origin/main` and inspect open/draft PR bodies for the same `<!-- ingest-blog:supportUnitKey=... -->` marker.
 - The PR title starts with `[📦 New Block]` and uses Korean after the fixed prefix.
 - The PR gets `ai-generated` and `failure-block:<failureBlockHash>` labels.
-- The PR body is Korean except fixed markers, command names, code identifiers, paths, labels, and source excerpts.
-- The PR body includes the focused report summary, focused evidence sections, verification, and hidden support unit claim.
-- The PR body must not include full-blog ingest counts, other support unit keys, or backlog details.
+- The visible PR body uses exactly three top-level sections: `# New Block Parser Arrival`, `# Evidence`, and `# Original Html`.
+- `# New Block Parser Arrival` contains only `Blog`, `Editor`, `Parser Block`, and `Original Post` rows.
+- `# Evidence` contains the raw-GitHub evidence image and rendered Markdown evidence.
+- `# Original Html` contains the HTML that failed before the parser change in an `html` code fence.
+- The PR body must not include visible summary, root cause, changes, validation, notes, report, backlog, full-blog counts, or other support unit sections.
+- Keep the hidden support unit claim marker as an HTML comment for duplicate checks.
 - PR evidence images use committed `figure` assets and `https://raw.githubusercontent.com/<owner>/<repo>/<headCommitSha>/<path>` URLs after push.
 - PR evidence images must not use `tmp/`, `file://`, `.agents/...` relative paths, or paths that only render locally.
 
