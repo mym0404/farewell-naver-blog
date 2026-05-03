@@ -48,7 +48,7 @@ bun .agents/skills/ingest-blog/scripts/collect-blog-errors.ts \
   --blogId <blogId> \
   --reuseOutputDir <absolute-output-dir> \
   --rerunFailures \
-  --focusSupportUnit naver-se4:v2_poll
+  --focusSupportUnit <supportUnitKey>
 ```
 
 Check whether every discovered support unit has a ready open PR:
@@ -64,7 +64,7 @@ Create a fixture for one fixed representative post:
 bun .agents/skills/ingest-blog/scripts/write-sample-fixture.ts \
   --blogId <blogId> \
   --logNo <logNo> \
-  --id se4-example-block
+  --id <fixtureId>
 ```
 
 `collect-blog-errors.ts` and `write-sample-fixture.ts` force image handling to remote references and disable image and thumbnail downloads.
@@ -143,7 +143,7 @@ The report must include:
 - ingest target and whether an output was reused
 - total post count and failed post count
 - failed-post rerun results
-- parser blocks added or extended
+- parser support added or extended
 - fixtures added
 - knowledge documents updated
 - verification commands and results
@@ -171,11 +171,11 @@ After the summary and hidden claim marker, the visible PR body must use exactly 
 
 <!-- ingest-blog:supportUnitKey=<key> -->
 
-# New Block Parser Arrival
+# Parser Support
 
-- Blog `Naver`
+- Blog: `<blogId>`
 - Editor: `<editorType>`
-- Parser Block: `<ParserBlockClass>`
+- Parser Support: `<ParserSupportName>`
 - [Original Post](<sourceUrl>)
 
 # Evidence

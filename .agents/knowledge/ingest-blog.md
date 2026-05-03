@@ -15,7 +15,7 @@ bun .agents/skills/ingest-blog/scripts/collect-blog-errors.ts \
   --blogId <blogId> \
   --reuseOutputDir <absolute-output-dir> \
   --rerunFailures \
-  --focusSupportUnit naver-se4:v2_poll
+  --focusSupportUnit <supportUnitKey>
 ```
 
 ```bash
@@ -27,7 +27,7 @@ bun .agents/skills/ingest-blog/scripts/check-support-unit-prs.ts \
 bun .agents/skills/ingest-blog/scripts/write-sample-fixture.ts \
   --blogId <blogId> \
   --logNo <logNo> \
-  --id se4-example-block
+  --id <fixtureId>
 ```
 
 ## Ingest Behavior
@@ -84,8 +84,8 @@ bun .agents/skills/ingest-blog/scripts/write-sample-fixture.ts \
 - The PR gets `ai-generated` and `failure-block:<failureBlockHash>` labels.
 - The PR body starts with one or two Korean summary lines that state what parser behavior changed.
 - The hidden support unit claim marker follows the Korean summary.
-- After the summary and marker, the visible PR body uses exactly three top-level sections: `# New Block Parser Arrival`, `# Evidence`, and `# Original Html`.
-- `# New Block Parser Arrival` contains only `Blog`, `Editor`, `Parser Block`, and `Original Post` rows.
+- After the summary and marker, the visible PR body uses exactly three top-level sections: `# Parser Support`, `# Evidence`, and `# Original Html`.
+- `# Parser Support` contains only `Blog`, `Editor`, `Parser Support`, and `Original Post` rows.
 - `# Evidence` contains the raw-GitHub evidence image and rendered Markdown evidence.
 - `# Original Html` contains the HTML that failed before the parser change in an `html` code fence.
 - The PR body must not include visible root cause, changes, validation, notes, report, backlog, full-blog counts, or other support unit sections.
