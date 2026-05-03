@@ -3,8 +3,7 @@ const ingestBlogPrTitlePrefixByType = {
   newBlockParser: "[📦 New Block Parser]",
   parserImprovement: "[🎉 Parser Improvement]",
 } as const
-const ingestBlogPrTitlePrefixPattern =
-  /^\[(?:📦 New Block Parser|🎉 Parser Improvement|📦 New Block)\]\s*/
+const ingestBlogPrTitlePrefixPattern = /^\[[^\]]+\]\s*/
 
 export const createSupportUnitClaim = (supportUnitKey: string) =>
   `<!-- ingest-blog:supportUnitKey=${supportUnitKey} -->`

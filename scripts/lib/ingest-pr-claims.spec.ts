@@ -21,7 +21,7 @@ describe("ingest PR claims", () => {
     expect(
       createIngestBlogPrTitle({
         type: "parserImprovement",
-        title: "[📦 New Block] SE4 quote block 개선",
+        title: "[📦 New Block Parser] SE4 quote block 개선",
       }),
     ).toBe("[🎉 Parser Improvement] SE4 quote block 개선")
     expect(
