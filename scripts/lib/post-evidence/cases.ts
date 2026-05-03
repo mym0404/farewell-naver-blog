@@ -27,8 +27,8 @@ export type EvidenceCliArgs = {
 }
 
 const usageText = `Usage:
-  bun scripts/capture-post-evidence.ts --blogId my-blog --logNo 123 [--metadata key=value] [--target post|inspect-path --inspectPath 0.1] [--optionsPath options.json] [--outputDir tmp/harness/post-evidence/case] [--assetProfile temporary|readme]
-  bun scripts/capture-post-evidence.ts --case cases.json [--outputDir tmp/harness/post-evidence/run] [--assetProfile temporary|readme]
+  bun scripts/capture-post-evidence.ts --blogId my-blog --logNo 123 [--metadata key=value] [--target post|inspect-path --inspectPath 0.1] [--optionsPath options.json] [--outputDir tmp/harness/post-evidence/case] [--assetProfile readme|figure|tmp]
+  bun scripts/capture-post-evidence.ts --case cases.json [--outputDir tmp/harness/post-evidence/run] [--assetProfile readme|figure|tmp]
 
 Outputs table.md, report.json, Naver screenshots, and renderer screenshots.`
 
@@ -110,12 +110,12 @@ const parseTarget = (value: unknown, context: string): EvidenceTarget => {
 }
 
 const parseAssetProfile = (value: string | undefined): EvidenceAssetProfile => {
-  if (!value || value === "temporary") {
-    return "temporary"
+  if (!value || value === "tmp") {
+    return "tmp"
   }
 
-  if (value === "readme") {
-    return "readme"
+  if (value === "readme" || value === "figure") {
+    return value
   }
 
   throw new Error(capturePostEvidenceUsage())

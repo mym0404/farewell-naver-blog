@@ -418,7 +418,7 @@ export const createEvidenceTableRows = ({
 export const capturePostEvidence = async ({
   cases,
   outputDir,
-  assetProfile = "temporary",
+  assetProfile = "tmp",
   browser,
 }: {
   cases: EvidenceCase[]

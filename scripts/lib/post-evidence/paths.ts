@@ -2,7 +2,9 @@ import path from "node:path"
 
 import { ensureDir, resolveRepoPath } from "../../../src/shared/Utils.js"
 
-export type EvidenceAssetProfile = "temporary" | "readme"
+export type EvidenceAssetProfile = "readme" | "figure" | "tmp"
+
+const persistentAssetRoot = path.join(".agents", "knowledge", "reference", "assets")
 
 export const safeEvidencePathSegment = (value: string) => {
   const segment = value.replace(/[^a-zA-Z0-9_-]+/g, "-").replace(/^-+|-+$/g, "")
@@ -34,9 +36,9 @@ export const resolveEvidenceOutputPaths = async ({
 }) => {
   const resolvedOutputDir = resolveRepoPath(outputDir)
   const assetDir =
-    assetProfile === "readme"
-      ? resolveRepoPath(path.join(".agents", "knowledge", "reference", "assets", "readme"))
-      : path.join(resolvedOutputDir, "assets")
+    assetProfile === "tmp"
+      ? path.join(resolvedOutputDir, "assets")
+      : resolveRepoPath(path.join(persistentAssetRoot, assetProfile))
 
   await ensureDir(resolvedOutputDir)
   await ensureDir(assetDir)
@@ -55,4 +57,12 @@ export const toMarkdownAssetPath = ({
 }: {
   markdownFilePath: string
   assetPath: string
-}) => path.relative(path.dirname(markdownFilePath), assetPath).split(path.sep).join("/")
+}) => {
+  const repoRelativePath = path.relative(resolveRepoPath("."), assetPath).split(path.sep).join("/")
+
+  if (repoRelativePath.startsWith(`${persistentAssetRoot}/`)) {
+    return repoRelativePath
+  }
+
+  return path.relative(path.dirname(markdownFilePath), assetPath).split(path.sep).join("/")
+}

@@ -727,11 +727,7 @@ const createEvidenceCases = ({
       return {
         blogId,
         logNo: targetReport.logNo,
-        metadata: {
-          title: targetReport.title,
-          status: "failed",
-          error: group.error,
-        },
+        metadata: `parse failure: ${group.editorType ?? "unknown-editor"} / ${group.firstUnsupportedTag ?? "unknown-tag"}`,
         target: group.firstUnsupportedPath
           ? {
               kind: "inspect-path",
@@ -753,11 +749,9 @@ const createEvidenceCases = ({
       return {
         blogId,
         logNo: result.logNo,
-        metadata: {
-          title: post?.title ?? result.logNo,
-          status: "rerun-success",
-          beforeError: result.beforeError ?? "",
-        },
+        metadata: result.beforeError
+          ? `fixed parse example: ${result.beforeError}`
+          : `converted post example: ${post?.title ?? result.logNo}`,
         target: {
           kind: "post",
         },
@@ -866,7 +860,7 @@ const run = async () => {
       evidenceReport = await capturePostEvidence({
         cases: evidenceCases,
         outputDir: path.join(resolvedOutputDir, "post-evidence"),
-        assetProfile: "temporary",
+        assetProfile: "figure",
       })
       await writeFile(
         evidenceTablePath,
