@@ -19,14 +19,14 @@ const parseVideoId = (sourceUrl: string) => {
   }
 }
 
-const getEmbeddedVideo = ({ $node }: { $node: ReturnType<CheerioAPI> }) => {
+const getEmbeddedVideos = ({ $, $node }: { $: CheerioAPI; $node: ReturnType<CheerioAPI> }) => {
   if (!$node.is("p, div, span")) {
     return null
   }
 
-  const iframes = $node.find("span._outerVideo iframe[src]")
+  const videoContainers = $node.find("span._outerVideo")
 
-  if (iframes.length !== 1) {
+  if (videoContainers.length === 0) {
     return null
   }
 
@@ -41,22 +41,33 @@ const getEmbeddedVideo = ({ $node }: { $node: ReturnType<CheerioAPI> }) => {
     return null
   }
 
-  const iframe = iframes.first()
-  const sourceUrl = normalizeAssetUrl(iframe.attr("src")!)
+  const videos = []
 
-  if (!sourceUrl) {
-    return null
+  for (const container of videoContainers.toArray()) {
+    const iframe = $(container).find("iframe[src]")
+
+    if (iframe.length !== 1) {
+      return null
+    }
+
+    const sourceUrl = normalizeAssetUrl(iframe.attr("src")!)
+
+    if (!sourceUrl) {
+      return null
+    }
+
+    videos.push({
+      title: "Video",
+      thumbnailUrl: null,
+      sourceUrl,
+      vid: parseVideoId(sourceUrl),
+      inkey: null,
+      width: parseDimension(iframe.attr("width")),
+      height: parseDimension(iframe.attr("height")),
+    })
   }
 
-  return {
-    title: "Video",
-    thumbnailUrl: null,
-    sourceUrl,
-    vid: parseVideoId(sourceUrl),
-    inkey: null,
-    width: parseDimension(iframe.attr("width")),
-    height: parseDimension(iframe.attr("height")),
-  }
+  return videos
 }
 
 export class NaverSe2EmbeddedVideoBlock extends LeafBlock {
@@ -83,21 +94,21 @@ export class NaverSe2EmbeddedVideoBlock extends LeafBlock {
     },
   ] satisfies OutputOption<"video">[]
 
-  override match({ node, $node }: ParserBlockContext) {
-    return node.type === "tag" && getEmbeddedVideo({ $node }) !== null
+  override match({ $, node, $node }: ParserBlockContext) {
+    return node.type === "tag" && getEmbeddedVideos({ $, $node }) !== null
   }
 
-  override convert({ $node }: Parameters<LeafBlock["convert"]>[0]): ParserBlockResult {
-    const video = getEmbeddedVideo({ $node })
+  override convert({ $, $node }: Parameters<LeafBlock["convert"]>[0]): ParserBlockResult {
+    const videos = getEmbeddedVideos({ $, $node })
 
     /* v8 ignore next 3 */
-    if (!video) {
+    if (!videos) {
       return { status: "skip" }
     }
 
     return {
       status: "handled",
-      blocks: [{ type: "video", video }],
+      blocks: videos.map((video) => ({ type: "video", video })),
     }
   }
 }
