@@ -4,21 +4,14 @@ import {
   createFailureBlockLabel,
   createNewBlockPrTitle,
   createSupportUnitClaim,
-  hasSupportUnitClaim,
   parseSupportUnitClaim,
 } from "./ingest-pr-claims.js"
 
 describe("ingest PR claims", () => {
-  it("detects duplicate support unit claims from PR bodies", () => {
+  it("parses support unit claim markers from PR bodies", () => {
     const claim = createSupportUnitClaim("naver-se4:v2_poll")
 
     expect(parseSupportUnitClaim(`body\n${claim}\n`)).toBe("naver-se4:v2_poll")
-    expect(
-      hasSupportUnitClaim({
-        supportUnitKey: "naver-se4:v2_poll",
-        pullRequests: [{ body: claim }, { body: "<!-- ingest-blog:supportUnitKey=naver-se4:v2_map -->" }],
-      }),
-    ).toBe(true)
   })
 
   it("formats PR title and failure block label", () => {

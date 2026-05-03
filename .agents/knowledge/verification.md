@@ -27,6 +27,13 @@
 - `bun scripts/capture-post-evidence.ts --help`: post evidence CLI surface check. Live smoke cases may open Playwright and Naver mobile pages. Evidence section behavior is documented in `.agents/knowledge/post-evidence.md`.
 - `bun .agents/skills/ingest-blog/scripts/collect-blog-errors.ts --help`: parser coverage ingest CLI surface check. Ingest workflow behavior is documented in `.agents/knowledge/ingest-blog.md`.
 
+## Ingest Blog PR Gate
+- Before each `ingest-blog` support-unit PR, run `pnpm typecheck`, `pnpm test:coverage`, `pnpm smoke:ui`, and `pnpm check:unused`.
+- `pnpm typecheck`, `pnpm test:coverage`, and `pnpm smoke:ui` mirror the non-draft PR CI checks.
+- `pnpm check:unused` is an extra local source/test/script dead-code gate and is not part of CI.
+- Do not add `pnpm check:local` to this gate because `pnpm typecheck` and `pnpm test:coverage` cover the relevant type and Vitest checks directly.
+- Network e2e is required only when live fetch, live resume, or upload behavior changes.
+
 ## Parser Block Unit Test
 - Parser block specs live beside parser block implementations under `src/modules/blocks/naver-se2/*`, `src/modules/blocks/naver-se3/*`, and `src/modules/blocks/naver-se4/*`.
 - Each parser block spec file covers one parser block responsibility through the real `NaverBlogSE*Editor.parse()` dispatch path.

@@ -2,7 +2,7 @@
 
 ## Purpose
 - The repo-local `ingest-blog` skill improves parser coverage from real public Naver Blog posts.
-- It is a failure-driven parser coverage loop that discovers all parser gaps but implements and PRs one parser support unit at a time.
+- It is a failure-driven parser coverage loop that discovers all parser gaps and creates one focused PR per parser support unit.
 - The skill body lives at `.agents/skills/ingest-blog/SKILL.md`.
 
 ## Commands
@@ -13,9 +13,14 @@ bun .agents/skills/ingest-blog/scripts/collect-blog-errors.ts --blogId <blogId>
 ```bash
 bun .agents/skills/ingest-blog/scripts/collect-blog-errors.ts \
   --blogId <blogId> \
-  --reuseOutputDir tmp/harness/ingest-blog/<runId> \
+  --reuseOutputDir <absolute-output-dir> \
   --rerunFailures \
   --focusSupportUnit naver-se4:v2_poll
+```
+
+```bash
+bun .agents/skills/ingest-blog/scripts/check-support-unit-prs.ts \
+  --outputDir <absolute-output-dir>
 ```
 
 ```bash
@@ -32,15 +37,18 @@ bun .agents/skills/ingest-blog/scripts/write-sample-fixture.ts \
 - When reusable output exists, rerun failed posts only unless `--forceFull` is explicitly requested.
 - Previous successful posts are treated as stable during a failed-post rerun.
 - Shared ingest output and aggregate run state stay under ignored `tmp/harness/ingest-blog/<runId>`.
+- The first collect output's absolute `outputDir` is reused after branch switches with `--reuseOutputDir <absolute-output-dir>`.
+- Relative `tmp/harness/...` reuse paths are not used while processing support-unit branches.
 - `.cache/` is app runtime state and is not used for ingest workflow state.
 - `--focusSupportUnit <key>` makes report generation and exit status use only the selected parser support unit.
+- `check-support-unit-prs.ts` compares `failure-summary.json` support units with ready open PR body claim markers.
 
 ## Required Parser Coverage Outputs
 - A real focused parser gap must be closed by adding a parser block or extending the owning block.
 - Each fixed support unit needs one representative public sample fixture.
 - Related knowledge changes are required when parser responsibility, fixture policy, output behavior, or verification expectations change.
 - Unresolved focused failures are not fixed by adding placeholder fixtures or code. Report the reason, representative `logNo`, and inspect evidence instead.
-- Other support units from the same blog stay as ignored backlog and do not appear in the focused PR body.
+- Other support units from the same blog stay out of the focused PR body, but each discovered support unit must get its own focused PR before the ingest turn is complete.
 
 ## Expected PR File Shape
 - Before editing, infer whether the focused support unit is an existing-block edit or a new-block addition.
@@ -61,9 +69,15 @@ bun .agents/skills/ingest-blog/scripts/write-sample-fixture.ts \
 ## PR Policy
 - Code, fixtures, knowledge, verification, and focused reports finish before PR handling.
 - Invoking the repo-local `ingest-blog` skill is PR creation intent.
-- Default behavior is to create a draft PR for the focused support unit without asking for confirmation.
-- If the focused unit is safely deferred with no code or fixture changes, report the deferral instead of creating an empty PR.
-- Before starting or creating a PR, fetch `origin/main` and inspect open/draft PR bodies for the same `<!-- ingest-blog:supportUnitKey=... -->` marker.
+- Default behavior is to create ready PRs for all discovered support units without asking for confirmation.
+- If a focused unit is safely deferred with no code or fixture changes, report the blocker and do not mark the ingest turn complete.
+- Before editing each support unit branch, fetch `origin/main`.
+- Multiple focused PRs are processed sequentially in the same working directory.
+- Each support unit uses one branch named `worktree/ingest-blog-<safeSupportUnitKey>`, where `worktree/` is a branch prefix and no git worktree is created.
+- Before moving to the next unit, `git status --short` must be clean so code from different PRs cannot mix.
+- Before commit, push, or PR creation, the Local PR Gate must pass: `pnpm typecheck`, `pnpm test:coverage`, `pnpm smoke:ui`, and `pnpm check:unused`.
+- If the Local PR Gate fails because of the focused diff, fix the diff and rerun the full gate. If the failure appears unrelated or flaky, rerun the failing command alone; if it still reproduces, stop PR creation and report the blocker.
+- `pnpm check:local` is not part of the Local PR Gate because `pnpm typecheck` and `pnpm test:coverage` directly cover the CI-relevant type and Vitest checks.
 - The PR title starts with `[📦 New Block]` and uses Korean after the fixed prefix.
 - The PR gets `ai-generated` and `failure-block:<failureBlockHash>` labels.
 - The PR body starts with one or two Korean summary lines that state what parser behavior changed.
@@ -73,18 +87,23 @@ bun .agents/skills/ingest-blog/scripts/write-sample-fixture.ts \
 - `# Evidence` contains the raw-GitHub evidence image and rendered Markdown evidence.
 - `# Original Html` contains the HTML that failed before the parser change in an `html` code fence.
 - The PR body must not include visible root cause, changes, validation, notes, report, backlog, full-blog counts, or other support unit sections.
-- Keep the hidden support unit claim marker as an HTML comment for duplicate checks.
+- Keep the hidden support unit claim marker as an HTML comment for the PR completion checker.
 - PR evidence images use committed `figure` assets and `https://raw.githubusercontent.com/<owner>/<repo>/<headCommitSha>/<path>` URLs after push.
 - PR evidence images must not use `tmp/`, `file://`, `.agents/...` relative paths, or paths that only render locally.
+- PRs are ready for review by default. Do not create draft PRs, and do not count draft PR claims as complete.
+- After PR creation, run `gh pr update-branch <number>` once when supported. A failed update-branch attempt is reported but does not block the support-unit PR.
+- After each PR, run `check-support-unit-prs.ts --outputDir <absolute-output-dir>`.
+- The turn may end only when the PR checker exits `0`.
 
 ## Coverage Target
 - Use a public blog with unsupported parser blocks as the coverage target.
 - Blogs with no unsupported parser blocks can check basic script health but are not parser coverage targets.
-- Completion means every discovered `supportUnitKey` has its own focused branch or PR and the merged aggregate target has manifest `failureCount` `0`, empty failure groups, and no downloaded image files.
+- Turn completion means every discovered `supportUnitKey` has a ready open PR body claim and `check-support-unit-prs.ts --outputDir <absolute-output-dir>` exits `0`.
+- Aggregate target completion after merge still requires manifest `failureCount` `0`, empty failure groups, and no downloaded image files.
 
 ## Verification
 - Validate the skill with the skill-creator `quick_validate.py` script against `.agents/skills/ingest-blog`.
-- Check CLI surfaces with `bun .agents/skills/ingest-blog/scripts/collect-blog-errors.ts --help` and `bun .agents/skills/ingest-blog/scripts/write-sample-fixture.ts --help`.
+- Check CLI surfaces with `bun .agents/skills/ingest-blog/scripts/collect-blog-errors.ts --help`, `bun .agents/skills/ingest-blog/scripts/write-sample-fixture.ts --help`, and `bun .agents/skills/ingest-blog/scripts/check-support-unit-prs.ts --help`.
 - Use `bun scripts/capture-post-evidence.ts --help` for evidence CLI changes.
 - Parser block changes need `pnpm test:parser-blocks` and `pnpm test:offline`.
 - Broader parser, renderer, exporter, or UI state changes may require `pnpm check:local` or `pnpm check:full` according to `.agents/knowledge/verification.md`.
