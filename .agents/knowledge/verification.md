@@ -24,6 +24,7 @@
 - `pnpm test:network:upload`: live browser UI export and GitHub upload through PicList runtime.
 - `pnpm dev`: user-facing HMR server on the default development port. Harnesses should not reuse it.
 - `pnpm start`: builds UI and serves `dist/client` through `src/Server.ts`.
+- `pnpm gh:update-branches -- --dry-run --limit <n>`: GitHub PR branch update script smoke check. Without `--dry-run`, it changes remote PR branches through `gh pr update-branch`.
 - `bun scripts/capture-post-evidence.ts --help`: post evidence CLI surface check. Live smoke cases may open Playwright and Naver mobile pages. Evidence section behavior is documented in `.agents/knowledge/post-evidence.md`.
 - `bun .agents/skills/ingest-blog/scripts/collect-blog-errors.ts --help`: parser coverage ingest CLI surface check. Ingest workflow behavior is documented in `.agents/knowledge/ingest-blog.md`.
 
