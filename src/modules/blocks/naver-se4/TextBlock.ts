@@ -79,7 +79,7 @@ const parseRecommendationTextBlocks = (texts: string[]) => {
   ]
 }
 
-const parseTextBlocks = ({
+export const parseTextBlocks = ({
   $node,
   options,
   outputSelection,
