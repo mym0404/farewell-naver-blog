@@ -54,6 +54,7 @@
 - Ad-hoc server checks should not share `.cache/export-ui-settings.json` with the user's development session.
 - Repo-local temporary files belong under `tmp/`; tests and e2e harnesses should use `tests/helpers/test-paths.ts` instead of `os.tmpdir()`.
 - `.cache/` is persisted app state, not a scratch directory for tests, harnesses, or runtime upload config.
+- Helper scripts and specs that serve only one repo-local skill belong under that skill directory. Keep root `scripts/` for project-level CLIs and helpers shared by more than one workflow.
 
 ## Documentation
 - Evergreen repo knowledge lives in shallow `.agents/knowledge/*.md` files.
