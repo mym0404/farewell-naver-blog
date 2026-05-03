@@ -6,6 +6,10 @@
 - Parser, renderer, exporter, server, and UI contracts should stay visible in code or tests when they are mechanical.
 - Commit, push, and PR creation require explicit user request.
 
+## GitHub Workflow
+- Package scripts that operate on GitHub use the `gh:` prefix.
+- `pnpm gh:update-branches` runs `scripts/update-open-pr-branches.ts` and calls `gh pr update-branch` for open PRs.
+
 ## TypeScript
 - The repo is strict TypeScript with NodeNext ESM.
 - Use `.js` extensions in TS imports where NodeNext runtime imports require them.
