@@ -1,6 +1,6 @@
 ---
 name: ingest-blog
-description: Ingest a public Naver Blog by blogId to improve this repository's parser coverage. Use when Codex needs to export every public post without downloading images, summarize parse failures, implement or extend parser blocks for failed HTML, add representative sample fixtures, and update related project knowledge.
+description: Ingest a public Naver Blog by blogId to improve this repository's parser coverage. Use when Codex needs to export every public post without downloading images, summarize parse failures, implement or extend parser blocks for failed HTML, add representative sample fixtures, update related project knowledge, and create Korean draft PRs.
 ---
 
 # Ingest Blog
@@ -131,9 +131,15 @@ An `ingest-blog` invocation is PR creation intent. After code, fixtures, knowled
 Do not offer `pr=ask`, `pr=none`, or other PR modes.
 If there are no code or fixture changes for the focused support unit because it is safely deferred, do not create an empty PR; report the deferral instead.
 
-The visible PR body must use exactly these three top-level sections and no extra visible sections:
+The PR body must start with one or two Korean summary lines that state what parser behavior changed. Keep the summary concrete and visible before the hidden claim marker and sections.
+After the summary and hidden claim marker, the visible PR body must use exactly these three top-level sections and no extra visible sections:
 
 ````markdown
+<Korean summary of what changed>
+<Optional second Korean summary line for fixture or verification context>
+
+<!-- ingest-blog:supportUnitKey=<key> -->
+
 # New Block Parser Arrival
 
 - Blog `Naver`
@@ -152,14 +158,14 @@ The visible PR body must use exactly these three top-level sections and no extra
 ```
 ````
 
-Do not add visible summary, root cause, changes, validation, notes, report, backlog, or full-blog sections to the PR body.
+Do not add visible root cause, changes, validation, notes, report, backlog, full-blog sections, or other extra visible sections to the PR body.
 Keep the hidden claim marker as an HTML comment if needed for duplicate checks, but do not add another visible section for it.
 For a focused support-unit PR:
 
 - Title must start with `[📦 New Block]`.
 - Add or create GitHub labels `ai-generated` and `failure-block:<failureBlockHash>`.
-- Include only the fixed three-section body above.
-- Include a hidden claim marker: `<!-- ingest-blog:supportUnitKey=<key> -->`.
+- Include only the summary and fixed three-section body above.
+- Include a hidden claim marker after the summary: `<!-- ingest-blog:supportUnitKey=<key> -->`.
 - Re-run the open/draft PR duplicate check immediately before creating the PR.
 - PR evidence images must render on GitHub. Commit `figure` assets first, push the branch, then replace local or repo-relative image paths with `https://raw.githubusercontent.com/<owner>/<repo>/<headCommitSha>/<path>` URLs in the PR body.
 - Do not use `tmp/`, `file://`, `.agents/...` relative paths, or Markdown/HTML image paths that only work locally in the PR body.
