@@ -25,7 +25,7 @@
 ## Current Risk Seam
 - Fast live upload can finish before 1-second polling observes intermediate `uploading` state.
 - `src/server/JobStore.ts` and `src/ui/features/job-results/JobResultsPanel.tsx` preserve the last upload snapshot so the result stage still shows progress evidence after completion.
-- `scripts/harness/run-ui-live-upload.ts` uses run-unique GitHub paths so live upload evidence is not hidden by a reused path.
+- `tests/e2e/run-ui-live-upload.ts` uses run-unique GitHub paths so live upload evidence is not hidden by a reused path.
 
 ## Verification
 - `pnpm smoke:ui`: mock upload/rewrite UI state, result table, and resume surfaces.

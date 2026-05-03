@@ -43,10 +43,10 @@
 - SE2 blocks live under `src/modules/blocks/naver-se2`.
 - SE3 blocks live under `src/modules/blocks/naver-se3`.
 - SE4 blocks live under `src/modules/blocks/naver-se4`.
-- Live-fetch sample coverage lives in `tests/fixtures/samples/*` and `tests/sample-fixtures.test.ts`.
+- Live-fetch sample coverage lives in `tests/fixtures/samples/*` and `tests/helpers/sample-fixtures.spec.ts`.
 
 ## Important Seams
 - Parser block changes usually touch `BaseBlock.outputOptions`, an editor's `supportedBlocks`, `src/modules/blocks/*`, focused parser tests, and `.agents/knowledge/fixtures.md`.
-- Renderer or exporter output changes usually affect `tests/fixtures/samples/*/expected.md`, `tests/markdown-renderer.test.ts`, `tests/naver-blog-exporter.test.ts`, and UI result assumptions.
+- Renderer or exporter output changes usually affect `tests/fixtures/samples/*/expected.md`, `src/modules/converter/MarkdownRenderer.spec.ts`, `src/modules/exporter/NaverBlogExporter.spec.ts`, and UI result assumptions.
 - Job lifecycle changes usually affect `src/server/HttpServer.ts`, `src/server/JobStore.ts`, `src/server/ExportJobManifest.ts`, `src/ui/features/job-results/*`, and `.agents/knowledge/upload.md`.
 - UI shell changes usually affect `src/ui/App.tsx`, `src/ui/features/common/*`, `src/ui/styles/globals.css`, and `.agents/knowledge/DESIGN.md`.

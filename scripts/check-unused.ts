@@ -53,9 +53,9 @@ type TsserverDiagnostic = {
 const sourceRoots = ["src", "tests", "scripts"]
 const unusedDiagnosticCodes = new Set([6133, 6138, 6192, 6196, 6198, 6199])
 const allowedKnipFileEntries: Record<string, string> = {
-  "scripts/harness/run-live-server.ts": "spawned by live resume harness",
-  "scripts/harness/run-ui-resume-smoke.ts": "spawned by smoke suite",
-  "scripts/harness/run-ui-smoke.ts": "spawned by smoke suite",
+  "tests/e2e/lib/run-live-server.ts": "spawned by live resume harness",
+  "tests/e2e/run-ui-resume-smoke.ts": "spawned by smoke suite",
+  "tests/e2e/run-ui-smoke.ts": "spawned by smoke suite",
   "vitest.parser-blocks.config.ts": "parser block coverage config entrypoint",
 }
 const allowedKnipExports: Record<string, string> = {

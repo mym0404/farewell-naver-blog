@@ -14,9 +14,9 @@ export default defineConfig({
   },
   test: {
     include: [
-      "tests/parser/naver-se2/**/*.test.ts",
-      "tests/parser/naver-se3/**/*.test.ts",
-      "tests/parser/naver-se4/**/*.test.ts",
+      "src/modules/blocks/naver-se2/**/*.spec.ts",
+      "src/modules/blocks/naver-se3/**/*.spec.ts",
+      "src/modules/blocks/naver-se4/**/*.spec.ts",
     ],
     coverage: {
       provider: "v8",
