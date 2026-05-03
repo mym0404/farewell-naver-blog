@@ -25,7 +25,7 @@ type FixtureArgs = {
 }
 
 const usage = () => `Usage:
-  bun .agents/skills/ingest-blog/scripts/write-sample-fixture.ts --blogId mym0404 --logNo 223034929697 --id se4-example-block [--force]
+  bun .agents/skills/ingest-blog/scripts/write-sample-fixture.ts --blogId my-blog --logNo 123456789012 --id se4-example-block [--force]
 
 Creates tests/fixtures/samples/<id>/expected.md with remote asset references and no image downloads.`
 

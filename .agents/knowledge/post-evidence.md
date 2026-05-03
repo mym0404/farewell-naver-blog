@@ -1,23 +1,23 @@
 # Post Evidence
 
 ## Purpose
-- Post evidence compares a public Naver Blog source and this repo's Markdown conversion in one Markdown table.
+- Post evidence compares a public Naver Blog source and this repo's Markdown conversion in README-style Markdown sections.
 - Use it for ingest reports, PR descriptions, parser coverage evidence, and README source assets.
 - Evidence artifacts are harness/report output, not exported blog output.
 
 ## CLI
 ```bash
 bun scripts/capture-post-evidence.ts \
-  --blogId mym0404 \
-  --logNo 223034929697 \
+  --blogId <blogId> \
+  --logNo <logNo> \
   --target post \
   --metadata "SE4 quote conversion"
 ```
 
 ```bash
 bun scripts/capture-post-evidence.ts \
-  --blogId mym0404 \
-  --logNo 223034929697 \
+  --blogId <blogId> \
+  --logNo <logNo> \
   --target inspect-path \
   --inspectPath 0 \
   --metadata "SE4 quote block"
@@ -43,32 +43,31 @@ bun scripts/capture-post-evidence.ts \
 - Evidence capture should not download Naver image files unless an explicit options file intentionally changes asset behavior.
 
 ## Output
-- The CLI writes `table.md`, `report.json`, and screenshot assets.
+- The CLI writes `evidence.md`, `report.json`, and screenshot assets.
 - The default output root is `tmp/harness/post-evidence/<blogId>-<logNo>-<timestamp>`.
 - `--assetProfile tmp` writes assets under the output directory and is for local smoke output.
 - `--assetProfile readme` writes assets under `.agents/knowledge/reference/assets/readme` so README fragments can reference stable repo-local assets.
 - `--assetProfile figure` writes assets under `.agents/knowledge/reference/assets/figure` so PR/report figures can be committed separately from README assets.
 - Persistent asset profiles write image links as repo-root-relative `.agents/...` paths rather than `tmp`-relative paths.
-- `report.json` keeps per-row source URL, screenshot paths, Markdown text, and row errors.
-- Any row error means the evidence table is incomplete until the capture or rendering issue is fixed or explicitly reported.
+- `report.json` keeps per-section source URL, screenshot paths, Markdown text, and section errors.
+- Any section error means the evidence document is incomplete until the capture or rendering issue is fixed or explicitly reported.
 
-## Table Shape
-- `table.md` is a four-column GitHub-safe Markdown pipe table: `Metadata` | `Links` | `Naver Capture` | `Markdown`.
-- `Links` contains the public Naver post link.
-- `Naver Capture` is an image cell that points at a generated PNG asset.
-- Naver capture images render with `width="300"` inside the Markdown table so PR and report rows keep a readable image size.
-- `Markdown` is rendered as a single-line inline code span. Real newlines become literal `\n` text so Markdown table rows stay valid without visible `<br>` text.
-- Table cell content escapes pipe characters so generated rows remain valid report and PR fragments.
+## Section Shape
+- `evidence.md` renders one `###` section per evidence case.
+- Keep each section in this order: metadata heading, source link, Naver capture image, Markdown code fence.
+- Source links use the label `원문 보기`.
+- Naver capture images render with `width="300"` so PR and report sections keep a readable image size.
+- Markdown is rendered in a fenced `markdown` code block and preserves real line breaks.
 
 ## README Examples
-- README examples use `###` sections per block type, not a table.
+- README examples use the same `###` section shape per block type.
 - Reuse post evidence screenshot assets and Markdown snippets for README examples.
 - Keep each README example in this order: block type heading, source link, Naver capture image, Markdown code fence.
 
-## Metadata Cell
-- Treat `Metadata` as a short human note.
+## Metadata
+- Treat metadata as a short human note.
 - Prefer notes like parser block behavior, failure family, or conversion scenario.
-- Do not fill it with routine state such as blog id, log number, title, or status unless that value is the useful note for the row.
+- Do not fill it with routine state such as blog id, log number, title, or status unless that value is the useful note for the section.
 
 ## Capture Behavior
 - Naver source screenshots use the mobile `m.blog.naver.com/PostView.naver` page.
@@ -80,12 +79,12 @@ bun scripts/capture-post-evidence.ts \
 ## Ingest Reports
 - `.agents/skills/ingest-blog/scripts/collect-blog-errors.ts` uses post evidence helpers when writing ingest reports.
 - Completed ingest outputs may be reused; when a reusable manifest exists, rerun only failed posts unless `--forceFull` is requested.
-- Ingest reports include `report.md`, `report.json`, `evidence-table.md`, and committed figure images under `.agents/knowledge/reference/assets/figure`.
-- Parser fixes represented in a report should include the changed parser block or extension, the representative fixture, related knowledge updates, verification results, and unresolved failures with reasons.
-- PR bodies may include the report summary and evidence table only after the user explicitly asks for PR creation or invokes the skill with that intent.
+- Ingest reports include `report.md`, `report.json`, `evidence.md`, and committed figure images under `.agents/knowledge/reference/assets/figure`.
+- Focused parser fixes represented in a report should include the changed parser block or extension, the representative fixture, related knowledge updates, verification results, and unresolved focused failures with reasons.
+- PR bodies may include the focused report summary and evidence sections only after the user explicitly asks for PR creation or invokes the skill with that intent.
 
 ## Verification
 - Run `bun scripts/capture-post-evidence.ts --help` after changing the CLI surface.
 - Run at least one full-post smoke and one inspect-path smoke after changing capture behavior.
-- Check `report.json.errorCount` before using a generated table.
+- Check `report.json.errorCount` before using generated evidence.
 - Use `identify <asset>.png` or a visual image check when screenshot framing or target node capture behavior changes.

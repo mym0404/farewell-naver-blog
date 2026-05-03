@@ -6,21 +6,21 @@
 ## Export Command
 ```bash
 bun scripts/export-single-post.ts \
-  --blogId mym0404 \
-  --logNo 223034929697 \
-  --outputDir tmp/manual-audit/223034929697/output \
-  --report tmp/manual-audit/223034929697/report.json \
-  --manualReviewMarkdownPath tmp/manual-audit/223034929697/post.md \
-  --metadataCachePath tmp/manual-audit/223034929697/metadata-cache.json
+  --blogId my-blog \
+  --logNo 123456789012 \
+  --outputDir tmp/manual-audit/123456789012/output \
+  --report tmp/manual-audit/123456789012/report.json \
+  --manualReviewMarkdownPath tmp/manual-audit/123456789012/post.md \
+  --metadataCachePath tmp/manual-audit/123456789012/metadata-cache.json
 ```
 
 ## Inspect Command
 ```bash
 bun scripts/export-single-post.ts \
   --inspect \
-  --blogId mym0404 \
-  --logNo 223034929697 \
-  --report tmp/manual-audit/223034929697/inspect.json
+  --blogId my-blog \
+  --logNo 123456789012 \
+  --report tmp/manual-audit/123456789012/inspect.json
 ```
 
 - Use inspect before implementing a parser block when the export error only names an unsupported editor node.
@@ -36,10 +36,10 @@ bun scripts/export-single-post.ts \
 - Compare browser structure, `post.md`, and `report.json`.
 - Record whether the result is `as-expected`, `mismatch`, `error`, or `not-checked`.
 
-## Evidence Table
-- Use `scripts/capture-post-evidence.ts` when the comparison needs a Markdown table row with source capture and converted Markdown.
+## Evidence
+- Use `scripts/capture-post-evidence.ts` when the comparison needs Markdown evidence with source capture and converted Markdown.
 - Use `--target post` for full-post evidence and `--target inspect-path --inspectPath <path>` for block-level evidence.
-- Post evidence table rules live in `.agents/knowledge/post-evidence.md`.
+- Post evidence section rules live in `.agents/knowledge/post-evidence.md`.
 
 ## Code Anchors
 - `scripts/export-single-post.ts`

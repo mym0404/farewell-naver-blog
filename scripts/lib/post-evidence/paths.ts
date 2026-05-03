@@ -45,7 +45,7 @@ export const resolveEvidenceOutputPaths = async ({
 
   return {
     outputDir: resolvedOutputDir,
-    tablePath: path.join(resolvedOutputDir, "table.md"),
+    evidencePath: path.join(resolvedOutputDir, "evidence.md"),
     reportPath: path.join(resolvedOutputDir, "report.json"),
     assetDir,
   }

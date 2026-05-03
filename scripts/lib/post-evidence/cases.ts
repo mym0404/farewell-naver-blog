@@ -31,7 +31,7 @@ const usageText = `Usage:
   bun scripts/capture-post-evidence.ts --blogId my-blog --logNo 123 [--metadata key=value] [--target post|inspect-path --inspectPath 0.1] [--optionsPath options.json] [--metadataCachePath tmp/harness/post-evidence/metadata-cache.json] [--outputDir tmp/harness/post-evidence/case] [--assetProfile readme|figure|tmp]
   bun scripts/capture-post-evidence.ts --case cases.json [--metadataCachePath tmp/harness/post-evidence/metadata-cache.json] [--outputDir tmp/harness/post-evidence/run] [--assetProfile readme|figure|tmp]
 
-Outputs table.md, report.json, Naver screenshots, and Markdown evidence.`
+Outputs evidence.md, report.json, Naver screenshots, and Markdown evidence.`
 
 export const capturePostEvidenceUsage = () => usageText
 

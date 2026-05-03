@@ -22,7 +22,7 @@ const run = async () => {
   console.log(
     [
       `outputDir: ${report.outputDir}`,
-      `tablePath: ${report.tablePath}`,
+      `evidencePath: ${report.evidencePath}`,
       `reportPath: ${report.reportPath}`,
       `rows: ${report.rows.length}`,
       `errors: ${report.errorCount}`,

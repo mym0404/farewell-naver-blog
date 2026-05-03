@@ -25,7 +25,7 @@ import {
 } from "../../../../src/shared/Utils.js"
 import {
   capturePostEvidence,
-  createEvidenceTableRows,
+  createEvidenceMarkdownSections,
 } from "../../../../scripts/lib/post-evidence/capture.js"
 import type { EvidenceCase } from "../../../../scripts/lib/post-evidence/cases.js"
 import {
@@ -33,7 +33,13 @@ import {
   loadReusableIngestOutput,
   type ReusableIngestOutput,
 } from "../../../../scripts/lib/post-evidence/ingest-output.js"
-import { renderEvidenceMarkdownTable } from "../../../../scripts/lib/post-evidence/table.js"
+import { renderEvidenceMarkdownSections } from "../../../../scripts/lib/post-evidence/evidence.js"
+import { createSupportUnit } from "../../../../scripts/lib/ingest-support-units.js"
+import {
+  mergeSupportUnitFailureGroups,
+  selectFocusedSupportUnit,
+  type SupportUnitFailureGroup,
+} from "../../../../scripts/lib/ingest-focus.js"
 
 type CollectArgs = {
   blogId: string
@@ -42,6 +48,7 @@ type CollectArgs = {
   rerunFailures: boolean
   forceFull: boolean
   changesPath?: string
+  focusSupportUnit?: string
 }
 
 type CollectChanges = {
@@ -86,6 +93,8 @@ type FailureGroup = {
   firstUnsupportedTag: string | null
   firstUnsupportedClassName: string | null
   firstUnsupportedModuleType: string | null
+  supportUnitKey: string
+  failureBlockHash: string
   representative: {
     logNo: string
     title: string
@@ -96,16 +105,18 @@ type FailureGroup = {
 }
 
 const usage = () => `Usage:
-  bun .agents/skills/ingest-blog/scripts/collect-blog-errors.ts --blogId mym0404 [--outputDir tmp/harness/ingest-blog/mym0404]
-  bun .agents/skills/ingest-blog/scripts/collect-blog-errors.ts --blogId mym0404 --reuseOutputDir tmp/harness/ingest-blog/mym0404 --rerunFailures
+  bun .agents/skills/ingest-blog/scripts/collect-blog-errors.ts --blogId my-blog [--outputDir tmp/harness/ingest-blog/my-blog]
+  bun .agents/skills/ingest-blog/scripts/collect-blog-errors.ts --blogId my-blog --reuseOutputDir tmp/harness/ingest-blog/my-blog --rerunFailures
 
 Options:
   --reuseOutputDir <dir>  Reuse a completed ingest output and rerun only failed posts.
   --rerunFailures        Require failed-post rerun from a reusable output.
   --forceFull            Ignore reusable output and run a full ingest.
+  --focusSupportUnit <key>
+                         Report and exit against one parser block support unit.
   --changesPath <json>   Include parser/fixture/knowledge/verification changes in report.
 
-Exports public posts with remote asset references, reuses completed outputs when possible, inspects failures, and writes report.md/report.json/evidence-table.md.`
+Exports public posts with remote asset references, reuses completed outputs when possible, inspects failures, and writes report.md/report.json/evidence.md.`
 
 const readValue = (args: string[], index: number) => {
   const value = args[index + 1]
@@ -122,6 +133,7 @@ const parseArgs = (args: string[]): CollectArgs | "help" => {
   let outputDir: string | undefined
   let reuseOutputDir: string | undefined
   let changesPath: string | undefined
+  let focusSupportUnit: string | undefined
   let rerunFailures = false
   let forceFull = false
 
@@ -166,6 +178,12 @@ const parseArgs = (args: string[]): CollectArgs | "help" => {
       continue
     }
 
+    if (arg === "--focusSupportUnit") {
+      focusSupportUnit = readValue(args, index)
+      index++
+      continue
+    }
+
     throw new Error(usage())
   }
 
@@ -180,6 +198,7 @@ const parseArgs = (args: string[]): CollectArgs | "help" => {
     ...(outputDir ? { outputDir } : {}),
     ...(reuseOutputDir ? { reuseOutputDir } : {}),
     ...(changesPath ? { changesPath } : {}),
+    ...(focusSupportUnit ? { focusSupportUnit } : {}),
   }
 }
 
@@ -319,6 +338,45 @@ const createFailureKey = (report: FailedPostReport) =>
     report.firstUnsupported?.moduleType ?? "no-module",
   ].join(" | ")
 
+const readPreviousFailureGroups = async (outputDir: string): Promise<SupportUnitFailureGroup[]> => {
+  try {
+    const parsed = JSON.parse(await readFile(path.join(outputDir, "failure-summary.json"), "utf8")) as Record<string, unknown>
+    const value = Array.isArray(parsed.discoveredSupportUnits)
+      ? parsed.discoveredSupportUnits
+      : Array.isArray(parsed.allFailureGroups)
+        ? parsed.allFailureGroups
+        : parsed.failureGroups
+    const groups = Array.isArray(value) ? value : []
+
+    return groups.flatMap((group) => {
+      if (!group || typeof group !== "object" || Array.isArray(group)) {
+        return []
+      }
+
+      const record = group as Record<string, unknown>
+      const supportUnitKey = record.supportUnitKey
+      const failureBlockHash = record.failureBlockHash
+      const logNos = record.logNos
+
+      return typeof supportUnitKey === "string" && Array.isArray(logNos)
+        ? [
+            {
+              supportUnitKey,
+              ...(typeof failureBlockHash === "string" ? { failureBlockHash } : {}),
+              logNos: logNos.filter((logNo): logNo is string => typeof logNo === "string"),
+            },
+          ]
+        : []
+    })
+  } catch (error) {
+    if (isNotFoundError(error)) {
+      return []
+    }
+
+    throw error
+  }
+}
+
 const groupFailures = (reports: FailedPostReport[]): FailureGroup[] => {
   const groups = new Map<string, FailedPostReport[]>()
 
@@ -337,6 +395,12 @@ const groupFailures = (reports: FailedPostReport[]): FailureGroup[] => {
       if (!representative) {
         throw new Error("failure group cannot be empty")
       }
+      const supportUnit = createSupportUnit({
+        editorType: representative.editor?.type ?? null,
+        firstUnsupportedTag: representative.firstUnsupported?.tagName ?? null,
+        firstUnsupportedClassName: representative.firstUnsupported?.className ?? null,
+        firstUnsupportedModuleType: representative.firstUnsupported?.moduleType ?? null,
+      })
 
       return {
         key,
@@ -347,6 +411,8 @@ const groupFailures = (reports: FailedPostReport[]): FailureGroup[] => {
         firstUnsupportedTag: representative.firstUnsupported?.tagName ?? null,
         firstUnsupportedClassName: representative.firstUnsupported?.className ?? null,
         firstUnsupportedModuleType: representative.firstUnsupported?.moduleType ?? null,
+        supportUnitKey: supportUnit.supportUnitKey,
+        failureBlockHash: supportUnit.failureBlockHash,
         representative: {
           logNo: representative.logNo,
           title: representative.title,
@@ -514,6 +580,8 @@ const renderFailureSummaryMarkdown = ({
       `### ${index + 1}. ${group.editorType ?? "unknown-editor"} / ${group.firstUnsupportedTag ?? "unknown-tag"}`,
       "",
       `- count: ${group.count}`,
+      `- supportUnitKey: ${group.supportUnitKey}`,
+      `- failureBlockHash: ${group.failureBlockHash}`,
       `- error: ${group.error}`,
       `- representativeLogNo: ${group.representative.logNo}`,
       `- representativeTitle: ${group.representative.title}`,
@@ -568,7 +636,10 @@ const renderIngestReportMarkdown = ({
   failureGroups,
   downloadedAssetFiles,
   changes,
-  evidenceTablePath,
+  evidencePath,
+  focusSupportUnit,
+  focusedSupportUnitResolved,
+  focusedSupportUnitKnown,
 }: {
   blogId: string
   manifest: ExportManifest
@@ -588,71 +659,104 @@ const renderIngestReportMarkdown = ({
   failureGroups: FailureGroup[]
   downloadedAssetFiles: string[]
   changes: CollectChanges
-  evidenceTablePath: string
-}) => [
-  `# Ingest Report: ${blogId}`,
-  "",
-  "## Target",
-  "",
-  `- outputDir: ${outputDir}`,
-  `- reuseUsed: ${reuse.used}`,
-  `- reuseMode: ${reuse.mode}`,
-  `- reuseSourceOutputDir: ${reuse.sourceOutputDir ?? "(none)"}`,
-  "",
-  "## Counts",
-  "",
-  `- totalPosts: ${manifest.totalPosts}`,
-  `- successCount: ${manifest.successCount}`,
-  `- failureCount: ${manifest.failureCount}`,
-  `- previousFailureCount: ${reuse.previousFailureCount}`,
-  `- downloadedAssetFileCount: ${downloadedAssetFiles.length}`,
-  "",
-  "## Rerun Results",
-  "",
-  ...(rerunResults.length === 0
-    ? ["- 없음"]
-    : rerunResults.map(
-        (result) =>
-          `- ${result.logNo}: ${result.status} (before=${result.beforeError ?? "none"}, after=${result.afterError ?? "none"})`,
-      )),
-  "",
-  "## Parser Changes",
-  "",
-  renderList(changes.parserChanges),
-  "",
-  "## Fixtures",
-  "",
-  renderList(changes.fixtures),
-  "",
-  "## Knowledge",
-  "",
-  renderList(changes.knowledge),
-  "",
-  "## Verification",
-  "",
-  renderVerificationList(changes.verification),
-  "",
-  "## Evidence Table",
-  "",
-  `- path: ${evidenceTablePath}`,
-  "",
-  "## Unresolved Failures",
-  "",
-  ...(failureGroups.length === 0
-    ? ["- 없음"]
-    : failureGroups.map(
-        (group) =>
-          `- ${group.representative.logNo}: ${group.error} (${group.count} posts, inspect=${group.representative.inspectReportPath ?? "none"})`,
-      )),
-  "",
-  "## Deferred",
-  "",
-  renderDeferredList({
-    failureGroups,
-    unresolved: changes.unresolved,
-  }),
-  "",
-].join("\n")
+  evidencePath: string
+  focusSupportUnit?: string
+  focusedSupportUnitResolved: boolean | null
+  focusedSupportUnitKnown: boolean
+}) => {
+  const commonSections = [
+    "## Parser Changes",
+    "",
+    renderList(changes.parserChanges),
+    "",
+    "## Fixtures",
+    "",
+    renderList(changes.fixtures),
+    "",
+    "## Knowledge",
+    "",
+    renderList(changes.knowledge),
+    "",
+    "## Verification",
+    "",
+    renderVerificationList(changes.verification),
+    "",
+    "## Evidence",
+    "",
+    `- path: ${evidencePath}`,
+    "",
+    "## Unresolved Failures",
+    "",
+    ...(failureGroups.length === 0
+      ? ["- 없음"]
+      : failureGroups.map(
+          (group) =>
+            `- ${group.representative.logNo}: ${group.error} (${group.count} posts, inspect=${group.representative.inspectReportPath ?? "none"})`,
+        )),
+    "",
+    "## Deferred",
+    "",
+    renderDeferredList({
+      failureGroups,
+      unresolved: changes.unresolved,
+    }),
+    "",
+  ]
+
+  if (focusSupportUnit) {
+    return [
+      `# Support Unit Report: ${focusSupportUnit}`,
+      "",
+      "## Target",
+      "",
+      `- supportUnitKey: ${focusSupportUnit}`,
+      `- focusedSupportUnitKnown: ${focusedSupportUnitKnown}`,
+      `- focusedSupportUnitResolved: ${focusedSupportUnitResolved}`,
+      `- outputDir: ${outputDir}`,
+      "",
+      "## Rerun Results",
+      "",
+      ...(rerunResults.length === 0
+        ? ["- 없음"]
+        : rerunResults.map(
+            (result) =>
+              `- ${result.logNo}: ${result.status} (before=${result.beforeError ?? "none"}, after=${result.afterError ?? "none"})`,
+          )),
+      "",
+      ...commonSections,
+    ].join("\n")
+  }
+
+  return [
+    `# Ingest Report: ${blogId}`,
+    "",
+    "## Target",
+    "",
+    `- outputDir: ${outputDir}`,
+    `- reuseUsed: ${reuse.used}`,
+    `- reuseMode: ${reuse.mode}`,
+    `- reuseSourceOutputDir: ${reuse.sourceOutputDir ?? "(none)"}`,
+    "",
+    "## Counts",
+    "",
+    `- totalPosts: ${manifest.totalPosts}`,
+    `- successCount: ${manifest.successCount}`,
+    `- failureCount: ${manifest.failureCount}`,
+    `- previousFailureCount: ${reuse.previousFailureCount}`,
+    `- downloadedAssetFileCount: ${downloadedAssetFiles.length}`,
+    "",
+    "## Rerun Results",
+    "",
+    ...(rerunResults.length === 0
+      ? ["- 없음"]
+      : rerunResults.map(
+          (result) =>
+            `- ${result.logNo}: ${result.status} (before=${result.beforeError ?? "none"}, after=${result.afterError ?? "none"})`,
+        )),
+    "",
+    ...commonSections,
+  ].join("\n")
+}
 
 const inspectFailedPost = async ({
   blogId,
@@ -709,6 +813,7 @@ const createEvidenceCases = ({
   failureGroups,
   rerunResults,
   manifest,
+  focusedLogNos,
 }: {
   blogId: string
   failureGroups: FailureGroup[]
@@ -719,6 +824,7 @@ const createEvidenceCases = ({
     afterError: string | null
   }>
   manifest: ExportManifest
+  focusedLogNos: string[]
 }): EvidenceCase[] => {
   if (failureGroups.length > 0) {
     return failureGroups.map((group) => {
@@ -740,8 +846,11 @@ const createEvidenceCases = ({
     })
   }
 
+  const focusedLogNoSet = new Set(focusedLogNos)
+
   return rerunResults
     .filter((result) => result.status === "success")
+    .filter((result) => focusedLogNoSet.size === 0 || focusedLogNoSet.has(result.logNo))
     .slice(0, 5)
     .map((result) => {
       const post = manifest.posts.find((entry) => entry.logNo === result.logNo)
@@ -836,21 +945,42 @@ const run = async () => {
       }),
     ),
   )
-  const failureGroups = groupFailures(failedPostReports)
+  const allFailureGroups = groupFailures(failedPostReports)
+  const previousFailureGroups = reusableOutput
+    ? await readPreviousFailureGroups(reusableOutput.outputDir)
+    : []
+  const discoveredSupportUnits = mergeSupportUnitFailureGroups([
+    ...previousFailureGroups,
+    ...allFailureGroups,
+  ])
+  const focusedSelection = selectFocusedSupportUnit({
+    failureGroups: allFailureGroups,
+    previousFailureGroups,
+    focusSupportUnit: parsedArgs.focusSupportUnit,
+  })
+  const failureGroups = focusedSelection.reportFailureGroups
+  const focusedLogNos = parsedArgs.focusSupportUnit
+    ? focusedSelection.previousFocusedLogNos
+    : []
+  const focusedLogNoSet = new Set(focusedLogNos)
+  const reportRerunResults = parsedArgs.focusSupportUnit
+    ? rerunResults.filter((result) => focusedLogNoSet.has(result.logNo))
+    : rerunResults
   const downloadedAssetFiles = await listFilesRecursive(path.join(resolvedOutputDir, "public"))
   const manifestPath = path.join(resolvedOutputDir, "manifest.json")
   const failureSummaryJsonPath = path.join(resolvedOutputDir, "failure-summary.json")
   const failureSummaryMarkdownPath = path.join(resolvedOutputDir, "failure-summary.md")
   const reportJsonPath = path.join(resolvedOutputDir, "report.json")
   const reportMarkdownPath = path.join(resolvedOutputDir, "report.md")
-  const evidenceTablePath = path.join(resolvedOutputDir, "evidence-table.md")
+  const evidencePath = path.join(resolvedOutputDir, "evidence.md")
   const logPath = path.join(resolvedOutputDir, "ingest.log")
   const changes = await readChanges(parsedArgs.changesPath)
   const evidenceCases = createEvidenceCases({
     blogId,
     failureGroups,
-    rerunResults,
+    rerunResults: reportRerunResults,
     manifest,
+    focusedLogNos,
   })
   let evidenceReport: Awaited<ReturnType<typeof capturePostEvidence>> | null = null
   let evidenceError: string | null = null
@@ -863,67 +993,101 @@ const run = async () => {
         assetProfile: "figure",
       })
       await writeFile(
-        evidenceTablePath,
-        renderEvidenceMarkdownTable(
-          createEvidenceTableRows({
+        evidencePath,
+        renderEvidenceMarkdownSections(
+          createEvidenceMarkdownSections({
             rows: evidenceReport.rows,
-            tablePath: evidenceTablePath,
+            evidencePath,
           }),
         ),
         "utf8",
       )
     } catch (error) {
       evidenceError = toErrorMessage(error)
-      await writeFile(evidenceTablePath, renderEvidenceMarkdownTable([]), "utf8")
+      await writeFile(evidencePath, renderEvidenceMarkdownSections([]), "utf8")
     }
   } else {
-    await writeFile(evidenceTablePath, renderEvidenceMarkdownTable([]), "utf8")
+    await writeFile(evidencePath, renderEvidenceMarkdownSections([]), "utf8")
   }
-  const summary = {
+  const evidenceSummary = {
+    report: evidenceReport,
+    error: evidenceError,
+    errorCount: evidenceReport?.errorCount ?? (evidenceError ? 1 : 0),
+  }
+  const aggregateSummary = {
     blogId,
     outputDir: resolvedOutputDir,
     manifestPath,
     reportJsonPath,
     reportMarkdownPath,
-    evidenceTablePath,
+    evidencePath,
     totalPosts: manifest.totalPosts,
     successCount: manifest.successCount,
     failureCount: manifest.failureCount,
+    focus: {
+      supportUnitKey: parsedArgs.focusSupportUnit ?? null,
+      failureBlockHash: focusedSelection.focusedFailureBlockHash ?? null,
+      known: focusedSelection.focusedSupportUnitKnown,
+      resolved: focusedSelection.focusedSupportUnitResolved,
+      previousLogNos: focusedSelection.previousFocusedLogNos,
+      remainingBacklogGroupCount: focusedSelection.remainingBacklogGroups.length,
+    },
     reuse: {
       used: Boolean(reusableOutput),
       mode: reuseMode,
       sourceOutputDir: reusableOutput?.outputDir ?? null,
       previousFailureCount: previousFailedPosts.length,
     },
-    rerunResults,
+    rerunResults: reportRerunResults,
+    allRerunResults: rerunResults,
     assetMode: options.assets.imageHandlingMode,
     imageDownloadsDisabled: !options.assets.downloadImages && !options.assets.downloadThumbnails,
     downloadedAssetFileCount: downloadedAssetFiles.length,
     downloadedAssetFiles,
     failedPosts: failedPostReports,
     failureGroups,
+    allFailureGroups,
+    discoveredSupportUnits,
+    remainingBacklogGroups: focusedSelection.remainingBacklogGroups,
     changes,
-    evidence: {
-      report: evidenceReport,
-      error: evidenceError,
-      errorCount: evidenceReport?.errorCount ?? (evidenceError ? 1 : 0),
-    },
+    evidence: evidenceSummary,
   }
+  const reportSummary = parsedArgs.focusSupportUnit
+    ? {
+        blogId,
+        outputDir: resolvedOutputDir,
+        reportJsonPath,
+        reportMarkdownPath,
+        evidencePath,
+        focus: aggregateSummary.focus,
+        reuse: {
+          used: aggregateSummary.reuse.used,
+          mode: aggregateSummary.reuse.mode,
+          sourceOutputDir: aggregateSummary.reuse.sourceOutputDir,
+        },
+        rerunResults: reportRerunResults,
+        assetMode: aggregateSummary.assetMode,
+        imageDownloadsDisabled: aggregateSummary.imageDownloadsDisabled,
+        failureGroups,
+        changes,
+        evidence: evidenceSummary,
+      }
+    : aggregateSummary
 
   await writeJson({
     targetPath: failureSummaryJsonPath,
-    value: summary,
+    value: aggregateSummary,
   })
   await writeJson({
     targetPath: reportJsonPath,
-    value: summary,
+    value: reportSummary,
   })
   await writeFile(
     failureSummaryMarkdownPath,
     renderFailureSummaryMarkdown({
       blogId,
       manifest,
-      failureGroups,
+      failureGroups: allFailureGroups,
       downloadedAssetFiles,
     }),
     "utf8",
@@ -934,12 +1098,15 @@ const run = async () => {
       blogId,
       manifest,
       outputDir: resolvedOutputDir,
-      reuse: summary.reuse,
-      rerunResults,
+      reuse: aggregateSummary.reuse,
+      rerunResults: reportRerunResults,
       failureGroups,
       downloadedAssetFiles,
       changes,
-      evidenceTablePath,
+      evidencePath,
+      focusSupportUnit: parsedArgs.focusSupportUnit,
+      focusedSupportUnitResolved: focusedSelection.focusedSupportUnitResolved,
+      focusedSupportUnitKnown: focusedSelection.focusedSupportUnitKnown,
     }),
     "utf8",
   )
@@ -952,18 +1119,23 @@ const run = async () => {
       `manifestPath: ${manifestPath}`,
       `reportJsonPath: ${reportJsonPath}`,
       `reportMarkdownPath: ${reportMarkdownPath}`,
-      `evidenceTablePath: ${evidenceTablePath}`,
+      `evidencePath: ${evidencePath}`,
       `failureSummaryJsonPath: ${failureSummaryJsonPath}`,
       `failureSummaryMarkdownPath: ${failureSummaryMarkdownPath}`,
       `reuseMode: ${reuseMode}`,
       `failureCount: ${manifest.failureCount}`,
-      `failureGroupCount: ${failureGroups.length}`,
-      `evidenceErrorCount: ${summary.evidence.errorCount}`,
+      `failureGroupCount: ${allFailureGroups.length}`,
+      `focusedFailureGroupCount: ${failureGroups.length}`,
+      `evidenceErrorCount: ${evidenceSummary.errorCount}`,
       `downloadedAssetFileCount: ${downloadedAssetFiles.length}`,
     ].join("\n"),
   )
 
-  if (manifest.failureCount > 0 || downloadedAssetFiles.length > 0 || summary.evidence.errorCount > 0) {
+  const hasBlockingFailure = parsedArgs.focusSupportUnit
+    ? !focusedSelection.focusedSupportUnitKnown || failureGroups.length > 0
+    : manifest.failureCount > 0
+
+  if (hasBlockingFailure || downloadedAssetFiles.length > 0 || evidenceSummary.errorCount > 0) {
     process.exitCode = 1
   }
 }

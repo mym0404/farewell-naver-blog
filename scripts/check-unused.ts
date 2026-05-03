@@ -68,10 +68,19 @@ const allowedKnipFileEntries: Record<string, string> = {
 const allowedKnipExports: Record<string, string> = {
   "scripts/export-single-post.ts:runSinglePostExportCli": "script entrypoint alias",
   "src/modules/parser/PostParser.ts:parsePostHtmlWithBlockEvidence": "manual evidence capture CLI dependency",
+  "scripts/lib/post-evidence/cases.ts:capturePostEvidenceUsage": "manual evidence capture CLI dependency",
+  "scripts/lib/post-evidence/cases.ts:parseEvidenceCaseFile": "manual evidence capture CLI dependency",
+  "scripts/lib/post-evidence/paths.ts:safeEvidencePathSegment": "manual evidence capture CLI dependency",
+  "scripts/lib/post-evidence/paths.ts:createDefaultEvidenceOutputDir": "manual evidence capture CLI dependency",
+  "scripts/lib/post-evidence/paths.ts:resolveEvidenceOutputPaths": "manual evidence capture CLI dependency",
 }
 const allowedKnipTypes: Record<string, string> = {
+  "scripts/lib/ingest-focus.ts:SupportUnitFailureGroup": "ingest-blog skill CLI dependency",
+  "scripts/lib/post-evidence/cases.ts:EvidenceTarget": "manual evidence capture CLI dependency",
+  "scripts/lib/post-evidence/cases.ts:EvidenceCase": "manual evidence capture CLI dependency",
+  "scripts/lib/post-evidence/cases.ts:EvidenceCliArgs": "manual evidence capture CLI dependency",
   "scripts/lib/post-evidence/ingest-output.ts:ReusableIngestOutput": "ingest-blog skill CLI dependency",
-  "scripts/lib/post-evidence/table.ts:EvidenceTableRow": "manual evidence capture CLI dependency",
+  "scripts/lib/post-evidence/evidence.ts:EvidenceMarkdownSection": "manual evidence capture CLI dependency",
 }
 
 const runCommand = (command: string, args: string[]): Promise<CommandResult> =>

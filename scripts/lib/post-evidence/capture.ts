@@ -26,7 +26,7 @@ import {
   safeEvidencePathSegment,
   toMarkdownAssetPath,
 } from "./paths.js"
-import { renderEvidenceMarkdownTable, type EvidenceTableRow } from "./table.js"
+import { renderEvidenceMarkdownSections, type EvidenceMarkdownSection } from "./evidence.js"
 
 export type EvidenceRowReport = {
   blogId: string
@@ -42,7 +42,7 @@ export type EvidenceRowReport = {
 
 export type PostEvidenceReport = {
   outputDir: string
-  tablePath: string
+  evidencePath: string
   reportPath: string
   assetDir: string
   errorCount: number
@@ -263,7 +263,7 @@ const captureCase = async ({
   browser,
   evidenceCase,
   outputDir,
-  tablePath,
+  evidencePath,
   assetDir,
   readBlogScan,
   readFetcher,
@@ -271,7 +271,7 @@ const captureCase = async ({
   browser: Browser
   evidenceCase: EvidenceCase
   outputDir: string
-  tablePath: string
+  evidencePath: string
   assetDir: string
   readBlogScan: (blogId: string) => Promise<BlogScan>
   readFetcher: (blogId: string) => Promise<SinglePostFetcher>
@@ -339,7 +339,7 @@ const captureCase = async ({
     naverCapturePath: naverCaptureFailed
       ? null
       : toMarkdownAssetPath({
-          markdownFilePath: tablePath,
+          markdownFilePath: evidencePath,
           assetPath: naverCapturePath,
         }),
     markdown,
@@ -347,19 +347,19 @@ const captureCase = async ({
   }
 }
 
-export const createEvidenceTableRows = ({
+export const createEvidenceMarkdownSections = ({
   rows,
-  tablePath,
+  evidencePath,
 }: {
   rows: EvidenceRowReport[]
-  tablePath: string
-}): EvidenceTableRow[] =>
+  evidencePath: string
+}): EvidenceMarkdownSection[] =>
   rows.map((row) => ({
     metadata: row.metadata,
     sourceUrl: row.sourceUrl,
     naverCapturePath: row.naverCaptureAssetPath
       ? toMarkdownAssetPath({
-          markdownFilePath: tablePath,
+          markdownFilePath: evidencePath,
           assetPath: row.naverCaptureAssetPath,
         })
       : null,
@@ -454,24 +454,24 @@ export const capturePostEvidence = async ({
           browser: activeBrowser,
           evidenceCase,
           outputDir: paths.outputDir,
-          tablePath: paths.tablePath,
+          evidencePath: paths.evidencePath,
           assetDir: paths.assetDir,
           readBlogScan,
           readFetcher,
         }),
     })
-    const tableRows = createEvidenceTableRows({
+    const evidenceSections = createEvidenceMarkdownSections({
       rows,
-      tablePath: paths.tablePath,
+      evidencePath: paths.evidencePath,
     })
     const errorCount = rows.reduce((count, row) => count + row.errors.length, 0)
 
-    await ensureDir(path.dirname(paths.tablePath))
-    await writeFile(paths.tablePath, renderEvidenceMarkdownTable(tableRows), "utf8")
+    await ensureDir(path.dirname(paths.evidencePath))
+    await writeFile(paths.evidencePath, renderEvidenceMarkdownSections(evidenceSections), "utf8")
 
     const report = {
       outputDir: paths.outputDir,
-      tablePath: paths.tablePath,
+      evidencePath: paths.evidencePath,
       reportPath: paths.reportPath,
       assetDir: paths.assetDir,
       errorCount,

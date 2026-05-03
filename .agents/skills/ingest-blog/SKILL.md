@@ -5,47 +5,58 @@ description: Ingest a public Naver Blog by blogId to improve this repository's p
 
 # Ingest Blog
 
-Use this skill to raise Naver Blog parser coverage from real public posts. Treat a blog ingest as a coverage-improvement loop, not just a report.
+Use this skill to raise Naver Blog parser coverage from real public posts. Treat a blog ingest as a coverage-improvement loop that discovers all gaps but implements and PRs one parser support unit at a time.
 
 ## Required Outcome
 
-When a parse error is found, the final work must include all three outputs:
+When a parse error is found, group failures into parser support units and work on one `supportUnitKey` per branch or PR. For the focused support unit, the final work must include all three outputs:
 
 - Add a new parser block or extend the existing block that owns the failed HTML.
 - Add a representative sample fixture for the fixed failure type.
 - Update related knowledge documents when responsibilities, behavior, fixture rules, or verification expectations changed.
 
-Do not treat an unresolved parse error as complete. If a failure cannot be safely fixed in the current pass, leave code and fixtures unchanged for that failure and report the reason, representative `logNo`, and inspect evidence.
+Do not treat an unresolved focused support unit as complete. If a failure cannot be safely fixed in the current pass, leave code and fixtures unchanged for that unit and report the reason, representative `logNo`, and inspect evidence.
+Other support units from the same blog stay as backlog in ignored `tmp` run state and must not appear in the focused PR body.
 
 ## Quick Commands
 
 Run ingest with remote asset references. If a completed output for the same `blogId` exists, reuse it and rerun only failed posts:
 
 ```bash
-bun .agents/skills/ingest-blog/scripts/collect-blog-errors.ts --blogId mym0404
+bun .agents/skills/ingest-blog/scripts/collect-blog-errors.ts --blogId <blogId>
 ```
 
 Force a new full ingest:
 
 ```bash
-bun .agents/skills/ingest-blog/scripts/collect-blog-errors.ts --blogId mym0404 --forceFull
+bun .agents/skills/ingest-blog/scripts/collect-blog-errors.ts --blogId <blogId> --forceFull
 ```
 
 Reuse a specific completed output and rerun only failed posts:
 
 ```bash
 bun .agents/skills/ingest-blog/scripts/collect-blog-errors.ts \
-  --blogId mym0404 \
-  --reuseOutputDir tmp/harness/ingest-blog/mym0404 \
+  --blogId <blogId> \
+  --reuseOutputDir tmp/harness/ingest-blog/<runId> \
   --rerunFailures
+```
+
+Rerun and report one parser support unit:
+
+```bash
+bun .agents/skills/ingest-blog/scripts/collect-blog-errors.ts \
+  --blogId <blogId> \
+  --reuseOutputDir tmp/harness/ingest-blog/<runId> \
+  --rerunFailures \
+  --focusSupportUnit naver-se4:v2_poll
 ```
 
 Create a fixture for one fixed representative post:
 
 ```bash
 bun .agents/skills/ingest-blog/scripts/write-sample-fixture.ts \
-  --blogId mym0404 \
-  --logNo 223034929697 \
+  --blogId <blogId> \
+  --logNo <logNo> \
   --id se4-example-block
 ```
 
@@ -55,8 +66,8 @@ Create evidence for a source post or inspect path:
 
 ```bash
 bun scripts/capture-post-evidence.ts \
-  --blogId mym0404 \
-  --logNo 223034929697 \
+  --blogId <blogId> \
+  --logNo <logNo> \
   --target inspect-path \
   --inspectPath 0 \
   --metadataCachePath tmp/harness/post-evidence/metadata-cache.json
@@ -64,7 +75,7 @@ bun scripts/capture-post-evidence.ts \
 
 `--target post` renders Markdown with frontmatter. `--target inspect-path` renders only the selected block fragment and omits frontmatter.
 Naver screenshots capture the selected HTML node rather than the current viewport; long nodes may produce tall images.
-Evidence tables are GitHub-safe four-column Markdown pipe tables with Markdown snippets rendered as single-line inline code.
+Evidence renders as README-style Markdown sections with a source link, Naver capture image, and Markdown code fence.
 Use `--metadataCachePath` when generating multiple rows from one blog so post metadata scan results are reused.
 Use `--assetProfile tmp` for local smoke output, `--assetProfile readme` for README assets, and `--assetProfile figure` for report or PR figures that must be committed.
 
@@ -72,17 +83,20 @@ Use `--assetProfile tmp` for local smoke output, `--assetProfile readme` for REA
 
 1. Run `collect-blog-errors.ts --blogId <blogId>` unless the user explicitly asked for `--forceFull`.
 2. If the script reuses a completed output, treat previous successes as stable and rerun only the failed posts.
-3. Read the generated `manifest.json`, `failure-summary.json`, `failure-summary.md`, `report.json`, `report.md`, `evidence-table.md`, and per-post inspect reports.
-4. Group failures by root parser cause, not by title or category.
-5. For each actual parser gap, inspect the failed HTML and identify the owning editor/block boundary.
-6. Implement the smallest parser block addition or extension that handles that DOM shape.
-7. Add or extend the focused parser block spec beside the block implementation.
-8. Add one representative sample fixture per fixed failure type with `write-sample-fixture.ts`.
-9. Update knowledge documents only where a durable rule changed.
-10. Run the verification commands listed below.
-11. Regenerate the report so it reflects the final parser changes, fixtures, knowledge updates, verification results, and evidence table.
+3. Read the generated `manifest.json`, `failure-summary.json`, `failure-summary.md`, `report.json`, `report.md`, `evidence.md`, and per-post inspect reports.
+4. Select one `supportUnitKey` from `failureGroups`; do not implement multiple support units in the same branch or PR.
+5. Before starting that unit, run `git fetch origin main` and inspect open/draft PRs with `gh pr list --state open --json number,title,body,headRefName,isDraft`.
+6. Skip the unit if `origin/main` already supports it or an open/draft PR body contains the same `<!-- ingest-blog:supportUnitKey=... -->` marker.
+7. Inspect the focused failed HTML and identify the owning editor/block boundary.
+8. Implement the smallest parser block addition or extension that handles that DOM shape.
+9. Add or extend the focused parser block spec beside the block implementation.
+10. Add one representative sample fixture for the focused support unit with `write-sample-fixture.ts`.
+11. Update knowledge documents only where a durable rule changed.
+12. Run the verification commands listed below.
+13. Regenerate the report with `--focusSupportUnit <key>` so it reflects only the focused unit, fixtures, knowledge updates, verification results, and evidence.
 
 Do not rerun the same blog as a full ingest after a completed output exists unless the user asked for `--forceFull` or the reusable manifest is invalid.
+Store shared ingest output and aggregate run state only under ignored `tmp/harness/ingest-blog/<runId>`. Do not use `.cache` for this workflow because it is reserved for app runtime state.
 
 ## Report Rules
 
@@ -90,7 +104,7 @@ Every completed skill run must leave these report artifacts:
 
 - `report.md`
 - `report.json`
-- `evidence-table.md`
+- `evidence.md`
 - evidence images under `.agents/knowledge/reference/assets/figure`
 
 The report must include:
@@ -102,13 +116,13 @@ The report must include:
 - fixtures added
 - knowledge documents updated
 - verification commands and results
-- evidence table generated through `scripts/capture-post-evidence.ts` helpers
-- unresolved failures and the reason each one is deferred
+- evidence generated through `scripts/capture-post-evidence.ts` helpers
+- unresolved focused failures and the reason each one is deferred
 
-Keep the evidence table `Metadata` column as a short human note, such as the parser block behavior being demonstrated. Do not fill it with routine run state like blog id, log number, title, or status unless that value is the useful note for the row.
+Keep evidence metadata as a short human note, such as the parser block behavior being demonstrated. Do not fill it with routine run state like blog id, log number, title, or status unless that value is the useful note for the section.
 
 Use `--changesPath <json>` when rerunning the collector after code changes. The JSON may contain `parserChanges`, `fixtures`, `knowledge`, `verification`, and `unresolved` arrays.
-If unresolved failures remain, include one deferred reason per representative failure group in `unresolved`.
+If unresolved focused failures remain, include one deferred reason per representative failure group in `unresolved`.
 Treat non-zero evidence capture errors as an incomplete report and fix the evidence generation issue before using the report.
 
 ## PR Flow
@@ -122,7 +136,17 @@ Default behavior is `pr=ask`: finish code, fixtures, knowledge updates, verifica
 This PR mode is an instruction to the agent running the skill, not a `collect-blog-errors.ts` CLI option.
 Do not commit, push, or create a PR only because report generation finished. Keep the repository-level rule that commit/push/PR require explicit user instruction.
 
-When a PR is requested, include the `report.md` summary and `evidence-table.md` content in the PR body.
+When a PR is requested, include the focused `report.md` summary and `evidence.md` content in the PR body.
+For a focused support-unit PR:
+
+- Title must start with `[📦 New Block]`.
+- Add or create GitHub labels `ai-generated` and `failure-block:<failureBlockHash>`.
+- Include only the focused unit summary, representative fixture, verification, and `evidence.md` content.
+- Do not include full-blog ingest counts, other support unit keys, or backlog details.
+- Include a hidden claim marker: `<!-- ingest-blog:supportUnitKey=<key> -->`.
+- Re-run the open/draft PR duplicate check immediately before creating the PR.
+
+When one skill invocation creates multiple PRs, use one branch and worktree per support unit. Use `.worktrees/ingest-blog/<supportUnitKey>/`, and add `.worktrees/` to `.gitignore` if it is missing.
 
 ## Parser Fix Rules
 
@@ -167,7 +191,6 @@ python3 /Users/mj/.codex/skills/.system/skill-creator/scripts/quick_validate.py 
 bun .agents/skills/ingest-blog/scripts/collect-blog-errors.ts --help
 bun .agents/skills/ingest-blog/scripts/write-sample-fixture.ts --help
 bun scripts/capture-post-evidence.ts --help
-bun .agents/skills/ingest-blog/scripts/collect-blog-errors.ts --blogId mym0404
 ```
 
 For parser/block changes:
@@ -180,8 +203,8 @@ pnpm check:local
 
 Run `pnpm check:unused` when moving, exporting, removing, or intentionally keeping source/test/script code that may be unused.
 
-## Completion Gate
+## Coverage Target
 
-The skill setup is complete only when `mym0404` full ingest succeeds, the generated manifest has `failureCount: 0`, the failure groups are empty, and no image files are downloaded.
+Use a public blog that actually has unsupported parser blocks as the coverage target. A blog with no unsupported blocks can check basic script health, but it cannot prove this parser coverage workflow.
 
-Use `mym0404` as the script-health baseline. It is not expected to require a new parser block or fixture. If `mym0404` produces a parse failure, first check whether the script is wrong; only apply the parser coverage workflow if the failure is a real parser gap.
+For a selected coverage target, completion means every discovered `supportUnitKey` has been handled through its own focused branch or PR. After those focused changes are merged, rerun a full ingest of the same target on `origin/main`; the aggregate pass is complete only when the generated manifest has `failureCount: 0`, failure groups are empty, and no image files are downloaded.

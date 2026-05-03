@@ -28,7 +28,7 @@
 - 정확한 block 목록, selector, output key, sample 목록, allowlist, 파일별 세부 동작은 코드와 테스트를 source of truth로 둔다.
 - parser/editor 지식은 새 block 하나나 파일 하나가 추가될 때마다 갱신하지 않고, 구조·책임·검증 기준이 바뀔 때만 갱신한다.
 - sample fixture, renderer/exporter 계약처럼 문서화된 운영 기준이 바뀌면 관련 knowledge를 함께 갱신한다.
-- README, ingest report, PR 설명에 쓰는 evidence table 계약은 `.agents/knowledge/post-evidence.md`를 따른다.
+- README, ingest report, PR 설명에 쓰는 evidence section 계약은 `.agents/knowledge/post-evidence.md`를 따른다.
 - commit, push, PR 생성은 사용자가 명시적으로 요청한 경우에만 수행한다.
 
 ## Validation Routes
@@ -50,7 +50,7 @@
 - Product domain and output rules: `.agents/knowledge/domain.md`
 - Sample fixtures: `.agents/knowledge/fixtures.md`
 - Ingest blog coverage workflow: `.agents/knowledge/ingest-blog.md`
-- Post evidence tables: `.agents/knowledge/post-evidence.md`
+- Post evidence sections: `.agents/knowledge/post-evidence.md`
 - Upload and resume lifecycle: `.agents/knowledge/upload.md`
 - UI design system: `.agents/knowledge/DESIGN.md`
 - Browser/manual UI verification: `.agents/knowledge/browser-verification.md`
