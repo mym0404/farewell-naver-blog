@@ -42,9 +42,8 @@ describe("single post inspect", () => {
       options,
       html: `
         <div id="viewTypeSelector">
-          <div class="se-component se-file se-l-default" id="SE-file">
-            <script class="__se_module_data" data-module-v2='{"type":"v2_file","data":{"link":"https://example.com/file.pdf"}}'></script>
-            <a class="se-file-save-button" href="https://example.com/file.pdf">파일 다운로드</a>
+          <div class="se-component se-poll se-l-default" id="SE-poll">
+            <script class="__se_module_data" data-module-v2='{"type":"v2_poll","data":{"question":"Pick one"}}'></script>
           </div>
         </div>
       `,
@@ -52,19 +51,19 @@ describe("single post inspect", () => {
 
     expect(diagnostics.parse).toMatchObject({
       status: "failed",
-      error: '파싱 가능한 naver-se4 block이 없습니다: div class="se-component se-file se-l-default" moduleType="v2_file"',
+      error: '파싱 가능한 naver-se4 block이 없습니다: div class="se-component se-poll se-l-default" moduleType="v2_poll"',
     })
     expect(diagnostics.unsupportedNodes).toHaveLength(1)
     expect(diagnostics.unsupportedNodes[0]).toMatchObject({
       path: "0",
       tagName: "div",
-      id: "SE-file",
-      className: "se-component se-file se-l-default",
-      moduleType: "v2_file",
+      id: "SE-poll",
+      className: "se-component se-poll se-l-default",
+      moduleType: "v2_poll",
       moduleData: {
-        type: "v2_file",
+        type: "v2_poll",
         data: {
-          link: "https://example.com/file.pdf",
+          question: "Pick one",
         },
       },
     })
@@ -76,7 +75,7 @@ describe("single post inspect", () => {
       logNo: "123456789012",
       sourceUrl,
       options,
-      html: `<div id="viewTypeSelector"><div><p>Intro</p><div><video class="fx _postImage _gifmp4" data-gif-url="https://example.com/sample.gif"></video></div></div></div>`,
+      html: `<div id="viewTypeSelector"><div><p>Intro</p><div><video class="fx _postImage _gifmp4" data-gif-url="https://example.com/sample.gif"></video><iframe src="https://example.com/embed"></iframe></div></div></div>`,
     })
 
     expect(diagnostics.parse).toMatchObject({
@@ -89,13 +88,13 @@ describe("single post inspect", () => {
           path: "0.1",
           tagName: "div",
           unsupported: true,
-          children: [
+          children: expect.arrayContaining([
             expect.objectContaining({
               path: "0.1.0",
               tagName: "video",
               unsupported: true,
             }),
-          ],
+          ]),
         }),
       ]),
     )
