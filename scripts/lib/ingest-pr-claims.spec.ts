@@ -2,30 +2,34 @@ import { describe, expect, it } from "vitest"
 
 import {
   createFailureBlockLabel,
-  createParserSupportPrTitle,
+  createIngestBlogPrTitle,
   createSupportUnitClaim,
-  hasSupportUnitClaim,
   parseSupportUnitClaim,
 } from "./ingest-pr-claims.js"
 
 describe("ingest PR claims", () => {
-  it("detects duplicate support unit claims from PR bodies", () => {
-    const claim = createSupportUnitClaim("editor:content-shape")
+  it("parses support unit claim markers from PR bodies", () => {
+    const claim = createSupportUnitClaim("naver-se4:v2_poll")
 
-    expect(parseSupportUnitClaim(`body\n${claim}\n`)).toBe("editor:content-shape")
-    expect(
-      hasSupportUnitClaim({
-        supportUnitKey: "editor:content-shape",
-        pullRequests: [{ body: claim }, { body: "<!-- ingest-blog:supportUnitKey=editor:other-content -->" }],
-      }),
-    ).toBe(true)
+    expect(parseSupportUnitClaim(`body\n${claim}\n`)).toBe("naver-se4:v2_poll")
   })
 
   it("formats PR title and failure block label", () => {
-    expect(createParserSupportPrTitle("Support parser content")).toBe("[Parser Support] Support parser content")
-    expect(createParserSupportPrTitle("[Parser Support] Support parser content")).toBe(
-      "[Parser Support] Support parser content",
+    expect(createIngestBlogPrTitle({ type: "newBlockParser", title: "SE4 poll block 지원" })).toBe(
+      "[📦 New Block Parser] SE4 poll block 지원",
     )
+    expect(
+      createIngestBlogPrTitle({
+        type: "parserImprovement",
+        title: "[📦 New Block Parser] SE4 quote block 개선",
+      }),
+    ).toBe("[🎉 Parser Improvement] SE4 quote block 개선")
+    expect(
+      createIngestBlogPrTitle({
+        type: "parserImprovement",
+        title: "[🎉 Parser Improvement] SE4 quote block 개선",
+      }),
+    ).toBe("[🎉 Parser Improvement] SE4 quote block 개선")
     expect(createFailureBlockLabel("a1b2c3d4")).toBe("failure-block:a1b2c3d4")
   })
 })
