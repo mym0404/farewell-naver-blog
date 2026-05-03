@@ -42,10 +42,12 @@ jobs:
 
       - name: Read Playwright version
         id: playwright-version
-        run: echo "version=$(node -p \"require('./node_modules/playwright/package.json').version\")" >> "$GITHUB_OUTPUT"
+        run: |
+          version=$(node -e "const fs = require('node:fs'); const pkg = JSON.parse(fs.readFileSync('node_modules/playwright/package.json', 'utf8')); console.log(pkg.version)")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Restore Playwright browser cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
