@@ -47,6 +47,8 @@ export type PostEvidenceReport = {
   rows: EvidenceRowReport[]
 }
 
+type BlogScan = Awaited<ReturnType<NaverBlogFetcher["scanBlog"]>>
+
 const createDefaultEvidenceOptions = () => {
   const options = defaultExportOptions()
 
@@ -155,6 +157,7 @@ const renderEvidenceMarkdown = async ({
   outputDir,
   options,
   fetcher,
+  scan,
   html,
   target,
 }: {
@@ -163,12 +166,10 @@ const renderEvidenceMarkdown = async ({
   outputDir: string
   options: ExportOptions
   fetcher: NaverBlogFetcher
+  scan: BlogScan
   html: string
   target: EvidenceCase["target"]
 }) => {
-  const scan = await fetcher.scanBlog({
-    includePosts: true,
-  })
   const posts = scan.posts ?? []
   const post = posts.find((entry) => entry.logNo === logNo)
 
@@ -260,12 +261,14 @@ const captureCase = async ({
   outputDir,
   tablePath,
   assetDir,
+  readBlogScan,
 }: {
   browser: Browser
   evidenceCase: EvidenceCase
   outputDir: string
   tablePath: string
   assetDir: string
+  readBlogScan: (blogId: string) => Promise<BlogScan>
 }): Promise<EvidenceRowReport> => {
   const blogId = extractBlogId(evidenceCase.blogId)
   const fetcher = new NaverBlogFetcher({
@@ -285,6 +288,7 @@ const captureCase = async ({
       outputDir,
       options,
       fetcher,
+      scan: await readBlogScan(blogId),
       html,
       target: evidenceCase.target,
     })
@@ -384,6 +388,21 @@ export const capturePostEvidence = async ({
     assetProfile,
   })
   const ownedBrowser = browser ? null : await chromium.launch()
+  const scanCache = new Map<string, Promise<BlogScan>>()
+  const readBlogScan = (blogId: string) => {
+    const cached = scanCache.get(blogId)
+
+    if (cached) {
+      return cached
+    }
+
+    const scan = new NaverBlogFetcher({ blogId }).scanBlog({
+      includePosts: true,
+    })
+
+    scanCache.set(blogId, scan)
+    return scan
+  }
 
   try {
     const activeBrowser = browser ?? ownedBrowser
@@ -402,6 +421,7 @@ export const capturePostEvidence = async ({
           outputDir: paths.outputDir,
           tablePath: paths.tablePath,
           assetDir: paths.assetDir,
+          readBlogScan,
         }),
     })
     const tableRows = createEvidenceTableRows({

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import { renderEvidenceMarkdownTable } from "./table.js"
 
 describe("renderEvidenceMarkdownTable", () => {
-  it("escapes table-breaking characters in metadata and markdown", () => {
+  it("renders a GitHub-safe HTML table and preserves Markdown line breaks", () => {
     const table = renderEvidenceMarkdownTable([
       {
         metadata: {
@@ -16,10 +16,13 @@ describe("renderEvidenceMarkdownTable", () => {
       },
     ])
 
-    expect(table).toContain("a &#124; b")
-    expect(table).toContain("line 1<br>&lt;p&gt;")
-    expect(table).toContain("left &#124; right<br>&lt;script&gt;")
-    expect(table).toContain("[Naver](https://blog.naver.com/a/1)")
-    expect(table.split("\n")[2]?.split("|")).toHaveLength(6)
+    expect(table).toContain("<th>Metadata</th>")
+    expect(table).toContain("<th>Markdown</th>")
+    expect(table).toContain("a | b")
+    expect(table).toContain("line 1\n&lt;p&gt;")
+    expect(table).toContain("left | right\n&lt;script&gt;")
+    expect(table).toContain('<a href="https://blog.naver.com/a/1">Naver</a>')
+    expect(table).toContain('<img src="assets/naver.png" alt="Naver Capture" width="260">')
+    expect(table).not.toContain("<br>")
   })
 })

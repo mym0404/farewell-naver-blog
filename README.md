@@ -66,15 +66,112 @@ output/
 
 ## 실제 예시
 
-| Metadata | Links | Naver Capture | Markdown |
-| --- | --- | --- | --- |
-| SE2 image block | [Naver](https://blog.naver.com/mym0404/221504285266) | ![Naver Capture](.agents/knowledge/reference/assets/readme/mym0404-221504285266-path-1-0-2-naver.png) | <pre><code>![](https://ssl.pstatic.net/static/blog/blank.gif)<br></code></pre> |
-| SE2 code block | [Naver](https://blog.naver.com/mym0404/221504285266) | ![Naver Capture](.agents/knowledge/reference/assets/readme/mym0404-221504285266-path-1-7-0-naver.png) | <pre><code>```<br>class Device {<br>    // Base width in point, use iPhone 6<br>    static let base: CGFloat = 375<br>    static var ratio: CGFloat {<br>        return UIScreen.main.bounds.width / base<br>    }<br>}<br>```<br></code></pre> |
-| SE2 embedded video block | [Naver](https://blog.naver.com/cuk1026/110167789656) | ![Naver Capture](.agents/knowledge/reference/assets/readme/cuk1026-110167789656-path-7-naver.png) | <pre><code>[Video](http://videofarm.daum.net/controller/video/viewer/Video.html?vid=v855c4MLyyLL5LLBiB5MB4L&amp;play_loc=undefined&amp;__authenticIframe=true)<br></code></pre> |
-| SE3 quote block | [Naver](https://blog.naver.com/sekishin/221405258251) | ![Naver Capture](.agents/knowledge/reference/assets/readme/sekishin-221405258251-path-4-naver.png) | <pre><code>&gt; The&nbsp;new&nbsp;super&nbsp;powerful&nbsp;Note<br></code></pre> |
-| SE3 image group block | [Naver](https://blog.naver.com/sekishin/221405258251) | ![Naver Capture](.agents/knowledge/reference/assets/readme/sekishin-221405258251-path-8-naver.png) | <pre><code>![](https://mblogthumb-phinf.pstatic.net/MjAxODExMDZfMTA0/MDAxNTQxNDMyMzkyNDc5.K9sjeXO4gJvR3Wnpak3Rg9oiaz2NpKdDLVL2CHoirY8g.Eo8OpuEfeuKrWgZ9gsbd1g46z0XP4ri65D1he9TN0GIg.JPEG.is02019/image_9414533351541431971760.jpg?type=w800)<br><br>![](https://mblogthumb-phinf.pstatic.net/MjAxODExMDZfNTgg/MDAxNTQxNDMyNDI0NzYy.mtcfEcZqVQWYzY2H1vL_YE5aqXK5LtPJ_bvsVOmaxIgg.UwyJB70-gQL-ksdFkaw-oH_F0qSYFCUKVdDwEV7v8E4g.JPEG.is02019/image_5391002611541431971760.jpg?type=w800)<br></code></pre> |
-| SE4 heading block | [Naver](https://blog.naver.com/goyamee/223511986798) | ![Naver Capture](.agents/knowledge/reference/assets/readme/goyamee-223511986798-path-4-naver.png) | <pre><code>## **전북 부안 가볼만한곳**<br></code></pre> |
-| SE4 link card block | [Naver](https://blog.naver.com/mym0404/223034929697) | ![Naver Capture](.agents/knowledge/reference/assets/readme/mym0404-223034929697-path-2-naver.png) | <pre><code>[9942번: 하노이의 네 탑](https://www.acmicpc.net/problem/9942)<br><br>9942번 제출 맞힌 사람 숏코딩 재채점 결과 채점 현황 질문 게시판 하노이의 네 탑 다국어 시간 제한 메모리 제한 제출 정답 맞힌 사람 정답 비율 3 초 128 MB 724 204 151 32.059% 문제 하노이의 탑 이라는 유명한 문제가 있다. 하지만 이 문제는 너무 유명한 나머지 이제는 식상하다. 그러니까 이번엔 탑을 3개가 아닌 4개로 늘려서 생각해보자! N개의 원판과 4개의 막대가 있을 때, 즉 보조 막대가 한 개가 아닌 두 개이면 몇 번 움직여서 모든 원판을 끝의 원판으로 옮길 수 있을까? 4개의 막대를 이용해서 N개의...<br></code></pre> |
-| SE4 formula block | [Naver](https://blog.naver.com/mym0404/223034929697) | ![Naver Capture](.agents/knowledge/reference/assets/readme/mym0404-223034929697-path-10-naver.png) | <pre><code>$$<br>f\left(n\right)=MIN_{1\le k&lt;n}\left\{f\left(k\right)+g\left(n-k\right)+f\left(k\right)\right\}<br>$$<br></code></pre> |
-| SE4 code block | [Naver](https://blog.naver.com/mym0404/223034929697) | ![Naver Capture](.agents/knowledge/reference/assets/readme/mym0404-223034929697-path-12-naver.png) | <pre><code>```javascript<br>const ll mod = 9901;<br>inline ll md(ll x) { return md(mod, x); }<br>void solve() {<br>   int n, t = 1;<br><br>   vi g(1000001);<br>   g[1] = 1;<br>   for (int i = 2; i &lt;= 1000000; i++) {<br>      g[i] = md(g[i - 1] * 2 + 1);<br>   }<br>   vi f(1000001);<br>   f[1] = 1;<br>   f[2] = 3;<br>   f[3] = 5;<br>   for (int i = 4; i &lt;= 1000000; i++) {<br>      int k = i - round(sqrt(i * 2 + 1)) + 1;<br>      f[i] = md(f[k] * 2 + g[i - k]);<br>   }<br>   cin &gt;&gt; n;<br>   cout &lt;&lt; f[n];<br>}<br>```<br></code></pre> |
-| SE4 table block | [Naver](https://blog.naver.com/mym0404/221302086471) | ![Naver Capture](.agents/knowledge/reference/assets/readme/mym0404-221302086471-path-4-naver.png) | <pre><code>&#124; ㅗㄷ &#124; 1 &#124; 2 &#124;<br>&#124; --- &#124; --- &#124; --- &#124;<br>&#124; 3 &#124; 4 &#124; 5 &#124;<br>&#124; 6 &#124; 7 &#124; 8 &#124;<br></code></pre> |
+<table>
+  <thead>
+    <tr>
+      <th>Metadata</th>
+      <th>Links</th>
+      <th>Naver Capture</th>
+      <th>Markdown</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>SE2 link image</td>
+      <td><a href="https://blog.naver.com/mym0404/221504285266">Naver</a></td>
+      <td><img src=".agents/knowledge/reference/assets/readme/mym0404-221504285266-path-1-0-1-0-0-0-naver.png" alt="Naver Capture" width="260"></td>
+      <td><pre><code>![](https://dthumb-phinf.pstatic.net/?src=%22https%3A%2F%2Fcdn-images-1.medium.com%2Fmax%2F1200%2F0*WZM2cHocLncEgg1F.png%22&amp;type=f560_336)</code></pre></td>
+    </tr>
+    <tr>
+      <td>SE2 paragraph</td>
+      <td><a href="https://blog.naver.com/mym0404/221504285266">Naver</a></td>
+      <td><img src=".agents/knowledge/reference/assets/readme/mym0404-221504285266-path-1-3-naver.png" alt="Naver Capture" width="260"></td>
+      <td><pre><code>우선 아래와 같은 클래스를 하나 만들어준다.</code></pre></td>
+    </tr>
+    <tr>
+      <td>SE2 code block</td>
+      <td><a href="https://blog.naver.com/mym0404/221504285266">Naver</a></td>
+      <td><img src=".agents/knowledge/reference/assets/readme/mym0404-221504285266-path-1-7-0-naver.png" alt="Naver Capture" width="260"></td>
+      <td><pre><code>```
+class Device {
+    // Base width in point, use iPhone 6
+    static let base: CGFloat = 375
+    static var ratio: CGFloat {
+        return UIScreen.main.bounds.width / base
+    }
+}
+```</code></pre></td>
+    </tr>
+    <tr>
+      <td>SE4 link card</td>
+      <td><a href="https://blog.naver.com/mym0404/223034929697">Naver</a></td>
+      <td><img src=".agents/knowledge/reference/assets/readme/mym0404-223034929697-path-2-naver.png" alt="Naver Capture" width="260"></td>
+      <td><pre><code>[9942번: 하노이의 네 탑](https://www.acmicpc.net/problem/9942)
+
+9942번 제출 맞힌 사람 숏코딩 재채점 결과 채점 현황 질문 게시판 하노이의 네 탑 다국어 시간 제한 메모리 제한 제출 정답 맞힌 사람 정답 비율 3 초 128 MB 724 204 151 32.059% 문제 하노이의 탑 이라는 유명한 문제가 있다. 하지만 이 문제는 너무 유명한 나머지 이제는 식상하다. 그러니까 이번엔 탑을 3개가 아닌 4개로 늘려서 생각해보자! N개의 원판과 4개의 막대가 있을 때, 즉 보조 막대가 한 개가 아닌 두 개이면 몇 번 움직여서 모든 원판을 끝의 원판으로 옮길 수 있을까? 4개의 막대를 이용해서 N개의...</code></pre></td>
+    </tr>
+    <tr>
+      <td>SE4 image</td>
+      <td><a href="https://blog.naver.com/mym0404/223034929697">Naver</a></td>
+      <td><img src=".agents/knowledge/reference/assets/readme/mym0404-223034929697-path-4-naver.png" alt="Naver Capture" width="260"></td>
+      <td><pre><code>![](https://mblogthumb-phinf.pstatic.net/MjAyMzAzMDRfMjcz/MDAxNjc3OTM2NjkzMzk1.dBw7P8v6syYqhX6uiGFtZYMxhRNu5AdLgy0ubMXc0o8g.NCYvjxO4oXkJt-ZuBNXDiROJWj-zxI7ibwoKHpoyOKog.PNG.mym0404/image.png?type=w800)</code></pre></td>
+    </tr>
+    <tr>
+      <td>SE4 quote</td>
+      <td><a href="https://blog.naver.com/mym0404/222619228134">Naver</a></td>
+      <td><img src=".agents/knowledge/reference/assets/readme/mym0404-222619228134-path-6-naver.png" alt="Naver Capture" width="260"></td>
+      <td><pre><code>&gt; Description &amp; Relation</code></pre></td>
+    </tr>
+    <tr>
+      <td>SE4 formula</td>
+      <td><a href="https://blog.naver.com/mym0404/223034929697">Naver</a></td>
+      <td><img src=".agents/knowledge/reference/assets/readme/mym0404-223034929697-path-10-naver.png" alt="Naver Capture" width="260"></td>
+      <td><pre><code>$$
+f\left(n\right)=MIN_{1\le k&lt;n}\left\{f\left(k\right)+g\left(n-k\right)+f\left(k\right)\right\}
+$$</code></pre></td>
+    </tr>
+    <tr>
+      <td>SE4 code block</td>
+      <td><a href="https://blog.naver.com/mym0404/223034929697">Naver</a></td>
+      <td><img src=".agents/knowledge/reference/assets/readme/mym0404-223034929697-path-12-naver.png" alt="Naver Capture" width="260"></td>
+      <td><pre><code>```javascript
+const ll mod = 9901;
+inline ll md(ll x) { return md(mod, x); }
+void solve() {
+   int n, t = 1;
+
+   vi g(1000001);
+   g[1] = 1;
+   for (int i = 2; i &lt;= 1000000; i++) {
+      g[i] = md(g[i - 1] * 2 + 1);
+   }
+   vi f(1000001);
+   f[1] = 1;
+   f[2] = 3;
+   f[3] = 5;
+   for (int i = 4; i &lt;= 1000000; i++) {
+      int k = i - round(sqrt(i * 2 + 1)) + 1;
+      f[i] = md(f[k] * 2 + g[i - k]);
+   }
+   cin &gt;&gt; n;
+   cout &lt;&lt; f[n];
+}
+```</code></pre></td>
+    </tr>
+    <tr>
+      <td>SE4 video</td>
+      <td><a href="https://blog.naver.com/mym0404/221302086471">Naver</a></td>
+      <td><img src=".agents/knowledge/reference/assets/readme/mym0404-221302086471-path-2-naver.png" alt="Naver Capture" width="260"></td>
+      <td><pre><code>[휴머노이드 첫 Rigging 성공 애니메이션](https://blog.naver.com/mym0404/221302086471)</code></pre></td>
+    </tr>
+    <tr>
+      <td>SE4 table</td>
+      <td><a href="https://blog.naver.com/mym0404/221302086471">Naver</a></td>
+      <td><img src=".agents/knowledge/reference/assets/readme/mym0404-221302086471-path-4-naver.png" alt="Naver Capture" width="260"></td>
+      <td><pre><code>| ㅗㄷ | 1 | 2 |
+| --- | --- | --- |
+| 3 | 4 | 5 |
+| 6 | 7 | 8 |</code></pre></td>
+    </tr>
+  </tbody>
+</table>

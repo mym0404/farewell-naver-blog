@@ -52,11 +52,11 @@ bun scripts/capture-post-evidence.ts \
 - Any row error means the evidence table is incomplete until the capture or rendering issue is fixed or explicitly reported.
 
 ## Table Shape
-- `table.md` is a four-column Markdown table: `Metadata` | `Links` | `Naver Capture` | `Markdown`.
+- `table.md` is a four-column GitHub-safe HTML table: `Metadata` | `Links` | `Naver Capture` | `Markdown`.
 - `Links` contains the public Naver post link.
 - `Naver Capture` is an image cell that points at a generated PNG asset.
-- `Markdown` is escaped inside `<pre><code>...</code></pre>` so multiline Markdown stays inside one table cell.
-- Table cell content escapes `|`, HTML-sensitive characters, and newlines so generated rows remain valid Markdown table rows.
+- `Markdown` is escaped inside `<pre><code>...</code></pre>` with real newlines, so multiline Markdown stays readable without visible `<br>` text.
+- Table cell content escapes HTML-sensitive characters so generated rows remain valid README and PR fragments.
 
 ## Metadata Cell
 - Treat `Metadata` as a short human note.

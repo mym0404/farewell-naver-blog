@@ -12,12 +12,10 @@ const escapeHtml = (value: string) =>
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
 
-const escapeTableCell = (value: string) =>
+const normalizeLineEndings = (value: string) =>
   value
     .replace(/\r\n/g, "\n")
     .replace(/\r/g, "\n")
-    .replace(/\|/g, "&#124;")
-    .replace(/\n/g, "<br>")
     .trim()
 
 const renderMetadata = (
@@ -34,40 +32,52 @@ const renderMetadata = (
     .join("\n")
 }
 
-const renderLinkCell = ({ sourceUrl }: { sourceUrl: string }) => `[Naver](${sourceUrl})`
+const renderLinkCell = ({ sourceUrl }: { sourceUrl: string }) =>
+  `<a href="${escapeHtml(sourceUrl)}">Naver</a>`
 
 const renderImageCell = (path: string | null, alt: string) =>
-  path ? `![${alt}](${path})` : ""
+  path ? `<img src="${escapeHtml(path)}" alt="${escapeHtml(alt)}" width="260">` : ""
 
 const renderMarkdownCell = (markdown: string | null) => {
   if (markdown === null) {
     return ""
   }
 
-  return `<pre><code>${escapeHtml(markdown)}</code></pre>`
+  return `<pre><code>${escapeHtml(normalizeLineEndings(markdown))}</code></pre>`
 }
 
-const renderCell = (value: string) => escapeTableCell(value)
+const renderCell = (value: string) => normalizeLineEndings(value)
 
 export const renderEvidenceMarkdownTable = (rows: EvidenceTableRow[]) => {
-  const header = "| Metadata | Links | Naver Capture | Markdown |"
-  const separator = "| --- | --- | --- | --- |"
-
-  if (rows.length === 0) {
-    return `${header}\n${separator}\n`
-  }
+  const header = [
+    "<table>",
+    "  <thead>",
+    "    <tr>",
+    "      <th>Metadata</th>",
+    "      <th>Links</th>",
+    "      <th>Naver Capture</th>",
+    "      <th>Markdown</th>",
+    "    </tr>",
+    "  </thead>",
+    "  <tbody>",
+  ].join("\n")
 
   const body = rows
     .map((row) =>
       [
-        renderCell(renderMetadata(row.metadata)),
-        renderCell(renderLinkCell(row)),
-        renderCell(renderImageCell(row.naverCapturePath, "Naver Capture")),
-        renderCell(renderMarkdownCell(row.markdown)),
-      ].join(" | "),
+        "    <tr>",
+        `      <td>${renderCell(renderMetadata(row.metadata))}</td>`,
+        `      <td>${renderCell(renderLinkCell(row))}</td>`,
+        `      <td>${renderCell(renderImageCell(row.naverCapturePath, "Naver Capture"))}</td>`,
+        `      <td>${renderCell(renderMarkdownCell(row.markdown))}</td>`,
+        "    </tr>",
+      ].join("\n"),
     )
-    .map((line) => `| ${line} |`)
     .join("\n")
+  const footer = [
+    "  </tbody>",
+    "</table>",
+  ].join("\n")
 
-  return `${header}\n${separator}\n${body}\n`
+  return rows.length === 0 ? `${header}\n${footer}\n` : `${header}\n${body}\n${footer}\n`
 }
