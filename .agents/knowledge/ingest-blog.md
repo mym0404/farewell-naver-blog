@@ -82,7 +82,7 @@ bun .agents/skills/ingest-blog/scripts/write-sample-fixture.ts \
 - The PR title starts with exactly `[📦 New Block Parser]` when adding and registering a new parser block.
 - The PR title starts with exactly `[🎉 Parser Improvement]` when extending or fixing an existing parser block.
 - No other `ingest-blog` PR title prefix is used.
-- The PR gets `ai-generated` and `failure-block:<failureBlockHash>` labels.
+- The PR gets the `ai-generated` label.
 - The PR body starts with one or two Korean summary lines that state what parser behavior changed.
 - The hidden support unit claim marker follows the Korean summary.
 - After the summary and marker, the visible PR body uses exactly three top-level sections: `# Parser Support`, `# Evidence`, and `# Original Html`.
