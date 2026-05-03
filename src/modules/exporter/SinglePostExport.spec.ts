@@ -1,12 +1,12 @@
 import { createHash } from "node:crypto"
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises"
 import path from "node:path"
-import { tmpdir } from "node:os"
 
 import { describe, expect, it } from "vitest"
 
 import { exportSinglePost } from "./SinglePostExport.js"
 import { defaultExportOptions } from "../../shared/ExportOptions.js"
+import { createTestTempDir } from "../../../tests/helpers/test-paths.js"
 
 const blogId = "mym0404"
 const logNo = "223034929697"
@@ -77,7 +77,7 @@ const createFetcher = ({
 
 describe("exportSinglePost", () => {
   it("writes one markdown file and returns export diagnostics", async () => {
-    const outputDir = await mkdtemp(path.join(tmpdir(), "single-post-export-"))
+    const outputDir = await createTestTempDir("single-post-export-")
     const options = defaultExportOptions()
 
     const post = {
@@ -166,7 +166,7 @@ describe("exportSinglePost", () => {
   })
 
   it("writes inline GIF video blocks as markdown images", async () => {
-    const outputDir = await mkdtemp(path.join(tmpdir(), "single-post-export-"))
+    const outputDir = await createTestTempDir("single-post-export-")
     const options = defaultExportOptions()
 
     const post = {
@@ -217,7 +217,7 @@ describe("exportSinglePost", () => {
   })
 
   it("throws when the requested post metadata is missing", async () => {
-    const outputDir = await mkdtemp(path.join(tmpdir(), "single-post-export-"))
+    const outputDir = await createTestTempDir("single-post-export-")
     const sentinelPath = path.join(outputDir, "keep.txt")
 
     await writeFile(sentinelPath, "keep", "utf8")
@@ -247,7 +247,7 @@ describe("exportSinglePost", () => {
   })
 
   it("throws when the requested post is outside category scope", async () => {
-    const outputDir = await mkdtemp(path.join(tmpdir(), "single-post-export-"))
+    const outputDir = await createTestTempDir("single-post-export-")
     const options = defaultExportOptions()
     options.scope.categoryIds = [10]
     options.scope.categoryMode = "exact-selected"
@@ -284,7 +284,7 @@ describe("exportSinglePost", () => {
   })
 
   it("throws when the requested post is outside date scope", async () => {
-    const outputDir = await mkdtemp(path.join(tmpdir(), "single-post-export-"))
+    const outputDir = await createTestTempDir("single-post-export-")
     const options = defaultExportOptions()
     options.scope.dateFrom = "2024-01-03"
 

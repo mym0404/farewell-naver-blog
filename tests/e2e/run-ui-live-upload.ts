@@ -1,12 +1,12 @@
 import { existsSync, readFileSync } from "node:fs"
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
-import { tmpdir } from "node:os"
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises"
 import path from "node:path"
 
 import { chromium } from "playwright"
 
 import { createHttpServer } from "../../src/server/HttpServer.js"
 import type { ExportJobState, PostManifestEntry, ScanResult } from "../../src/shared/Types.js"
+import { createTestTempDir } from "../helpers/test-paths.js"
 
 const blogId = "mym0404"
 const targetLogNo = "222990202785"
@@ -455,7 +455,7 @@ const run = async () => {
   const config = resolveLiveUploadConfig()
   const browserMode = resolveBrowserMode()
   const browser = await chromium.launch(browserMode)
-  const tempRoot = await mkdtemp(path.join(tmpdir(), "goodbye-live-upload-harness-"))
+  const tempRoot = await createTestTempDir("goodbye-live-upload-harness-")
   const server = createHttpServer({
     settingsPath: path.join(tempRoot, "export-ui-settings.json"),
     scanCachePath: path.join(tempRoot, "scan-cache.json"),

@@ -1,8 +1,7 @@
-import os from "node:os"
 import path from "node:path"
 
 import type { UploadCandidate, UnknownRecord } from "../../shared/Types.js"
-import { throwIfAborted } from "../../shared/Utils.js"
+import { ensureDir, getProjectTempPath, throwIfAborted } from "../../shared/Utils.js"
 import { dedupeUploadCandidatesByLocalPath } from "./UploadCandidateUtils.js"
 
 type RuntimeUploadResponse = {
@@ -52,7 +51,9 @@ type RunImageUploadPhaseInput = {
 
 const createRuntimeClient = async (): Promise<RuntimeUploaderClient> => {
   const runtimeModule = await import("piclist")
-  const runtimeConfigPath = path.join(os.tmpdir(), "goodbye-naver-blog-image-upload.json")
+  const runtimeConfigPath = getProjectTempPath("image-upload", "picgo-upload.json")
+
+  await ensureDir(path.dirname(runtimeConfigPath))
 
   return runtimeModule.PicGo.create(runtimeConfigPath)
 }

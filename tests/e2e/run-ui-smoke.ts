@@ -1,7 +1,5 @@
-import { mkdtemp, rm } from "node:fs/promises"
-import { tmpdir } from "node:os"
+import { mkdir, rm } from "node:fs/promises"
 import path from "node:path"
-import { mkdir } from "node:fs/promises"
 
 import { chromium } from "playwright"
 
@@ -19,6 +17,7 @@ import type {
   UploadProviderCatalogResponse,
   UploadProviderValue,
 } from "../../src/shared/Types.js"
+import { createTestPath, createTestTempDir } from "../helpers/test-paths.js"
 
 const responseTimeoutMs = 90_000
 const blockOutputDefinitions = new NaverBlog().getBlockOutputDefinitions()
@@ -79,7 +78,7 @@ const mobileViewport = {
   width: 375,
   height: 812,
 } as const
-const fallbackSmokeOutputDir = path.join(tmpdir(), `goodbye-naver-blog-smoke-fixture-${process.pid}`, "output")
+const fallbackSmokeOutputDir = createTestPath("ui-smoke-fixture", "output")
 
 const getCaptureDir = () => {
   const index = process.argv.indexOf("--capture-dir")
@@ -759,7 +758,7 @@ const waitForStepView = async ({
 }
 
 const run = async () => {
-  const tempRoot = await mkdtemp(path.join(tmpdir(), "goodbye-naver-blog-smoke-"))
+  const tempRoot = await createTestTempDir("goodbye-naver-blog-smoke-")
   const outputDir = path.join(tempRoot, "output")
   const server = createHttpServer({
     settingsPath: path.join(tempRoot, "export-ui-settings.json"),

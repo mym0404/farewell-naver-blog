@@ -1,10 +1,10 @@
-import { mkdtemp, readFile, rm } from "node:fs/promises"
+import { readFile, rm } from "node:fs/promises"
 import path from "node:path"
-import { tmpdir } from "node:os"
 
 import { describe, expect, it } from "vitest"
 
 import { createSinglePostMetadataCachingFetcher } from "./single-post-metadata-cache.js"
+import { createTestTempDir } from "../../tests/helpers/test-paths.js"
 
 const createBaseFetcher = ({
   scanCount,
@@ -59,7 +59,7 @@ const createBaseFetcher = ({
 
 describe("single post metadata cache", () => {
   it("reuses cached metadata across repeated wrappers for the same blog", async () => {
-    const rootDir = await mkdtemp(path.join(tmpdir(), "single-post-cache-"))
+    const rootDir = await createTestTempDir("single-post-cache-")
     const cachePath = path.join(rootDir, "metadata-cache.json")
     const scanCount = { value: 0 }
     const postsCount = { value: 0 }

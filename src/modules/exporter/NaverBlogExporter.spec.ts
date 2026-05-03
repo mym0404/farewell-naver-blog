@@ -1,8 +1,7 @@
 import { createHash } from "node:crypto"
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
+import { readFile, rm, writeFile } from "node:fs/promises"
 import * as fs from "node:fs/promises"
 import path from "node:path"
-import { tmpdir } from "node:os"
 
 import { afterEach, describe, expect, it, vi } from "vitest"
 
@@ -11,6 +10,7 @@ import { NaverBlogExporter } from "./NaverBlogExporter.js"
 import { rewriteUploadedAssets } from "./ImageUploadRewriter.js"
 import { defaultExportOptions } from "../../shared/ExportOptions.js"
 import { runWithLogSink } from "../../shared/Logger.js"
+import { createTestTempDir } from "../../../tests/helpers/test-paths.js"
 
 const scanResult = {
   blogId: "mym0404",
@@ -259,7 +259,7 @@ describe("NaverBlogExporter", () => {
   })
 
   it("writes manifest, progress, and running job items for successful exports", async () => {
-    const outputDir = await mkdtemp(path.join(tmpdir(), "bulk-export-"))
+    const outputDir = await createTestTempDir("bulk-export-")
     const onProgress = vi.fn()
     const onItem = vi.fn()
 
@@ -328,7 +328,7 @@ describe("NaverBlogExporter", () => {
   })
 
   it("reuses the scanned metadata snapshot instead of fetching the list again", async () => {
-    const outputDir = await mkdtemp(path.join(tmpdir(), "bulk-export-"))
+    const outputDir = await createTestTempDir("bulk-export-")
     const scanBlogSpy = vi.spyOn(NaverBlogFetcher.prototype, "scanBlog")
     const getAllPostsSpy = vi.spyOn(NaverBlogFetcher.prototype, "getAllPosts")
     const fetchPostHtmlSpy = vi.spyOn(NaverBlogFetcher.prototype, "fetchPostHtml").mockResolvedValue(postHtml)
@@ -366,7 +366,7 @@ describe("NaverBlogExporter", () => {
   })
 
   it("records unsupported representative cases as failed bulk export items", async () => {
-    const outputDir = await mkdtemp(path.join(tmpdir(), "bulk-export-"))
+    const outputDir = await createTestTempDir("bulk-export-")
     const onProgress = vi.fn()
     const onItem = vi.fn()
     const options = defaultExportOptions()
@@ -431,7 +431,7 @@ describe("NaverBlogExporter", () => {
   })
 
   it("does not create upload candidates for failed unsupported html exports", async () => {
-    const outputDir = await mkdtemp(path.join(tmpdir(), "bulk-export-"))
+    const outputDir = await createTestTempDir("bulk-export-")
     const options = defaultExportOptions()
     const se3Post = {
       ...posts[0],
@@ -484,7 +484,7 @@ describe("NaverBlogExporter", () => {
   })
 
   it("keeps manifest and job item order stable while exporting posts in parallel", async () => {
-    const outputDir = await mkdtemp(path.join(tmpdir(), "bulk-export-"))
+    const outputDir = await createTestTempDir("bulk-export-")
     const onProgress = vi.fn()
     const onItem = vi.fn()
     let releaseFirstPost!: () => void
@@ -561,7 +561,7 @@ describe("NaverBlogExporter", () => {
   })
 
   it("keeps failure and success order stable in mixed parallel exports", async () => {
-    const outputDir = await mkdtemp(path.join(tmpdir(), "bulk-export-"))
+    const outputDir = await createTestTempDir("bulk-export-")
     const onProgress = vi.fn()
     const onItem = vi.fn()
     let releaseFirstPost!: () => void
@@ -638,7 +638,7 @@ describe("NaverBlogExporter", () => {
   })
 
   it("marks download-and-upload exports as upload-ready with local candidate metadata", async () => {
-    const outputDir = await mkdtemp(path.join(tmpdir(), "bulk-export-"))
+    const outputDir = await createTestTempDir("bulk-export-")
     const onItem = vi.fn()
     const options = defaultExportOptions()
 
@@ -695,7 +695,7 @@ describe("NaverBlogExporter", () => {
   })
 
   it("does not clear the output directory when scan fails", async () => {
-    const outputDir = await mkdtemp(path.join(tmpdir(), "bulk-export-"))
+    const outputDir = await createTestTempDir("bulk-export-")
     const sentinelPath = path.join(outputDir, "keep.txt")
     await writeFile(sentinelPath, "keep", "utf8")
 
@@ -718,7 +718,7 @@ describe("NaverBlogExporter", () => {
   })
 
   it("keeps existing files, logs count mismatches, and records failed job items", async () => {
-    const outputDir = await mkdtemp(path.join(tmpdir(), "bulk-export-"))
+    const outputDir = await createTestTempDir("bulk-export-")
     const sentinelPath = path.join(outputDir, "stale.txt")
     const logSink = vi.fn()
     const onProgress = vi.fn()
@@ -785,7 +785,7 @@ describe("NaverBlogExporter", () => {
   })
 
   it("rewrites markdown, frontmatter thumbnail, manifest, and job items from upload results", async () => {
-    const outputDir = await mkdtemp(path.join(tmpdir(), "bulk-export-rewrite-"))
+    const outputDir = await createTestTempDir("bulk-export-rewrite-")
     const fixture = createUploadReadyFixture({
       outputDir,
     })
@@ -845,7 +845,7 @@ describe("NaverBlogExporter", () => {
   })
 
   it("rewrites html-fragment image references in markdown and manifest from upload results", async () => {
-    const outputDir = await mkdtemp(path.join(tmpdir(), "bulk-export-rewrite-"))
+    const outputDir = await createTestTempDir("bulk-export-rewrite-")
     const fixture = createHtmlFragmentUploadReadyFixture({
       outputDir,
     })
@@ -886,7 +886,7 @@ describe("NaverBlogExporter", () => {
   })
 
   it("rejects non-http(s) upload URLs before rewrite and keeps originals untouched", async () => {
-    const outputDir = await mkdtemp(path.join(tmpdir(), "bulk-export-rewrite-"))
+    const outputDir = await createTestTempDir("bulk-export-rewrite-")
     const fixture = createUploadReadyFixture({
       outputDir,
     })
@@ -924,7 +924,7 @@ describe("NaverBlogExporter", () => {
   })
 
   it("rejects secret-bearing upload URLs before rewrite and keeps originals untouched", async () => {
-    const outputDir = await mkdtemp(path.join(tmpdir(), "bulk-export-rewrite-"))
+    const outputDir = await createTestTempDir("bulk-export-rewrite-")
     const fixture = createUploadReadyFixture({
       outputDir,
     })
@@ -962,7 +962,7 @@ describe("NaverBlogExporter", () => {
   })
 
   it("keeps already rewritten markdown when the manifest snapshot rename fails", async () => {
-    const outputDir = await mkdtemp(path.join(tmpdir(), "bulk-export-rewrite-"))
+    const outputDir = await createTestTempDir("bulk-export-rewrite-")
     const fixture = createUploadReadyFixture({
       outputDir,
     })
