@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest"
 
 import {
-  createFailureBlockLabel,
   createIngestBlogPrTitle,
   createSupportUnitClaim,
   parseSupportUnitClaim,
@@ -14,7 +13,7 @@ describe("ingest PR claims", () => {
     expect(parseSupportUnitClaim(`body\n${claim}\n`)).toBe("naver-se4:v2_poll")
   })
 
-  it("formats PR title and failure block label", () => {
+  it("formats PR titles", () => {
     expect(createIngestBlogPrTitle({ type: "newBlockParser", title: "SE4 poll block 지원" })).toBe(
       "[📦 New Block Parser] SE4 poll block 지원",
     )
@@ -30,6 +29,5 @@ describe("ingest PR claims", () => {
         title: "[🎉 Parser Improvement] SE4 quote block 개선",
       }),
     ).toBe("[🎉 Parser Improvement] SE4 quote block 개선")
-    expect(createFailureBlockLabel("a1b2c3d4")).toBe("failure-block:a1b2c3d4")
   })
 })
