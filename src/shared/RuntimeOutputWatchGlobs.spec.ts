@@ -9,6 +9,7 @@ describe("vite config", () => {
         "**/.cache/**",
         "**/output/**",
         "**/outputs/**",
+        "**/tmp/**",
       ]),
     )
   })

@@ -4,16 +4,50 @@ import { LeafBlock } from "../BaseBlock.js"
 import type { ParserBlockContext } from "../ParserNode.js"
 import { parseJsonAttribute } from "./JsonAttribute.js"
 
+const parseCssUrl = (value: string | undefined) => value?.match(/url\((['"]?)(.*?)\1\)/)?.[2]
+
 export class NaverSe4MaterialBlock extends LeafBlock {
   override readonly id = "linkCard"
   override readonly label = "자료 링크"
   override readonly outputOptions = linkCardOutputOptions
 
   override match({ $node }: ParserBlockContext) {
-    return $node.hasClass("se-material")
+    return $node.hasClass("se-material") || $node.find(".not_sponsored_component").length > 0
   }
 
   override convert({ $node }: Parameters<LeafBlock["convert"]>[0]) {
+    const customCard = $node.find(".not_sponsored_component").first()
+
+    if (customCard.length > 0) {
+      const link = customCard.find("a.link").first()
+      const url = link.attr("href") ?? ""
+
+      if (!url) {
+        throw new Error("SE4 material block parsing failed.")
+      }
+
+      const thumbnailSource = parseCssUrl(customCard.find(".thumbnail").attr("style"))
+      const description = [customCard.find(".label").text(), customCard.find(".date").text()]
+        .map(compactText)
+        .filter(Boolean)
+        .join(" / ")
+
+      return {
+        status: "handled" as const,
+        blocks: [
+          {
+            type: "linkCard" as const,
+            card: {
+              title: compactText(customCard.find(".title").text()) || url,
+              description,
+              url,
+              imageUrl: thumbnailSource ? normalizeAssetUrl(thumbnailSource) : null,
+            },
+          },
+        ],
+      }
+    }
+
     const materialLink = $node.find("a.se-module-material").first()
     const linkData = parseJsonAttribute(materialLink.attr("data-linkdata"))
     const url = materialLink.attr("href") ?? (typeof linkData?.link === "string" ? linkData.link : "")

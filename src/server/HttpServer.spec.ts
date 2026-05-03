@@ -1,5 +1,4 @@
 import { access, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
-import { tmpdir } from "node:os"
 import path from "node:path"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
@@ -17,7 +16,7 @@ import type {
 } from "../shared/Types.js"
 import { AbortOperationError } from "../shared/Utils.js"
 import { createHttpServer } from "./HttpServer.js"
-import { createTestPath } from "../../tests/helpers/test-paths.js"
+import { createTestPath, createTestTempDir } from "../../tests/helpers/test-paths.js"
 
 let activeServer: ReturnType<typeof createHttpServer> | null = null
 let testServerRootSequence = 0
@@ -397,7 +396,7 @@ afterEach(async () => {
 
 describe("http server", () => {
   it("returns frontmatter metadata from export defaults", async () => {
-    const rootDir = await mkdtemp(path.join(tmpdir(), "export-defaults-"))
+    const rootDir = await createTestTempDir("export-defaults-")
     const settingsPath = path.join(rootDir, "export-ui-settings.json")
     const outputDir = path.join(rootDir, "output")
 
@@ -478,7 +477,7 @@ describe("http server", () => {
   })
 
   it("hydrates resumed jobs from manifest.json", async () => {
-    const rootDir = await mkdtemp(path.join(tmpdir(), "export-manifest-resume-"))
+    const rootDir = await createTestTempDir("export-manifest-resume-")
     const settingsPath = path.join(rootDir, "export-ui-settings.json")
     const outputDir = path.join(rootDir, "output")
 
@@ -590,7 +589,7 @@ describe("http server", () => {
   })
 
   it("looks up resumable jobs for an explicit output path", async () => {
-    const rootDir = await mkdtemp(path.join(tmpdir(), "export-manifest-lookup-"))
+    const rootDir = await createTestTempDir("export-manifest-lookup-")
     const settingsPath = path.join(rootDir, "export-ui-settings.json")
     const outputDir = path.join(rootDir, "resume-output")
 
@@ -698,7 +697,7 @@ describe("http server", () => {
   })
 
   it("restores a resumable job for an explicit output path and persists that path", async () => {
-    const rootDir = await mkdtemp(path.join(tmpdir(), "export-manifest-restore-"))
+    const rootDir = await createTestTempDir("export-manifest-restore-")
     const settingsPath = path.join(rootDir, "export-ui-settings.json")
     const outputDir = path.join(rootDir, "resume-output")
 
@@ -813,7 +812,7 @@ describe("http server", () => {
   })
 
   it("does not hydrate resumed jobs from temporary output directories", async () => {
-    const rootDir = await mkdtemp(path.join(tmpdir(), "export-manifest-temp-resume-"))
+    const rootDir = await createTestTempDir("export-manifest-temp-resume-")
     const settingsPath = path.join(rootDir, "export-ui-settings.json")
     const outputDir = await mkdtemp(path.join("/tmp", "goodbye-temp-resume-output-"))
 
@@ -923,7 +922,7 @@ describe("http server", () => {
   })
 
   it("restores full resumed scan posts from scan cache when manifest snapshot was compacted", async () => {
-    const rootDir = await mkdtemp(path.join(tmpdir(), "export-manifest-resume-cache-"))
+    const rootDir = await createTestTempDir("export-manifest-resume-cache-")
     const settingsPath = path.join(rootDir, "export-ui-settings.json")
     const scanCachePath = path.join(rootDir, "scan-cache.json")
     const outputDir = path.join(rootDir, "output")
@@ -1039,7 +1038,7 @@ describe("http server", () => {
   })
 
   it("clears the resumed output directory and bootstrap state", async () => {
-    const rootDir = await mkdtemp(path.join(tmpdir(), "export-reset-"))
+    const rootDir = await createTestTempDir("export-reset-")
     const settingsPath = path.join(rootDir, "export-ui-settings.json")
     const outputDir = path.join(rootDir, "output")
 
@@ -1158,7 +1157,7 @@ describe("http server", () => {
   })
 
   it("cancels an active export job before resetting output", async () => {
-    const rootDir = await mkdtemp(path.join(tmpdir(), "export-reset-active-"))
+    const rootDir = await createTestTempDir("export-reset-active-")
     const settingsPath = path.join(rootDir, "export-ui-settings.json")
     const outputDir = path.join(rootDir, "output")
     let signalSeen = false
@@ -1226,7 +1225,7 @@ describe("http server", () => {
   })
 
   it("returns an error when manifest.json is invalid", async () => {
-    const rootDir = await mkdtemp(path.join(tmpdir(), "export-manifest-invalid-"))
+    const rootDir = await createTestTempDir("export-manifest-invalid-")
     const settingsPath = path.join(rootDir, "export-ui-settings.json")
     const outputDir = path.join(rootDir, "output")
 
@@ -1258,7 +1257,7 @@ describe("http server", () => {
   })
 
   it("keeps the newer in-memory job when bootstrap sees an older manifest snapshot", async () => {
-    const rootDir = await mkdtemp(path.join(tmpdir(), "export-manifest-stale-"))
+    const rootDir = await createTestTempDir("export-manifest-stale-")
     const settingsPath = path.join(rootDir, "export-ui-settings.json")
     const outputDir = path.join(rootDir, "output")
     const staleManifest = {
@@ -1418,7 +1417,7 @@ describe("http server", () => {
   })
 
   it("loads persisted export settings from the project settings file", async () => {
-    const rootDir = await mkdtemp(path.join(tmpdir(), "export-settings-"))
+    const rootDir = await createTestTempDir("export-settings-")
     const settingsPath = path.join(rootDir, "export-ui-settings.json")
 
     await writeFile(
@@ -1491,7 +1490,7 @@ describe("http server", () => {
   })
 
   it("falls back to defaults when the settings file is malformed", async () => {
-    const rootDir = await mkdtemp(path.join(tmpdir(), "export-settings-"))
+    const rootDir = await createTestTempDir("export-settings-")
     const settingsPath = path.join(rootDir, "export-ui-settings.json")
     await writeFile(settingsPath, "{broken", "utf8")
 
@@ -1528,7 +1527,7 @@ describe("http server", () => {
   })
 
   it("persists export settings without category ids", async () => {
-    const rootDir = await mkdtemp(path.join(tmpdir(), "export-settings-"))
+    const rootDir = await createTestTempDir("export-settings-")
     const settingsPath = path.join(rootDir, "export-ui-settings.json")
 
     try {
@@ -1601,7 +1600,7 @@ describe("http server", () => {
   })
 
   it("rejects invalid persisted export settings payloads", async () => {
-    const rootDir = await mkdtemp(path.join(tmpdir(), "export-settings-"))
+    const rootDir = await createTestTempDir("export-settings-")
     const settingsPath = path.join(rootDir, "export-ui-settings.json")
 
     try {
@@ -1692,7 +1691,7 @@ describe("http server", () => {
   })
 
   it("opens a local output file through the action api", async () => {
-    const rootDir = await mkdtemp(path.join(tmpdir(), "open-local-file-"))
+    const rootDir = await createTestTempDir("open-local-file-")
     const targetPath = path.join(rootDir, "posts", "first", "index.md")
     const openLocalPath = vi.fn(async () => {})
 
@@ -1726,7 +1725,7 @@ describe("http server", () => {
   })
 
   it("builds a preview link from the current markdown file through the action api", async () => {
-    const rootDir = await mkdtemp(path.join(tmpdir(), "preview-local-file-"))
+    const rootDir = await createTestTempDir("preview-local-file-")
     const targetPath = path.join(rootDir, "posts", "first", "index.md")
 
     try {
@@ -1760,7 +1759,7 @@ describe("http server", () => {
   })
 
   it("rejects preview-link requests for missing files", async () => {
-    const rootDir = await mkdtemp(path.join(tmpdir(), "preview-local-file-missing-"))
+    const rootDir = await createTestTempDir("preview-local-file-missing-")
 
     try {
       activeServer = createTestHttpServer()
@@ -1786,7 +1785,7 @@ describe("http server", () => {
   })
 
   it("rejects preview-link requests that escape the output root", async () => {
-    const rootDir = await mkdtemp(path.join(tmpdir(), "preview-local-file-escape-"))
+    const rootDir = await createTestTempDir("preview-local-file-escape-")
 
     try {
       activeServer = createTestHttpServer()
@@ -1812,7 +1811,7 @@ describe("http server", () => {
   })
 
   it("returns 422 when a preview link cannot be generated", async () => {
-    const rootDir = await mkdtemp(path.join(tmpdir(), "preview-local-file-too-large-"))
+    const rootDir = await createTestTempDir("preview-local-file-too-large-")
     const targetPath = path.join(rootDir, "posts", "first", "index.md")
     let markdown = ""
     let index = 0
@@ -1851,7 +1850,7 @@ describe("http server", () => {
   })
 
   it("persists scan results to a json file and reuses them after app reloads", async () => {
-    const rootDir = await mkdtemp(path.join(tmpdir(), "scan-cache-"))
+    const rootDir = await createTestTempDir("scan-cache-")
     const scanCachePath = path.join(rootDir, "scan-cache.json")
     const scanBlogSpy = vi.spyOn(NaverBlogFetcher.prototype, "scanBlog").mockResolvedValue({
       ...baseScanResult,
@@ -2384,7 +2383,7 @@ describe("http server", () => {
   })
 
   it("cancels an active upload job before resetting output", async () => {
-    const rootDir = await mkdtemp(path.join(tmpdir(), "upload-reset-active-"))
+    const rootDir = await createTestTempDir("upload-reset-active-")
     const settingsPath = path.join(rootDir, "export-ui-settings.json")
     const outputDir = path.join(rootDir, "output")
     let signalSeen = false

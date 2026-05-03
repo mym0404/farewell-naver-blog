@@ -5,6 +5,7 @@
 - CI lives in `.github/workflows/required-checks.yml`.
 - UI smoke and live harnesses live in `tests/e2e/*`.
 - Sample fixture regression lives in `tests/helpers/sample-fixtures.spec.ts` and `tests/helpers/sample-fixtures.ts`.
+- Test and harness temporary paths are rooted through `tests/helpers/test-paths.ts` under repo-local `tmp/`.
 
 ## Primary Commands
 - `pnpm check:local`: `pnpm typecheck && pnpm test:offline`. Run after ordinary repository file changes.
@@ -12,11 +13,11 @@
 - `pnpm check:full`: `pnpm check:local && pnpm smoke:ui`. Run when user flow, UI state, exporter output, or shared runtime behavior may be affected.
 - `pnpm smoke:ui`: `pnpm build:ui && bun tests/e2e/run-ui-smoke-suite.ts`. Verifies mock-based scan, export, upload, theme persistence, and resume UI.
 - `pnpm test:network`: builds UI once, then runs live resume export, SE2 table resume export, and live upload e2e. It needs external network and upload credentials and creates remote state.
-- `pnpm test:coverage`: runs Vitest with V8 coverage.
+- `pnpm test:coverage`: runs the full Vitest suite once with V8 coverage, enforces global coverage thresholds, and also enforces 100% coverage for parser block implementation globs.
 
 ## Focused Commands
 - `pnpm typecheck`: TypeScript contract check only.
-- `pnpm test:offline`: Vitest suite. Sample fixture tests fetch live Naver post HTML through the sample cache before comparing expected output.
+- `pnpm test:offline`: Vitest suite. Sample fixture tests fetch live Naver post HTML before comparing expected output, using the sample cache only outside CI.
 - `pnpm test:parser-blocks`: parser block implementation coverage gate. It runs block-level parser specs with 100% line, function, branch, and statement coverage for `src/modules/blocks/{common,naver-se2,naver-se3,naver-se4}` implementation files.
 - `pnpm test:network:resume-export`: live Naver resume export without upload.
 - `pnpm test:network:resume-export:se2-table`: live SE2 table resume export range.
@@ -52,12 +53,13 @@
 - `pnpm smoke:ui` uses mock flows and does not prove live Naver fetch or external upload behavior.
 - `pnpm test:network:resume-export` proves live fetch and resume export, but not external upload.
 - `pnpm test:network:upload` is the only bundled command that proves external upload state. It creates remote state.
-- Fork PRs may not receive `GOODBYE_UPLOAD_E2E_GITHUB_TOKEN`, so CI live upload can fail for secret availability rather than code behavior.
+- CI does not run network e2e, so live resume and external upload are proven only by explicit `pnpm test:network:*` runs.
 
 ## CI
 - `.github/workflows/required-checks.yml` runs on non-draft pull requests.
 - CI uses Node.js 24, pnpm 10, and Bun 1.3.13.
-- CI runs `pnpm check:full`, writes `.env` with `GOODBYE_UPLOAD_E2E=1`, runs `pnpm test:network:upload`, runs `pnpm test:coverage`, then uploads `coverage/lcov.info` to Codecov.
+- CI restores the Playwright browser cache keyed by the installed Playwright version, then runs `pnpm exec playwright install --with-deps --only-shell chromium`.
+- CI runs `pnpm typecheck`, `pnpm smoke:ui`, `pnpm test:coverage`, then uploads `coverage/lcov.info` to Codecov. CI does not run `pnpm test:offline` separately because `pnpm test:coverage` already runs the full Vitest suite.
 
 ## Task Loops
 - Knowledge-only changes still need path and command spot checks. Run `pnpm check:local` when practical.
