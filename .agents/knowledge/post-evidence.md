@@ -1,7 +1,7 @@
 # Post Evidence
 
 ## Purpose
-- Post evidence compares a public Naver Blog source, this repo's Markdown conversion, and the external Markdown renderer in one Markdown table.
+- Post evidence compares a public Naver Blog source and this repo's Markdown conversion in one Markdown table.
 - Use it for README fragments, ingest reports, PR descriptions, and parser coverage evidence.
 - Evidence artifacts are harness/report output, not exported blog output.
 
@@ -37,7 +37,7 @@ bun scripts/capture-post-evidence.ts \
 
 ## Export Options
 - `--optionsPath` accepts the same JSON option shape used by single-post export helpers.
-- The evidence renderer honors export options, including block output options, Markdown link style, asset handling, and frontmatter selection.
+- Evidence Markdown generation honors export options, including block output options, Markdown link style, asset handling, and frontmatter selection.
 - Default evidence options use remote asset references, disable image downloads, disable thumbnail downloads, disable compression, and omit `exportedAt`.
 - Evidence capture should not download Naver image files unless an explicit options file intentionally changes asset behavior.
 
@@ -48,14 +48,13 @@ bun scripts/capture-post-evidence.ts \
 - `--assetProfile readme` writes assets under `.agents/knowledge/reference/assets/readme` so README fragments can reference stable repo-local assets.
 - `--assetProfile figure` writes assets under `.agents/knowledge/reference/assets/figure` so PR/report figures can be committed separately from README assets.
 - Persistent asset profiles write image links as repo-root-relative `.agents/...` paths rather than `tmp`-relative paths.
-- `report.json` keeps per-row source URL, renderer URL or renderer error, screenshot paths, Markdown text, and row errors.
+- `report.json` keeps per-row source URL, screenshot paths, Markdown text, and row errors.
 - Any row error means the evidence table is incomplete until the capture or rendering issue is fixed or explicitly reported.
 
 ## Table Shape
-- `table.md` is a five-column Markdown table: `Metadata` | `Links` | `Naver Capture` | `Markdown` | `Rendered Capture`.
-- `Links` contains both the public Naver post link and the external renderer link.
-- If the external renderer URL cannot be generated, `Links` includes `실패: <reason>` instead of a renderer link.
-- `Naver Capture` and `Rendered Capture` are image cells that point at generated PNG assets.
+- `table.md` is a four-column Markdown table: `Metadata` | `Links` | `Naver Capture` | `Markdown`.
+- `Links` contains the public Naver post link.
+- `Naver Capture` is an image cell that points at a generated PNG asset.
 - `Markdown` is escaped inside `<pre><code>...</code></pre>` so multiline Markdown stays inside one table cell.
 - Table cell content escapes `|`, HTML-sensitive characters, and newlines so generated rows remain valid Markdown table rows.
 
@@ -69,9 +68,6 @@ bun scripts/capture-post-evidence.ts \
 - Full-post source capture targets `#viewTypeSelector`.
 - Inspect-path source capture resolves the same editor-specific path reported by single-post inspect.
 - Source screenshots capture the selected HTML node, not only the current viewport; long nodes may produce tall images.
-- Renderer screenshots open the external Markdown renderer URL and capture `#markdown-preview`.
-- Renderer capture sets `localStorage.markdownViewerGlobalState` to `{"theme":"dark"}` before page load, so rendered evidence is dark mode by default.
-- Renderer capture measures the preview content bounds, expands the viewport when needed, and captures the selected preview node with Playwright screenshot `clip` and screenshot-only `style`.
 
 ## Ingest Reports
 - `.agents/skills/ingest-blog/scripts/collect-blog-errors.ts` uses post evidence helpers when writing ingest reports.
@@ -84,4 +80,4 @@ bun scripts/capture-post-evidence.ts \
 - Run `bun scripts/capture-post-evidence.ts --help` after changing the CLI surface.
 - Run at least one full-post smoke and one inspect-path smoke after changing capture behavior.
 - Check `report.json.errorCount` before using a generated table.
-- Use `identify <asset>.png` or a visual image check when screenshot framing, target node capture, or renderer theme behavior changes.
+- Use `identify <asset>.png` or a visual image check when screenshot framing or target node capture behavior changes.

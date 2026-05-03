@@ -8,7 +8,6 @@ import { NaverBlog } from "../../../src/modules/blog/NaverBlog.js"
 import { renderMarkdownPost } from "../../../src/modules/converter/MarkdownRenderer.js"
 import { AssetStore } from "../../../src/modules/exporter/AssetStore.js"
 import { buildMarkdownFilePath, getCategoryForPost } from "../../../src/modules/exporter/ExportPaths.js"
-import { buildMarkdownViewerShareUrl } from "../../../src/modules/exporter/MarkdownViewerShareUrl.js"
 import { buildPostLinkTargets, createSameBlogPostLinkResolver } from "../../../src/modules/exporter/PostLinkRewriter.js"
 import { NaverBlogFetcher } from "../../../src/modules/fetcher/NaverBlogFetcher.js"
 import { parsePostHtmlWithBlockEvidence } from "../../../src/modules/parser/PostParser.js"
@@ -17,7 +16,7 @@ import type { AstBlock, ExportOptions, ParsedPost } from "../../../src/shared/Ty
 import { ensureDir, extractBlogId, mapConcurrent, toErrorMessage } from "../../../src/shared/Utils.js"
 import { readSinglePostOptions } from "../single-post-cli.js"
 import type { EvidenceCase } from "./cases.js"
-import { captureNaverPost, captureRenderer } from "./playwright.js"
+import { captureNaverPost } from "./playwright.js"
 import {
   createDefaultEvidenceOutputDir,
   type EvidenceAssetProfile,
@@ -33,13 +32,9 @@ export type EvidenceRowReport = {
   target: EvidenceCase["target"]
   metadata: EvidenceCase["metadata"]
   sourceUrl: string
-  rendererUrl: string | null
-  rendererError: string | null
   naverCaptureAssetPath: string | null
   naverCapturePath: string | null
   markdown: string | null
-  renderedCaptureAssetPath: string | null
-  renderedCapturePath: string | null
   errors: string[]
 }
 
@@ -146,7 +141,7 @@ const createCaptureFilename = ({
   blogId: string
   logNo: string
   target: EvidenceCase["target"]
-  kind: "naver" | "rendered"
+  kind: "naver"
 }) => {
   const targetSegment =
     target.kind === "post" ? "post" : `path-${safeEvidencePathSegment(target.path)}`
@@ -282,8 +277,6 @@ const captureCase = async ({
   let sourceUrl = `https://blog.naver.com/${blogId}/${evidenceCase.logNo}`
   let editorType: string | null = new NaverBlog().getEditorForHtml(html)?.type ?? null
   let markdown: string | null = null
-  let rendererUrl: string | null = null
-  let rendererError: string | null = null
 
   try {
     const rendered = await renderEvidenceMarkdown({
@@ -299,14 +292,8 @@ const captureCase = async ({
     editorType = rendered.editorType
     sourceUrl = rendered.sourceUrl
     markdown = rendered.markdown
-    rendererUrl = buildMarkdownViewerShareUrl(markdown)
-
-    if (!rendererUrl) {
-      rendererError = "renderer share URL length exceeded"
-    }
   } catch (error) {
-    rendererError = toErrorMessage(error)
-    errors.push(rendererError)
+    errors.push(toErrorMessage(error))
   }
 
   const naverCapturePath = path.join(
@@ -318,8 +305,6 @@ const captureCase = async ({
       kind: "naver",
     }),
   )
-  let renderedCapturePath: string | null = null
-  let renderedCaptureAssetPath: string | null = null
 
   try {
     await captureNaverPost({
@@ -334,31 +319,6 @@ const captureCase = async ({
     errors.push(`Naver capture failed: ${toErrorMessage(error)}`)
   }
 
-  if (rendererUrl) {
-    renderedCaptureAssetPath = path.join(
-      assetDir,
-      createCaptureFilename({
-        blogId,
-        logNo: evidenceCase.logNo,
-        target: evidenceCase.target,
-        kind: "rendered",
-      }),
-    )
-    renderedCapturePath = renderedCaptureAssetPath
-
-    try {
-      await captureRenderer({
-        browser,
-        rendererUrl,
-        outputPath: renderedCaptureAssetPath,
-      })
-    } catch (error) {
-      errors.push(`Renderer capture failed: ${toErrorMessage(error)}`)
-      renderedCapturePath = null
-      renderedCaptureAssetPath = null
-    }
-  }
-
   const naverCaptureFailed = errors.some((error) => error.startsWith("Naver capture failed"))
 
   return {
@@ -367,8 +327,6 @@ const captureCase = async ({
     target: evidenceCase.target,
     metadata: evidenceCase.metadata,
     sourceUrl,
-    rendererUrl,
-    rendererError,
     naverCaptureAssetPath: naverCaptureFailed ? null : naverCapturePath,
     naverCapturePath: naverCaptureFailed
       ? null
@@ -377,13 +335,6 @@ const captureCase = async ({
           assetPath: naverCapturePath,
         }),
     markdown,
-    renderedCaptureAssetPath,
-    renderedCapturePath: renderedCapturePath
-      ? toMarkdownAssetPath({
-          markdownFilePath: tablePath,
-          assetPath: renderedCapturePath,
-        })
-      : null,
     errors,
   }
 }
@@ -398,8 +349,6 @@ export const createEvidenceTableRows = ({
   rows.map((row) => ({
     metadata: row.metadata,
     sourceUrl: row.sourceUrl,
-    rendererUrl: row.rendererUrl,
-    rendererError: row.rendererError,
     naverCapturePath: row.naverCaptureAssetPath
       ? toMarkdownAssetPath({
           markdownFilePath: tablePath,
@@ -407,12 +356,6 @@ export const createEvidenceTableRows = ({
         })
       : null,
     markdown: row.markdown,
-    renderedCapturePath: row.renderedCaptureAssetPath
-      ? toMarkdownAssetPath({
-          markdownFilePath: tablePath,
-          assetPath: row.renderedCaptureAssetPath,
-        })
-      : null,
   }))
 
 export const capturePostEvidence = async ({

@@ -1,11 +1,8 @@
 export type EvidenceTableRow = {
   metadata: string | Record<string, string | number | boolean | null | undefined>
   sourceUrl: string
-  rendererUrl: string | null
-  rendererError: string | null
   naverCapturePath: string | null
   markdown: string | null
-  renderedCapturePath: string | null
 }
 
 const escapeHtml = (value: string) =>
@@ -37,25 +34,7 @@ const renderMetadata = (
     .join("\n")
 }
 
-const renderLinkCell = ({
-  sourceUrl,
-  rendererUrl,
-  rendererError,
-}: {
-  sourceUrl: string
-  rendererUrl: string | null
-  rendererError: string | null
-}) => {
-  const links = [`[Naver](${sourceUrl})`]
-
-  if (rendererUrl) {
-    links.push(`[Renderer](${rendererUrl})`)
-  } else {
-    links.push(`실패: ${escapeHtml(rendererError ?? "renderer link unavailable")}`)
-  }
-
-  return links.join("\n")
-}
+const renderLinkCell = ({ sourceUrl }: { sourceUrl: string }) => `[Naver](${sourceUrl})`
 
 const renderImageCell = (path: string | null, alt: string) =>
   path ? `![${alt}](${path})` : ""
@@ -71,8 +50,8 @@ const renderMarkdownCell = (markdown: string | null) => {
 const renderCell = (value: string) => escapeTableCell(value)
 
 export const renderEvidenceMarkdownTable = (rows: EvidenceTableRow[]) => {
-  const header = "| Metadata | Links | Naver Capture | Markdown | Rendered Capture |"
-  const separator = "| --- | --- | --- | --- | --- |"
+  const header = "| Metadata | Links | Naver Capture | Markdown |"
+  const separator = "| --- | --- | --- | --- |"
 
   if (rows.length === 0) {
     return `${header}\n${separator}\n`
@@ -85,7 +64,6 @@ export const renderEvidenceMarkdownTable = (rows: EvidenceTableRow[]) => {
         renderCell(renderLinkCell(row)),
         renderCell(renderImageCell(row.naverCapturePath, "Naver Capture")),
         renderCell(renderMarkdownCell(row.markdown)),
-        renderCell(renderImageCell(row.renderedCapturePath, "Rendered Capture")),
       ].join(" | "),
     )
     .map((line) => `| ${line} |`)

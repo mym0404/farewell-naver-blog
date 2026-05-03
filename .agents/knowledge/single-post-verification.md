@@ -37,7 +37,7 @@ bun scripts/export-single-post.ts \
 - Record whether the result is `as-expected`, `mismatch`, `error`, or `not-checked`.
 
 ## Evidence Table
-- Use `scripts/capture-post-evidence.ts` when the comparison needs a Markdown table row with source capture, converted Markdown, renderer link, and rendered capture.
+- Use `scripts/capture-post-evidence.ts` when the comparison needs a Markdown table row with source capture and converted Markdown.
 - Use `--target post` for full-post evidence and `--target inspect-path --inspectPath <path>` for block-level evidence.
 - Post evidence table rules live in `.agents/knowledge/post-evidence.md`.
 

@@ -62,8 +62,7 @@ bun scripts/capture-post-evidence.ts \
 ```
 
 `--target post` renders Markdown with frontmatter. `--target inspect-path` renders only the selected block fragment and omits frontmatter.
-Both Naver and renderer screenshots capture the selected HTML node rather than the current viewport; long nodes may produce tall images.
-Renderer screenshots are captured in the external renderer's dark theme.
+Naver screenshots capture the selected HTML node rather than the current viewport; long nodes may produce tall images.
 Use `--assetProfile tmp` for local smoke output, `--assetProfile readme` for README assets, and `--assetProfile figure` for report or PR figures that must be committed.
 
 ## Workflow
