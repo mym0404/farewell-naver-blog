@@ -105,15 +105,16 @@ type FailureGroup = {
 }
 
 const usage = () => `Usage:
-  bun .agents/skills/ingest-blog/scripts/collect-blog-errors.ts --blogId my-blog [--outputDir tmp/harness/ingest-blog/my-blog]
-  bun .agents/skills/ingest-blog/scripts/collect-blog-errors.ts --blogId my-blog --reuseOutputDir tmp/harness/ingest-blog/my-blog --rerunFailures
+  bun .agents/skills/ingest-blog/scripts/collect-blog-errors.ts --blogId <blogId> [--outputDir tmp/harness/ingest-blog/<runId>]
+  bun .agents/skills/ingest-blog/scripts/collect-blog-errors.ts --blogId <blogId> --reuseOutputDir /absolute/path/to/tmp/harness/ingest-blog/<runId> --rerunFailures
 
 Options:
   --reuseOutputDir <dir>  Reuse a completed ingest output and rerun only failed posts.
+                         Use the first collect's printed absolute outputDir from support-unit branches.
   --rerunFailures        Require failed-post rerun from a reusable output.
   --forceFull            Ignore reusable output and run a full ingest.
   --focusSupportUnit <key>
-                         Report and exit against one parser block support unit.
+                         Report and exit against one parser support unit.
   --changesPath <json>   Include parser/fixture/knowledge/verification changes in report.
 
 Exports public posts with remote asset references, reuses completed outputs when possible, inspects failures, and writes report.md/report.json/evidence.md.`
