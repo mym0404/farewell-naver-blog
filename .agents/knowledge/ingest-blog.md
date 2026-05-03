@@ -78,7 +78,9 @@ bun .agents/skills/ingest-blog/scripts/write-sample-fixture.ts \
 - Before commit, push, or PR creation, the Local PR Gate must pass: `pnpm typecheck`, `pnpm test:coverage`, `pnpm smoke:ui`, and `pnpm check:unused`.
 - If the Local PR Gate fails because of the focused diff, fix the diff and rerun the full gate. If the failure appears unrelated or flaky, rerun the failing command alone; if it still reproduces, stop PR creation and report the blocker.
 - `pnpm check:local` is not part of the Local PR Gate because `pnpm typecheck` and `pnpm test:coverage` directly cover the CI-relevant type and Vitest checks.
-- The PR title starts with `[📦 New Block]` and uses Korean after the fixed prefix.
+- The PR title starts with exactly `[📦 New Block Parser]` when adding and registering a new parser block.
+- The PR title starts with exactly `[🎉 Parser Improvement]` when extending or fixing an existing parser block.
+- No other `ingest-blog` PR title prefix is used.
 - The PR gets `ai-generated` and `failure-block:<failureBlockHash>` labels.
 - The PR body starts with one or two Korean summary lines that state what parser behavior changed.
 - The hidden support unit claim marker follows the Korean summary.

@@ -193,7 +193,9 @@ Do not add visible root cause, changes, validation, notes, report, backlog, full
 Keep the hidden claim marker as an HTML comment for the PR completion checker, but do not add another visible section for it.
 For a focused support-unit PR:
 
-- Title must start with `[📦 New Block]`.
+- Title must start with exactly `[📦 New Block Parser]` when adding and registering a new parser block.
+- Title must start with exactly `[🎉 Parser Improvement]` when extending or fixing an existing parser block.
+- Do not use any other `ingest-blog` PR title prefix.
 - Add or create GitHub labels `ai-generated` and `failure-block:<failureBlockHash>`.
 - Include only the summary and fixed three-section body above.
 - Include a hidden claim marker after the summary: `<!-- ingest-blog:supportUnitKey=<key> -->`.

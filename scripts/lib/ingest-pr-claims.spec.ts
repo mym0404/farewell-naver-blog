@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import {
   createFailureBlockLabel,
-  createNewBlockPrTitle,
+  createIngestBlogPrTitle,
   createSupportUnitClaim,
   parseSupportUnitClaim,
 } from "./ingest-pr-claims.js"
@@ -15,8 +15,21 @@ describe("ingest PR claims", () => {
   })
 
   it("formats PR title and failure block label", () => {
-    expect(createNewBlockPrTitle("Support SE4 poll block")).toBe("[📦 New Block] Support SE4 poll block")
-    expect(createNewBlockPrTitle("[📦 New Block] Support SE4 poll block")).toBe("[📦 New Block] Support SE4 poll block")
+    expect(createIngestBlogPrTitle({ type: "newBlockParser", title: "SE4 poll block 지원" })).toBe(
+      "[📦 New Block Parser] SE4 poll block 지원",
+    )
+    expect(
+      createIngestBlogPrTitle({
+        type: "parserImprovement",
+        title: "[📦 New Block] SE4 quote block 개선",
+      }),
+    ).toBe("[🎉 Parser Improvement] SE4 quote block 개선")
+    expect(
+      createIngestBlogPrTitle({
+        type: "parserImprovement",
+        title: "[🎉 Parser Improvement] SE4 quote block 개선",
+      }),
+    ).toBe("[🎉 Parser Improvement] SE4 quote block 개선")
     expect(createFailureBlockLabel("a1b2c3d4")).toBe("failure-block:a1b2c3d4")
   })
 })
