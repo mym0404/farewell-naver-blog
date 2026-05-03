@@ -13,14 +13,14 @@ describe("NaverSe4HeadingBlock", () => {
     expect(parsed.blocks).toEqual([{ type: "heading", level: 2, text: "Section title" }])
   })
 
-  it("throws when a section title has no text", () => {
-    expect(() =>
-      parseSe4Blocks(`
+  it("skips empty section title components", () => {
+    const parsed = parseSe4Blocks(`
         <div class="se-component se-sectionTitle">
           <div class="se-module-text"><br /></div>
         </div>
-      `),
-    ).toThrow("SE4 heading block parsing failed.")
+      `)
+
+    expect(parsed.blocks).toEqual([])
   })
 
   it("throws when a section title has no text module", () => {

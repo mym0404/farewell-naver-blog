@@ -1,11 +1,11 @@
-import { mkdir, mkdtemp, utimes, writeFile } from "node:fs/promises"
-import os from "node:os"
+import { mkdir, utimes, writeFile } from "node:fs/promises"
 import path from "node:path"
 
 import { describe, expect, it } from "vitest"
 
 import { findLatestReusableIngestOutput, loadReusableIngestOutput } from "./ingest-output.js"
 import type { ExportManifest } from "../../../src/shared/Types.js"
+import { createTestTempDir } from "../../../tests/helpers/test-paths.js"
 
 const createManifest = (overrides: Partial<ExportManifest> = {}): ExportManifest => ({
   blogId: "sample",
@@ -123,7 +123,7 @@ const createManifest = (overrides: Partial<ExportManifest> = {}): ExportManifest
 
 describe("ingest output reuse helpers", () => {
   it("loads only completed matching manifests", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "ingest-output-"))
+    const dir = await createTestTempDir("ingest-output-")
     await writeFile(path.join(dir, "manifest.json"), `${JSON.stringify(createManifest())}\n`, "utf8")
 
     const output = await loadReusableIngestOutput({
@@ -135,7 +135,7 @@ describe("ingest output reuse helpers", () => {
   })
 
   it("ignores unfinished manifests", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "ingest-output-"))
+    const dir = await createTestTempDir("ingest-output-")
     await writeFile(
       path.join(dir, "manifest.json"),
       `${JSON.stringify(createManifest({ finishedAt: null }))}\n`,
@@ -146,7 +146,7 @@ describe("ingest output reuse helpers", () => {
   })
 
   it("finds the latest completed output for a blog", async () => {
-    const root = await mkdtemp(path.join(os.tmpdir(), "ingest-output-root-"))
+    const root = await createTestTempDir("ingest-output-root-")
     const oldDir = path.join(root, "old")
     const newDir = path.join(root, "new")
 

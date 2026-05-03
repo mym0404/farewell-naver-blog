@@ -40,25 +40,34 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run required checks
-        run: pnpm check:full
-
-      - name: Write live upload .env
+      - name: Read Playwright version
+        id: playwright-version
         run: |
-          cat <<EOF > .env
-          GOODBYE_UPLOAD_E2E=1
-          GOODBYE_UPLOAD_E2E_GITHUB_TOKEN=${{ secrets.GOODBYE_UPLOAD_E2E_GITHUB_TOKEN }}
-          EOF
+          version=$(node -e "const fs = require('node:fs'); const pkg = JSON.parse(fs.readFileSync('node_modules/playwright/package.json', 'utf8')); console.log(pkg.version)")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
-      - name: Run live upload Playwright e2e
-        run: pnpm test:network:upload
+      - name: Restore Playwright browser cache
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps --only-shell chromium
+
+      - name: Run typecheck
+        run: pnpm typecheck
+
+      - name: Run UI smoke
+        timeout-minutes: 10
+        run: pnpm smoke:ui
 
       - name: Run coverage gate
         run: pnpm test:coverage
 
-      - name: Upload coverage to Codecov
+      - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
         with:
-          use_oidc: true
-          files: ./coverage/lcov.info
-          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}

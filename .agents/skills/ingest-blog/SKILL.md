@@ -1,6 +1,6 @@
 ---
 name: ingest-blog
-description: Ingest a public Naver Blog by blogId to improve this repository's parser coverage. Use when Codex needs to export every public post without downloading images, summarize parse failures, implement or extend parser blocks for failed HTML, add representative sample fixtures, and update related project knowledge.
+description: Ingest a public Naver Blog by blogId to improve this repository's parser coverage. Use when Codex needs to export every public post without downloading images, summarize parse failures, implement or extend parser blocks for failed HTML, add representative sample fixtures, update related project knowledge, and create Korean draft PRs.
 ---
 
 # Ingest Blog
@@ -128,24 +128,48 @@ Treat non-zero evidence capture errors as an incomplete report and fix the evide
 
 ## PR Flow
 
-Default behavior is `pr=ask`: finish code, fixtures, knowledge updates, verification, and reports first, then ask the user whether to open a PR.
+An `ingest-blog` invocation is PR creation intent. After code, fixtures, knowledge updates, verification, and focused reports are ready, create a draft PR for the focused support unit without asking for confirmation.
+Do not offer `pr=ask`, `pr=none`, or other PR modes.
+If there are no code or fixture changes for the focused support unit because it is safely deferred, do not create an empty PR; report the deferral instead.
 
-- `pr=none`: do not ask and do not create a PR.
-- `pr=ask`: ask after the final report is ready.
-- `pr=draft`: commit, push, and create a draft PR only when the user explicitly invoked the skill with that intent.
+The PR body must start with one or two Korean summary lines that state what parser behavior changed. Keep the summary concrete and visible before the hidden claim marker and sections.
+After the summary and hidden claim marker, the visible PR body must use exactly these three top-level sections and no extra visible sections:
 
-This PR mode is an instruction to the agent running the skill, not a `collect-blog-errors.ts` CLI option.
-Do not commit, push, or create a PR only because report generation finished. Keep the repository-level rule that commit/push/PR require explicit user instruction.
+````markdown
+<Korean summary of what changed>
+<Optional second Korean summary line for fixture or verification context>
 
-When a PR is requested, include the focused `report.md` summary and `evidence.md` content in the PR body.
+<!-- ingest-blog:supportUnitKey=<key> -->
+
+# New Block Parser Arrival
+
+- Blog `Naver`
+- Editor: `<editorType>`
+- Parser Block: `<ParserBlockClass>`
+- [Original Post](<sourceUrl>)
+
+# Evidence
+
+<raw-GitHub evidence image and rendered Markdown evidence>
+
+# Original Html
+
+```html
+<HTML that failed before the parser change>
+```
+````
+
+Do not add visible root cause, changes, validation, notes, report, backlog, full-blog sections, or other extra visible sections to the PR body.
+Keep the hidden claim marker as an HTML comment if needed for duplicate checks, but do not add another visible section for it.
 For a focused support-unit PR:
 
 - Title must start with `[📦 New Block]`.
 - Add or create GitHub labels `ai-generated` and `failure-block:<failureBlockHash>`.
-- Include only the focused unit summary, representative fixture, verification, and `evidence.md` content.
-- Do not include full-blog ingest counts, other support unit keys, or backlog details.
-- Include a hidden claim marker: `<!-- ingest-blog:supportUnitKey=<key> -->`.
+- Include only the summary and fixed three-section body above.
+- Include a hidden claim marker after the summary: `<!-- ingest-blog:supportUnitKey=<key> -->`.
 - Re-run the open/draft PR duplicate check immediately before creating the PR.
+- PR evidence images must render on GitHub. Commit `figure` assets first, push the branch, then replace local or repo-relative image paths with `https://raw.githubusercontent.com/<owner>/<repo>/<headCommitSha>/<path>` URLs in the PR body.
+- Do not use `tmp/`, `file://`, `.agents/...` relative paths, or Markdown/HTML image paths that only work locally in the PR body.
 
 When one skill invocation creates multiple PRs, use one branch and worktree per support unit. Use `.worktrees/ingest-blog/<supportUnitKey>/`, and add `.worktrees/` to `.gitignore` if it is missing.
 

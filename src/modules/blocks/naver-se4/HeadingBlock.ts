@@ -35,15 +35,24 @@ export class NaverSe4HeadingBlock extends LeafBlock {
   }
 
   override convert({ $node, options }: Parameters<LeafBlock["convert"]>[0]) {
+    const $textModule = $node.find(".se-module-text")
+    const hasTextModule = $textModule.length > 0
     const title = compactText(
       convertHtmlToMarkdown({
-        html: $node.find(".se-module-text").html() ?? "",
+        html: $textModule.html() ?? "",
         options: {},
         resolveLinkUrl: options.resolveLinkUrl,
       }),
     )
 
     if (!title) {
+      if (hasTextModule) {
+        return {
+          status: "handled" as const,
+          blocks: [],
+        }
+      }
+
       throw new Error("SE4 heading block parsing failed.")
     }
 

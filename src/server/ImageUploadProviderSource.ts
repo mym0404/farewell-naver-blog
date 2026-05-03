@@ -1,4 +1,3 @@
-import os from "node:os"
 import path from "node:path"
 
 import type {
@@ -11,6 +10,7 @@ import type {
   UploadProviderValue,
 } from "../shared/Types.js"
 import { DEFAULT_UPLOAD_PROVIDER_KEY, UPLOAD_PROVIDER_KEYS } from "../shared/UploadProviderKeys.js"
+import { ensureDir, getProjectTempPath } from "../shared/Utils.js"
 
 const providerLabelMap: Record<string, string> = {
   [UPLOAD_PROVIDER_KEYS.ADVANCED]: "Advanced Custom",
@@ -784,7 +784,9 @@ const createCatalogFromRuntime = (runtimeCatalog: RuntimeCatalogLike): UploadPro
 
 const createRuntimeInstance = async () => {
   const { PicGo } = await import("piclist")
-  const runtimeConfigPath = path.join(os.tmpdir(), "goodbye-naver-blog-image-upload-config.json")
+  const runtimeConfigPath = getProjectTempPath("image-upload", "picgo-provider-config.json")
+
+  await ensureDir(path.dirname(runtimeConfigPath))
 
   return PicGo.create(runtimeConfigPath)
 }

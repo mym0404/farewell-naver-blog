@@ -1,11 +1,11 @@
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process"
-import { mkdtemp, readFile, rm } from "node:fs/promises"
-import { tmpdir } from "node:os"
+import { readFile, rm } from "node:fs/promises"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 
 import { defaultExportOptions } from "../../src/shared/ExportOptions.js"
 import type { ExportJobState, ExportManifest, ExportOptions, ScanResult } from "../../src/shared/Types.js"
+import { createTestTempDir } from "../helpers/test-paths.js"
 
 const repoRoot = fileURLToPath(new URL("../../", import.meta.url))
 
@@ -252,7 +252,7 @@ const buildScopedOptions = () => {
 }
 
 const run = async () => {
-  const tempRoot = await mkdtemp(path.join(tmpdir(), "goodbye-live-resume-export-"))
+  const tempRoot = await createTestTempDir("goodbye-live-resume-export-")
   const settingsPath = path.join(tempRoot, "export-ui-settings.json")
   const scanCachePath = path.join(tempRoot, "scan-cache.json")
   const manifestPath = path.join(repoRoot, scopedOutputDir, "manifest.json")
