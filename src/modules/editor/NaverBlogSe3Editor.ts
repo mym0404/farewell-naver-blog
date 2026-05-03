@@ -3,6 +3,7 @@ import { unique } from "@shared/Utils.js"
 import { NaverSe3CodeBlock } from "../blocks/naver-se3/CodeBlock.js"
 import { NaverSe3DocumentTitleBlock } from "../blocks/naver-se3/DocumentTitleBlock.js"
 import { NaverSe3ImageBlock } from "../blocks/naver-se3/ImageBlock.js"
+import { NaverSe3LinkCardBlock } from "../blocks/naver-se3/LinkCardBlock.js"
 import { NaverSe3QuoteBlock } from "../blocks/naver-se3/QuoteBlock.js"
 import { NaverSe3TableBlock } from "../blocks/naver-se3/TableBlock.js"
 import { NaverSe3TextBlock } from "../blocks/naver-se3/TextBlock.js"
@@ -18,6 +19,7 @@ export class NaverBlogSE3Editor extends BaseEditor {
     new NaverSe3TableBlock(),
     new NaverSe3QuoteBlock(),
     new NaverSe3CodeBlock(),
+    new NaverSe3LinkCardBlock(),
     new NaverSe3ImageBlock(),
     new NaverSe3TextBlock(),
   ]
