@@ -127,16 +127,12 @@ Treat non-zero evidence capture errors as an incomplete report and fix the evide
 
 ## PR Flow
 
-Default behavior is `pr=ask`: finish code, fixtures, knowledge updates, verification, and reports first, then ask the user whether to open a PR.
+An `ingest-blog` invocation is PR creation intent. After code, fixtures, knowledge updates, verification, and focused reports are ready, create a draft PR for the focused support unit without asking for confirmation.
+Do not offer `pr=ask`, `pr=none`, or other PR modes.
+If there are no code or fixture changes for the focused support unit because it is safely deferred, do not create an empty PR; report the deferral instead.
 
-- `pr=none`: do not ask and do not create a PR.
-- `pr=ask`: ask after the final report is ready.
-- `pr=draft`: commit, push, and create a draft PR only when the user explicitly invoked the skill with that intent.
-
-This PR mode is an instruction to the agent running the skill, not a `collect-blog-errors.ts` CLI option.
-Do not commit, push, or create a PR only because report generation finished. Keep the repository-level rule that commit/push/PR require explicit user instruction.
-
-When a PR is requested, include the focused `report.md` summary and `evidence.md` content in the PR body.
+Write the PR title and body in Korean, except fixed markers, command names, code identifiers, paths, labels, and source excerpts.
+Include the focused `report.md` summary and `evidence.md` content in the PR body.
 For a focused support-unit PR:
 
 - Title must start with `[📦 New Block]`.
@@ -145,6 +141,8 @@ For a focused support-unit PR:
 - Do not include full-blog ingest counts, other support unit keys, or backlog details.
 - Include a hidden claim marker: `<!-- ingest-blog:supportUnitKey=<key> -->`.
 - Re-run the open/draft PR duplicate check immediately before creating the PR.
+- PR evidence images must render on GitHub. Commit `figure` assets first, push the branch, then replace local or repo-relative image paths with `https://raw.githubusercontent.com/<owner>/<repo>/<headCommitSha>/<path>` URLs in the PR body.
+- Do not use `tmp/`, `file://`, `.agents/...` relative paths, or Markdown/HTML image paths that only work locally in the PR body.
 
 When one skill invocation creates multiple PRs, use one branch and worktree per support unit. Use `.worktrees/ingest-blog/<supportUnitKey>/`, and add `.worktrees/` to `.gitignore` if it is missing.
 

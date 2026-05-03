@@ -52,13 +52,17 @@ bun .agents/skills/ingest-blog/scripts/write-sample-fixture.ts \
 
 ## PR Policy
 - Code, fixtures, knowledge, verification, and focused reports finish before PR handling.
-- Default behavior is to ask after the report is ready.
-- Commit, push, or PR creation still requires explicit user intent.
+- Invoking the repo-local `ingest-blog` skill is PR creation intent.
+- Default behavior is to create a draft PR for the focused support unit without asking for confirmation.
+- If the focused unit is safely deferred with no code or fixture changes, report the deferral instead of creating an empty PR.
 - Before starting or creating a PR, fetch `origin/main` and inspect open/draft PR bodies for the same `<!-- ingest-blog:supportUnitKey=... -->` marker.
-- A requested PR title starts with `[📦 New Block]`.
-- A requested PR gets `ai-generated` and `failure-block:<failureBlockHash>` labels.
-- A requested PR body includes the focused report summary, focused evidence sections, verification, and hidden support unit claim.
-- A requested PR body must not include full-blog ingest counts, other support unit keys, or backlog details.
+- The PR title starts with `[📦 New Block]` and uses Korean after the fixed prefix.
+- The PR gets `ai-generated` and `failure-block:<failureBlockHash>` labels.
+- The PR body is Korean except fixed markers, command names, code identifiers, paths, labels, and source excerpts.
+- The PR body includes the focused report summary, focused evidence sections, verification, and hidden support unit claim.
+- The PR body must not include full-blog ingest counts, other support unit keys, or backlog details.
+- PR evidence images use committed `figure` assets and `https://raw.githubusercontent.com/<owner>/<repo>/<headCommitSha>/<path>` URLs after push.
+- PR evidence images must not use `tmp/`, `file://`, `.agents/...` relative paths, or paths that only render locally.
 
 ## Coverage Target
 - Use a public blog with unsupported parser blocks as the coverage target.
