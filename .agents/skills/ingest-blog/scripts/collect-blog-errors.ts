@@ -34,12 +34,12 @@ import {
   type ReusableIngestOutput,
 } from "../../../../scripts/lib/post-evidence/ingest-output.js"
 import { renderEvidenceMarkdownSections } from "../../../../scripts/lib/post-evidence/evidence.js"
-import { createSupportUnit } from "../../../../scripts/lib/ingest-support-units.js"
+import { createSupportUnit } from "./lib/ingest-support-units.js"
 import {
   mergeSupportUnitFailureGroups,
   selectFocusedSupportUnit,
   type SupportUnitFailureGroup,
-} from "../../../../scripts/lib/ingest-focus.js"
+} from "./lib/ingest-focus.js"
 
 type CollectArgs = {
   blogId: string
@@ -339,6 +339,27 @@ const createFailureKey = (report: FailedPostReport) =>
     report.firstUnsupported?.moduleType ?? "no-module",
   ].join(" | ")
 
+const readPreviousRepresentative = (value: unknown): SupportUnitFailureGroup["representative"] => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return undefined
+  }
+
+  const record = value as Record<string, unknown>
+
+  if (typeof record.logNo !== "string") {
+    return undefined
+  }
+
+  return {
+    logNo: record.logNo,
+    ...(typeof record.title === "string" ? { title: record.title } : {}),
+    ...(typeof record.source === "string" ? { source: record.source } : {}),
+    ...(typeof record.inspectReportPath === "string" || record.inspectReportPath === null
+      ? { inspectReportPath: record.inspectReportPath }
+      : {}),
+  }
+}
+
 const readPreviousFailureGroups = async (outputDir: string): Promise<SupportUnitFailureGroup[]> => {
   try {
     const parsed = JSON.parse(await readFile(path.join(outputDir, "failure-summary.json"), "utf8")) as Record<string, unknown>
@@ -357,6 +378,10 @@ const readPreviousFailureGroups = async (outputDir: string): Promise<SupportUnit
       const record = group as Record<string, unknown>
       const supportUnitKey = record.supportUnitKey
       const failureBlockHash = record.failureBlockHash
+      const editorType = record.editorType
+      const firstUnsupportedPath = record.firstUnsupportedPath
+      const firstUnsupportedTag = record.firstUnsupportedTag
+      const representative = readPreviousRepresentative(record.representative)
       const logNos = record.logNos
 
       return typeof supportUnitKey === "string" && Array.isArray(logNos)
@@ -364,6 +389,10 @@ const readPreviousFailureGroups = async (outputDir: string): Promise<SupportUnit
             {
               supportUnitKey,
               ...(typeof failureBlockHash === "string" ? { failureBlockHash } : {}),
+              ...(typeof editorType === "string" ? { editorType } : {}),
+              ...(typeof firstUnsupportedPath === "string" ? { firstUnsupportedPath } : {}),
+              ...(typeof firstUnsupportedTag === "string" ? { firstUnsupportedTag } : {}),
+              ...(representative ? { representative } : {}),
               logNos: logNos.filter((logNo): logNo is string => typeof logNo === "string"),
             },
           ]
@@ -812,12 +841,14 @@ const inspectFailedPost = async ({
 const createEvidenceCases = ({
   blogId,
   failureGroups,
+  previousFocusedGroups,
   rerunResults,
   manifest,
   focusedLogNos,
 }: {
   blogId: string
   failureGroups: FailureGroup[]
+  previousFocusedGroups: SupportUnitFailureGroup[]
   rerunResults: Array<{
     logNo: string
     beforeError: string | null
@@ -848,6 +879,44 @@ const createEvidenceCases = ({
   }
 
   const focusedLogNoSet = new Set(focusedLogNos)
+  const successfulLogNoSet = new Set(
+    rerunResults
+      .filter((result) => result.status === "success")
+      .map((result) => result.logNo),
+  )
+  const previousFocusedCases = previousFocusedGroups
+    .flatMap((group): EvidenceCase[] => {
+      const representativeLogNo = group.representative?.logNo
+      const logNo =
+        representativeLogNo && successfulLogNoSet.has(representativeLogNo)
+          ? representativeLogNo
+          : group.logNos.find((candidate) => successfulLogNoSet.has(candidate)) ??
+            group.logNos[0]
+
+      if (!logNo || !successfulLogNoSet.has(logNo)) {
+        return []
+      }
+
+      return [
+        {
+          blogId,
+          logNo,
+          metadata: `fixed parse example: ${group.editorType ?? "unknown-editor"} / ${group.firstUnsupportedTag ?? "unknown-tag"}`,
+          target: group.firstUnsupportedPath
+            ? {
+                kind: "inspect-path",
+                path: group.firstUnsupportedPath,
+              }
+            : {
+                kind: "post",
+              },
+        },
+      ]
+    })
+
+  if (previousFocusedCases.length > 0) {
+    return previousFocusedCases.slice(0, 5)
+  }
 
   return rerunResults
     .filter((result) => result.status === "success")
@@ -979,6 +1048,7 @@ const run = async () => {
   const evidenceCases = createEvidenceCases({
     blogId,
     failureGroups,
+    previousFocusedGroups: focusedSelection.previousFocusedGroups,
     rerunResults: reportRerunResults,
     manifest,
     focusedLogNos,
@@ -1000,6 +1070,7 @@ const run = async () => {
             rows: evidenceReport.rows,
             evidencePath,
           }),
+          { includeSourceLink: false },
         ),
         "utf8",
       )
