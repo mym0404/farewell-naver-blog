@@ -80,6 +80,51 @@ describe("NaverSe2InlineGifVideoBlock", () => {
     ])
   })
 
+  it("parses multiple linked inline gif videos into image blocks", () => {
+    const parsed = parseSe2Blocks(`
+      <p>
+        <a href="https://example.com/first">
+          <video
+            src="https://mblogvideo-phinf.pstatic.net/first.gif?type=mp4w800"
+            class="fx _postImage _gifmp4"
+            data-gif-url="https://mblogthumb-phinf.pstatic.net/first.gif?type=w210"
+          ></video>
+        </a>
+        &nbsp;&nbsp;
+        <a href="https://example.com/second">
+          <video
+            src="https://mblogvideo-phinf.pstatic.net/second.gif?type=mp4w800"
+            class="fx _postImage _gifmp4"
+            data-gif-url="https://mblogthumb-phinf.pstatic.net/second.gif?type=w210"
+          ></video>
+        </a>
+      </p>
+    `)
+
+    expect(parsed.blocks).toEqual([
+      {
+        type: "image",
+        image: {
+          sourceUrl: "https://mblogthumb-phinf.pstatic.net/first.gif?type=w210",
+          originalSourceUrl: "https://mblogvideo-phinf.pstatic.net/first.gif?type=mp4w800",
+          alt: "",
+          caption: null,
+          mediaKind: "image",
+        },
+      },
+      {
+        type: "image",
+        image: {
+          sourceUrl: "https://mblogthumb-phinf.pstatic.net/second.gif?type=w210",
+          originalSourceUrl: "https://mblogvideo-phinf.pstatic.net/second.gif?type=mp4w800",
+          alt: "",
+          caption: null,
+          mediaKind: "image",
+        },
+      },
+    ])
+  })
+
   it("ignores inline gif videos mixed with text", () => {
     const parsed = parseSe2Blocks(`
       <p>
