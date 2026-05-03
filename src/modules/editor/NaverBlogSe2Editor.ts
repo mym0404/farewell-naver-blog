@@ -9,6 +9,7 @@ import { NaverSe2HeadingBlock } from "../blocks/naver-se2/HeadingBlock.js"
 import { NaverSe2ImageBlock } from "../blocks/naver-se2/ImageBlock.js"
 import { NaverSe2InlineGifVideoBlock } from "../blocks/naver-se2/InlineGifVideoBlock.js"
 import { NaverSe2LineBreakBlock } from "../blocks/naver-se2/LineBreakBlock.js"
+import { NaverSe2PollBlock } from "../blocks/naver-se2/PollBlock.js"
 import { NaverSe2QuoteBlock } from "../blocks/naver-se2/QuoteBlock.js"
 import { NaverSe2SpacerBlock } from "../blocks/naver-se2/SpacerBlock.js"
 import { NaverSe2TableBlock } from "../blocks/naver-se2/TableBlock.js"
@@ -32,6 +33,7 @@ export class NaverBlogSE2Editor extends BaseEditor {
     new NaverSe2HeadingBlock(),
     new NaverSe2CodeBlock(),
     new NaverSe2InlineGifVideoBlock(),
+    new NaverSe2PollBlock(),
     new NaverSe2EmbeddedVideoBlock(),
     new NaverSe2ImageBlock(),
     new NaverSe2SpacerBlock(),
