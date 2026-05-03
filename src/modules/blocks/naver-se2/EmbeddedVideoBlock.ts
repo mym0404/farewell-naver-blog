@@ -20,25 +20,27 @@ const parseVideoId = (sourceUrl: string) => {
 }
 
 const getEmbeddedVideo = ({ $node }: { $node: ReturnType<CheerioAPI> }) => {
-  if (!$node.is("p, div, span")) {
+  if (!$node.is("p, div, span, iframe")) {
     return null
   }
 
-  const iframes = $node.find("span._outerVideo iframe[src]")
+  const iframes = $node.is("iframe[src]") ? $node : $node.find("span._outerVideo iframe[src]")
 
   if (iframes.length !== 1) {
     return null
   }
 
-  const cloneWithoutVideo = $node.clone()
-  cloneWithoutVideo.find("style, span._outerVideo").remove()
+  if (!$node.is("iframe")) {
+    const cloneWithoutVideo = $node.clone()
+    cloneWithoutVideo.find("style, span._outerVideo").remove()
 
-  if (cloneWithoutVideo.find("img, iframe, video, table").length > 0) {
-    return null
-  }
+    if (cloneWithoutVideo.find("img, iframe, video, table").length > 0) {
+      return null
+    }
 
-  if (compactText(cloneWithoutVideo.text())) {
-    return null
+    if (compactText(cloneWithoutVideo.text())) {
+      return null
+    }
   }
 
   const iframe = iframes.first()
