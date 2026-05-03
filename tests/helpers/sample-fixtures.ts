@@ -251,7 +251,10 @@ export const renderSampleFixture = async ({
 export const loadSampleFixture = async (sample: SampleFixtureEntry) => ({
   html: await new NaverBlogFetcher({
     blogId: sample.blogId,
-    cache: createSamplePostHtmlCache(await ensureHarnessDir("sample-post-html-cache")),
+    cache:
+      process.env.CI === "true"
+        ? undefined
+        : createSamplePostHtmlCache(await ensureHarnessDir("sample-post-html-cache")),
   }).fetchPostHtml(sample.logNo),
   expectedMarkdown: sample.expectedError
     ? undefined

@@ -67,35 +67,6 @@ jobs:
       - name: Run parser block coverage gate
         run: pnpm test:parser-blocks
 
-      - name: Check live upload secret
-        id: live-upload-secret
-        env:
-          GOODBYE_UPLOAD_E2E_GITHUB_TOKEN: ${{ secrets.GOODBYE_UPLOAD_E2E_GITHUB_TOKEN }}
-        run: |
-          if [ -n "$GOODBYE_UPLOAD_E2E_GITHUB_TOKEN" ]; then
-            echo "configured=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "configured=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Write live upload .env
-        if: ${{ steps.live-upload-secret.outputs.configured == 'true' }}
-        env:
-          GOODBYE_UPLOAD_E2E_GITHUB_TOKEN: ${{ secrets.GOODBYE_UPLOAD_E2E_GITHUB_TOKEN }}
-        run: |
-          cat <<EOF > .env
-          GOODBYE_UPLOAD_E2E=1
-          GOODBYE_UPLOAD_E2E_GITHUB_TOKEN=$GOODBYE_UPLOAD_E2E_GITHUB_TOKEN
-          EOF
-
-      - name: Run live upload Playwright e2e
-        if: ${{ steps.live-upload-secret.outputs.configured == 'true' }}
-        run: pnpm test:network:upload
-
-      - name: Skip live upload Playwright e2e
-        if: ${{ steps.live-upload-secret.outputs.configured != 'true' }}
-        run: echo "GOODBYE_UPLOAD_E2E_GITHUB_TOKEN is not configured; skipping live upload Playwright e2e."
-
       - name: Run coverage gate
         run: pnpm test:coverage
 

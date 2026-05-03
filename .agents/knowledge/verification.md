@@ -17,7 +17,7 @@
 
 ## Focused Commands
 - `pnpm typecheck`: TypeScript contract check only.
-- `pnpm test:offline`: Vitest suite. Sample fixture tests fetch live Naver post HTML through the sample cache before comparing expected output.
+- `pnpm test:offline`: Vitest suite. Sample fixture tests fetch live Naver post HTML before comparing expected output, using the sample cache only outside CI.
 - `pnpm test:parser-blocks`: parser block implementation coverage gate. It runs block-level parser specs with 100% line, function, branch, and statement coverage for `src/modules/blocks/{common,naver-se2,naver-se3,naver-se4}` implementation files.
 - `pnpm test:network:resume-export`: live Naver resume export without upload.
 - `pnpm test:network:resume-export:se2-table`: live SE2 table resume export range.
@@ -53,13 +53,13 @@
 - `pnpm smoke:ui` uses mock flows and does not prove live Naver fetch or external upload behavior.
 - `pnpm test:network:resume-export` proves live fetch and resume export, but not external upload.
 - `pnpm test:network:upload` is the only bundled command that proves external upload state. It creates remote state.
-- CI skips live upload when `GOODBYE_UPLOAD_E2E_GITHUB_TOKEN` is unavailable, so external upload is only proven when the secret is configured.
+- CI does not run network e2e, so live resume and external upload are proven only by explicit `pnpm test:network:*` runs.
 
 ## CI
 - `.github/workflows/required-checks.yml` runs on non-draft pull requests.
 - CI uses Node.js 24, pnpm 10, and Bun 1.3.13.
 - CI restores the Playwright browser cache keyed by the installed Playwright version, then runs `pnpm exec playwright install --with-deps --only-shell chromium`.
-- CI runs `pnpm check:local`, `pnpm smoke:ui`, `pnpm test:parser-blocks`, conditionally runs `pnpm test:network:upload` when the live upload secret is configured, runs `pnpm test:coverage`, then uploads `coverage/lcov.info` to Codecov.
+- CI runs `pnpm check:local`, `pnpm smoke:ui`, `pnpm test:parser-blocks`, `pnpm test:coverage`, then uploads `coverage/lcov.info` to Codecov.
 
 ## Task Loops
 - Knowledge-only changes still need path and command spot checks. Run `pnpm check:local` when practical.
