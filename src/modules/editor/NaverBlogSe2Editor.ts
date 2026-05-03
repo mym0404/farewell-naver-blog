@@ -4,6 +4,7 @@ import { NaverSe2BookWidgetBlock } from "../blocks/naver-se2/BookWidgetBlock.js"
 import { NaverSe2CodeBlock } from "../blocks/naver-se2/CodeBlock.js"
 import { NaverSe2ContainerBlock } from "../blocks/naver-se2/ContainerBlock.js"
 import { NaverSe2DividerBlock } from "../blocks/naver-se2/DividerBlock.js"
+import { NaverSe2EmbeddedVideoBlock } from "../blocks/naver-se2/EmbeddedVideoBlock.js"
 import { NaverSe2HeadingBlock } from "../blocks/naver-se2/HeadingBlock.js"
 import { NaverSe2ImageBlock } from "../blocks/naver-se2/ImageBlock.js"
 import { NaverSe2InlineGifVideoBlock } from "../blocks/naver-se2/InlineGifVideoBlock.js"
@@ -31,6 +32,7 @@ export class NaverBlogSE2Editor extends BaseEditor {
     new NaverSe2HeadingBlock(),
     new NaverSe2CodeBlock(),
     new NaverSe2InlineGifVideoBlock(),
+    new NaverSe2EmbeddedVideoBlock(),
     new NaverSe2ImageBlock(),
     new NaverSe2SpacerBlock(),
     new NaverSe2TextElementBlock(),

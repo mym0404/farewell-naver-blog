@@ -32,24 +32,24 @@ describe("NaverSe3TextBlock", () => {
     expect(parsed.blocks).toEqual([{ type: "paragraph", text: "첫 줄  \n둘째 줄" }])
   })
 
-  it("throws when a text component has no text blocks", () => {
-    expect(() =>
-      parseSe3Blocks(`
+  it("skips text components with no text blocks", () => {
+    const parsed = parseSe3Blocks(`
         <div class="se_component se_text">
           <div class="se_textarea"><br /></div>
         </div>
-      `),
-    ).toThrow("SE3 text block parsing failed.")
+      `)
+
+    expect(parsed.blocks).toEqual([])
   })
 
-  it("throws when a text area has no html", () => {
-    expect(() =>
-      parseSe3Blocks(`
+  it("skips text areas with no html", () => {
+    const parsed = parseSe3Blocks(`
         <div class="se_component se_text">
           <div class="se_textarea"></div>
         </div>
-      `),
-    ).toThrow("SE3 text block parsing failed.")
+      `)
+
+    expect(parsed.blocks).toEqual([])
   })
 
   it("applies every output option", () => {

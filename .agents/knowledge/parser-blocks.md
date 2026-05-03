@@ -11,7 +11,7 @@
 - `supportedBlocks`는 ordered first-match list다.
 - 첫 번째로 match된 block만 convert를 실행한다.
 - match되는 block이 없으면 parser는 실패한다.
-- `skip`은 document title, spacer, top-level line break처럼 의도적으로 버리는 node에만 사용한다.
+- `skip`은 document title, spacer, top-level line break, 빈 editor component처럼 의도적으로 버리는 node에만 사용한다.
 - 내용이 있는 node를 match했는데 변환할 수 없으면 block이 throw한다.
 
 ## Context

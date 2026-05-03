@@ -53,7 +53,7 @@ export class NaverSe3TextBlock extends LeafBlock {
     const blocks = parseTextBlocks({ $, $component: $node, options, outputSelection })
 
     if (blocks.length === 0) {
-      throw new Error("SE3 text block parsing failed.")
+      return { status: "skip" }
     }
 
     return { status: "handled", blocks }
