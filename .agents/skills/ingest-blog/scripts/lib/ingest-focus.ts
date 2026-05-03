@@ -1,8 +1,31 @@
 export type SupportUnitFailureGroup = {
   supportUnitKey: string
   failureBlockHash?: string
+  editorType?: string | null
+  firstUnsupportedPath?: string | null
+  firstUnsupportedTag?: string | null
+  representative?: {
+    logNo: string
+    title?: string
+    source?: string
+    inspectReportPath?: string | null
+  }
   logNos: string[]
 }
+
+const mergeOptionalGroupMetadata = ({
+  current,
+  next,
+}: {
+  current: SupportUnitFailureGroup
+  next: SupportUnitFailureGroup
+}) => ({
+  failureBlockHash: current.failureBlockHash ?? next.failureBlockHash,
+  editorType: current.editorType ?? next.editorType,
+  firstUnsupportedPath: current.firstUnsupportedPath ?? next.firstUnsupportedPath,
+  firstUnsupportedTag: current.firstUnsupportedTag ?? next.firstUnsupportedTag,
+  representative: current.representative ?? next.representative,
+})
 
 export const mergeSupportUnitFailureGroups = (groups: SupportUnitFailureGroup[]) => {
   const merged = new Map<string, SupportUnitFailureGroup>()
@@ -13,7 +36,10 @@ export const mergeSupportUnitFailureGroups = (groups: SupportUnitFailureGroup[])
     if (!current) {
       merged.set(group.supportUnitKey, {
         supportUnitKey: group.supportUnitKey,
-        ...(group.failureBlockHash ? { failureBlockHash: group.failureBlockHash } : {}),
+        ...mergeOptionalGroupMetadata({
+          current: group,
+          next: group,
+        }),
         logNos: [...new Set(group.logNos)],
       })
       continue
@@ -21,7 +47,10 @@ export const mergeSupportUnitFailureGroups = (groups: SupportUnitFailureGroup[])
 
     merged.set(group.supportUnitKey, {
       supportUnitKey: group.supportUnitKey,
-      failureBlockHash: current.failureBlockHash ?? group.failureBlockHash,
+      ...mergeOptionalGroupMetadata({
+        current,
+        next: group,
+      }),
       logNos: [...new Set([...current.logNos, ...group.logNos])],
     })
   }
@@ -42,6 +71,7 @@ export const selectFocusedSupportUnit = <Group extends SupportUnitFailureGroup>(
     return {
       reportFailureGroups: failureGroups,
       remainingBacklogGroups: [],
+      previousFocusedGroups: [],
       previousFocusedLogNos: [],
       focusedFailureBlockHash: undefined,
       focusedSupportUnitKnown: true,
@@ -51,6 +81,7 @@ export const selectFocusedSupportUnit = <Group extends SupportUnitFailureGroup>(
 
   const reportFailureGroups = failureGroups.filter((group) => group.supportUnitKey === focusSupportUnit)
   const remainingBacklogGroups = failureGroups.filter((group) => group.supportUnitKey !== focusSupportUnit)
+  const previousFocusedGroups = previousFailureGroups.filter((group) => group.supportUnitKey === focusSupportUnit)
   const previousFocusedLogNos = previousFailureGroups
     .filter((group) => group.supportUnitKey === focusSupportUnit)
     .flatMap((group) => group.logNos)
@@ -62,6 +93,7 @@ export const selectFocusedSupportUnit = <Group extends SupportUnitFailureGroup>(
   return {
     reportFailureGroups,
     remainingBacklogGroups,
+    previousFocusedGroups,
     previousFocusedLogNos,
     focusedFailureBlockHash,
     focusedSupportUnitKnown,
