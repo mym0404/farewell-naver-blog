@@ -1,0 +1,4 @@
+interface:
+  display_name: "Ingest Blog"
+  short_description: "Improve Naver Blog parser coverage"
+  default_prompt: "Use $ingest-blog to ingest a public Naver Blog and improve parser coverage from parse failures."
