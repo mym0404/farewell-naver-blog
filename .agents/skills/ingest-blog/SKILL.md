@@ -64,7 +64,7 @@ bun scripts/capture-post-evidence.ts \
 
 `--target post` renders Markdown with frontmatter. `--target inspect-path` renders only the selected block fragment and omits frontmatter.
 Naver screenshots capture the selected HTML node rather than the current viewport; long nodes may produce tall images.
-Evidence tables are GitHub-safe four-column HTML tables with Markdown snippets escaped inside `<pre><code>` cells.
+Evidence tables are GitHub-safe four-column Markdown pipe tables with Markdown snippets rendered as single-line inline code.
 Use `--metadataCachePath` when generating multiple rows from one blog so post metadata scan results are reused.
 Use `--assetProfile tmp` for local smoke output, `--assetProfile readme` for README assets, and `--assetProfile figure` for report or PR figures that must be committed.
 

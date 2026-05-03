@@ -53,12 +53,12 @@ bun scripts/capture-post-evidence.ts \
 - Any row error means the evidence table is incomplete until the capture or rendering issue is fixed or explicitly reported.
 
 ## Table Shape
-- `table.md` is a four-column GitHub-safe HTML table: `Metadata` | `Links` | `Naver Capture` | `Markdown`.
+- `table.md` is a four-column GitHub-safe Markdown pipe table: `Metadata` | `Links` | `Naver Capture` | `Markdown`.
 - `Links` contains the public Naver post link.
 - `Naver Capture` is an image cell that points at a generated PNG asset.
-- Naver capture images render at `width="300"` in generated tables so README and PR rows keep a readable minimum image size.
-- `Markdown` is escaped inside `<pre><code>...</code></pre>` with real newlines, so multiline Markdown stays readable without visible `<br>` text.
-- Table cell content escapes HTML-sensitive characters so generated rows remain valid README and PR fragments.
+- Naver capture images render with `width="300"` inside the Markdown table so README and PR rows keep a readable image size.
+- `Markdown` is rendered as a single-line inline code span. Real newlines become literal `\n` text so Markdown table rows stay valid without visible `<br>` text.
+- Table cell content escapes pipe characters so generated rows remain valid README and PR fragments.
 
 ## Metadata Cell
 - Treat `Metadata` as a short human note.
