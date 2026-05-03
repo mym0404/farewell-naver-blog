@@ -2,6 +2,7 @@ import type { AstBlock, ParsedPost } from "@shared/Types.js"
 import { unique } from "@shared/Utils.js"
 import { NaverSe2BookWidgetBlock } from "../blocks/naver-se2/BookWidgetBlock.js"
 import { NaverSe2CodeBlock } from "../blocks/naver-se2/CodeBlock.js"
+import { NaverSe2CommentBlock } from "../blocks/naver-se2/CommentBlock.js"
 import { NaverSe2ContainerBlock } from "../blocks/naver-se2/ContainerBlock.js"
 import { NaverSe2DividerBlock } from "../blocks/naver-se2/DividerBlock.js"
 import { NaverSe2EmbeddedVideoBlock } from "../blocks/naver-se2/EmbeddedVideoBlock.js"
@@ -23,6 +24,7 @@ export class NaverBlogSE2Editor extends BaseEditor {
 
   protected override readonly supportedBlocks = [
     new NaverSe2TextNodeBlock(),
+    new NaverSe2CommentBlock(),
     new NaverSe2BookWidgetBlock(),
     new NaverSe2TableBlock(),
     new NaverSe2ContainerBlock(),
