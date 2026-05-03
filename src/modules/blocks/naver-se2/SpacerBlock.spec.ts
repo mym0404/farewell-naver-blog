@@ -22,4 +22,12 @@ describe("NaverSe2SpacerBlock", () => {
 
     expect(parsed.blocks).toEqual([])
   })
+
+  it("skips empty anchor stubs", () => {
+    const parsed = parseSe2Blocks(`
+      <a _foo="con_link" href="https://example.com" target="_blank"></a>
+    `)
+
+    expect(parsed.blocks).toEqual([])
+  })
 })

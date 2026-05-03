@@ -5,7 +5,7 @@ import type { ParserBlockContext } from "../ParserNode.js"
 import { compactText } from "../../../shared/Utils.js"
 
 const nestedBlockContainerTags = new Set(["div", "span", "font"])
-const spacerContainerTags = new Set(["p", "div", "span", "font", "b", "strong", "i", "em", "u"])
+const spacerContainerTags = new Set(["p", "div", "span", "font", "b", "strong", "i", "em", "u", "a"])
 
 const shouldUnwrapNestedBlocks = ({
   element,
