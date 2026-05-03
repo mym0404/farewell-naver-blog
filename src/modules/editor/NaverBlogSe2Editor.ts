@@ -60,4 +60,13 @@ export class NaverBlogSE2Editor extends BaseEditor {
       videos,
     } satisfies ParsedPost
   }
+
+  override inspect({ $, tags, options }: BaseEditorParseInput) {
+    return this.inspectBlocks({
+      $,
+      nodes: $("#viewTypeSelector").first().contents().toArray(),
+      tags,
+      options,
+    })
+  }
 }

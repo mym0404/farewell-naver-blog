@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from "vitest"
 
 import {
   parseSinglePostCliArgs,
+  renderSinglePostInspectSummary,
   renderSinglePostSummary,
   singlePostCliUsage,
 } from "./single-post-cli.js"
@@ -13,6 +14,7 @@ import { type RunSinglePostCliDeps, runSinglePostCli } from "../export-single-po
 import { createTestPath } from "../../tests/helpers/test-paths.js"
 
 type RunSinglePostExportFn = NonNullable<RunSinglePostCliDeps["exportSinglePost"]>
+type RunSinglePostInspectFn = NonNullable<RunSinglePostCliDeps["inspectSinglePost"]>
 const testOutputDir = createTestPath("single-post-cli", "output")
 const testExporterMarkdownFilePath = createTestPath("single-post-cli", "output", "posts", "my-blog.md")
 
@@ -44,6 +46,34 @@ describe("single-post cli", () => {
       manualReviewMarkdownPath: "./post.md",
       metadataCachePath: "./metadata-cache.json",
       optionsPath: "./options.json",
+      inspect: false,
+      stdout: true,
+    })
+  })
+
+  it("parses inspect flags without outputDir", () => {
+    expect(
+      parseSinglePostCliArgs([
+        "--inspect",
+        "--blogId",
+        "my-blog",
+        "--logNo",
+        "123456789012",
+        "--report",
+        "./inspect.json",
+        "--options",
+        "./options.json",
+        "--stdout",
+      ]),
+    ).toEqual({
+      blogId: "my-blog",
+      logNo: "123456789012",
+      outputDir: null,
+      reportPath: "./inspect.json",
+      manualReviewMarkdownPath: null,
+      metadataCachePath: null,
+      optionsPath: "./options.json",
+      inspect: true,
       stdout: true,
     })
   })
@@ -56,7 +86,7 @@ describe("single-post cli", () => {
 
   it("shows the real pnpm exec entrypoint in the usage string", () => {
       expect(singlePostCliUsage()).toBe(
-      "Usage: bun scripts/export-single-post.ts --blogId my-blog --logNo 123456789012 --outputDir ./output [--report ./output/report.json] [--manualReviewMarkdownPath ./output/post.md] [--metadataCachePath ./output/metadata-cache.json] [--options ./config/single-post.json] [--stdout]",
+      "Usage: bun scripts/export-single-post.ts --blogId my-blog --logNo 123456789012 --outputDir ./output [--report ./output/report.json] [--manualReviewMarkdownPath ./output/post.md] [--metadataCachePath ./output/metadata-cache.json] [--options ./config/single-post.json] [--stdout]\nInspect: bun scripts/export-single-post.ts --inspect --blogId my-blog --logNo 123456789012 [--report ./inspect.json] [--options ./config/single-post.json] [--stdout]",
       )
     })
 
@@ -97,6 +127,51 @@ describe("single-post cli", () => {
         `exporterMarkdownFilePath: ${testExporterMarkdownFilePath}`,
       "manualReviewMarkdownFilePath: (not provided)",
       "metadataCachePath: (not provided)",
+    ].join("\n"))
+  })
+
+  it("renders inspect summary with unsupported nodes", () => {
+    expect(
+      renderSinglePostInspectSummary({
+        reportPath: "/tmp/inspect.json",
+        diagnostics: {
+          blogId: "my-blog",
+          logNo: "123456789012",
+          sourceUrl: "https://blog.naver.com/my-blog/123456789012",
+          editor: {
+            type: "naver-se4",
+            label: "SmartEditor 4",
+          },
+          parse: {
+            status: "failed",
+            error: "파싱 가능한 naver-se4 block이 없습니다: div",
+          },
+          nodes: [],
+          unsupportedNodes: [
+            {
+              path: "0",
+              tagName: "div",
+              unsupported: true,
+              className: "se-component se-file",
+              moduleType: "v2_file",
+              text: "첨부파일 demo.pdf 파일 다운로드",
+              html: "<div>demo</div>",
+            },
+          ],
+        },
+      }),
+    ).toBe([
+      "blogId: my-blog",
+      "logNo: 123456789012",
+      "editor: naver-se4 (SmartEditor 4)",
+      "parse: failed",
+      "error: 파싱 가능한 naver-se4 block이 없습니다: div",
+      "unsupportedCount: 1",
+      "inspectReportPath: /tmp/inspect.json",
+      "  - path: 0",
+      "    node: div class=\"se-component se-file\" moduleType=\"v2_file\"",
+      "    text: 첨부파일 demo.pdf 파일 다운로드",
+      "    html: <div>demo</div>",
     ].join("\n"))
   })
 
@@ -199,6 +274,75 @@ describe("single-post cli", () => {
       expect(report.manualReviewMarkdownFilePath).toBe(manualReviewMarkdownPath)
       expect(report.metadataCachePath).toBe(metadataCachePath)
       expect(await readFile(manualReviewMarkdownPath, "utf8")).toBe("# hello\n")
+    } finally {
+      await rm(rootDir, { recursive: true, force: true })
+    }
+  })
+
+  it("runs inspect mode without export outputDir", async () => {
+    const rootDir = await mkdtemp(path.join(tmpdir(), "single-post-cli-"))
+    const reportPath = path.join(rootDir, "inspect.json")
+    const stdoutWrite = vi.fn()
+    const stderrWrite = vi.fn()
+    const exportSinglePost = vi.fn()
+    const inspectSinglePost = vi.fn(async () => ({
+      blogId: "my-blog",
+      logNo: "123456789012",
+      sourceUrl: "https://blog.naver.com/my-blog/123456789012",
+      editor: {
+        type: "naver-se4",
+        label: "SmartEditor 4",
+      },
+      parse: {
+        status: "failed" as const,
+        error: "파싱 가능한 naver-se4 block이 없습니다: div",
+      },
+      nodes: [],
+      unsupportedNodes: [
+        {
+          path: "0",
+          tagName: "div",
+          unsupported: true,
+          text: "",
+          html: "<div></div>",
+        },
+      ],
+    }))
+
+    try {
+      await runSinglePostCli({
+        argv: [
+          "--inspect",
+          "--blogId",
+          "my-blog",
+          "--logNo",
+          "123456789012",
+          "--report",
+          reportPath,
+          "--stdout",
+        ],
+        exportSinglePost: exportSinglePost as RunSinglePostExportFn,
+        inspectSinglePost: inspectSinglePost as RunSinglePostInspectFn,
+        stdoutWrite,
+        stderrWrite,
+      })
+
+      expect(exportSinglePost).not.toHaveBeenCalled()
+      expect(inspectSinglePost).toHaveBeenCalledTimes(1)
+      expect(inspectSinglePost).toHaveBeenCalledWith(
+        expect.objectContaining({
+          blogId: "my-blog",
+          logNo: "123456789012",
+        }),
+      )
+      expect(stdoutWrite).toHaveBeenCalledWith(expect.stringContaining('"unsupportedNodes"'))
+      expect(stderrWrite).toHaveBeenCalledWith(expect.stringContaining("parse: failed"))
+
+      const report = JSON.parse(await readFile(reportPath, "utf8")) as {
+        unsupportedNodes: unknown[]
+      }
+
+      expect(report.unsupportedNodes).toHaveLength(1)
     } finally {
       await rm(rootDir, { recursive: true, force: true })
     }
