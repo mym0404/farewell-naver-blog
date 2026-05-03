@@ -6,6 +6,8 @@ import { LeafBlock } from "../BaseBlock.js"
 import type { ParserBlockResult } from "../ParserNode.js"
 import type { ParserBlockContext } from "../ParserNode.js"
 
+const standaloneImageSelector = "img, video._gifmp4.se_mediaImage[data-gif-url]"
+
 const getStandaloneImages = ({
   $,
   $component,
@@ -14,22 +16,27 @@ const getStandaloneImages = ({
   $component: ReturnType<CheerioAPI>
 }) => {
   const images = $component
-    .find("img")
+    .find(standaloneImageSelector)
     .toArray()
     .map((node): ImageData | null => {
       const $image = $(node)
-      const sourceUrl = $image.attr("data-lazy-src") ?? $image.attr("src") ?? ""
+      const isGifVideoImage = $image.is("video")
+      const sourceUrl = isGifVideoImage
+        ? $image.attr("data-gif-url")!
+        : $image.attr("data-lazy-src") ?? $image.attr("src") ?? ""
+      const originalSourceUrl = isGifVideoImage ? normalizeAssetUrl($image.attr("src") ?? "") : null
+      const normalizedSourceUrl = normalizeAssetUrl(sourceUrl)
 
       if (!sourceUrl.trim()) {
         return null
       }
 
       return {
-            sourceUrl: normalizeAssetUrl(sourceUrl),
-            originalSourceUrl: null,
-            /* v8 ignore next */
-            alt: $image.attr("alt") ?? "",
-            caption: null,
+        sourceUrl: normalizedSourceUrl,
+        originalSourceUrl: originalSourceUrl && originalSourceUrl !== normalizedSourceUrl ? originalSourceUrl : null,
+        /* v8 ignore next */
+        alt: $image.attr("alt") ?? "",
+        caption: null,
         mediaKind: "image",
       } satisfies ImageData
     })
@@ -38,7 +45,7 @@ const getStandaloneImages = ({
   const textWithoutImages = compactText(
     $component
       .clone()
-      .find("img")
+      .find(standaloneImageSelector)
       .remove()
       .end()
       .text(),
