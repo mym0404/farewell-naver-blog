@@ -83,7 +83,7 @@ bun scripts/capture-post-evidence.ts \
 `--target post` renders Markdown with frontmatter. `--target inspect-path` renders only the selected block fragment and omits frontmatter.
 Naver screenshots capture the selected HTML node rather than the current viewport; long nodes may produce tall images.
 Focused parser-support PR evidence must use `inspect-path` whenever an unsupported block path is known, including after the focused rerun succeeds. Use `post` only when no inspect path is available.
-Evidence renders as README-style Markdown sections with a source link, Naver capture image, and Markdown code fence.
+Ingest PR evidence renders as README-style Markdown sections with a Naver capture image and Markdown code fence, without a source-post link.
 Use `--metadataCachePath` when generating multiple rows from one blog so post metadata scan results are reused.
 Use `--assetProfile tmp` for local smoke output, `--assetProfile readme` for README assets, and `--assetProfile figure` for report or PR figures that must be committed.
 
@@ -174,10 +174,8 @@ After the summary and hidden claim marker, the visible PR body must use exactly 
 
 # Parser Support
 
-- Blog: `<blogId>`
 - Editor: `<editorType>`
 - Parser Support: `<ParserSupportName>`
-- [Original Post](<sourceUrl>)
 
 # Evidence
 
@@ -200,6 +198,9 @@ For a focused support-unit PR:
 - Add or create GitHub labels `ai-generated` and `failure-block:<failureBlockHash>`.
 - Include only the summary and fixed three-section body above.
 - Include a hidden claim marker after the summary: `<!-- ingest-blog:supportUnitKey=<key> -->`.
+- Do not include visible blog names, blog ids, log numbers, source-post URLs, or source-post link labels in the PR body.
+- Do not include source frontmatter fields such as `source`, `blogId`, `logNo`, `publishedAt`, `category`, `categoryPath`, or `thumbnail` in PR Markdown evidence.
+- Use anonymous committed figure asset filenames so raw-GitHub image URLs do not reveal a source blog or post id.
 - Run the Local PR Gate after the focused report is regenerated and before commit, push, or PR creation.
 - PR evidence images must render on GitHub. Commit `figure` assets first, push the branch, then replace local or repo-relative image paths with `https://raw.githubusercontent.com/<owner>/<repo>/<headCommitSha>/<path>` URLs in the PR body.
 - Do not use `tmp/`, `file://`, `.agents/...` relative paths, or Markdown/HTML image paths that only work locally in the PR body.

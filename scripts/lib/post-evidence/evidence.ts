@@ -5,6 +5,10 @@ export type EvidenceMarkdownSection = {
   markdown: string | null
 }
 
+export type EvidenceMarkdownRenderOptions = {
+  includeSourceLink?: boolean
+}
+
 const escapeHtmlAttribute = (value: string) =>
   value
     .replace(/&/g, "&amp;")
@@ -53,7 +57,7 @@ const renderMarkdownFence = (markdown: string | null) => {
   return `${fence}markdown\n${value}\n${fence}`
 }
 
-const renderSection = (section: EvidenceMarkdownSection) => {
+const renderSection = (section: EvidenceMarkdownSection, options: Required<EvidenceMarkdownRenderOptions>) => {
   const heading = renderMetadata(section.metadata).replace(/\n/g, " / ")
   const image = renderImage(section.naverCapturePath, `${heading} Naver capture`)
   const markdown = renderMarkdownFence(section.markdown)
@@ -61,7 +65,7 @@ const renderSection = (section: EvidenceMarkdownSection) => {
   return [
     `### ${heading}`,
     "",
-    renderSourceLink(section),
+    options.includeSourceLink ? renderSourceLink(section) : null,
     "",
     image,
     "",
@@ -71,10 +75,17 @@ const renderSection = (section: EvidenceMarkdownSection) => {
     .join("\n")
 }
 
-export const renderEvidenceMarkdownSections = (sections: EvidenceMarkdownSection[]) => {
+export const renderEvidenceMarkdownSections = (
+  sections: EvidenceMarkdownSection[],
+  options: EvidenceMarkdownRenderOptions = {},
+) => {
   if (sections.length === 0) {
     return "No evidence.\n"
   }
 
-  return `${sections.map(renderSection).join("\n\n")}\n`
+  const resolvedOptions = {
+    includeSourceLink: options.includeSourceLink ?? true,
+  }
+
+  return `${sections.map((section) => renderSection(section, resolvedOptions)).join("\n\n")}\n`
 }

@@ -86,9 +86,12 @@ bun .agents/skills/ingest-blog/scripts/write-sample-fixture.ts \
 - The PR body starts with one or two Korean summary lines that state what parser behavior changed.
 - The hidden support unit claim marker follows the Korean summary.
 - After the summary and marker, the visible PR body uses exactly three top-level sections: `# Parser Support`, `# Evidence`, and `# Original Html`.
-- `# Parser Support` contains only `Blog`, `Editor`, `Parser Support`, and `Original Post` rows.
-- `# Evidence` contains the raw-GitHub evidence image and rendered Markdown evidence.
+- `# Parser Support` contains only `Editor` and `Parser Support` rows.
+- `# Evidence` contains the raw-GitHub evidence image and rendered Markdown evidence without a source-post link.
 - `# Original Html` contains the HTML that failed before the parser change in an `html` code fence.
+- The visible PR body does not include source blog names, blog ids, log numbers, source-post URLs, or source-post link labels.
+- PR Markdown evidence omits source frontmatter fields such as `source`, `blogId`, `logNo`, `publishedAt`, `category`, `categoryPath`, and `thumbnail`.
+- PR evidence uses anonymous committed figure asset filenames so raw-GitHub image URLs do not reveal a source blog or post id.
 - The PR body must not include visible root cause, changes, validation, notes, report, backlog, full-blog counts, or other support unit sections.
 - Keep the hidden support unit claim marker as an HTML comment for the PR completion checker.
 - PR evidence images use committed `figure` assets and `https://raw.githubusercontent.com/<owner>/<repo>/<headCommitSha>/<path>` URLs after push.

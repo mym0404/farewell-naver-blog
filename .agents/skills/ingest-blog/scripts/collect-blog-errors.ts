@@ -1070,6 +1070,7 @@ const run = async () => {
             rows: evidenceReport.rows,
             evidencePath,
           }),
+          { includeSourceLink: false },
         ),
         "utf8",
       )
