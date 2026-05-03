@@ -88,12 +88,13 @@ Use `--assetProfile tmp` for local smoke output, `--assetProfile readme` for REA
 5. Before starting that unit, run `git fetch origin main` and inspect open/draft PRs with `gh pr list --state open --json number,title,body,headRefName,isDraft`.
 6. Skip the unit if `origin/main` already supports it or an open/draft PR body contains the same `<!-- ingest-blog:supportUnitKey=... -->` marker.
 7. Inspect the focused failed HTML and identify the owning editor/block boundary.
-8. Implement the smallest parser block addition or extension that handles that DOM shape.
-9. Add or extend the focused parser block spec beside the block implementation.
-10. Add one representative sample fixture for the focused support unit with `write-sample-fixture.ts`.
-11. Update knowledge documents only where a durable rule changed.
-12. Run the verification commands listed below.
-13. Regenerate the report with `--focusSupportUnit <key>` so it reflects only the focused unit, fixtures, knowledge updates, verification results, and evidence.
+8. Infer the expected PR file shape before editing. Use the owning editor/block boundary to decide whether this should be an existing-block edit or a new-block addition.
+9. Implement the smallest parser block addition or extension that handles that DOM shape.
+10. Add or extend the focused parser block spec beside the block implementation.
+11. Add one representative sample fixture for the focused support unit with `write-sample-fixture.ts`.
+12. Update knowledge documents only where a durable rule changed.
+13. Run the verification commands listed below.
+14. Regenerate the report with `--focusSupportUnit <key>` so it reflects only the focused unit, fixtures, knowledge updates, verification results, and evidence.
 
 Do not rerun the same blog as a full ingest after a completed output exists unless the user asked for `--forceFull` or the reusable manifest is invalid.
 Store shared ingest output and aggregate run state only under ignored `tmp/harness/ingest-blog/<runId>`. Do not use `.cache` for this workflow because it is reserved for app runtime state.
@@ -157,6 +158,12 @@ When one skill invocation creates multiple PRs, use one branch and worktree per 
 - Do not add a registry, compatibility re-export, broad fallback parser, or catch-all block.
 - Do not change renderer or AST types unless the failed content cannot fit an existing AST block.
 - If a new AST block type is unavoidable, update shared types, renderer, exporter behavior, focused tests, fixtures, and knowledge together.
+- Keep the PR file shape predictable from the chosen strategy:
+  - Existing-block edit: touch the owning block file, its adjacent spec, one representative sample fixture, and durable knowledge only if the contract changed.
+  - New-block addition: add the new block file, its adjacent spec, the owning editor registration, one representative sample fixture, and durable knowledge only if the contract changed.
+  - Evidence assets may be included when the report or PR body needs committed `figure` images.
+- Do not touch renderer, exporter, shared AST types, UI, workflow, broad helpers, or unrelated knowledge unless the focused failed HTML cannot be represented through existing contracts.
+- If the necessary diff does not match the expected file shape, keep the wider change directly tied to the focused failure and document the reason in the report.
 
 ## Fixture Rules
 
