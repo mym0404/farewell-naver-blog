@@ -76,8 +76,8 @@ const allowedKnipExports: Record<string, string> = {
   "scripts/lib/post-evidence/paths.ts:resolveEvidenceOutputPaths": "manual evidence capture CLI dependency",
 }
 const allowedKnipTypes: Record<string, string> = {
-  "scripts/lib/ingest-focus.ts:SupportUnitFailureGroup": "ingest-blog skill CLI dependency",
-  "scripts/lib/ingest-pr-check.ts:SupportUnitClaimPullRequest": "ingest-blog skill CLI dependency",
+  ".agents/skills/ingest-blog/scripts/lib/ingest-focus.ts:SupportUnitFailureGroup": "ingest-blog skill CLI dependency",
+  ".agents/skills/ingest-blog/scripts/lib/ingest-pr-check.ts:SupportUnitClaimPullRequest": "ingest-blog skill CLI dependency",
   "scripts/lib/post-evidence/cases.ts:EvidenceTarget": "manual evidence capture CLI dependency",
   "scripts/lib/post-evidence/cases.ts:EvidenceCase": "manual evidence capture CLI dependency",
   "scripts/lib/post-evidence/cases.ts:EvidenceCliArgs": "manual evidence capture CLI dependency",
