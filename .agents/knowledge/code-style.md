@@ -9,8 +9,6 @@
 ## GitHub Workflow
 - Package scripts that operate on GitHub use the `gh:` prefix.
 - `pnpm gh:update-branches` runs `scripts/update-open-pr-branches.ts` and calls `gh pr update-branch` for open PRs.
-- Use `pnpm gh:update-branches -- --dry-run` before remote-changing runs when checking target PRs.
-- The update-branch script supports `--repo owner/name` for explicit repository targeting and `--limit <n>` for bounded runs.
 
 ## TypeScript
 - The repo is strict TypeScript with NodeNext ESM.
