@@ -91,6 +91,74 @@ describe("NaverSe4MaterialBlock", () => {
     })
   })
 
+  it("parses custom purchase proof components into link cards", () => {
+    const parsed = parseSe4Blocks(`
+      <div class="se-component se-custom se-l-default">
+        <div class="se-component-content">
+          <div class="se-section se-section-custom se-section-align-center se-l-default">
+            <div class="not_sponsored_component">
+              <div class="thumbnail" style="background-image: url(https://example.com/product.jpg?type=f900_540_nanimated)"></div>
+              <div class="text">
+                <div class="label">
+                  <i class="icon_money"></i>
+                  내돈내산 인증
+                  <span class="category">쇼핑</span>
+                </div>
+                <strong class="title">오쿠 저소음 두유제조기 900ml</strong>
+                <div class="date"><span class="number">2024.12.</span>구매확정</div>
+              </div>
+              <a href="https://smartstore.naver.com/main/products/10843938836" class="link"></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    `)
+
+    expect(parsed.blocks).toEqual([
+      {
+        type: "linkCard",
+        card: {
+          title: "오쿠 저소음 두유제조기 900ml",
+          description: "내돈내산 인증 쇼핑 / 2024.12.구매확정",
+          url: "https://smartstore.naver.com/main/products/10843938836",
+          imageUrl: "https://example.com/product.jpg?type=f900_540_nanimated",
+        },
+      },
+    ])
+  })
+
+  it("uses custom purchase proof fallbacks", () => {
+    const parsed = parseSe4Blocks(`
+      <div class="se-component se-custom se-l-default">
+        <div class="not_sponsored_component">
+          <a href="https://smartstore.naver.com/main/products/1" class="link"></a>
+        </div>
+      </div>
+    `)
+
+    expect(parsed.blocks).toEqual([
+      {
+        type: "linkCard",
+        card: {
+          title: "https://smartstore.naver.com/main/products/1",
+          description: "",
+          url: "https://smartstore.naver.com/main/products/1",
+          imageUrl: null,
+        },
+      },
+    ])
+  })
+
+  it("throws when a custom purchase proof component has no url", () => {
+    expect(() =>
+      parseSe4Blocks(`
+        <div class="se-component se-custom se-l-default">
+          <div class="not_sponsored_component"></div>
+        </div>
+      `),
+    ).toThrow("SE4 material block parsing failed.")
+  })
+
   it("applies every output option", () => {
     expectEveryBlockOutputOption({
       editorType: "naver-se4",
