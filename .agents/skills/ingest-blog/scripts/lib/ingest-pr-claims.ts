@@ -11,9 +11,6 @@ export const createSupportUnitClaim = (supportUnitKey: string) =>
 export const parseSupportUnitClaim = (body: string | null | undefined) =>
   body?.match(supportUnitClaimPattern)?.[1] ?? null
 
-export const createFailureBlockLabel = (failureBlockHash: string) =>
-  `failure-block:${failureBlockHash}`
-
 export const createIngestBlogPrTitle = ({
   title,
   type,
