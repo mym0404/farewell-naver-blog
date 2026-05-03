@@ -7,6 +7,7 @@
 ## Server Rules
 - Do not reuse a user's `pnpm dev` session for agent harness checks.
 - Start isolated checks with non-default `PORT`, separate `GOODBYE_SETTINGS_PATH`, and separate `GOODBYE_SCAN_CACHE_PATH`.
+- Keep browser verification scratch files under repo-local `tmp/`.
 - Prefer harnesses that use `listen(0)` when available.
 
 ## What To Check

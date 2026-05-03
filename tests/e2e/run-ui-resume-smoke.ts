@@ -1,5 +1,4 @@
-import { mkdtemp, rm } from "node:fs/promises"
-import { tmpdir } from "node:os"
+import { rm } from "node:fs/promises"
 import path from "node:path"
 
 import { chromium } from "playwright"
@@ -21,6 +20,7 @@ import type {
   ScanResult,
   UploadProviderCatalogResponse,
 } from "../../src/shared/Types.js"
+import { createTestTempDir } from "../helpers/test-paths.js"
 
 const desktopViewport = {
   width: 1440,
@@ -677,7 +677,7 @@ const runScenario = async ({
 }
 
 const run = async () => {
-  const tempRoot = await mkdtemp(path.join(tmpdir(), "goodbye-naver-blog-resume-smoke-"))
+  const tempRoot = await createTestTempDir("goodbye-naver-blog-resume-smoke-")
   const server = createHttpServer({
     settingsPath: path.join(tempRoot, "export-ui-settings.json"),
     scanCachePath: path.join(tempRoot, "scan-cache.json"),

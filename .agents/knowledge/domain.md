@@ -43,6 +43,7 @@
 ## UI And State Rules
 - `.cache/scan-cache.json` stores scan cache.
 - `.cache/export-ui-settings.json` stores persisted UI settings, last output directory, theme, and export options.
+- `tmp/` stores repo-local ephemeral test, harness, and runtime config files.
 - `강제로 불러오기` invalidates the scan cache for the current blog input.
 - UI bootstrap reads the last `outputDir` and its `manifest.json` to recover prior job state.
 - `running`, `upload`, and `result` stages share the same result table surface.

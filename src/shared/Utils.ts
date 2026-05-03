@@ -19,6 +19,8 @@ export const resolveRepoPath = (targetPath: string) => {
   return path.isAbsolute(targetPath) ? targetPath : path.resolve(repoRootDir, targetPath)
 }
 
+export const getProjectTempPath = (...segments: string[]) => resolveRepoPath(path.join("tmp", ...segments))
+
 export const ensureDir = async (targetPath: string) => {
   await mkdir(targetPath, { recursive: true })
 }

@@ -48,6 +48,8 @@
 - User `pnpm dev` owns the normal development server path.
 - Tests and harnesses should use isolated `GOODBYE_SETTINGS_PATH`, `GOODBYE_SCAN_CACHE_PATH`, and non-default `PORT` or `listen(0)`.
 - Ad-hoc server checks should not share `.cache/export-ui-settings.json` with the user's development session.
+- Repo-local temporary files belong under `tmp/`; tests and e2e harnesses should use `tests/helpers/test-paths.ts` instead of `os.tmpdir()`.
+- `.cache/` is persisted app state, not a scratch directory for tests, harnesses, or runtime upload config.
 
 ## Documentation
 - Evergreen repo knowledge lives in shallow `.agents/knowledge/*.md` files.

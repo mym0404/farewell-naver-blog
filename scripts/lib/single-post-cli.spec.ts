@@ -1,6 +1,5 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises"
 import path from "node:path"
-import { tmpdir } from "node:os"
 
 import { describe, expect, it, vi } from "vitest"
 
@@ -11,7 +10,7 @@ import {
   singlePostCliUsage,
 } from "./single-post-cli.js"
 import { type RunSinglePostCliDeps, runSinglePostCli } from "../export-single-post.js"
-import { createTestPath } from "../../tests/helpers/test-paths.js"
+import { createTestPath, createTestTempDir } from "../../tests/helpers/test-paths.js"
 
 type RunSinglePostExportFn = NonNullable<RunSinglePostCliDeps["exportSinglePost"]>
 type RunSinglePostInspectFn = NonNullable<RunSinglePostCliDeps["inspectSinglePost"]>
@@ -176,7 +175,7 @@ describe("single-post cli", () => {
   })
 
   it("writes a report file and keeps stdout empty when --stdout is omitted", async () => {
-    const rootDir = await mkdtemp(path.join(tmpdir(), "single-post-cli-"))
+    const rootDir = await createTestTempDir("single-post-cli-")
     const outputDir = path.join(rootDir, "output")
     const reportPath = path.join(rootDir, "report.json")
     const manualReviewMarkdownPath = path.join(rootDir, "post.md")
@@ -280,7 +279,7 @@ describe("single-post cli", () => {
   })
 
   it("runs inspect mode without export outputDir", async () => {
-    const rootDir = await mkdtemp(path.join(tmpdir(), "single-post-cli-"))
+    const rootDir = await createTestTempDir("single-post-cli-")
     const reportPath = path.join(rootDir, "inspect.json")
     const stdoutWrite = vi.fn()
     const stderrWrite = vi.fn()
@@ -349,7 +348,7 @@ describe("single-post cli", () => {
   })
 
   it("writes markdown to stdout when --stdout is present", async () => {
-    const rootDir = await mkdtemp(path.join(tmpdir(), "single-post-cli-"))
+    const rootDir = await createTestTempDir("single-post-cli-")
     const outputDir = path.join(rootDir, "output")
 
     const stdoutWrite = vi.fn()
@@ -403,7 +402,7 @@ describe("single-post cli", () => {
   })
 
   it("fails fast when options JSON has the wrong nested type", async () => {
-    const rootDir = await mkdtemp(path.join(tmpdir(), "single-post-cli-"))
+    const rootDir = await createTestTempDir("single-post-cli-")
     const outputDir = path.join(rootDir, "output")
     const optionsPath = path.join(rootDir, "options.json")
 
@@ -452,7 +451,7 @@ describe("single-post cli", () => {
   })
 
   it("fails fast when block output defaults use block type keys", async () => {
-    const rootDir = await mkdtemp(path.join(tmpdir(), "single-post-cli-"))
+    const rootDir = await createTestTempDir("single-post-cli-")
     const outputDir = path.join(rootDir, "output")
     const optionsPath = path.join(rootDir, "options.json")
 
@@ -499,7 +498,7 @@ describe("single-post cli", () => {
   })
 
   it("passes frontmatter aliases through options JSON", async () => {
-    const rootDir = await mkdtemp(path.join(tmpdir(), "single-post-cli-"))
+    const rootDir = await createTestTempDir("single-post-cli-")
     const outputDir = path.join(rootDir, "output")
     const optionsPath = path.join(rootDir, "options.json")
 
@@ -554,7 +553,7 @@ describe("single-post cli", () => {
   })
 
   it("fails fast when a removed markdown option container is present in options JSON", async () => {
-    const rootDir = await mkdtemp(path.join(tmpdir(), "single-post-cli-"))
+    const rootDir = await createTestTempDir("single-post-cli-")
     const outputDir = path.join(rootDir, "output")
     const optionsPath = path.join(rootDir, "options.json")
 
@@ -589,7 +588,7 @@ describe("single-post cli", () => {
   })
 
   it("fails fast when removed structure legacy keys are present in options JSON", async () => {
-    const rootDir = await mkdtemp(path.join(tmpdir(), "single-post-cli-"))
+    const rootDir = await createTestTempDir("single-post-cli-")
     const outputDir = path.join(rootDir, "output")
     const optionsPath = path.join(rootDir, "options.json")
 
@@ -624,7 +623,7 @@ describe("single-post cli", () => {
   })
 
   it("fails fast when removed asset legacy keys are present in options JSON", async () => {
-    const rootDir = await mkdtemp(path.join(tmpdir(), "single-post-cli-"))
+    const rootDir = await createTestTempDir("single-post-cli-")
     const outputDir = path.join(rootDir, "output")
     const optionsPath = path.join(rootDir, "options.json")
 
@@ -659,7 +658,7 @@ describe("single-post cli", () => {
   })
 
   it("fails fast when frontmatter aliases collide", async () => {
-    const rootDir = await mkdtemp(path.join(tmpdir(), "single-post-cli-"))
+    const rootDir = await createTestTempDir("single-post-cli-")
     const outputDir = path.join(rootDir, "output")
     const optionsPath = path.join(rootDir, "options.json")
 
@@ -698,7 +697,7 @@ describe("single-post cli", () => {
   })
 
   it("fails fast when options JSON is malformed", async () => {
-    const rootDir = await mkdtemp(path.join(tmpdir(), "single-post-cli-"))
+    const rootDir = await createTestTempDir("single-post-cli-")
     const outputDir = path.join(rootDir, "output")
     const optionsPath = path.join(rootDir, "options.json")
 

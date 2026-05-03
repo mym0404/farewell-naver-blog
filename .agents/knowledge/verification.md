@@ -5,6 +5,7 @@
 - CI lives in `.github/workflows/required-checks.yml`.
 - UI smoke and live harnesses live in `tests/e2e/*`.
 - Sample fixture regression lives in `tests/helpers/sample-fixtures.spec.ts` and `tests/helpers/sample-fixtures.ts`.
+- Test and harness temporary paths are rooted through `tests/helpers/test-paths.ts` under repo-local `tmp/`.
 
 ## Primary Commands
 - `pnpm check:local`: `pnpm typecheck && pnpm test:offline`. Run after ordinary repository file changes.

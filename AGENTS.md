@@ -22,8 +22,8 @@
 
 ## Operating Rules
 - source of truth 우선순위는 사용자 지시, 루트 `AGENTS.md`, 코드/설정/테스트, `.agents/knowledge/*.md`, reference 문서다.
-- 영속 UI 설정과 서버 파일 캐시는 `.cache/` 아래에 저장한다. 작업 산출물 폴더에는 runtime 산출물만 둔다.
-- AI agent, test, harness가 서버를 띄울 때는 사용자 `pnpm dev`와 공유 `.cache/export-ui-settings.json`을 피하고, 별도 `GOODBYE_SETTINGS_PATH`, `GOODBYE_SCAN_CACHE_PATH`, 비기본 `PORT` 또는 `listen(0)`을 쓴다.
+- 영속 UI 설정과 서버 파일 캐시는 `.cache/` 아래에 저장한다. 임시 테스트, harness, 런타임 config 파일은 repo-local `tmp/` 아래에 둔다.
+- AI agent, test, harness가 서버를 띄울 때는 사용자 `pnpm dev`와 공유 `.cache/export-ui-settings.json`을 피하고, 별도 `GOODBYE_SETTINGS_PATH`, `GOODBYE_SCAN_CACHE_PATH`, repo-local `tmp/`, 비기본 `PORT` 또는 `listen(0)`을 쓴다.
 - knowledge는 코드 목록을 복제하지 않고 책임 경계, 현재 운영 계약, 검증 기준만 둔다.
 - 정확한 block 목록, selector, output key, sample 목록, allowlist, 파일별 세부 동작은 코드와 테스트를 source of truth로 둔다.
 - parser/editor 지식은 새 block 하나나 파일 하나가 추가될 때마다 갱신하지 않고, 구조·책임·검증 기준이 바뀔 때만 갱신한다.

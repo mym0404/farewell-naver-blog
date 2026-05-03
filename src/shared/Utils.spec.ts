@@ -7,6 +7,7 @@ import {
   delay,
   extractBlogId,
   formatTitleSegment,
+  getProjectTempPath,
   mapConcurrent,
   normalizeAssetUrl,
   resolveRepoPath,
@@ -16,7 +17,7 @@ import {
 } from "./Utils.js"
 import { createTestPath } from "../../tests/helpers/test-paths.js"
 
-const repoRoot = fileURLToPath(new URL("..", import.meta.url))
+const repoRoot = fileURLToPath(new URL("../..", import.meta.url))
 const relativeTempOutputDir = path.relative(repoRoot, createTestPath("utils", "output"))
 const relativeTempClientDir = path.relative(repoRoot, createTestPath("utils", "dist", "client"))
 const absoluteTempExportDir = createTestPath("utils", "export")
@@ -86,5 +87,6 @@ describe("shared utils", () => {
     expect(resolveRepoPath(relativeTempOutputDir)).toBe(path.resolve(repoRoot, relativeTempOutputDir))
     expect(resolveRepoPath(relativeTempClientDir)).toBe(path.resolve(repoRoot, relativeTempClientDir))
     expect(resolveRepoPath(absoluteTempExportDir)).toBe(absoluteTempExportDir)
+    expect(getProjectTempPath("utils", "scratch")).toBe(path.join(repoRoot, "tmp", "utils", "scratch"))
   })
 })
