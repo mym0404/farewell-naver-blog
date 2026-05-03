@@ -21,5 +21,11 @@ export const hasSupportUnitClaim = ({
 export const createFailureBlockLabel = (failureBlockHash: string) =>
   `failure-block:${failureBlockHash}`
 
-export const createNewBlockPrTitle = (title: string) =>
-  `[📦 New Block] ${title.replace(/^\[📦 New Block\]\s*/, "")}`
+const parserSupportTitlePrefix = "[Parser Support]"
+
+export const createParserSupportPrTitle = (title: string) =>
+  `${parserSupportTitlePrefix} ${
+    title.startsWith(parserSupportTitlePrefix)
+      ? title.slice(parserSupportTitlePrefix.length).trimStart()
+      : title
+  }`
