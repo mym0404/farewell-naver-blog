@@ -9,11 +9,12 @@
 - Document chrome 계열은 본문 output이 아닌 제목 wrapper를 버린다.
 - Text 계열은 SE3 textarea HTML을 Markdown paragraph로 만들고, 비어 있는 textarea component는 버린다.
 - Media 계열은 component 안의 standalone images를 image 또는 imageGroup AST로 만든다.
+- Link card 계열은 SE3 oglink preview component를 linkCard AST로 만든다.
 - Table, quote, code 계열은 component 안의 대표 semantic child를 공용 AST로 만든다.
 
 ## Characteristics
 - SE3 parser는 component 단위 leaf block 중심이다.
-- SE3는 현재 heading, divider, video, linkCard 전용 block을 갖지 않는다.
+- SE3는 현재 heading, divider, video 전용 block을 갖지 않는다.
 - 지원하지 않는 SE3 content node는 실패로 드러난다.
 - 의미 있는 본문이 없는 SE3 text component는 실패가 아니라 output 없는 spacer처럼 취급한다.
 - `videos`는 항상 빈 배열이다.
