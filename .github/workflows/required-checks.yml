@@ -43,6 +43,9 @@ jobs:
       - name: Run required checks
         run: pnpm check:full
 
+      - name: Run parser block coverage gate
+        run: pnpm test:parser-blocks
+
       - name: Write live upload .env
         run: |
           cat <<EOF > .env
