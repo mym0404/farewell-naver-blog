@@ -33,6 +33,7 @@ bun .agents/skills/ingest-blog/scripts/write-sample-fixture.ts \
 ## Ingest Behavior
 - Blog ingest uses `NaverBlogExporter` and forces remote asset references for the scan path.
 - Image and thumbnail downloads stay disabled in the ingest scripts.
+- Ingest-only helper modules and specs live under `.agents/skills/ingest-blog/scripts/lib`.
 - A completed output for the same `blogId` can be reused when the manifest matches the blog and has `finishedAt`.
 - When reusable output exists, rerun failed posts only unless `--forceFull` is explicitly requested.
 - Previous successful posts are treated as stable during a failed-post rerun.

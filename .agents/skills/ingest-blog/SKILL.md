@@ -82,6 +82,7 @@ bun scripts/capture-post-evidence.ts \
 
 `--target post` renders Markdown with frontmatter. `--target inspect-path` renders only the selected block fragment and omits frontmatter.
 Naver screenshots capture the selected HTML node rather than the current viewport; long nodes may produce tall images.
+Focused parser-support PR evidence must use `inspect-path` whenever an unsupported block path is known, including after the focused rerun succeeds. Use `post` only when no inspect path is available.
 Evidence renders as README-style Markdown sections with a source link, Naver capture image, and Markdown code fence.
 Use `--metadataCachePath` when generating multiple rows from one blog so post metadata scan results are reused.
 Use `--assetProfile tmp` for local smoke output, `--assetProfile readme` for README assets, and `--assetProfile figure` for report or PR figures that must be committed.

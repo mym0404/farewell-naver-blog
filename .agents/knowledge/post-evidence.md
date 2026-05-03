@@ -78,6 +78,7 @@ bun scripts/capture-post-evidence.ts \
 
 ## Ingest Reports
 - `.agents/skills/ingest-blog/scripts/collect-blog-errors.ts` uses post evidence helpers when writing ingest reports.
+- Post evidence helpers stay under `scripts/lib/post-evidence` because both the manual evidence CLI and ingest reports use them.
 - Completed ingest outputs may be reused; when a reusable manifest exists, rerun only failed posts unless `--forceFull` is requested.
 - Ingest reports include `report.md`, `report.json`, `evidence.md`, and committed figure images under `.agents/knowledge/reference/assets/figure`.
 - Focused parser fixes represented in a report should include the changed parser block or extension, the representative fixture, related knowledge updates, verification results, and unresolved focused failures with reasons.
