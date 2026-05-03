@@ -23,12 +23,13 @@ export type EvidenceCliArgs = {
   cases: EvidenceCase[]
   outputDir?: string
   optionsPath?: string
+  metadataCachePath?: string
   assetProfile: EvidenceAssetProfile
 }
 
 const usageText = `Usage:
-  bun scripts/capture-post-evidence.ts --blogId my-blog --logNo 123 [--metadata key=value] [--target post|inspect-path --inspectPath 0.1] [--optionsPath options.json] [--outputDir tmp/harness/post-evidence/case] [--assetProfile readme|figure|tmp]
-  bun scripts/capture-post-evidence.ts --case cases.json [--outputDir tmp/harness/post-evidence/run] [--assetProfile readme|figure|tmp]
+  bun scripts/capture-post-evidence.ts --blogId my-blog --logNo 123 [--metadata key=value] [--target post|inspect-path --inspectPath 0.1] [--optionsPath options.json] [--metadataCachePath tmp/harness/post-evidence/metadata-cache.json] [--outputDir tmp/harness/post-evidence/case] [--assetProfile readme|figure|tmp]
+  bun scripts/capture-post-evidence.ts --case cases.json [--metadataCachePath tmp/harness/post-evidence/metadata-cache.json] [--outputDir tmp/harness/post-evidence/run] [--assetProfile readme|figure|tmp]
 
 Outputs table.md, report.json, Naver screenshots, and Markdown evidence.`
 
@@ -172,6 +173,7 @@ export const parseCapturePostEvidenceArgs = async (
   let inspectPath: string | undefined
   let outputDir: string | undefined
   let optionsPath: string | undefined
+  let metadataCachePath: string | undefined
   let assetProfileValue: string | undefined
   let casePath: string | undefined
   const metadataEntries: string[] = []
@@ -225,6 +227,12 @@ export const parseCapturePostEvidenceArgs = async (
       continue
     }
 
+    if (arg === "--metadataCachePath") {
+      metadataCachePath = readValue(args, index)
+      index++
+      continue
+    }
+
     if (arg === "--outputDir") {
       outputDir = readValue(args, index)
       index++
@@ -256,6 +264,7 @@ export const parseCapturePostEvidenceArgs = async (
       }),
       ...(outputDir ? { outputDir } : {}),
       ...(optionsPath ? { optionsPath } : {}),
+      ...(metadataCachePath ? { metadataCachePath } : {}),
       assetProfile,
     }
   }
@@ -282,6 +291,7 @@ export const parseCapturePostEvidenceArgs = async (
     ],
     ...(outputDir ? { outputDir } : {}),
     ...(optionsPath ? { optionsPath } : {}),
+    ...(metadataCachePath ? { metadataCachePath } : {}),
     assetProfile,
   }
 }

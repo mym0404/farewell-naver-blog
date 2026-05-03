@@ -26,6 +26,7 @@ bun scripts/capture-post-evidence.ts \
 ```bash
 bun scripts/capture-post-evidence.ts \
   --case tmp/harness/post-evidence/cases.json \
+  --metadataCachePath tmp/harness/post-evidence/metadata-cache.json \
   --outputDir tmp/harness/post-evidence/run
 ```
 
@@ -55,6 +56,7 @@ bun scripts/capture-post-evidence.ts \
 - `table.md` is a four-column GitHub-safe HTML table: `Metadata` | `Links` | `Naver Capture` | `Markdown`.
 - `Links` contains the public Naver post link.
 - `Naver Capture` is an image cell that points at a generated PNG asset.
+- Naver capture images render at `width="300"` in generated tables so README and PR rows keep a readable minimum image size.
 - `Markdown` is escaped inside `<pre><code>...</code></pre>` with real newlines, so multiline Markdown stays readable without visible `<br>` text.
 - Table cell content escapes HTML-sensitive characters so generated rows remain valid README and PR fragments.
 
@@ -67,6 +69,7 @@ bun scripts/capture-post-evidence.ts \
 - Naver source screenshots use the mobile `m.blog.naver.com/PostView.naver` page.
 - Full-post source capture targets `#viewTypeSelector`.
 - Inspect-path source capture resolves the same editor-specific path reported by single-post inspect.
+- Capture hides unrelated fixed and sticky mobile UI before screenshotting the selected node, so the mobile blog header does not cover the body block.
 - Source screenshots capture the selected HTML node, not only the current viewport; long nodes may produce tall images.
 
 ## Ingest Reports

@@ -34,8 +34,24 @@ const captureElementNode = async ({
       return
     }
 
+    for (const element of Array.from(document.body.querySelectorAll("*"))) {
+      if (!(element instanceof HTMLElement)) {
+        continue
+      }
+
+      if (node.contains(element) || element.contains(node)) {
+        continue
+      }
+
+      const position = window.getComputedStyle(element).position
+
+      if (position === "fixed" || position === "sticky") {
+        element.style.setProperty("visibility", "hidden", "important")
+      }
+    }
+
     node.scrollIntoView({
-      block: "start",
+      block: "center",
       inline: "nearest",
     })
   })

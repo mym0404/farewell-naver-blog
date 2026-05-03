@@ -16,6 +16,7 @@ const run = async () => {
     cases: args.cases,
     outputDir: args.outputDir,
     assetProfile: args.assetProfile,
+    metadataCachePath: args.metadataCachePath,
   })
 
   console.log(

@@ -8,12 +8,14 @@ import { NaverBlog } from "../../../src/modules/blog/NaverBlog.js"
 import { renderMarkdownPost } from "../../../src/modules/converter/MarkdownRenderer.js"
 import { AssetStore } from "../../../src/modules/exporter/AssetStore.js"
 import { buildMarkdownFilePath, getCategoryForPost } from "../../../src/modules/exporter/ExportPaths.js"
+import type { SinglePostFetcher } from "../../../src/modules/exporter/SinglePostExport.js"
 import { buildPostLinkTargets, createSameBlogPostLinkResolver } from "../../../src/modules/exporter/PostLinkRewriter.js"
 import { NaverBlogFetcher } from "../../../src/modules/fetcher/NaverBlogFetcher.js"
 import { parsePostHtmlWithBlockEvidence } from "../../../src/modules/parser/PostParser.js"
 import { cloneExportOptions, defaultExportOptions } from "../../../src/shared/ExportOptions.js"
-import type { AstBlock, ExportOptions, ParsedPost } from "../../../src/shared/Types.js"
-import { ensureDir, extractBlogId, mapConcurrent, toErrorMessage } from "../../../src/shared/Utils.js"
+import type { AstBlock, ExportOptions, ParsedPost, PostSummary, ScanResult } from "../../../src/shared/Types.js"
+import { ensureDir, extractBlogId, mapConcurrent, resolveRepoPath, toErrorMessage } from "../../../src/shared/Utils.js"
+import { createSinglePostMetadataCachingFetcher } from "../single-post-metadata-cache.js"
 import { readSinglePostOptions } from "../single-post-cli.js"
 import type { EvidenceCase } from "./cases.js"
 import { captureNaverPost } from "./playwright.js"
@@ -47,7 +49,9 @@ export type PostEvidenceReport = {
   rows: EvidenceRowReport[]
 }
 
-type BlogScan = Awaited<ReturnType<NaverBlogFetcher["scanBlog"]>>
+type BlogScan = ScanResult & {
+  posts: PostSummary[]
+}
 
 const createDefaultEvidenceOptions = () => {
   const options = defaultExportOptions()
@@ -165,7 +169,7 @@ const renderEvidenceMarkdown = async ({
   logNo: string
   outputDir: string
   options: ExportOptions
-  fetcher: NaverBlogFetcher
+  fetcher: SinglePostFetcher
   scan: BlogScan
   html: string
   target: EvidenceCase["target"]
@@ -262,6 +266,7 @@ const captureCase = async ({
   tablePath,
   assetDir,
   readBlogScan,
+  readFetcher,
 }: {
   browser: Browser
   evidenceCase: EvidenceCase
@@ -269,11 +274,10 @@ const captureCase = async ({
   tablePath: string
   assetDir: string
   readBlogScan: (blogId: string) => Promise<BlogScan>
+  readFetcher: (blogId: string) => Promise<SinglePostFetcher>
 }): Promise<EvidenceRowReport> => {
   const blogId = extractBlogId(evidenceCase.blogId)
-  const fetcher = new NaverBlogFetcher({
-    blogId,
-  })
+  const fetcher = await readFetcher(blogId)
   const options = await readEvidenceOptions(evidenceCase.optionsPath)
   const html = await fetcher.fetchPostHtml(evidenceCase.logNo)
   const errors: string[] = []
@@ -367,11 +371,13 @@ export const capturePostEvidence = async ({
   outputDir,
   assetProfile = "tmp",
   browser,
+  metadataCachePath,
 }: {
   cases: EvidenceCase[]
   outputDir?: string
   assetProfile?: EvidenceAssetProfile
   browser?: Browser
+  metadataCachePath?: string
 }): Promise<PostEvidenceReport> => {
   const firstCase = cases[0]
 
@@ -388,6 +394,27 @@ export const capturePostEvidence = async ({
     assetProfile,
   })
   const ownedBrowser = browser ? null : await chromium.launch()
+  const resolvedMetadataCachePath = metadataCachePath ? resolveRepoPath(metadataCachePath) : undefined
+  const fetcherCache = new Map<string, Promise<SinglePostFetcher>>()
+  const readFetcher = (blogId: string) => {
+    const cached = fetcherCache.get(blogId)
+
+    if (cached) {
+      return cached
+    }
+
+    const fetcher = resolvedMetadataCachePath
+      ? createSinglePostMetadataCachingFetcher({
+          blogId,
+          cachePath: resolvedMetadataCachePath,
+          readFile,
+          writeFile,
+        })
+      : Promise.resolve(new NaverBlogFetcher({ blogId }))
+
+    fetcherCache.set(blogId, fetcher)
+    return fetcher
+  }
   const scanCache = new Map<string, Promise<BlogScan>>()
   const readBlogScan = (blogId: string) => {
     const cached = scanCache.get(blogId)
@@ -396,8 +423,16 @@ export const capturePostEvidence = async ({
       return cached
     }
 
-    const scan = new NaverBlogFetcher({ blogId }).scanBlog({
-      includePosts: true,
+    const scan = readFetcher(blogId).then(async (fetcher) => {
+      const [scanResult, posts] = await Promise.all([
+        fetcher.scanBlog(),
+        fetcher.getAllPosts(),
+      ])
+
+      return {
+        ...scanResult,
+        posts,
+      }
     })
 
     scanCache.set(blogId, scan)
@@ -422,6 +457,7 @@ export const capturePostEvidence = async ({
           tablePath: paths.tablePath,
           assetDir: paths.assetDir,
           readBlogScan,
+          readFetcher,
         }),
     })
     const tableRows = createEvidenceTableRows({

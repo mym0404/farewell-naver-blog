@@ -16,6 +16,21 @@ describe("parseCapturePostEvidenceArgs", () => {
     })
   })
 
+  it("accepts a metadata cache path", async () => {
+    const parsed = await parseCapturePostEvidenceArgs([
+      "--blogId",
+      "mym0404",
+      "--logNo",
+      "223034929697",
+      "--metadataCachePath",
+      "tmp/metadata-cache.json",
+    ])
+
+    expect(parsed).toMatchObject({
+      metadataCachePath: "tmp/metadata-cache.json",
+    })
+  })
+
   it("accepts persistent asset profiles", async () => {
     await expect(
       parseCapturePostEvidenceArgs([

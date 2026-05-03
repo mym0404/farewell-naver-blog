@@ -36,7 +36,7 @@ const renderLinkCell = ({ sourceUrl }: { sourceUrl: string }) =>
   `<a href="${escapeHtml(sourceUrl)}">Naver</a>`
 
 const renderImageCell = (path: string | null, alt: string) =>
-  path ? `<img src="${escapeHtml(path)}" alt="${escapeHtml(alt)}" width="260">` : ""
+  path ? `<img src="${escapeHtml(path)}" alt="${escapeHtml(alt)}" width="300">` : ""
 
 const renderMarkdownCell = (markdown: string | null) => {
   if (markdown === null) {

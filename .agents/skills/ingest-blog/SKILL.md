@@ -58,12 +58,14 @@ bun scripts/capture-post-evidence.ts \
   --blogId mym0404 \
   --logNo 223034929697 \
   --target inspect-path \
-  --inspectPath 0
+  --inspectPath 0 \
+  --metadataCachePath tmp/harness/post-evidence/metadata-cache.json
 ```
 
 `--target post` renders Markdown with frontmatter. `--target inspect-path` renders only the selected block fragment and omits frontmatter.
 Naver screenshots capture the selected HTML node rather than the current viewport; long nodes may produce tall images.
 Evidence tables are GitHub-safe four-column HTML tables with Markdown snippets escaped inside `<pre><code>` cells.
+Use `--metadataCachePath` when generating multiple rows from one blog so post metadata scan results are reused.
 Use `--assetProfile tmp` for local smoke output, `--assetProfile readme` for README assets, and `--assetProfile figure` for report or PR figures that must be committed.
 
 ## Workflow

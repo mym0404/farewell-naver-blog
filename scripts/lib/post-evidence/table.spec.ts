@@ -22,7 +22,7 @@ describe("renderEvidenceMarkdownTable", () => {
     expect(table).toContain("line 1\n&lt;p&gt;")
     expect(table).toContain("left | right\n&lt;script&gt;")
     expect(table).toContain('<a href="https://blog.naver.com/a/1">Naver</a>')
-    expect(table).toContain('<img src="assets/naver.png" alt="Naver Capture" width="260">')
+    expect(table).toContain('<img src="assets/naver.png" alt="Naver Capture" width="300">')
     expect(table).not.toContain("<br>")
   })
 })

@@ -79,19 +79,19 @@ output/
     <tr>
       <td>SE2 link image</td>
       <td><a href="https://blog.naver.com/mym0404/221504285266">Naver</a></td>
-      <td><img src=".agents/knowledge/reference/assets/readme/mym0404-221504285266-path-1-0-1-0-0-0-naver.png" alt="Naver Capture" width="260"></td>
+      <td><img src=".agents/knowledge/reference/assets/readme/mym0404-221504285266-path-1-0-1-0-0-0-naver.png" alt="Naver Capture" width="300"></td>
       <td><pre><code>![](https://dthumb-phinf.pstatic.net/?src=%22https%3A%2F%2Fcdn-images-1.medium.com%2Fmax%2F1200%2F0*WZM2cHocLncEgg1F.png%22&amp;type=f560_336)</code></pre></td>
     </tr>
     <tr>
       <td>SE2 paragraph</td>
       <td><a href="https://blog.naver.com/mym0404/221504285266">Naver</a></td>
-      <td><img src=".agents/knowledge/reference/assets/readme/mym0404-221504285266-path-1-3-naver.png" alt="Naver Capture" width="260"></td>
+      <td><img src=".agents/knowledge/reference/assets/readme/mym0404-221504285266-path-1-3-naver.png" alt="Naver Capture" width="300"></td>
       <td><pre><code>우선 아래와 같은 클래스를 하나 만들어준다.</code></pre></td>
     </tr>
     <tr>
       <td>SE2 code block</td>
       <td><a href="https://blog.naver.com/mym0404/221504285266">Naver</a></td>
-      <td><img src=".agents/knowledge/reference/assets/readme/mym0404-221504285266-path-1-7-0-naver.png" alt="Naver Capture" width="260"></td>
+      <td><img src=".agents/knowledge/reference/assets/readme/mym0404-221504285266-path-1-7-0-naver.png" alt="Naver Capture" width="300"></td>
       <td><pre><code>```
 class Device {
     // Base width in point, use iPhone 6
@@ -105,7 +105,7 @@ class Device {
     <tr>
       <td>SE4 link card</td>
       <td><a href="https://blog.naver.com/mym0404/223034929697">Naver</a></td>
-      <td><img src=".agents/knowledge/reference/assets/readme/mym0404-223034929697-path-2-naver.png" alt="Naver Capture" width="260"></td>
+      <td><img src=".agents/knowledge/reference/assets/readme/mym0404-223034929697-path-2-naver.png" alt="Naver Capture" width="300"></td>
       <td><pre><code>[9942번: 하노이의 네 탑](https://www.acmicpc.net/problem/9942)
 
 9942번 제출 맞힌 사람 숏코딩 재채점 결과 채점 현황 질문 게시판 하노이의 네 탑 다국어 시간 제한 메모리 제한 제출 정답 맞힌 사람 정답 비율 3 초 128 MB 724 204 151 32.059% 문제 하노이의 탑 이라는 유명한 문제가 있다. 하지만 이 문제는 너무 유명한 나머지 이제는 식상하다. 그러니까 이번엔 탑을 3개가 아닌 4개로 늘려서 생각해보자! N개의 원판과 4개의 막대가 있을 때, 즉 보조 막대가 한 개가 아닌 두 개이면 몇 번 움직여서 모든 원판을 끝의 원판으로 옮길 수 있을까? 4개의 막대를 이용해서 N개의...</code></pre></td>
@@ -113,19 +113,19 @@ class Device {
     <tr>
       <td>SE4 image</td>
       <td><a href="https://blog.naver.com/mym0404/223034929697">Naver</a></td>
-      <td><img src=".agents/knowledge/reference/assets/readme/mym0404-223034929697-path-4-naver.png" alt="Naver Capture" width="260"></td>
+      <td><img src=".agents/knowledge/reference/assets/readme/mym0404-223034929697-path-4-naver.png" alt="Naver Capture" width="300"></td>
       <td><pre><code>![](https://mblogthumb-phinf.pstatic.net/MjAyMzAzMDRfMjcz/MDAxNjc3OTM2NjkzMzk1.dBw7P8v6syYqhX6uiGFtZYMxhRNu5AdLgy0ubMXc0o8g.NCYvjxO4oXkJt-ZuBNXDiROJWj-zxI7ibwoKHpoyOKog.PNG.mym0404/image.png?type=w800)</code></pre></td>
     </tr>
     <tr>
       <td>SE4 quote</td>
       <td><a href="https://blog.naver.com/mym0404/222619228134">Naver</a></td>
-      <td><img src=".agents/knowledge/reference/assets/readme/mym0404-222619228134-path-6-naver.png" alt="Naver Capture" width="260"></td>
+      <td><img src=".agents/knowledge/reference/assets/readme/mym0404-222619228134-path-6-naver.png" alt="Naver Capture" width="300"></td>
       <td><pre><code>&gt; Description &amp; Relation</code></pre></td>
     </tr>
     <tr>
       <td>SE4 formula</td>
       <td><a href="https://blog.naver.com/mym0404/223034929697">Naver</a></td>
-      <td><img src=".agents/knowledge/reference/assets/readme/mym0404-223034929697-path-10-naver.png" alt="Naver Capture" width="260"></td>
+      <td><img src=".agents/knowledge/reference/assets/readme/mym0404-223034929697-path-10-naver.png" alt="Naver Capture" width="300"></td>
       <td><pre><code>$$
 f\left(n\right)=MIN_{1\le k&lt;n}\left\{f\left(k\right)+g\left(n-k\right)+f\left(k\right)\right\}
 $$</code></pre></td>
@@ -133,7 +133,7 @@ $$</code></pre></td>
     <tr>
       <td>SE4 code block</td>
       <td><a href="https://blog.naver.com/mym0404/223034929697">Naver</a></td>
-      <td><img src=".agents/knowledge/reference/assets/readme/mym0404-223034929697-path-12-naver.png" alt="Naver Capture" width="260"></td>
+      <td><img src=".agents/knowledge/reference/assets/readme/mym0404-223034929697-path-12-naver.png" alt="Naver Capture" width="300"></td>
       <td><pre><code>```javascript
 const ll mod = 9901;
 inline ll md(ll x) { return md(mod, x); }
@@ -161,13 +161,13 @@ void solve() {
     <tr>
       <td>SE4 video</td>
       <td><a href="https://blog.naver.com/mym0404/221302086471">Naver</a></td>
-      <td><img src=".agents/knowledge/reference/assets/readme/mym0404-221302086471-path-2-naver.png" alt="Naver Capture" width="260"></td>
+      <td><img src=".agents/knowledge/reference/assets/readme/mym0404-221302086471-path-2-naver.png" alt="Naver Capture" width="300"></td>
       <td><pre><code>[휴머노이드 첫 Rigging 성공 애니메이션](https://blog.naver.com/mym0404/221302086471)</code></pre></td>
     </tr>
     <tr>
       <td>SE4 table</td>
       <td><a href="https://blog.naver.com/mym0404/221302086471">Naver</a></td>
-      <td><img src=".agents/knowledge/reference/assets/readme/mym0404-221302086471-path-4-naver.png" alt="Naver Capture" width="260"></td>
+      <td><img src=".agents/knowledge/reference/assets/readme/mym0404-221302086471-path-4-naver.png" alt="Naver Capture" width="300"></td>
       <td><pre><code>| ㅗㄷ | 1 | 2 |
 | --- | --- | --- |
 | 3 | 4 | 5 |
