@@ -12,6 +12,7 @@
 - 첫 번째로 match된 block만 convert를 실행한다.
 - match되는 block이 없으면 parser는 실패한다.
 - `skip`은 document title, spacer, top-level line break, 빈 editor component처럼 의도적으로 버리는 node에만 사용한다.
+- 알려진 component가 파싱 후 의미 있는 출력이 없으면 `handled`와 빈 `blocks`를 반환할 수 있다.
 - 내용이 있는 node를 match했는데 변환할 수 없으면 block이 throw한다.
 
 ## Context
