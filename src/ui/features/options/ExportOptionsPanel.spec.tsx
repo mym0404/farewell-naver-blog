@@ -452,6 +452,7 @@ describe("ExportOptionsPanel", () => {
       "naver-se4:paragraph",
       "naver-se3:table",
       "naver-se3:code",
+      "naver-se3:linkCard",
       "naver-se3:image",
       "naver-se3:paragraph",
       "naver-se2:table",
