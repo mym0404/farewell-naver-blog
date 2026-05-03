@@ -1,0 +1,140 @@
+import { describe, expect, it } from "vitest"
+
+import { parseSe4Blocks, parseSe4BlocksWithOptions } from "../../../../tests/helpers/parser-test-utils.js"
+
+describe("NaverSe4WrappingParagraphBlock", () => {
+  it("parses wrapping paragraph image and text slots", () => {
+    const parsed = parseSe4Blocks(`
+      <div class="se-component se-wrappingParagraph se-l-inner-big-left">
+        <div class="se-component-content">
+          <div class="se-component-slot se-component-slot-float">
+            <div class="se-section se-section-image">
+              <div class="se-module se-module-image">
+                <a class="se-module-image-link __se_image_link" data-linkdata='{"src":"https://example.com/wrapped.png"}'>
+                  <img src="https://example.com/wrapped.png?type=w80_blur" data-lazy-src="https://example.com/wrapped.png?type=w800" alt="wrapped" />
+                </a>
+              </div>
+            </div>
+          </div>
+          <div class="se-component-slot">
+            <div class="se-section se-section-text">
+              <div class="se-module se-module-text">
+                <p class="se-text-paragraph"><span>첫 문단</span></p>
+                <p class="se-text-paragraph"><span><b>둘째 문단</b></span></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `)
+
+    expect(parsed.blocks).toEqual([
+      {
+        type: "image",
+        image: {
+          sourceUrl: "https://example.com/wrapped.png",
+          originalSourceUrl: "https://example.com/wrapped.png",
+          alt: "wrapped",
+          caption: null,
+          mediaKind: "image",
+        },
+        outputSelectionKey: "naver-se4:image",
+        outputSelection: {
+          variant: "markdown-image",
+        },
+      },
+      {
+        type: "paragraph",
+        text: "첫 문단",
+      },
+      {
+        type: "paragraph",
+        text: "**둘째 문단**",
+      },
+    ])
+  })
+
+  it("handles text-only wrapping paragraph components", () => {
+    const parsed = parseSe4Blocks(`
+      <div class="se-component se-wrappingParagraph se-l-inner-big-left">
+        <div class="se-component-slot">
+          <div class="se-module se-module-text">
+            <p class="se-text-paragraph"><span>본문만 있는 감싼 문단</span></p>
+          </div>
+        </div>
+      </div>
+    `)
+
+    expect(parsed.blocks).toEqual([
+      {
+        type: "paragraph",
+        text: "본문만 있는 감싼 문단",
+      },
+    ])
+  })
+
+  it("handles image-only wrapping paragraph components", () => {
+    const parsed = parseSe4Blocks(`
+      <div class="se-component se-wrappingParagraph se-l-inner-big-left">
+        <div class="se-component-slot se-component-slot-float">
+          <a class="se-module-image-link __se_image_link" data-linkdata='{"src":"https://example.com/image-only.png"}'>
+            <img src="https://example.com/image-only.png" alt="" />
+          </a>
+        </div>
+      </div>
+    `)
+
+    expect(parsed.blocks).toEqual([
+      {
+        type: "image",
+        image: {
+          sourceUrl: "https://example.com/image-only.png",
+          originalSourceUrl: "https://example.com/image-only.png",
+          alt: "",
+          caption: null,
+          mediaKind: "image",
+        },
+        outputSelectionKey: "naver-se4:image",
+        outputSelection: {
+          variant: "markdown-image",
+        },
+      },
+    ])
+  })
+
+  it("applies paragraph output selections to wrapped text", () => {
+    const parsed = parseSe4BlocksWithOptions({
+      blockOutputs: {
+        defaults: {
+          "naver-se4:paragraph": {
+            variant: "reference-links",
+          },
+        },
+      },
+      components: [
+        `
+          <div class="se-component se-wrappingParagraph se-l-inner-big-left">
+            <div class="se-component-slot">
+              <div class="se-module se-module-text">
+                <p class="se-text-paragraph">
+                  <span><a href="https://example.com">example</a></span>
+                </p>
+              </div>
+            </div>
+          </div>
+        `,
+      ],
+    })
+
+    expect(parsed.blocks).toEqual([
+      {
+        type: "paragraph",
+        text: "[example][1]\n\n[1]: https://example.com",
+        outputSelectionKey: "naver-se4:paragraph",
+        outputSelection: {
+          variant: "reference-links",
+        },
+      },
+    ])
+  })
+})

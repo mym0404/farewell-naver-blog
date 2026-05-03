@@ -3,6 +3,8 @@ import type { OutputOption } from "../../../shared/Types.js"
 import type { ParserBlockContext, ParserBlockResult } from "../ParserNode.js"
 import { parseImageLink, se4ImageLinkSelector } from "./ImageLink.js"
 
+type HandledParserBlockResult = Extract<ParserBlockResult, { status: "handled" }>
+
 export class NaverSe4ImageBlock extends LeafBlock {
   override readonly id = "image"
   override readonly label = "이미지"
@@ -59,7 +61,7 @@ export class NaverSe4ImageBlock extends LeafBlock {
     return $node.hasClass("se-image")
   }
 
-  override convert({ $node }: Parameters<LeafBlock["convert"]>[0]): ParserBlockResult {
+  override convert({ $node }: Parameters<LeafBlock["convert"]>[0]): HandledParserBlockResult {
     const image = parseImageLink($node.find(se4ImageLinkSelector).first())
 
     if (!image) {
