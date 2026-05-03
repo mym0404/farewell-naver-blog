@@ -14,6 +14,7 @@
 ## Ownership
 - Blog 계층은 editor 목록과 UI에 노출할 parser block output definition을 모은다.
 - Editor 계층은 에디터 감지, parse root 선택, block 실행 순서, source-level context 주입, output selection 적용을 담당한다.
+- Editor 계층은 inspect path와 변환된 AST block을 연결해야 하는 도구를 위해 선택적 source evidence hook도 제공한다. 기본 parser output에는 이 evidence를 넣지 않는다.
 - Parser block 계층은 DOM node의 `match()`와 AST 변환인 `convert()`를 담당한다.
 - Renderer/exporter는 parser block DOM 규칙을 알지 않고 `AstBlock`과 `ParsedPost`만 소비한다.
 
@@ -28,6 +29,7 @@
 - 현재 AST block은 `paragraph`, `heading`, `quote`, `divider`, `code`, `formula`, `image`, `imageGroup`, `video`, `linkCard`, `table`이다.
 - `ParsedPost`는 `tags`, `blocks`, `body`, `videos`를 반환한다.
 - `body`는 현재 `blocks`를 `kind: "block"` 구조로 감싼 값이며, Markdown 렌더링은 `src/modules/converter/MarkdownRenderer.ts`가 맡는다.
+- Inspect/evidence 도구가 source path를 필요로 할 때는 별도 parser helper가 block evidence를 함께 반환한다. 이 값은 디버깅과 리포트용이며 export manifest나 Markdown 도메인 모델에 저장하지 않는다.
 
 ## File Structure Rules
 - Blog ownership은 `src/modules/blog/*`에 둔다.

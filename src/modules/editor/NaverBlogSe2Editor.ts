@@ -42,13 +42,14 @@ export class NaverBlogSE2Editor extends BaseEditor {
     return !html.includes('class="se-component') && !html.includes('class="se_component')
   }
 
-  override parse({ $, tags, options }: BaseEditorParseInput): ParsedPost {
+  override parse({ $, tags, options, captureBlockEvidence }: BaseEditorParseInput): ParsedPost {
     const container = $("#viewTypeSelector").first()
     const { blocks, body } = this.runBlocks({
       $,
       nodes: container.contents().toArray(),
       tags,
       options,
+      captureBlockEvidence,
     })
 
     const videos = blocks

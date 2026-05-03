@@ -53,6 +53,13 @@ type TsserverDiagnostic = {
 const sourceRoots = ["src", "tests", "scripts"]
 const unusedDiagnosticCodes = new Set([6133, 6138, 6192, 6196, 6198, 6199])
 const allowedKnipFileEntries: Record<string, string> = {
+  ".agents/skills/ingest-blog/scripts/collect-blog-errors.ts": "ingest-blog skill CLI entrypoint",
+  ".agents/skills/ingest-blog/scripts/write-sample-fixture.ts": "ingest-blog skill CLI entrypoint",
+  "scripts/capture-post-evidence.ts": "manual evidence capture CLI entrypoint",
+  "scripts/lib/post-evidence/capture.ts": "manual evidence capture CLI dependency",
+  "scripts/lib/post-evidence/cases.ts": "manual evidence capture CLI dependency",
+  "scripts/lib/post-evidence/paths.ts": "manual evidence capture CLI dependency",
+  "scripts/lib/post-evidence/playwright.ts": "manual evidence capture CLI dependency",
   "tests/e2e/lib/run-live-server.ts": "spawned by live resume harness",
   "tests/e2e/run-ui-resume-smoke.ts": "spawned by smoke suite",
   "tests/e2e/run-ui-smoke.ts": "spawned by smoke suite",
@@ -60,6 +67,11 @@ const allowedKnipFileEntries: Record<string, string> = {
 }
 const allowedKnipExports: Record<string, string> = {
   "scripts/export-single-post.ts:runSinglePostExportCli": "script entrypoint alias",
+  "src/modules/parser/PostParser.ts:parsePostHtmlWithBlockEvidence": "manual evidence capture CLI dependency",
+}
+const allowedKnipTypes: Record<string, string> = {
+  "scripts/lib/post-evidence/ingest-output.ts:ReusableIngestOutput": "ingest-blog skill CLI dependency",
+  "scripts/lib/post-evidence/table.ts:EvidenceTableRow": "manual evidence capture CLI dependency",
 }
 
 const runCommand = (command: string, args: string[]): Promise<CommandResult> =>
@@ -116,6 +128,10 @@ const isAllowedKnipItem = ({
 
   if (type === "export" && item) {
     return Object.hasOwn(allowedKnipExports, `${file}:${item.name}`)
+  }
+
+  if (type === "type" && item) {
+    return Object.hasOwn(allowedKnipTypes, `${file}:${item.name}`)
   }
 
   return false

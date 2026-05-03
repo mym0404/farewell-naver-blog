@@ -16,10 +16,13 @@ export abstract class BaseBlock {
 }
 
 export abstract class ContainerBlock extends BaseBlock {
-  override convert({ $node, matchNode }: ParserBlockConvertContext): ParserBlockResult {
+  override convert({ $node, matchNode, path }: ParserBlockConvertContext): ParserBlockResult {
     return {
       status: "handled",
-      blocks: $node.contents().toArray().flatMap(matchNode),
+      blocks: $node
+        .contents()
+        .toArray()
+        .flatMap((node, index) => matchNode(node, `${path}.${index}`)),
     }
   }
 }

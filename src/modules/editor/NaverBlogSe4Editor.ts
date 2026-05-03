@@ -69,13 +69,14 @@ export class NaverBlogSE4Editor extends BaseEditor {
     )
   }
 
-  override parse({ $, sourceUrl = "", tags, options }: BaseEditorParseInput): ParsedPost {
+  override parse({ $, sourceUrl = "", tags, options, captureBlockEvidence }: BaseEditorParseInput): ParsedPost {
     const { blocks, body } = this.runBlocks({
       $,
       nodes: $("#viewTypeSelector .se-component").toArray(),
       sourceUrl,
       tags,
       options,
+      captureBlockEvidence,
       moduleContext: (node: AnyNode) => {
         const $component = $(node)
         const moduleScript = $component.find("script.__se_module_data").first()

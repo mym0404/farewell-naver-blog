@@ -29,13 +29,14 @@ export class NaverBlogSE3Editor extends BaseEditor {
     )
   }
 
-  override parse({ $, tags, options }: BaseEditorParseInput): ParsedPost {
+  override parse({ $, tags, options, captureBlockEvidence }: BaseEditorParseInput): ParsedPost {
     const container = $("#viewTypeSelector .se_component_wrap.sect_dsc").first()
     const { blocks, body } = this.runBlocks({
       $,
       nodes: container.children(".se_component").toArray(),
       tags,
       options,
+      captureBlockEvidence,
     })
 
     return {

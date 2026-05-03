@@ -19,10 +19,25 @@ Do not treat an unresolved parse error as complete. If a failure cannot be safel
 
 ## Quick Commands
 
-Run full ingest with remote asset references:
+Run ingest with remote asset references. If a completed output for the same `blogId` exists, reuse it and rerun only failed posts:
 
 ```bash
 bun .agents/skills/ingest-blog/scripts/collect-blog-errors.ts --blogId mym0404
+```
+
+Force a new full ingest:
+
+```bash
+bun .agents/skills/ingest-blog/scripts/collect-blog-errors.ts --blogId mym0404 --forceFull
+```
+
+Reuse a specific completed output and rerun only failed posts:
+
+```bash
+bun .agents/skills/ingest-blog/scripts/collect-blog-errors.ts \
+  --blogId mym0404 \
+  --reuseOutputDir tmp/harness/ingest-blog/mym0404 \
+  --rerunFailures
 ```
 
 Create a fixture for one fixed representative post:
@@ -34,19 +49,71 @@ bun .agents/skills/ingest-blog/scripts/write-sample-fixture.ts \
   --id se4-example-block
 ```
 
-Both scripts force image handling to remote references and disable image and thumbnail downloads.
+`collect-blog-errors.ts` and `write-sample-fixture.ts` force image handling to remote references and disable image and thumbnail downloads.
+
+Create evidence for a source post or inspect path:
+
+```bash
+bun scripts/capture-post-evidence.ts \
+  --blogId mym0404 \
+  --logNo 223034929697 \
+  --target inspect-path \
+  --inspectPath 0
+```
 
 ## Workflow
 
-1. Run `collect-blog-errors.ts --blogId <blogId>`.
-2. Read the generated `manifest.json`, `failure-summary.json`, `failure-summary.md`, and per-post inspect reports.
-3. Group failures by root parser cause, not by title or category.
-4. For each actual parser gap, inspect the failed HTML and identify the owning editor/block boundary.
-5. Implement the smallest parser block addition or extension that handles that DOM shape.
-6. Add or extend the focused parser block spec beside the block implementation.
-7. Add one representative sample fixture per fixed failure type with `write-sample-fixture.ts`.
-8. Update knowledge documents only where a durable rule changed.
-9. Run the verification commands listed below.
+1. Run `collect-blog-errors.ts --blogId <blogId>` unless the user explicitly asked for `--forceFull`.
+2. If the script reuses a completed output, treat previous successes as stable and rerun only the failed posts.
+3. Read the generated `manifest.json`, `failure-summary.json`, `failure-summary.md`, `report.json`, `report.md`, `evidence-table.md`, and per-post inspect reports.
+4. Group failures by root parser cause, not by title or category.
+5. For each actual parser gap, inspect the failed HTML and identify the owning editor/block boundary.
+6. Implement the smallest parser block addition or extension that handles that DOM shape.
+7. Add or extend the focused parser block spec beside the block implementation.
+8. Add one representative sample fixture per fixed failure type with `write-sample-fixture.ts`.
+9. Update knowledge documents only where a durable rule changed.
+10. Run the verification commands listed below.
+11. Regenerate the report so it reflects the final parser changes, fixtures, knowledge updates, verification results, and evidence table.
+
+Do not rerun the same blog as a full ingest after a completed output exists unless the user asked for `--forceFull` or the reusable manifest is invalid.
+
+## Report Rules
+
+Every completed skill run must leave these report artifacts in the ingest output directory:
+
+- `report.md`
+- `report.json`
+- `evidence-table.md`
+- evidence images under `post-evidence/assets/`
+
+The report must include:
+
+- ingest target and whether an output was reused
+- total post count and failed post count
+- failed-post rerun results
+- parser blocks added or extended
+- fixtures added
+- knowledge documents updated
+- verification commands and results
+- evidence table generated through `scripts/capture-post-evidence.ts` helpers
+- unresolved failures and the reason each one is deferred
+
+Use `--changesPath <json>` when rerunning the collector after code changes. The JSON may contain `parserChanges`, `fixtures`, `knowledge`, `verification`, and `unresolved` arrays.
+If unresolved failures remain, include one deferred reason per representative failure group in `unresolved`.
+Treat non-zero evidence capture errors as an incomplete report and fix the evidence generation issue before using the report.
+
+## PR Flow
+
+Default behavior is `pr=ask`: finish code, fixtures, knowledge updates, verification, and reports first, then ask the user whether to open a PR.
+
+- `pr=none`: do not ask and do not create a PR.
+- `pr=ask`: ask after the final report is ready.
+- `pr=draft`: commit, push, and create a draft PR only when the user explicitly invoked the skill with that intent.
+
+This PR mode is an instruction to the agent running the skill, not a `collect-blog-errors.ts` CLI option.
+Do not commit, push, or create a PR only because report generation finished. Keep the repository-level rule that commit/push/PR require explicit user instruction.
+
+When a PR is requested, include the `report.md` summary and `evidence-table.md` content in the PR body.
 
 ## Parser Fix Rules
 
@@ -90,6 +157,7 @@ For skill changes:
 python3 /Users/mj/.codex/skills/.system/skill-creator/scripts/quick_validate.py .agents/skills/ingest-blog
 bun .agents/skills/ingest-blog/scripts/collect-blog-errors.ts --help
 bun .agents/skills/ingest-blog/scripts/write-sample-fixture.ts --help
+bun scripts/capture-post-evidence.ts --help
 bun .agents/skills/ingest-blog/scripts/collect-blog-errors.ts --blogId mym0404
 ```
 

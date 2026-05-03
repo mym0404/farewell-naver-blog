@@ -27,8 +27,9 @@ export type ParserBlockContext = {
 }
 
 export type ParserBlockConvertContext = ParserBlockContext & {
+  path: string
   outputSelection?: BlockOutputSelection
-  matchNode: (node: AnyNode) => AstBlock[]
+  matchNode: (node: AnyNode, path: string) => AstBlock[]
 }
 
 export type ParserBlockResult =

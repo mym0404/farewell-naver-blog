@@ -23,6 +23,7 @@
 - `pnpm test:network:upload`: live browser UI export and GitHub upload through PicList runtime.
 - `pnpm dev`: user-facing HMR server on the default development port. Harnesses should not reuse it.
 - `pnpm start`: builds UI and serves `dist/client` through `src/Server.ts`.
+- `bun scripts/capture-post-evidence.ts --help`: evidence table CLI surface check. Live smoke cases may open Playwright, Naver mobile pages, and the external Markdown renderer.
 
 ## Parser Block Unit Test
 - Parser block specs live beside parser block implementations under `src/modules/blocks/naver-se2/*`, `src/modules/blocks/naver-se3/*`, and `src/modules/blocks/naver-se4/*`.
@@ -62,6 +63,7 @@
 - Dead-code cleanup needs `pnpm check:unused`; use `pnpm check:local` separately for the normal type and test baseline.
 - Parser block changes need `pnpm test:parser-blocks` and `pnpm test:offline`.
 - Editor dispatch or sample fixture changes need `pnpm test:offline` at minimum.
+- Evidence capture or ingest report changes need the relevant CLI `--help`, focused unit tests for table/reuse helpers, and at least one smoke case when network/browser access is part of the changed behavior. Evidence row errors are report errors, so verify the generated `errorCount` or `evidenceErrorCount` before treating the report as complete.
 - Exporter, renderer, manifest, upload, resume, or UI state changes need `pnpm smoke:ui`.
 - Live resume or upload changes need the matching `pnpm test:network:*` command.
 - If a command fails, compare the failure to the current diff before changing code. Report unrelated existing failures without calling them pass.

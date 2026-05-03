@@ -51,6 +51,7 @@ export type BaseEditorParseInput = {
     {
       resolveLinkUrl?: (url: string) => string
     }
+  captureBlockEvidence?: (evidence: ParserBlockSourceEvidence) => void
 }
 
 export type ParserBlockInspection = {
@@ -67,6 +68,14 @@ export type ParserBlockInspection = {
   matchedBlockId?: string
   matchedBlockLabel?: string
   children?: ParserBlockInspection[]
+}
+
+export type ParserBlockSourceEvidence = {
+  path: string
+  block: AstBlock
+  blockType: AstBlock["type"]
+  parserBlockId: string
+  parserBlockLabel: string
 }
 
 export abstract class BaseEditor {
@@ -205,6 +214,7 @@ export abstract class BaseEditor {
     options,
     sourceUrl,
     moduleContext,
+    captureBlockEvidence,
   }: {
     $: CheerioAPI
     nodes: AnyNode[]
@@ -216,6 +226,7 @@ export abstract class BaseEditor {
       moduleType?: string | null
       hasQuote?: boolean
     }
+    captureBlockEvidence?: (evidence: ParserBlockSourceEvidence) => void
   }) {
     const applyOutputSelection = ({
       parsedBlock,
@@ -278,7 +289,7 @@ export abstract class BaseEditor {
       )
     }
 
-    const matchNode = (node: AnyNode): AstBlock[] => {
+    const matchNode = (node: AnyNode, path: string): AstBlock[] => {
       const context = createBlockContext(node)
       const block = this.supportedBlocks.find((supportedBlock) => supportedBlock.match(context))
 
@@ -299,6 +310,7 @@ export abstract class BaseEditor {
           : undefined
       const convertContext = {
         ...context,
+        path,
         outputSelection,
         matchNode,
       } satisfies ParserBlockConvertContext
@@ -309,15 +321,25 @@ export abstract class BaseEditor {
         return []
       }
 
-      return result.blocks.map((parsedBlock) =>
-        applyOutputSelection({
+      return result.blocks.map((parsedBlock) => {
+        const blockWithSelection = applyOutputSelection({
           parsedBlock,
           parserBlock: block,
-        }),
-      )
+        })
+
+        captureBlockEvidence?.({
+          path,
+          block: blockWithSelection,
+          blockType: blockWithSelection.type,
+          parserBlockId: block.id,
+          parserBlockLabel: block.label,
+        })
+
+        return blockWithSelection
+      })
     }
 
-    const blocks = nodes.flatMap(matchNode)
+    const blocks = nodes.flatMap((node, index) => matchNode(node, String(index)))
 
     return {
       blocks,
