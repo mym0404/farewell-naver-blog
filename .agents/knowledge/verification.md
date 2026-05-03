@@ -13,7 +13,7 @@
 - `pnpm check:full`: `pnpm check:local && pnpm smoke:ui`. Run when user flow, UI state, exporter output, or shared runtime behavior may be affected.
 - `pnpm smoke:ui`: `pnpm build:ui && bun tests/e2e/run-ui-smoke-suite.ts`. Verifies mock-based scan, export, upload, theme persistence, and resume UI.
 - `pnpm test:network`: builds UI once, then runs live resume export, SE2 table resume export, and live upload e2e. It needs external network and upload credentials and creates remote state.
-- `pnpm test:coverage`: runs Vitest with V8 coverage.
+- `pnpm test:coverage`: runs the full Vitest suite once with V8 coverage, enforces global coverage thresholds, and also enforces 100% coverage for parser block implementation globs.
 
 ## Focused Commands
 - `pnpm typecheck`: TypeScript contract check only.
@@ -59,7 +59,7 @@
 - `.github/workflows/required-checks.yml` runs on non-draft pull requests.
 - CI uses Node.js 24, pnpm 10, and Bun 1.3.13.
 - CI restores the Playwright browser cache keyed by the installed Playwright version, then runs `pnpm exec playwright install --with-deps --only-shell chromium`.
-- CI runs `pnpm check:local`, `pnpm smoke:ui`, `pnpm test:parser-blocks`, `pnpm test:coverage`, then uploads `coverage/lcov.info` to Codecov.
+- CI runs `pnpm typecheck`, `pnpm smoke:ui`, `pnpm test:coverage`, then uploads `coverage/lcov.info` to Codecov. CI does not run `pnpm test:offline` separately because `pnpm test:coverage` already runs the full Vitest suite.
 
 ## Task Loops
 - Knowledge-only changes still need path and command spot checks. Run `pnpm check:local` when practical.

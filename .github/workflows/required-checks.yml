@@ -57,15 +57,12 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps --only-shell chromium
 
-      - name: Run local checks
-        run: pnpm check:local
+      - name: Run typecheck
+        run: pnpm typecheck
 
       - name: Run UI smoke
         timeout-minutes: 10
         run: pnpm smoke:ui
-
-      - name: Run parser block coverage gate
-        run: pnpm test:parser-blocks
 
       - name: Run coverage gate
         run: pnpm test:coverage
