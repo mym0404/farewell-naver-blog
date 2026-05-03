@@ -10,6 +10,13 @@
 
 ![Goodbye Naver Blog Open Graph image](public/brand/og-image.png)
 
+## 내 블로그에 특정 블록이 파싱이 안돼요
+
+1. 해당 Repository를 fork합니다.
+2. 내 컴퓨터에 [bun](https://bun.com/docs/installation) 을 준비합니다. 설치 후 `bun --version` 을 실행해봅니다.
+3. Coding AI Agent에게 `$ingest-blog {내 블로그 id}` 를 부탁합니다. (현재는 `.agents/skills/ingest-blog` 에 존재하는 스킬입니다.)
+4. Parsing failure blocks 들에 대한 Fix가 PR로 올라 올 것입니다. 그 전에 마음에 들게 수정할 수 있습니다.
+
 ## 핵심
 
 - `SE2`, `SE3`, `ONE(SE4)` 글을 한 번에 export할 수 있습니다.
