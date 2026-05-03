@@ -16,7 +16,7 @@
 
 ## Focused Commands
 - `pnpm typecheck`: TypeScript contract check only.
-- `pnpm test:offline`: Vitest suite. Sample fixture tests fetch live Naver post HTML before comparing expected output.
+- `pnpm test:offline`: Vitest suite. Sample fixture tests fetch live Naver post HTML through the sample cache before comparing expected output.
 - `pnpm test:parser-blocks`: parser block implementation coverage gate. It runs block-level parser specs with 100% line, function, branch, and statement coverage for `src/modules/blocks/{common,naver-se2,naver-se3,naver-se4}` implementation files.
 - `pnpm test:network:resume-export`: live Naver resume export without upload.
 - `pnpm test:network:resume-export:se2-table`: live SE2 table resume export range.
@@ -46,7 +46,7 @@
 - A syntax or type error in the TypeScript project can make `check:unused` fail before dead-code cleanup is meaningful; restore the type baseline first, then interpret unused diagnostics.
 
 ## Coverage And Blind Spots
-- Sample fixtures prove current code matches live Naver post HTML for the recorded fixture URLs.
+- Sample fixtures prove current code matches live Naver post HTML for the recorded fixture URLs. They do not use committed source HTML snapshots.
 - `pnpm check:unused` proves no known unused source/test/script items remain under its configured analyzers and allowlists, but it does not prove runtime reachability for dynamic external integrations.
 - `pnpm smoke:ui` uses mock flows and does not prove live Naver fetch or external upload behavior.
 - `pnpm test:network:resume-export` proves live fetch and resume export, but not external upload.

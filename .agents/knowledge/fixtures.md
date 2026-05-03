@@ -6,6 +6,8 @@
 - `tests/helpers/sample-fixtures.spec.ts` discovers directories dynamically.
 - `tests/helpers/sample-fixtures.ts` parses expected frontmatter, fetches the live Naver post HTML from `blogId` and `logNo`, and renders it with fixture export options.
 - Live sample HTML is cached under `tmp/harness/sample-post-html-cache` through the optional `NaverBlogFetcher` cache interface.
+- Sample fixtures do not store source HTML files; update `blogId`, `logNo`, and expected Markdown from the live post.
+- Sample fixture rendering normalizes volatile Naver attachment download URLs inside `tests/helpers/sample-fixtures.ts` so expected Markdown does not depend on request-specific download tokens.
 
 ## Fixture Options
 - Sample fixture rendering uses `defaultExportOptions()`.
@@ -15,6 +17,7 @@
 
 ## Current Samples
 - `se2-code-image-autolayout`
+- `se2-inline-gif-video-wrapper`
 - `se2-legacy`
 - `se2-table-rawhtml-navigation`
 - `se2-thumburl-image-group`
@@ -22,15 +25,18 @@
 - `se3-quote-imagegroup-note9`
 - `se3-quote-table-vita`
 - `se4-formula-code-linkcard`
+- `se4-file-attachment`
 - `se4-heading-itinerary`
 - `se4-image-group`
 - `se4-image-legacy-link`
 - `se4-quote-formula-code`
+- `se4-mr-blog`
 - `se4-text-lists-nestjs`
 - `se4-video-table`
 
 ## Operating Rules
 - Add or update the expected output file for each sample.
+- Do not add fixture-local source HTML such as `post.html`; live public posts and the sample HTML cache are the source of input truth.
 - `expected.md` and `expected-error.md` must start with YAML frontmatter containing title, source, blogId, logNo, publishedAt, category, and categoryPath.
 - `expected-error.md` must include an `error` frontmatter string.
 - Fixture ids should describe editor and dominant block coverage.
