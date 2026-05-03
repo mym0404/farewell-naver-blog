@@ -6,23 +6,27 @@ import { LeafBlock } from "../BaseBlock.js"
 import type { ParserBlockContext, ParserBlockResult } from "../ParserNode.js"
 
 const getInlineGifVideoImage = ({ $node }: { $node: ReturnType<CheerioAPI> }): ImageData | null => {
-  if (!$node.is("p")) {
+  if (!$node.is("p, div, span")) {
     return null
   }
 
-  const video = $node.children("video.fx._postImage._gifmp4[data-gif-url]").first()
+  const videos = $node.find("video.fx._postImage._gifmp4[data-gif-url]")
 
-  if (video.length === 0) {
+  if (videos.length !== 1) {
+    return null
+  }
+
+  const video = videos.first()
+  const cloneWithoutVideo = $node.clone()
+
+  cloneWithoutVideo.find("video.fx._postImage._gifmp4").remove()
+
+  if (cloneWithoutVideo.find("img, iframe, video, table").length > 0) {
     return null
   }
 
   const textWithoutVideo = compactText(
-    $node
-      .clone()
-      .children("video")
-      .remove()
-      .end()
-      .text(),
+    cloneWithoutVideo.text(),
   )
 
   if (textWithoutVideo) {

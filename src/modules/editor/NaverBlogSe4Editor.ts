@@ -5,6 +5,7 @@ import { unique } from "@shared/Utils.js"
 import { NaverSe4CodeBlock } from "../blocks/naver-se4/CodeBlock.js"
 import { NaverSe4DividerBlock } from "../blocks/naver-se4/DividerBlock.js"
 import { NaverSe4DocumentTitleBlock } from "../blocks/naver-se4/DocumentTitleBlock.js"
+import { NaverSe4FileBlock } from "../blocks/naver-se4/FileBlock.js"
 import { NaverSe4FormulaBlock } from "../blocks/naver-se4/FormulaBlock.js"
 import { NaverSe4HeadingBlock } from "../blocks/naver-se4/HeadingBlock.js"
 import { NaverSe4ImageBlock } from "../blocks/naver-se4/ImageBlock.js"
@@ -13,6 +14,7 @@ import { NaverSe4ImageStripBlock } from "../blocks/naver-se4/ImageStripBlock.js"
 import { NaverSe4LinkCardBlock } from "../blocks/naver-se4/LinkCardBlock.js"
 import { NaverSe4MapBlock } from "../blocks/naver-se4/MapBlock.js"
 import { NaverSe4MaterialBlock } from "../blocks/naver-se4/MaterialBlock.js"
+import { NaverSe4MrBlogBlock } from "../blocks/naver-se4/MrBlogBlock.js"
 import { NaverSe4OembedBlock } from "../blocks/naver-se4/OembedBlock.js"
 import { NaverSe4QuoteBlock } from "../blocks/naver-se4/QuoteBlock.js"
 import { NaverSe4StickerBlock } from "../blocks/naver-se4/StickerBlock.js"
@@ -43,6 +45,7 @@ export class NaverBlogSE4Editor extends BaseEditor {
     new NaverSe4FormulaBlock(),
     new NaverSe4CodeBlock(),
     new NaverSe4LinkCardBlock(),
+    new NaverSe4FileBlock(),
     new NaverSe4VideoBlock(),
     new NaverSe4OembedBlock(),
     new NaverSe4MapBlock(),
@@ -54,6 +57,7 @@ export class NaverBlogSE4Editor extends BaseEditor {
     new NaverSe4HeadingBlock(),
     new NaverSe4DividerBlock(),
     new NaverSe4QuoteBlock(),
+    new NaverSe4MrBlogBlock(),
     new NaverSe4TextBlock(),
     new NaverSe4MaterialBlock(),
   ]
