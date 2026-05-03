@@ -20,8 +20,12 @@ export abstract class BaseBlog {
     return this.editors.flatMap((editor) => editor.getBlockOutputDefinitions())
   }
 
+  getEditorForHtml(html: string) {
+    return this.editors.find((candidate) => candidate.canParse(html)) ?? null
+  }
+
   parsePost(input: BlogPostParseInput): ParsedPost {
-    const editor = this.editors.find((candidate) => candidate.canParse(input.html))
+    const editor = this.getEditorForHtml(input.html)
 
     if (!editor) {
       throw new Error("지원하는 블로그 에디터를 찾지 못했습니다.")

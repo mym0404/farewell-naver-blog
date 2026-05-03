@@ -45,4 +45,13 @@ export class NaverBlogSE3Editor extends BaseEditor {
       videos: [],
     } satisfies ParsedPost
   }
+
+  override inspect({ $, tags, options }: BaseEditorParseInput) {
+    return this.inspectBlocks({
+      $,
+      nodes: $("#viewTypeSelector .se_component_wrap.sect_dsc").first().children(".se_component").toArray(),
+      tags,
+      options,
+    })
+  }
 }

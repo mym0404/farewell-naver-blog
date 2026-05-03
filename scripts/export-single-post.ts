@@ -7,10 +7,12 @@ import { fileURLToPath } from "node:url"
 import { cloneExportOptions } from "../src/shared/ExportOptions.js"
 import { NaverBlog } from "../src/modules/blog/NaverBlog.js"
 import { exportSinglePost } from "../src/modules/exporter/SinglePostExport.js"
+import { inspectSinglePost } from "../src/modules/exporter/SinglePostInspect.js"
 import { createSinglePostMetadataCachingFetcher } from "./lib/single-post-metadata-cache.js"
 import {
   parseSinglePostCliArgs,
   readSinglePostOptions,
+  renderSinglePostInspectSummary,
   renderSinglePostSummary,
 } from "./lib/single-post-cli.js"
 
@@ -20,6 +22,7 @@ export type RunSinglePostCliDeps = {
   writeFile?: typeof writeFile
   mkdir?: typeof mkdir
   exportSinglePost?: typeof exportSinglePost
+  inspectSinglePost?: typeof inspectSinglePost
   stdoutWrite?: (text: string) => void
   stderrWrite?: (text: string) => void
 }
@@ -30,6 +33,7 @@ export const runSinglePostCli = async ({
   writeFile: writeFileImpl = writeFile,
   mkdir: mkdirImpl = mkdir,
   exportSinglePost: exportSinglePostImpl = exportSinglePost,
+  inspectSinglePost: inspectSinglePostImpl = inspectSinglePost,
   stdoutWrite = (text) => {
     process.stdout.write(text)
   },
@@ -45,6 +49,7 @@ export const runSinglePostCli = async ({
     manualReviewMarkdownPath,
     metadataCachePath,
     optionsPath,
+    inspect,
     stdout,
   } =
     parseSinglePostCliArgs(argv)
@@ -57,6 +62,41 @@ export const runSinglePostCli = async ({
     optionsPath ? await readSinglePostOptions({ optionsPath, readFile: readFileImpl }) : undefined,
     { blockOutputDefinitions: new NaverBlog().getBlockOutputDefinitions() },
   )
+
+  if (inspect) {
+    const diagnostics = await inspectSinglePostImpl({
+      blogId,
+      logNo,
+      options,
+    })
+    const report = {
+      ...diagnostics,
+      metadataCachePath: resolvedMetadataCachePath,
+    }
+
+    if (reportPath) {
+      await mkdirImpl(path.dirname(reportPath), { recursive: true })
+      await writeFileImpl(reportPath, `${JSON.stringify(report, null, 2)}\n`, "utf8")
+    }
+
+    stderrWrite(
+      renderSinglePostInspectSummary({
+        diagnostics,
+        reportPath,
+      }),
+    )
+
+    if (stdout) {
+      stdoutWrite(`${JSON.stringify(report, null, 2)}\n`)
+    }
+
+    return
+  }
+
+  if (!outputDir) {
+    throw new Error("outputDir is required for export mode.")
+  }
+
   const diagnostics = await exportSinglePostImpl({
     blogId,
     logNo,
@@ -104,11 +144,11 @@ export const runSinglePostCli = async ({
     renderSinglePostSummary({
       blogId: diagnostics.post.blogId,
       logNo: diagnostics.post.logNo,
-        blockTypes: diagnostics.blockTypes,
-        exporterMarkdownFilePath: diagnostics.markdownFilePath,
-        manualReviewMarkdownFilePath: resolvedManualReviewMarkdownPath,
-        metadataCachePath: resolvedMetadataCachePath,
-      }),
+      blockTypes: diagnostics.blockTypes,
+      exporterMarkdownFilePath: diagnostics.markdownFilePath,
+      manualReviewMarkdownFilePath: resolvedManualReviewMarkdownPath,
+      metadataCachePath: resolvedMetadataCachePath,
+    }),
   )
 
   if (stdout) {

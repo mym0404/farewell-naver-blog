@@ -1,6 +1,8 @@
 import { resolveBlockOutputSelection } from "../../src/shared/BlockRegistry.js"
 import { defaultExportOptions } from "../../src/shared/ExportOptions.js"
 import { NaverBlog } from "../../src/modules/blog/NaverBlog.js"
+import type { ParserBlockInspection } from "../../src/modules/editor/BaseEditor.js"
+import type { SinglePostInspectDiagnostics } from "../../src/modules/exporter/SinglePostInspect.js"
 import type {
   BlockOutputSelection,
   ExportOptions,
@@ -547,7 +549,7 @@ const validateSinglePostOptionsJson = (value: unknown, optionsPath: string): Exp
 }
 
 export const singlePostCliUsage = () =>
-  `Usage: ${entrypoint} --blogId my-blog --logNo 123456789012 --outputDir ./output [--report ./output/report.json] [--manualReviewMarkdownPath ./output/post.md] [--metadataCachePath ./output/metadata-cache.json] [--options ./config/single-post.json] [--stdout]`
+  `Usage: ${entrypoint} --blogId my-blog --logNo 123456789012 --outputDir ./output [--report ./output/report.json] [--manualReviewMarkdownPath ./output/post.md] [--metadataCachePath ./output/metadata-cache.json] [--options ./config/single-post.json] [--stdout]\nInspect: ${entrypoint} --inspect --blogId my-blog --logNo 123456789012 [--report ./inspect.json] [--options ./config/single-post.json] [--stdout]`
 
 export const parseSinglePostCliArgs = (args: string[]) => {
   let blogId: string | null = null
@@ -557,6 +559,7 @@ export const parseSinglePostCliArgs = (args: string[]) => {
   let manualReviewMarkdownPath: string | null = null
   let metadataCachePath: string | null = null
   let optionsPath: string | null = null
+  let inspect = false
   let stdout = false
 
   const readValue = (index: number) => {
@@ -619,10 +622,15 @@ export const parseSinglePostCliArgs = (args: string[]) => {
       continue
     }
 
+    if (arg === "--inspect") {
+      inspect = true
+      continue
+    }
+
     throw usageError()
   }
 
-  if (!blogId || !logNo || !outputDir) {
+  if (!blogId || !logNo || (!inspect && !outputDir)) {
     throw usageError()
   }
 
@@ -634,6 +642,7 @@ export const parseSinglePostCliArgs = (args: string[]) => {
     manualReviewMarkdownPath,
     metadataCachePath,
     optionsPath,
+    inspect,
     stdout,
   }
 }
@@ -661,6 +670,51 @@ export const renderSinglePostSummary = ({
     `manualReviewMarkdownFilePath: ${manualReviewMarkdownFilePath ?? "(not provided)"}`,
     `metadataCachePath: ${metadataCachePath ?? "(not provided)"}`,
   ].join("\n")
+
+const renderInspectNodeSummary = (node: ParserBlockInspection) => {
+  const attributes = [
+    node.id ? `id="${node.id}"` : "",
+    node.className ? `class="${node.className}"` : "",
+    node.moduleType ? `moduleType="${node.moduleType}"` : "",
+  ].filter(Boolean)
+  const nodeLabel = [node.tagName, ...attributes].join(" ")
+
+  return [
+    `  - path: ${node.path}`,
+    `    node: ${nodeLabel}`,
+    `    text: ${node.text || "(empty)"}`,
+    `    html: ${node.html}`,
+  ].join("\n")
+}
+
+export const renderSinglePostInspectSummary = ({
+  diagnostics,
+  reportPath,
+}: {
+  diagnostics: SinglePostInspectDiagnostics
+  reportPath: string | null
+}) => {
+  const parseLines =
+    diagnostics.parse.status === "success"
+      ? [
+          "parse: success",
+          `blockTypes: ${diagnostics.parse.blockTypes.join(", ") || "(none)"}`,
+        ]
+      : [
+          "parse: failed",
+          `error: ${diagnostics.parse.error}`,
+        ]
+
+  return [
+    `blogId: ${diagnostics.blogId}`,
+    `logNo: ${diagnostics.logNo}`,
+    `editor: ${diagnostics.editor ? `${diagnostics.editor.type} (${diagnostics.editor.label})` : "(not detected)"}`,
+    ...parseLines,
+    `unsupportedCount: ${diagnostics.unsupportedNodes.length}`,
+    `inspectReportPath: ${reportPath ?? "(not provided)"}`,
+    ...diagnostics.unsupportedNodes.flatMap((node) => renderInspectNodeSummary(node)),
+  ].join("\n")
+}
 
 export const readSinglePostOptions = async ({
   optionsPath,

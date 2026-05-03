@@ -102,4 +102,27 @@ export class NaverBlogSE4Editor extends BaseEditor {
       videos,
     } satisfies ParsedPost
   }
+
+  override inspect({ $, sourceUrl = "", tags, options }: BaseEditorParseInput) {
+    return this.inspectBlocks({
+      $,
+      nodes: $("#viewTypeSelector .se-component").toArray(),
+      sourceUrl,
+      tags,
+      options,
+      moduleContext: (node: AnyNode) => {
+        const $component = $(node)
+        const moduleScript = $component.find("script.__se_module_data").first()
+        const moduleData =
+          parseJsonAttribute(moduleScript.attr("data-module-v2")) ??
+          parseJsonAttribute(moduleScript.attr("data-module"))
+
+        return {
+          moduleData,
+          moduleType: typeof moduleData?.type === "string" ? moduleData.type : null,
+          hasQuote: $component.find("blockquote.se-quotation-container").length > 0,
+        }
+      },
+    })
+  }
 }
