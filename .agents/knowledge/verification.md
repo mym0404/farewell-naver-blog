@@ -58,7 +58,8 @@
 ## CI
 - `.github/workflows/required-checks.yml` runs on non-draft pull requests.
 - CI uses Node.js 24, pnpm 10, and Bun 1.3.13.
-- CI runs `pnpm check:full`, writes `.env` with `GOODBYE_UPLOAD_E2E=1`, runs `pnpm test:network:upload`, runs `pnpm test:coverage`, then uploads `coverage/lcov.info` to Codecov.
+- CI restores the Playwright browser cache keyed by the installed Playwright version, then runs `pnpm exec playwright install --with-deps --only-shell chromium`.
+- CI runs `pnpm check:local`, `pnpm smoke:ui`, `pnpm test:parser-blocks`, writes `.env` with `GOODBYE_UPLOAD_E2E=1`, runs `pnpm test:network:upload`, runs `pnpm test:coverage`, then uploads `coverage/lcov.info` to Codecov.
 
 ## Task Loops
 - Knowledge-only changes still need path and command spot checks. Run `pnpm check:local` when practical.
