@@ -52,12 +52,12 @@
 - `pnpm smoke:ui` uses mock flows and does not prove live Naver fetch or external upload behavior.
 - `pnpm test:network:resume-export` proves live fetch and resume export, but not external upload.
 - `pnpm test:network:upload` is the only bundled command that proves external upload state. It creates remote state.
-- Fork PRs may not receive `FAREWELL_UPLOAD_E2E_GITHUB_TOKEN`, so CI live upload can fail for secret availability rather than code behavior.
+- Fork PRs may not receive `GOODBYE_UPLOAD_E2E_GITHUB_TOKEN`, so CI live upload can fail for secret availability rather than code behavior.
 
 ## CI
 - `.github/workflows/required-checks.yml` runs on non-draft pull requests.
 - CI uses Node.js 24, pnpm 10, and Bun 1.3.13.
-- CI runs `pnpm check:full`, writes `.env` with `FAREWELL_UPLOAD_E2E=1`, runs `pnpm test:network:upload`, runs `pnpm test:coverage`, then uploads `coverage/lcov.info` to Codecov.
+- CI runs `pnpm check:full`, writes `.env` with `GOODBYE_UPLOAD_E2E=1`, runs `pnpm test:network:upload`, runs `pnpm test:coverage`, then uploads `coverage/lcov.info` to Codecov.
 
 ## Task Loops
 - Knowledge-only changes still need path and command spot checks. Run `pnpm check:local` when practical.

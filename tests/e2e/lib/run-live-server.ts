@@ -6,9 +6,9 @@ const wait = (ms: number) =>
     setTimeout(resolve, ms)
   })
 
-const delayMs = Number(process.env.FAREWELL_LIVE_FETCH_DELAY_MS ?? "0")
+const delayMs = Number(process.env.GOODBYE_LIVE_FETCH_DELAY_MS ?? "0")
 const delayedLogNos = new Set(
-  (process.env.FAREWELL_LIVE_FETCH_DELAY_LOGNOS ?? "")
+  (process.env.GOODBYE_LIVE_FETCH_DELAY_LOGNOS ?? "")
     .split(",")
     .map((value) => value.trim())
     .filter(Boolean),
@@ -29,8 +29,8 @@ if (delayedLogNos.size > 0 && delayMs > 0) {
 }
 
 const server = createHttpServer({
-  settingsPath: process.env.FAREWELL_SETTINGS_PATH,
-  scanCachePath: process.env.FAREWELL_SCAN_CACHE_PATH,
+  settingsPath: process.env.GOODBYE_SETTINGS_PATH,
+  scanCachePath: process.env.GOODBYE_SCAN_CACHE_PATH,
 })
 
 const shutdown = () => {

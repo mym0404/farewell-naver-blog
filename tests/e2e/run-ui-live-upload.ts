@@ -12,7 +12,7 @@ const blogId = "mym0404"
 const targetLogNo = "222990202785"
 const uploadRepo = "mym0404/image-archive"
 const uploadBranch = "master"
-const uploadPath = `farewell-live/${Date.now()}`
+const uploadPath = `goodbye-live/${Date.now()}`
 const responseTimeoutMs = 240_000
 const githubApiBaseUrl = "https://api.github.com"
 const getCaptureDir = () => {
@@ -109,14 +109,14 @@ const loadDotEnv = (filePath: string) => {
 const resolveLiveUploadConfig = (): LiveUploadConfig => {
   loadDotEnv(".env")
 
-  if (process.env.FAREWELL_UPLOAD_E2E !== "1") {
-    throw new Error("FAREWELL_UPLOAD_E2E=1 이 필요합니다.")
+  if (process.env.GOODBYE_UPLOAD_E2E !== "1") {
+    throw new Error("GOODBYE_UPLOAD_E2E=1 이 필요합니다.")
   }
 
-  const token = process.env.FAREWELL_UPLOAD_E2E_GITHUB_TOKEN?.trim()
+  const token = process.env.GOODBYE_UPLOAD_E2E_GITHUB_TOKEN?.trim()
 
   if (!token) {
-    throw new Error("FAREWELL_UPLOAD_E2E_GITHUB_TOKEN 이 필요합니다.")
+    throw new Error("GOODBYE_UPLOAD_E2E_GITHUB_TOKEN 이 필요합니다.")
   }
 
   return {
@@ -212,7 +212,7 @@ const fetchGitHubJson = async <T>({
     headers: {
       accept: "application/vnd.github+json",
       authorization: `Bearer ${token}`,
-      "user-agent": "farewell-naver-blog-playwright-e2e",
+      "user-agent": "goodbye-naver-blog-playwright-e2e",
       "x-github-api-version": "2022-11-28",
     },
   })
@@ -455,7 +455,7 @@ const run = async () => {
   const config = resolveLiveUploadConfig()
   const browserMode = resolveBrowserMode()
   const browser = await chromium.launch(browserMode)
-  const tempRoot = await mkdtemp(path.join(tmpdir(), "farewell-live-upload-harness-"))
+  const tempRoot = await mkdtemp(path.join(tmpdir(), "goodbye-live-upload-harness-"))
   const server = createHttpServer({
     settingsPath: path.join(tempRoot, "export-ui-settings.json"),
     scanCachePath: path.join(tempRoot, "scan-cache.json"),

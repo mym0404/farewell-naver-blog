@@ -22,8 +22,8 @@ import type {
 
 const responseTimeoutMs = 90_000
 const blockOutputDefinitions = new NaverBlog().getBlockOutputDefinitions()
-const smokeFast = process.env.FAREWELL_SMOKE_FAST !== "0"
-const smokeDebug = process.env.FAREWELL_SMOKE_DEBUG === "1"
+const smokeFast = process.env.GOODBYE_SMOKE_FAST !== "0"
+const smokeDebug = process.env.GOODBYE_SMOKE_DEBUG === "1"
 const debugLog = (...args: unknown[]) => {
   if (!smokeDebug) {
     return
@@ -79,7 +79,7 @@ const mobileViewport = {
   width: 375,
   height: 812,
 } as const
-const fallbackSmokeOutputDir = path.join(tmpdir(), `farewell-naver-blog-smoke-fixture-${process.pid}`, "output")
+const fallbackSmokeOutputDir = path.join(tmpdir(), `goodbye-naver-blog-smoke-fixture-${process.pid}`, "output")
 
 const getCaptureDir = () => {
   const index = process.argv.indexOf("--capture-dir")
@@ -759,7 +759,7 @@ const waitForStepView = async ({
 }
 
 const run = async () => {
-  const tempRoot = await mkdtemp(path.join(tmpdir(), "farewell-naver-blog-smoke-"))
+  const tempRoot = await mkdtemp(path.join(tmpdir(), "goodbye-naver-blog-smoke-"))
   const outputDir = path.join(tempRoot, "output")
   const server = createHttpServer({
     settingsPath: path.join(tempRoot, "export-ui-settings.json"),

@@ -20,7 +20,7 @@ const run = async () => {
           cwd: process.cwd(),
           env: {
             ...process.env,
-            FAREWELL_SMOKE_FAST: process.env.FAREWELL_SMOKE_FAST ?? "1",
+            GOODBYE_SMOKE_FAST: process.env.GOODBYE_SMOKE_FAST ?? "1",
           },
           stdio: "pipe",
         })

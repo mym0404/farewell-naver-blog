@@ -46,7 +46,7 @@
 
 ## Server And Harness
 - User `pnpm dev` owns the normal development server path.
-- Tests and harnesses should use isolated `FAREWELL_SETTINGS_PATH`, `FAREWELL_SCAN_CACHE_PATH`, and non-default `PORT` or `listen(0)`.
+- Tests and harnesses should use isolated `GOODBYE_SETTINGS_PATH`, `GOODBYE_SCAN_CACHE_PATH`, and non-default `PORT` or `listen(0)`.
 - Ad-hoc server checks should not share `.cache/export-ui-settings.json` with the user's development session.
 
 ## Documentation

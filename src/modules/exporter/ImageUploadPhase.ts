@@ -52,7 +52,7 @@ type RunImageUploadPhaseInput = {
 
 const createRuntimeClient = async (): Promise<RuntimeUploaderClient> => {
   const runtimeModule = await import("piclist")
-  const runtimeConfigPath = path.join(os.tmpdir(), "farewell-naver-blog-image-upload.json")
+  const runtimeConfigPath = path.join(os.tmpdir(), "goodbye-naver-blog-image-upload.json")
 
   return runtimeModule.PicGo.create(runtimeConfigPath)
 }

@@ -28,10 +28,10 @@ const desktopViewport = {
 } as const
 
 const responseTimeoutMs = 30_000
-const smokeFast = process.env.FAREWELL_SMOKE_FAST !== "0"
+const smokeFast = process.env.GOODBYE_SMOKE_FAST !== "0"
 const resumeScenarioConcurrency = Math.max(
   1,
-  Number.parseInt(process.env.FAREWELL_RESUME_SMOKE_CONCURRENCY ?? "3", 10) || 3,
+  Number.parseInt(process.env.GOODBYE_RESUME_SMOKE_CONCURRENCY ?? "3", 10) || 3,
 )
 const resumeDialogSettledWaitMs = smokeFast ? 75 : 300
 const smokeJobPolling: ExportJobPollingConfig | undefined = smokeFast
@@ -677,7 +677,7 @@ const runScenario = async ({
 }
 
 const run = async () => {
-  const tempRoot = await mkdtemp(path.join(tmpdir(), "farewell-naver-blog-resume-smoke-"))
+  const tempRoot = await mkdtemp(path.join(tmpdir(), "goodbye-naver-blog-resume-smoke-"))
   const server = createHttpServer({
     settingsPath: path.join(tempRoot, "export-ui-settings.json"),
     scanCachePath: path.join(tempRoot, "scan-cache.json"),

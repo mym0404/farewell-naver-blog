@@ -46,8 +46,8 @@ jobs:
       - name: Write live upload .env
         run: |
           cat <<EOF > .env
-          FAREWELL_UPLOAD_E2E=1
-          FAREWELL_UPLOAD_E2E_GITHUB_TOKEN=${{ secrets.FAREWELL_UPLOAD_E2E_GITHUB_TOKEN }}
+          GOODBYE_UPLOAD_E2E=1
+          GOODBYE_UPLOAD_E2E_GITHUB_TOKEN=${{ secrets.GOODBYE_UPLOAD_E2E_GITHUB_TOKEN }}
           EOF
 
       - name: Run live upload Playwright e2e

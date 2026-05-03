@@ -4,7 +4,7 @@
 
 # Goodbye Naver Blog
 
-[![codecov](https://codecov.io/gh/mym0404/farewell-naver-blog/graph/badge.svg)](https://codecov.io/gh/mym0404/farewell-naver-blog)
+[![codecov](https://codecov.io/gh/mym0404/goodbye-naver-blog/graph/badge.svg)](https://codecov.io/gh/mym0404/goodbye-naver-blog)
 
 네이버 블로그 공개 글을 스캔해서 Markdown, frontmatter, 로컬 자산, 복구 가능한 `manifest.json`으로 export하는 도구입니다.
 
@@ -30,8 +30,8 @@
 ### 설치
 
 ```bash
-git clone https://github.com/mym0404/farewell-naver-blog.git
-cd farewell-naver-blog
+git clone https://github.com/mym0404/goodbye-naver-blog.git
+cd goodbye-naver-blog
 pnpm install
 ```
 

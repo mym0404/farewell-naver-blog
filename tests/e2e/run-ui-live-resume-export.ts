@@ -42,13 +42,13 @@ const parseResumeCaseId = (argv: string[]): ResumeCaseId => {
 }
 
 const selectedResumeCase = resumeCases[parseResumeCaseId(process.argv.slice(2))]
-const blogId = process.env.FAREWELL_LIVE_RESUME_BLOG_ID ?? selectedResumeCase.blogId
-const scopedDateFrom = process.env.FAREWELL_LIVE_RESUME_DATE_FROM ?? selectedResumeCase.dateFrom
-const scopedDateTo = process.env.FAREWELL_LIVE_RESUME_DATE_TO ?? selectedResumeCase.dateTo
-const scopedCategoryId = Number(process.env.FAREWELL_LIVE_RESUME_CATEGORY_ID ?? selectedResumeCase.categoryId)
-const delayedLogNo = process.env.FAREWELL_LIVE_RESUME_DELAY_LOGNO ?? selectedResumeCase.delayedLogNo
+const blogId = process.env.GOODBYE_LIVE_RESUME_BLOG_ID ?? selectedResumeCase.blogId
+const scopedDateFrom = process.env.GOODBYE_LIVE_RESUME_DATE_FROM ?? selectedResumeCase.dateFrom
+const scopedDateTo = process.env.GOODBYE_LIVE_RESUME_DATE_TO ?? selectedResumeCase.dateTo
+const scopedCategoryId = Number(process.env.GOODBYE_LIVE_RESUME_CATEGORY_ID ?? selectedResumeCase.categoryId)
+const delayedLogNo = process.env.GOODBYE_LIVE_RESUME_DELAY_LOGNO ?? selectedResumeCase.delayedLogNo
 const expectedScopedPostCount = Number(
-  process.env.FAREWELL_LIVE_RESUME_EXPECTED_POSTS ?? selectedResumeCase.expectedPosts,
+  process.env.GOODBYE_LIVE_RESUME_EXPECTED_POSTS ?? selectedResumeCase.expectedPosts,
 )
 const scopedOutputDir = `output/live-resume-e2e-${Date.now()}`
 
@@ -201,10 +201,10 @@ const startServer = async ({
     env: {
       ...process.env,
       NODE_ENV: "development",
-      FAREWELL_SETTINGS_PATH: settingsPath,
-      FAREWELL_SCAN_CACHE_PATH: scanCachePath,
-      FAREWELL_LIVE_FETCH_DELAY_LOGNOS: delayedLogNos.join(","),
-      FAREWELL_LIVE_FETCH_DELAY_MS: String(delayMs),
+      GOODBYE_SETTINGS_PATH: settingsPath,
+      GOODBYE_SCAN_CACHE_PATH: scanCachePath,
+      GOODBYE_LIVE_FETCH_DELAY_LOGNOS: delayedLogNos.join(","),
+      GOODBYE_LIVE_FETCH_DELAY_MS: String(delayMs),
     },
     stdio: ["pipe", "pipe", "pipe"],
   })
@@ -252,7 +252,7 @@ const buildScopedOptions = () => {
 }
 
 const run = async () => {
-  const tempRoot = await mkdtemp(path.join(tmpdir(), "farewell-live-resume-export-"))
+  const tempRoot = await mkdtemp(path.join(tmpdir(), "goodbye-live-resume-export-"))
   const settingsPath = path.join(tempRoot, "export-ui-settings.json")
   const scanCachePath = path.join(tempRoot, "scan-cache.json")
   const manifestPath = path.join(repoRoot, scopedOutputDir, "manifest.json")

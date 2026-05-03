@@ -815,7 +815,7 @@ describe("http server", () => {
   it("does not hydrate resumed jobs from temporary output directories", async () => {
     const rootDir = await mkdtemp(path.join(tmpdir(), "export-manifest-temp-resume-"))
     const settingsPath = path.join(rootDir, "export-ui-settings.json")
-    const outputDir = await mkdtemp(path.join("/tmp", "farewell-temp-resume-output-"))
+    const outputDir = await mkdtemp(path.join("/tmp", "goodbye-temp-resume-output-"))
 
     try {
       await writeFile(

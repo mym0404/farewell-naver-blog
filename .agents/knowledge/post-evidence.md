@@ -2,7 +2,7 @@
 
 ## Purpose
 - Post evidence compares a public Naver Blog source and this repo's Markdown conversion in one Markdown table.
-- Use it for README fragments, ingest reports, PR descriptions, and parser coverage evidence.
+- Use it for ingest reports, PR descriptions, parser coverage evidence, and README source assets.
 - Evidence artifacts are harness/report output, not exported blog output.
 
 ## CLI
@@ -56,9 +56,14 @@ bun scripts/capture-post-evidence.ts \
 - `table.md` is a four-column GitHub-safe Markdown pipe table: `Metadata` | `Links` | `Naver Capture` | `Markdown`.
 - `Links` contains the public Naver post link.
 - `Naver Capture` is an image cell that points at a generated PNG asset.
-- Naver capture images render with `width="300"` inside the Markdown table so README and PR rows keep a readable image size.
+- Naver capture images render with `width="300"` inside the Markdown table so PR and report rows keep a readable image size.
 - `Markdown` is rendered as a single-line inline code span. Real newlines become literal `\n` text so Markdown table rows stay valid without visible `<br>` text.
-- Table cell content escapes pipe characters so generated rows remain valid README and PR fragments.
+- Table cell content escapes pipe characters so generated rows remain valid report and PR fragments.
+
+## README Examples
+- README examples use `###` sections per block type, not a table.
+- Reuse post evidence screenshot assets and Markdown snippets for README examples.
+- Keep each README example in this order: block type heading, source link, Naver capture image, Markdown code fence.
 
 ## Metadata Cell
 - Treat `Metadata` as a short human note.

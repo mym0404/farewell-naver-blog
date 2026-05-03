@@ -784,7 +784,7 @@ const createCatalogFromRuntime = (runtimeCatalog: RuntimeCatalogLike): UploadPro
 
 const createRuntimeInstance = async () => {
   const { PicGo } = await import("piclist")
-  const runtimeConfigPath = path.join(os.tmpdir(), "farewell-naver-blog-image-upload-config.json")
+  const runtimeConfigPath = path.join(os.tmpdir(), "goodbye-naver-blog-image-upload-config.json")
 
   return PicGo.create(runtimeConfigPath)
 }
