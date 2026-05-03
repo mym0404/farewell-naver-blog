@@ -54,6 +54,7 @@ const sourceRoots = ["src", "tests", "scripts"]
 const unusedDiagnosticCodes = new Set([6133, 6138, 6192, 6196, 6198, 6199])
 const allowedKnipFileEntries: Record<string, string> = {
   ".agents/skills/ingest-blog/scripts/collect-blog-errors.ts": "ingest-blog skill CLI entrypoint",
+  ".agents/skills/ingest-blog/scripts/check-support-unit-prs.ts": "ingest-blog skill CLI entrypoint",
   ".agents/skills/ingest-blog/scripts/write-sample-fixture.ts": "ingest-blog skill CLI entrypoint",
   "scripts/capture-post-evidence.ts": "manual evidence capture CLI entrypoint",
   "scripts/lib/post-evidence/capture.ts": "manual evidence capture CLI dependency",
@@ -76,6 +77,7 @@ const allowedKnipExports: Record<string, string> = {
 }
 const allowedKnipTypes: Record<string, string> = {
   "scripts/lib/ingest-focus.ts:SupportUnitFailureGroup": "ingest-blog skill CLI dependency",
+  "scripts/lib/ingest-pr-check.ts:SupportUnitClaimPullRequest": "ingest-blog skill CLI dependency",
   "scripts/lib/post-evidence/cases.ts:EvidenceTarget": "manual evidence capture CLI dependency",
   "scripts/lib/post-evidence/cases.ts:EvidenceCase": "manual evidence capture CLI dependency",
   "scripts/lib/post-evidence/cases.ts:EvidenceCliArgs": "manual evidence capture CLI dependency",

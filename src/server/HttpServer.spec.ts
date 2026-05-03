@@ -96,6 +96,31 @@ const createPost = ({
   thumbnailUrl,
 })
 
+const nextPreviewSeed = (seed: number) => {
+  let value = Math.imul(seed ^ (seed >>> 16), 2246822507) >>> 0
+  value = Math.imul(value ^ (value >>> 13), 3266489909) >>> 0
+  return (value ^ (value >>> 16)) >>> 0
+}
+
+const createOversizedPreviewMarkdown = () => {
+  let seed = 0x9e3779b9
+  const lines = ["# oversized preview\n"]
+
+  for (let index = 0; index < 1600; index++) {
+    seed = nextPreviewSeed(seed + index + 1)
+    const first = seed
+    seed = nextPreviewSeed(seed)
+    const second = seed
+    const third = Math.imul(first, second) >>> 0
+
+    lines.push(
+      `- item ${index}: ${first.toString(36)} ${second.toString(36)} ${third.toString(36)}\n`,
+    )
+  }
+
+  return lines.join("")
+}
+
 const startServer = async (server: ReturnType<typeof createHttpServer>) => {
   await new Promise<void>((resolve) => {
     server.listen(0, "127.0.0.1", () => resolve())
@@ -1813,13 +1838,7 @@ describe("http server", () => {
   it("returns 422 when a preview link cannot be generated", async () => {
     const rootDir = await createTestTempDir("preview-local-file-too-large-")
     const targetPath = path.join(rootDir, "posts", "first", "index.md")
-    let markdown = ""
-    let index = 0
-
-    while (buildMarkdownViewerShareUrl(markdown) !== null && index < 20000) {
-      markdown += `- item ${index}: ${index.toString(36)} ${Math.imul(index + 1, 2654435761) >>> 0}\n`
-      index += 1
-    }
+    const markdown = createOversizedPreviewMarkdown()
 
     expect(buildMarkdownViewerShareUrl(markdown)).toBeNull()
 
