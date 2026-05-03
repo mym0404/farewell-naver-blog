@@ -24,8 +24,16 @@
 - `pnpm test:network:upload`: live browser UI export and GitHub upload through PicList runtime.
 - `pnpm dev`: user-facing HMR server on the default development port. Harnesses should not reuse it.
 - `pnpm start`: builds UI and serves `dist/client` through `src/Server.ts`.
+- `bun scripts/update-open-pr-branches.ts --help`: GitHub PR branch update CLI surface check. `pnpm gh:update-branches` changes remote PR branches through `gh pr update-branch`.
 - `bun scripts/capture-post-evidence.ts --help`: post evidence CLI surface check. Live smoke cases may open Playwright and Naver mobile pages. Evidence section behavior is documented in `.agents/knowledge/post-evidence.md`.
 - `bun .agents/skills/ingest-blog/scripts/collect-blog-errors.ts --help`: parser coverage ingest CLI surface check. Ingest workflow behavior is documented in `.agents/knowledge/ingest-blog.md`.
+
+## Ingest Blog PR Gate
+- Before each `ingest-blog` support-unit PR, run `pnpm typecheck`, `pnpm test:coverage`, `pnpm smoke:ui`, and `pnpm check:unused`.
+- `pnpm typecheck`, `pnpm test:coverage`, and `pnpm smoke:ui` mirror the non-draft PR CI checks.
+- `pnpm check:unused` is an extra local source/test/script dead-code gate and is not part of CI.
+- Do not add `pnpm check:local` to this gate because `pnpm typecheck` and `pnpm test:coverage` cover the relevant type and Vitest checks directly.
+- Network e2e is required only when live fetch, live resume, or upload behavior changes.
 
 ## Parser Block Unit Test
 - Parser block specs live beside parser block implementations under `src/modules/blocks/naver-se2/*`, `src/modules/blocks/naver-se3/*`, and `src/modules/blocks/naver-se4/*`.
