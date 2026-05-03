@@ -15,6 +15,7 @@
     "build": "pnpm build:ui && pnpm build:server",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "check:unused": "bun scripts/check-unused.ts",
+    "gh:update-branches": "bun scripts/update-open-pr-branches.ts",
     "test": "vitest run --configLoader runner --silent",
     "test:coverage": "vitest run --configLoader runner --silent --coverage",
     "test:parser-blocks": "vitest run --config vitest.parser-blocks.config.ts --silent --coverage",
