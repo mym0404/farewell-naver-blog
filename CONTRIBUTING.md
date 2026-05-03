@@ -71,4 +71,5 @@ pnpm test:network:upload
 - `src/ui`: React 로컬 웹 UI
 - `src/shared`: 타입, 옵션, block output 선택, job 상태
 - `scripts/export-single-post.ts`: 단건 검증 CLI
-- `scripts/harness/*`: parser/sample/UI 검증 harness
+- `tests/e2e/*`: smoke, resume, live network 검증 harness
+- `tests/helpers/*`: fixture와 parser 테스트 공용 helper

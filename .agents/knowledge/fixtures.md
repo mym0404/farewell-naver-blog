@@ -3,8 +3,8 @@
 ## Source Of Truth
 - Sample fixture directories live under `tests/fixtures/samples/*`.
 - Each sample must contain either `expected.md` or `expected-error.md`.
-- `tests/sample-fixtures.test.ts` discovers directories dynamically.
-- `scripts/harness/lib/sample-fixtures.ts` parses expected frontmatter, fetches the live Naver post HTML from `blogId` and `logNo`, and renders it with fixture export options.
+- `tests/helpers/sample-fixtures.spec.ts` discovers directories dynamically.
+- `tests/helpers/sample-fixtures.ts` parses expected frontmatter, fetches the live Naver post HTML from `blogId` and `logNo`, and renders it with fixture export options.
 - Live sample HTML is cached under `tmp/harness/sample-post-html-cache` through the optional `NaverBlogFetcher` cache interface.
 
 ## Fixture Options

@@ -3,14 +3,14 @@
 ## Source Of Truth
 - Package scripts live in `package.json`.
 - CI lives in `.github/workflows/required-checks.yml`.
-- UI and live harnesses live in `scripts/harness/*`.
-- Sample fixture regression lives in `tests/sample-fixtures.test.ts` and `scripts/harness/lib/sample-fixtures.ts`.
+- UI smoke and live harnesses live in `tests/e2e/*`.
+- Sample fixture regression lives in `tests/helpers/sample-fixtures.spec.ts` and `tests/helpers/sample-fixtures.ts`.
 
 ## Primary Commands
 - `pnpm check:local`: `pnpm typecheck && pnpm test:offline`. Run after ordinary repository file changes.
 - `pnpm check:unused`: `bun scripts/check-unused.ts`. Run when removing, exporting, moving, or intentionally keeping source/test/script code that may be unused. This command is not part of `check:local`.
 - `pnpm check:full`: `pnpm check:local && pnpm smoke:ui`. Run when user flow, UI state, exporter output, or shared runtime behavior may be affected.
-- `pnpm smoke:ui`: `pnpm build:ui && bun scripts/harness/run-ui-smoke-suite.ts`. Verifies mock-based scan, export, upload, theme persistence, and resume UI.
+- `pnpm smoke:ui`: `pnpm build:ui && bun tests/e2e/run-ui-smoke-suite.ts`. Verifies mock-based scan, export, upload, theme persistence, and resume UI.
 - `pnpm test:network`: builds UI once, then runs live resume export, SE2 table resume export, and live upload e2e. It needs external network and upload credentials and creates remote state.
 - `pnpm test:coverage`: runs Vitest with V8 coverage.
 
@@ -25,11 +25,11 @@
 - `pnpm start`: builds UI and serves `dist/client` through `src/Server.ts`.
 
 ## Parser Block Unit Test
-- Parser block tests live under `tests/parser/naver-se2/*`, `tests/parser/naver-se3/*`, and `tests/parser/naver-se4/*`.
+- Parser block specs live beside parser block implementations under `src/modules/blocks/naver-se2/*`, `src/modules/blocks/naver-se3/*`, and `src/modules/blocks/naver-se4/*`.
 - Each parser block spec file covers one parser block responsibility through the real `NaverBlogSE*Editor.parse()` dispatch path.
 - Each parser block spec that owns configurable block output options includes an `applies every output option` test that verifies every exposed option through parser dispatch.
-- Shared parser fixture helpers live only in `tests/parser/parser-test-utils.ts`.
-- `tests/parser/post-parser.test.ts` covers parser routing, tag extraction, same-blog link rewrite, and editor-specific output selection behavior.
+- Shared parser fixture helpers live only in `tests/helpers/parser-test-utils.ts`.
+- `src/modules/parser/PostParser.spec.ts` covers parser routing, tag extraction, same-blog link rewrite, and editor-specific output selection behavior.
 - Parser block implementation changes require `pnpm test:parser-blocks` and `pnpm test:offline`.
 - Parser routing changes require `pnpm test:offline`.
 
@@ -40,7 +40,7 @@
 - `tsserver` opens `src/Server.ts`, reads the configured project file list with `projectInfo`, then checks `src`, `tests`, and `scripts` TypeScript files with `semanticDiagnosticsSync` and `suggestionDiagnosticsSync`.
 - The unused script filters tsserver diagnostics to TypeScript unused diagnostic codes: `6133`, `6138`, `6192`, `6196`, `6198`, `6199`.
 - Static false positives are allowed only inside `scripts/check-unused.ts` allowlists when the file or export is a real runtime entrypoint that static analysis cannot see.
-- Current allowlisted file entrypoints are `scripts/harness/run-live-server.ts`, `scripts/harness/run-ui-resume-smoke.ts`, `scripts/harness/run-ui-smoke.ts`, and `vitest.parser-blocks.config.ts`.
+- Current allowlisted file entrypoints are `tests/e2e/lib/run-live-server.ts`, `tests/e2e/run-ui-resume-smoke.ts`, `tests/e2e/run-ui-smoke.ts`, and `vitest.parser-blocks.config.ts`.
 - Current allowlisted export entrypoint is `scripts/export-single-post.ts:runSinglePostExportCli`.
 - The command covers source/test/script dead code. It does not check unused package dependencies because the `knip` invocation intentionally excludes dependency categories.
 - A syntax or type error in the TypeScript project can make `check:unused` fail before dead-code cleanup is meaningful; restore the type baseline first, then interpret unused diagnostics.

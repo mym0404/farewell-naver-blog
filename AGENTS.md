@@ -7,7 +7,7 @@
 ## Tech Stack
 - `pnpm` 단일 저장소에서 Node.js 24 LTS, Node.js ESM, TypeScript, Bun 기반 TS 실행을 사용한다.
 - 웹 UI는 React, Vite, Tailwind CSS v4, shadcn/Radix, Sonner로 구성된다.
-- 검증은 Vitest, Playwright, `scripts/harness/*`가 맡는다.
+- 검증은 Vitest와 `tests/e2e/*` Playwright/Bun harness가 맡는다.
 
 ## Runtime And Architecture
 - 서버 시작점은 `src/Server.ts`, HTTP API는 `src/server/HttpServer.ts`다.
