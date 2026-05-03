@@ -36,6 +36,11 @@ bun scripts/export-single-post.ts \
 - Compare browser structure, `post.md`, and `report.json`.
 - Record whether the result is `as-expected`, `mismatch`, `error`, or `not-checked`.
 
+## Evidence Table
+- Use `scripts/capture-post-evidence.ts` when the comparison needs a Markdown table row with source capture, converted Markdown, renderer link, and rendered capture.
+- Use `--target post` for full-post evidence and `--target inspect-path --inspectPath <path>` for block-level evidence.
+- Post evidence table rules live in `.agents/knowledge/post-evidence.md`.
+
 ## Code Anchors
 - `scripts/export-single-post.ts`
 - `scripts/lib/single-post-cli.ts`

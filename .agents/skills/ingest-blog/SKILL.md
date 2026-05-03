@@ -61,6 +61,11 @@ bun scripts/capture-post-evidence.ts \
   --inspectPath 0
 ```
 
+`--target post` renders Markdown with frontmatter. `--target inspect-path` renders only the selected block fragment and omits frontmatter.
+Both Naver and renderer screenshots capture the selected HTML node rather than the current viewport; long nodes may produce tall images.
+Renderer screenshots are captured in the external renderer's dark theme.
+Use `--assetProfile tmp` for local smoke output, `--assetProfile readme` for README assets, and `--assetProfile figure` for report or PR figures that must be committed.
+
 ## Workflow
 
 1. Run `collect-blog-errors.ts --blogId <blogId>` unless the user explicitly asked for `--forceFull`.
@@ -79,12 +84,12 @@ Do not rerun the same blog as a full ingest after a completed output exists unle
 
 ## Report Rules
 
-Every completed skill run must leave these report artifacts in the ingest output directory:
+Every completed skill run must leave these report artifacts:
 
 - `report.md`
 - `report.json`
 - `evidence-table.md`
-- evidence images under `post-evidence/assets/`
+- evidence images under `.agents/knowledge/reference/assets/figure`
 
 The report must include:
 
@@ -97,6 +102,8 @@ The report must include:
 - verification commands and results
 - evidence table generated through `scripts/capture-post-evidence.ts` helpers
 - unresolved failures and the reason each one is deferred
+
+Keep the evidence table `Metadata` column as a short human note, such as the parser block behavior being demonstrated. Do not fill it with routine run state like blog id, log number, title, or status unless that value is the useful note for the row.
 
 Use `--changesPath <json>` when rerunning the collector after code changes. The JSON may contain `parserChanges`, `fixtures`, `knowledge`, `verification`, and `unresolved` arrays.
 If unresolved failures remain, include one deferred reason per representative failure group in `unresolved`.
