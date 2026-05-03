@@ -23,6 +23,7 @@
 - Link-like block은 모두 `linkCard` AST로 수렴한다.
 - Formula는 inline/block 여부를 metadata와 class로 판단한다.
 - Text block은 SE4 list를 Markdown list 문단으로 만들고, 추천 상품형 text 묶음은 하나의 list paragraph로 정리한다.
+- Heading block은 text가 있는 section title만 heading으로 만들고, 빈 section title placeholder는 출력하지 않는다.
 - Sticker는 image AST지만 `mediaKind: "sticker"`로 표시되어 asset 정책의 영향을 받는다.
 - `videos`는 parsed `video` block에서 추출한다.
 
