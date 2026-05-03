@@ -1,4 +1,4 @@
-import type { Browser, ElementHandle } from "playwright"
+import type { Browser, ElementHandle, Page } from "playwright"
 
 const mobileViewport = {
   width: 390,
@@ -21,6 +21,36 @@ const naverMobilePostUrl = ({
   blogId: string
   logNo: string
 }) => `https://m.blog.naver.com/PostView.naver?blogId=${encodeURIComponent(blogId)}&logNo=${encodeURIComponent(logNo)}`
+
+const postBodySelectors = (editorType: string | null) => {
+  if (editorType === "naver-se4") {
+    return ["#viewTypeSelector .se-main-container", "#viewTypeSelector"]
+  }
+
+  if (editorType === "naver-se3") {
+    return ["#viewTypeSelector .se_component_wrap.sect_dsc", "#viewTypeSelector"]
+  }
+
+  return ["#viewTypeSelector"]
+}
+
+const findFirstElement = async ({
+  page,
+  selectors,
+}: {
+  page: Page
+  selectors: string[]
+}) => {
+  for (const selector of selectors) {
+    const element = await page.$(selector)
+
+    if (element) {
+      return element
+    }
+  }
+
+  return null
+}
 
 const captureElementNode = async ({
   element,
@@ -87,7 +117,19 @@ export const captureNaverPost = async ({
     })
 
     if (!inspectPath) {
-      await page.locator("#viewTypeSelector").first().screenshot({ path: outputPath })
+      const element = await findFirstElement({
+        page,
+        selectors: postBodySelectors(editorType),
+      })
+
+      if (!element) {
+        throw new Error("post body element not found")
+      }
+
+      await captureElementNode({
+        element,
+        outputPath,
+      })
       return
     }
 
