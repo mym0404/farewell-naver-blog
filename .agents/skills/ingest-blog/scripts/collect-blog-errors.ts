@@ -106,10 +106,11 @@ type FailureGroup = {
 
 const usage = () => `Usage:
   bun .agents/skills/ingest-blog/scripts/collect-blog-errors.ts --blogId <blogId> [--outputDir tmp/harness/ingest-blog/<runId>]
-  bun .agents/skills/ingest-blog/scripts/collect-blog-errors.ts --blogId <blogId> --reuseOutputDir tmp/harness/ingest-blog/<runId> --rerunFailures
+  bun .agents/skills/ingest-blog/scripts/collect-blog-errors.ts --blogId <blogId> --reuseOutputDir /absolute/path/to/tmp/harness/ingest-blog/<runId> --rerunFailures
 
 Options:
   --reuseOutputDir <dir>  Reuse a completed ingest output and rerun only failed posts.
+                         Use the first collect's printed absolute outputDir from support-unit branches.
   --rerunFailures        Require failed-post rerun from a reusable output.
   --forceFull            Ignore reusable output and run a full ingest.
   --focusSupportUnit <key>
