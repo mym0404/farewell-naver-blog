@@ -8,6 +8,7 @@ describe("NaverSe2SpacerBlock", () => {
       <p style="" _foo="MsoNormal"><span lang="EN-US" style="font-size:12pt;">&nbsp;</span></p>
       <p><br></p>
       <div><br></div>
+      <ul style="list-style-type: disc;"></ul>
     `)
 
     expect(parsed.blocks).toEqual([])

@@ -14,6 +14,7 @@
 ## Block Families
 - Text 계열은 paragraph와 list를 Markdown paragraph로 만든다.
 - Media 계열은 image, image group, image strip, sticker를 image 계열 AST로 만든다.
+- Media/Text mixed 계열은 right wrapping paragraph의 float image slot과 text slot을 기존 image/paragraph AST로 푼다.
 - Rich content 계열은 formula, code, video, table을 공용 semantic AST로 만든다.
 - Link-like 계열은 link card, file, map, oEmbed, material, custom purchase proof 같은 외부 참조형 module을 linkCard AST로 수렴한다.
 - Quote/chrome 계열은 quotation, Blog씨 질문, divider, heading, document chrome을 처리한다.
