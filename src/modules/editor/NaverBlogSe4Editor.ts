@@ -21,6 +21,7 @@ import { NaverSe4StickerBlock } from "../blocks/naver-se4/StickerBlock.js"
 import { NaverSe4TableBlock } from "../blocks/naver-se4/TableBlock.js"
 import { NaverSe4TextBlock } from "../blocks/naver-se4/TextBlock.js"
 import { NaverSe4VideoBlock } from "../blocks/naver-se4/VideoBlock.js"
+import { NaverSe4WrappingParagraphBlock } from "../blocks/naver-se4/WrappingParagraphBlock.js"
 import { BaseEditor } from "./BaseEditor.js"
 import type { BaseEditorParseInput } from "./BaseEditor.js"
 
@@ -54,6 +55,7 @@ export class NaverBlogSE4Editor extends BaseEditor {
     new NaverSe4ImageGroupBlock(),
     new NaverSe4StickerBlock(),
     new NaverSe4ImageBlock(),
+    new NaverSe4WrappingParagraphBlock(),
     new NaverSe4HeadingBlock(),
     new NaverSe4DividerBlock(),
     new NaverSe4QuoteBlock(),
