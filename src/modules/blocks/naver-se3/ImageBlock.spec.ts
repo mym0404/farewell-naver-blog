@@ -89,6 +89,71 @@ describe("NaverSe3ImageBlock", () => {
     ])
   })
 
+  it("parses gif video images inside default image components", () => {
+    const parsed = parseSe3Blocks(`
+      <div class="se_component se_image default">
+        <div class="se_sectionArea se_align-center">
+          <div class="se_editArea">
+            <div class="se_viewArea">
+              <a class="se_mediaArea __se_image_link __se_link" data-linktype="img">
+                <video
+                  src="https://mblogvideo-phinf.pstatic.net/sample.gif?type=mp4w800"
+                  class="_gifmp4 se_mediaImage"
+                  data-gif-url="https://mblogthumb-phinf.pstatic.net/sample.gif?type=w800"
+                ></video>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    `)
+
+    expect(parsed.blocks).toEqual([
+      {
+        type: "image",
+        image: {
+          sourceUrl: "https://mblogthumb-phinf.pstatic.net/sample.gif?type=w800",
+          originalSourceUrl: "https://mblogvideo-phinf.pstatic.net/sample.gif?type=mp4w800",
+          alt: "",
+          caption: null,
+          mediaKind: "image",
+        },
+        outputSelectionKey: "naver-se3:image",
+        outputSelection: {
+          variant: "markdown-image",
+        },
+      },
+    ])
+  })
+
+  it("keeps gif video images without mp4 sources as source-only images", () => {
+    const parsed = parseSe3Blocks(`
+      <div class="se_component se_image default">
+        <video
+          class="_gifmp4 se_mediaImage"
+          data-gif-url="https://mblogthumb-phinf.pstatic.net/source-only.gif?type=w800"
+        ></video>
+      </div>
+    `)
+
+    expect(parsed.blocks).toEqual([
+      {
+        type: "image",
+        image: {
+          sourceUrl: "https://mblogthumb-phinf.pstatic.net/source-only.gif?type=w800",
+          originalSourceUrl: null,
+          alt: "",
+          caption: null,
+          mediaKind: "image",
+        },
+        outputSelectionKey: "naver-se3:image",
+        outputSelection: {
+          variant: "markdown-image",
+        },
+      },
+    ])
+  })
+
   it("applies every output option", () => {
     expectEveryBlockOutputOption({
       editorType: "naver-se3",
