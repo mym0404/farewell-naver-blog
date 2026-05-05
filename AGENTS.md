@@ -9,6 +9,36 @@
 - 웹 UI는 React, Vite, Tailwind CSS v4, shadcn/Radix, Sonner로 구성된다.
 - 검증은 Vitest와 `tests/e2e/*` Playwright/Bun harness가 맡는다.
 
+## Project Structure
+```text
+.
+|-- AGENTS.md                         # root router for coding agents
+|-- .agents/
+|   |-- knowledge/                    # repo-local evergreen knowledge
+|   `-- skills/ingest-blog/           # repo-local parser coverage workflow
+|-- src/
+|   |-- Server.ts                     # local server entrypoint
+|   |-- server/                       # HTTP API, jobs, local state, upload catalog
+|   |-- modules/
+|   |   |-- fetcher/                  # Naver API and post HTML fetch
+|   |   |-- parser/                   # common parser entrypoints
+|   |   |-- blog/                     # editor routing and output definitions
+|   |   |-- editor/                   # SE2, SE3, SE4 parser orchestration
+|   |   |-- blocks/                   # editor-specific parser blocks
+|   |   |-- converter/                # common AST to Markdown
+|   |   `-- exporter/                 # export, assets, upload/rewrite, manifest
+|   |-- shared/                       # cross-boundary types, options, templates
+|   `-- ui/                           # React wizard, feature panels, primitives, tokens
+|-- scripts/                          # shared project CLIs and helpers
+|-- tests/
+|   |-- e2e/                          # Playwright/Bun UI and live harnesses
+|   |-- fixtures/samples/             # public sample expected outputs
+|   `-- helpers/                      # fixture and test-path helpers
+|-- public/brand/                     # UI brand assets
+|-- .github/workflows/required-checks.yml
+`-- package.json                      # repo-native commands
+```
+
 ## Runtime And Architecture
 - 서버 시작점은 `src/Server.ts`, HTTP API는 `src/server/HttpServer.ts`다.
 - export 파이프라인은 `src/modules/exporter/NaverBlogExporter.ts`에서 `fetch -> parse -> review -> render -> write -> manifest` 순서로 따라간다.
@@ -24,10 +54,6 @@
 - source of truth 우선순위는 사용자 지시, 루트 `AGENTS.md`, 코드/설정/테스트, `.agents/knowledge/*.md`, reference 문서다.
 - 영속 UI 설정과 서버 파일 캐시는 `.cache/` 아래에 저장한다. 임시 테스트, harness, 런타임 config 파일은 repo-local `tmp/` 아래에 둔다.
 - AI agent, test, harness가 서버를 띄울 때는 사용자 `pnpm dev`와 공유 `.cache/export-ui-settings.json`을 피하고, 별도 `GOODBYE_SETTINGS_PATH`, `GOODBYE_SCAN_CACHE_PATH`, repo-local `tmp/`, 비기본 `PORT` 또는 `listen(0)`을 쓴다.
-- knowledge는 코드 목록을 복제하지 않고 책임 경계, 현재 운영 계약, 검증 기준만 둔다.
-- 정확한 block 목록, selector, output key, sample 목록, allowlist, 파일별 세부 동작은 코드와 테스트를 source of truth로 둔다.
-- parser/editor 지식은 새 block 하나나 파일 하나가 추가될 때마다 갱신하지 않고, 구조·책임·검증 기준이 바뀔 때만 갱신한다.
-- sample fixture, renderer/exporter 계약처럼 문서화된 운영 기준이 바뀌면 관련 knowledge를 함께 갱신한다.
 - README, ingest report, PR 설명에 쓰는 evidence section 계약은 `.agents/knowledge/post-evidence.md`를 따른다.
 - commit, push, PR 생성은 사용자가 명시적으로 요청한 경우에만 수행한다.
 
@@ -56,3 +82,9 @@
 - Browser/manual UI verification: `.agents/knowledge/browser-verification.md`
 - Single post verification: `.agents/knowledge/single-post-verification.md`
 - Code style and local workflow: `.agents/knowledge/code-style.md`
+
+## Knowledge System
+- 루트 `AGENTS.md`는 agent entry와 지식 라우터 역할을 맡고, 영속 지식은 `.agents/knowledge/*`에 둔다.
+- 프로젝트 구조, runtime entrypoint, 검증 명령, ownership boundary, 문서화된 동작이 바뀌면 같은 변경에서 루트 `AGENTS.md`와 관련 `.agents/knowledge/*` 문서를 함께 갱신한다.
+- 현재 repository knowledge는 기존 상태를 설명한다. 의도된 기능 변경이나 구조 변경을 거절하는 근거로 단독 사용하지 않는다.
+- Knowledge는 전체 코드 목록을 복제하지 않고 오래 유지되는 책임 경계, 운영 계약, 검증 기준만 담는다.
