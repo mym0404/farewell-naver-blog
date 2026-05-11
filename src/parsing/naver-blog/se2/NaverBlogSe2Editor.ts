@@ -12,8 +12,10 @@ import { NaverSe2HeadingBlock } from "./blocks/HeadingBlock.js"
 import { NaverSe2ImageBlock } from "./blocks/ImageBlock.js"
 import { NaverSe2InlineGifVideoBlock } from "./blocks/InlineGifVideoBlock.js"
 import { NaverSe2LineBreakBlock } from "./blocks/LineBreakBlock.js"
+import { NaverSe2PollBlock } from "./blocks/PollBlock.js"
 import { NaverSe2QuoteBlock } from "./blocks/QuoteBlock.js"
 import { NaverSe2SpacerBlock } from "./blocks/SpacerBlock.js"
+import { NaverSe2StyleBlock } from "./blocks/StyleBlock.js"
 import { NaverSe2TableBlock } from "./blocks/TableBlock.js"
 import { NaverSe2TextElementBlock } from "./blocks/TextElementBlock.js"
 import { NaverSe2TextNodeBlock } from "./blocks/TextNodeBlock.js"
@@ -23,6 +25,7 @@ export class NaverBlogSE2Editor extends BaseEditor {
   override readonly label = "SmartEditor 2"
 
   protected override readonly supportedBlocks = [
+    new NaverSe2StyleBlock(),
     new NaverSe2CommentBlock(),
     new NaverSe2TextNodeBlock(),
     new NaverSe2BookWidgetBlock(),
@@ -34,6 +37,7 @@ export class NaverBlogSE2Editor extends BaseEditor {
     new NaverSe2HeadingBlock(),
     new NaverSe2CodeBlock(),
     new NaverSe2InlineGifVideoBlock(),
+    new NaverSe2PollBlock(),
     new NaverSe2EmbeddedVideoBlock(),
     new NaverSe2ImageBlock(),
     new NaverSe2SpacerBlock(),
