@@ -8,7 +8,6 @@ category: 블로그 꾸미기
 categoryPath:
   - Life Style
   - 블로그 꾸미기
-visibility: public
 thumbnail: https://mblogthumb-phinf.pstatic.net/20130627_197/anglekim3708_1372317329711xU0qp_JPEG/%C8%D6%BC%BA%B8%BE-_%C0%A7%C1%AC_-f.jpg?type=w800
 ---
 
