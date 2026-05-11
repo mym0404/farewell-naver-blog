@@ -7,7 +7,6 @@ publishedAt: 2024-06-16T09:14:01+09:00
 category: 오늘의 이야기
 categoryPath:
   - 오늘의 이야기
-visibility: public
 thumbnail: https://mblogthumb-phinf.pstatic.net/MjAyNDA2MTZfMjM0/MDAxNzE4NDg0MzczOTgw.mzSce4Pavfe2LFtbHVFSOhsiTZpklaTIFe787QCOsJ8g.QnWBGbCJAwSgGd82YavGGO9SHwwLBxgU6EYsUvz7a-cg.PNG/%B5%F0%C1%F6%C5%D0%B0%E6%C1%A6.png?type=w800
 ---
 
