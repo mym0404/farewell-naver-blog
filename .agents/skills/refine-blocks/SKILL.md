@@ -26,6 +26,7 @@ The skill is for repository workflow and parser block responsibility. Do not rec
 - Do not close because the implementation could be cleaner. Merge first when the block is valid, then refine locally.
 - Review the PR at the target block boundary: what input shape it claims, what AST it emits, where it sits in `supportedBlocks`, and which neighboring blocks might overlap.
 - Check whether the PR keeps first-match parser behavior coherent for the editor family.
+- If a PR has merge conflicts but should otherwise be merged, resolve every conflict, rerun required verification, and merge only after the branch is mergeable.
 
 Before merge or close, add a GitHub comment whose first line is exactly `[AI GENERATED]`.
 
