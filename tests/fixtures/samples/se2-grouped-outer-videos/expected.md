@@ -8,16 +8,10 @@ category: 뒷북치는 IT
 categoryPath:
   - Life Style
   - 뒷북치는 IT
-visibility: public
 thumbnail: https://mblogthumb-phinf.pstatic.net/20140317_141/anglekim3708_1395039086506wSj9n_JPEG/%C6%C4%B8%C1-3.jpg?type=w800
-video:
-  - title: Video
-    sourceUrl: http://api.v.daum.net/widget2?nid=53754273&__authenticIframe=true
-    thumbnail: null
-  - title: Video
-    sourceUrl: http://api.v.daum.net/widget2?nid=53754273&__authenticIframe=true
-    thumbnail: null
 ---
+
+![](https://mblogthumb-phinf.pstatic.net/20140329_235/anglekim3708_1396075298612vBnmc_JPEG/CAM00615.jpg?type=w800)
 
 **금융감독원**
 
@@ -66,6 +60,8 @@ video:
 
 불시에 13억원이 무단 이체됨
 
+![](https://mblogthumb-phinf.pstatic.net/20140317_141/anglekim3708_1395039086506wSj9n_JPEG/%C6%C4%B8%C1-3.jpg?type=w800)
+
 파밍캅 이란? \[경남지방경찰청에서 배포함\]
 
 악성코드를 이용자의 컴퓨터에 감염시켜 진짜 은행사이트에 접속시, 강제로 가짜 은행사이트에
@@ -84,6 +80,8 @@ video:
 접속할 수 있도록 유도하기 위해 개발되었습니다. 그러므로 점점 진화되는 '파밍'기법 전부를
 
 대응할 수 없으므로 반드시 위 예방법을 준수하기시 바랍니다.
+
+![](https://mblogthumb-phinf.pstatic.net/20140317_36/anglekim3708_1395039086833UJN3b_JPEG/%C6%C4%B9%D6-2.jpg?type=w800)
 
 기능개선
 
