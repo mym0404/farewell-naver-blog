@@ -15,7 +15,7 @@ export const parseHtmlTable = ({ $, table }: { $: CheerioAPI; table: ReturnType<
 
           return {
             text: compactText(cellNode.text()),
-            html: (cellNode.html() ?? "").trim(),
+            html: cellNode.html()!.trim(),
             colspan: Number(cellNode.attr("colspan") ?? "1"),
             rowspan: Number(cellNode.attr("rowspan") ?? "1"),
             isHeader: cell.tagName === "th",
