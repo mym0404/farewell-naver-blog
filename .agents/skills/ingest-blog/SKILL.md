@@ -213,6 +213,7 @@ For a focused support-unit PR:
 - Prefer extending an existing block when the DOM is the same content family.
 - Add a new block only when the HTML has a distinct responsibility.
 - Register a new block directly in the editor `supportedBlocks` list.
+- When adding a new block, add `outputOptions` if the block leaves a user-selectable Markdown output format choice.
 - Do not add a registry, compatibility re-export, broad fallback parser, or catch-all block.
 - Do not change renderer or AST types unless the failed content cannot fit an existing AST block.
 - If a new AST block type is unavoidable, update shared types, renderer, exporter behavior, focused tests, fixtures, and cross-cutting knowledge together.
