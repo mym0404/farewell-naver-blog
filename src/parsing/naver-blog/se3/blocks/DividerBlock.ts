@@ -1,7 +1,7 @@
 import type { ParserBlockContext } from "../../core/BaseBlock.js"
 import { LeafBlock } from "../../core/BaseBlock.js"
 
-const dividerClassNames = ["default", "line2"]
+const dividerClassNames = ["default", "line2", "line5"]
 
 export class NaverSe3DividerBlock extends LeafBlock {
   override readonly id = "divider"
