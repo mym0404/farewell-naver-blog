@@ -52,15 +52,18 @@ const getEmbeddedVideos = ({ $, $node }: { $: CheerioAPI; $node: ReturnType<Chee
     return null
   }
 
-  const videoContainers = $node.is("span._outerVideo") ? $node : $node.find("span._outerVideo")
+  const isVideoContainer = $node.is("span._outerVideo, span._naverVideo")
+  const videoContainers = isVideoContainer
+    ? $node
+    : $node.find("span._outerVideo, span._naverVideo")
 
   if (videoContainers.length === 0) {
     return null
   }
 
-  if (!$node.is("span._outerVideo")) {
+  if (!isVideoContainer) {
     const cloneWithoutVideo = $node.clone()
-    cloneWithoutVideo.find("style, span._outerVideo").remove()
+    cloneWithoutVideo.find("style, span._outerVideo, span._naverVideo").remove()
 
     if (cloneWithoutVideo.find("img, iframe, video, table").length > 0) {
       return null

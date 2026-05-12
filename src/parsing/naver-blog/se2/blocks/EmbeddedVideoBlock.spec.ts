@@ -131,6 +131,35 @@ describe("NaverSe2EmbeddedVideoBlock", () => {
     expect(parsed.videos).toEqual([video])
   })
 
+  it("parses naver video spans wrapped in legacy paragraphs", () => {
+    const parsed = parseSe2Blocks(`
+      <p align="center">
+        <style>@media all and (min-width:600px){#_video1 iframe{width:560px !important;height:315px !important}}</style>
+        <span id="_video1" class="_naverVideo">
+          <iframe
+            src="https://serviceapi.rmcnmv.naver.com/flash/outKeyPlayer.nhn?vid=6E6ABC05CE7148D8961A0A965B71796E09EB&amp;outKey=V1284d549da3f65ddf4e7"
+            width="260"
+            height="190"
+          ></iframe>
+        </span>
+      </p>
+    `)
+
+    const video = {
+      title: "Video",
+      thumbnailUrl: null,
+      sourceUrl:
+        "https://serviceapi.rmcnmv.naver.com/flash/outKeyPlayer.nhn?vid=6E6ABC05CE7148D8961A0A965B71796E09EB&outKey=V1284d549da3f65ddf4e7",
+      vid: "6E6ABC05CE7148D8961A0A965B71796E09EB",
+      inkey: null,
+      width: 260,
+      height: 190,
+    }
+
+    expect(parsed.blocks).toEqual([{ type: "video", video }])
+    expect(parsed.videos).toEqual([video])
+  })
+
   it("parses direct video iframes into video blocks", () => {
     const parsed = parseSe2Blocks(`
       <iframe
