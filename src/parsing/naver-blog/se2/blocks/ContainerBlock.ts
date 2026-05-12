@@ -14,6 +14,7 @@ const spacerContainerTags = new Set([
   "i",
   "em",
   "u",
+  "strike",
   "ul",
 ])
 
