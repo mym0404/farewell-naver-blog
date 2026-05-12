@@ -12,8 +12,6 @@ thumbnail: https://blogthumb.pstatic.net/20151006_38/blogpeople_1444132521014Wyo
 
 ![](https://mblogthumb-phinf.pstatic.net/20151006_38/blogpeople_1444132521014Wyo0l_PNG/%BA%ED%B7%CE%B1%D7_%C3%DF%BC%AE_%B9%E9%C0%CF%C0%E5_%C0%CC%BA%A5%C6%AE_%BB%F3%B4%DC1psd.png?type=w800)
 
-![](https://mblogthumb-phinf.pstatic.net/20151006_38/blogpeople_1444132521014Wyo0l_PNG/%BA%ED%B7%CE%B1%D7_%C3%DF%BC%AE_%B9%E9%C0%CF%C0%E5_%C0%CC%BA%A5%C6%AE_%BB%F3%B4%DC1psd.png?type=w420)
-
 **조선팔도의 글쟁이들..**
 
 **만나고 왔소이다아.**
