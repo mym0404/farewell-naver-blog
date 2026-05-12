@@ -67,7 +67,7 @@ jobs:
         timeout-minutes: 10
         run: pnpm smoke:ui
 
-      - name: Run coverage gate
+      - name: Run Vitest coverage
         run: pnpm test:coverage
 
       - name: Upload coverage reports to Codecov

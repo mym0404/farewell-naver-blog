@@ -14,14 +14,14 @@
 - `pnpm check:full`: `pnpm check:local && pnpm smoke:ui`. Run when user flow, UI state, exporter output, or shared runtime behavior may be affected.
 - `pnpm smoke:ui`: `pnpm build:ui && bun tests/e2e/run-ui-smoke-suite.ts`. Verifies mock-based scan, export, upload, theme persistence, and resume UI.
 - `pnpm test:network`: builds UI once, then runs live resume export, SE2 table resume export, and live upload e2e. It needs external network and upload credentials and creates remote state.
-- `pnpm test:coverage`: runs the full Vitest suite once with V8 coverage, enforces global coverage thresholds, and also enforces 100% coverage for parser block implementation globs.
+- `pnpm test:coverage`: runs the full Vitest suite once with V8 coverage and enforces global coverage thresholds.
 
 ## Focused Commands
 - `pnpm format:biome`: applies Biome formatter output during multi-step edits.
 - `pnpm check:biome:write`: applies Biome safe fixes and import organization when the intended change includes repository-wide formatting or import ordering.
 - `pnpm typecheck`: TypeScript contract check only.
 - `pnpm test:offline`: Vitest suite. Sample fixture tests fetch live Naver post HTML before comparing expected output, using the sample cache only outside CI.
-- `pnpm test:parser-blocks`: parser block implementation coverage gate. It runs block-level parser specs with 100% line, function, branch, and statement coverage for `src/parsing/naver-blog/se*/blocks` implementation files.
+- `pnpm test:parser-blocks`: focused parser block spec run for `src/parsing/naver-blog/se*/blocks` behavior.
 - `pnpm test:network:resume-export`: live Naver resume export without upload.
 - `pnpm test:network:resume-export:se2-table`: live SE2 table resume export range.
 - `pnpm test:network:upload`: live browser UI export and GitHub upload through PicList runtime.
