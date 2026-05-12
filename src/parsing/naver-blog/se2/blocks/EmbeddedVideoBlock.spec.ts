@@ -131,6 +131,35 @@ describe("NaverSe2EmbeddedVideoBlock", () => {
     expect(parsed.videos).toEqual([video])
   })
 
+  it("parses naver video spans wrapped in legacy paragraphs", () => {
+    const parsed = parseSe2Blocks(`
+      <p align="center">
+        <style>@media all and (min-width:552px){#_video1 iframe{width:512px !important;height:293px !important}}</style>
+        <span id="_video1" class="_naverVideo">
+          <iframe
+            src="https://serviceapi.rmcnmv.naver.com/flash/outKeyPlayer.nhn?vid=FB4E2CDD3BBBFB341D5A285572F2E8ADBC70&amp;outKey=V123"
+            width="300"
+            height="225"
+          ></iframe>
+        </span>
+      </p>
+    `)
+
+    const video = {
+      title: "Video",
+      thumbnailUrl: null,
+      sourceUrl:
+        "https://serviceapi.rmcnmv.naver.com/flash/outKeyPlayer.nhn?vid=FB4E2CDD3BBBFB341D5A285572F2E8ADBC70&outKey=V123",
+      vid: "FB4E2CDD3BBBFB341D5A285572F2E8ADBC70",
+      inkey: null,
+      width: 300,
+      height: 225,
+    }
+
+    expect(parsed.blocks).toEqual([{ type: "video", video }])
+    expect(parsed.videos).toEqual([video])
+  })
+
   it("keeps invalid iframe source strings without video metadata", () => {
     const parsed = parseSe2Blocks(`
       <p>
