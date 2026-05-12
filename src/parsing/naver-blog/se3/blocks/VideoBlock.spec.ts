@@ -59,4 +59,68 @@ describe("NaverSe3VideoBlock", () => {
       },
     })
   })
+
+  it("uses module data matching the video element id", () => {
+    const parsed = parseSe3Blocks(
+      `
+        <div class="se_component se_video default">
+          <div class="se_viewArea">
+            <div id="video-target" class="se_mediaArea"></div>
+          </div>
+        </div>
+      `,
+      `
+        <script
+          type="text/data"
+          class="__se_module_data"
+          data-module='{"type":"v1_video","id":"other-video","data":{"baseElId":"other-video","vid":"wrong","inkey":"wrong","width":"1280","height":"720"}}'
+        ></script>
+        <script
+          type="text/data"
+          class="__se_module_data"
+          data-module='{"type":"v1_video","id":"video-target","data":{"baseElId":"video-target","vid":"right","inkey":"matched","width":"","height":"1080"}}'
+        ></script>
+      `,
+    )
+
+    expect(parsed.blocks[0]).toEqual({
+      type: "video",
+      video: {
+        title: "Video",
+        thumbnailUrl: null,
+        sourceUrl: "",
+        vid: "right",
+        inkey: "matched",
+        width: null,
+        height: 1080,
+      },
+    })
+  })
+
+  it("uses defaults when no module data matches the video element id", () => {
+    const parsed = parseSe3Blocks(
+      `
+        <div class="se_component se_video default">
+          <div class="se_viewArea">
+            <div id="video-target" class="se_mediaArea"></div>
+          </div>
+        </div>
+      `,
+      `
+        <script
+          type="text/data"
+          class="__se_module_data"
+          data-module='{"type":"v1_video","id":"other-video","data":{"baseElId":"other-video","vid":"wrong"}}'
+        ></script>
+      `,
+    )
+
+    expect(parsed.blocks[0]).toMatchObject({
+      type: "video",
+      video: {
+        vid: null,
+        inkey: null,
+      },
+    })
+  })
 })

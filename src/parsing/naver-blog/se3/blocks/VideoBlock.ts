@@ -6,6 +6,10 @@ import { LeafBlock } from "../../core/BaseBlock.js"
 import { parseJsonAttribute } from "../../core/JsonAttribute.js"
 
 const parseDimension = (value: unknown) => {
+  if (typeof value === "string" && !compactText(value)) {
+    return null
+  }
+
   const parsed = Number(value)
 
   return Number.isFinite(parsed) ? parsed : null
@@ -13,6 +17,27 @@ const parseDimension = (value: unknown) => {
 
 const getRecord = (value: unknown) =>
   value && typeof value === "object" && !Array.isArray(value) ? (value as UnknownRecord) : {}
+
+const getVideoModuleData = ({ $node }: Pick<ParserBlockContext, "$node">) => {
+  const mediaId = $node.find(".se_mediaArea[id]").first().attr("id")
+
+  if (!mediaId) {
+    return parseJsonAttribute($node.nextAll("script.__se_module_data").first().attr("data-module"))
+  }
+
+  const moduleScripts = $node.nextAll("script.__se_module_data")
+
+  for (let index = 0; index < moduleScripts.length; index += 1) {
+    const moduleData = parseJsonAttribute(moduleScripts.eq(index).attr("data-module"))
+    const data = getRecord(moduleData?.data)
+
+    if (moduleData?.id === mediaId || data.baseElId === mediaId) {
+      return moduleData
+    }
+  }
+
+  return undefined
+}
 
 export class NaverSe3VideoBlock extends LeafBlock {
   override readonly id = "video"
@@ -43,9 +68,7 @@ export class NaverSe3VideoBlock extends LeafBlock {
   }
 
   override convert({ $node, sourceUrl = "" }: Parameters<LeafBlock["convert"]>[0]) {
-    const moduleData = parseJsonAttribute(
-      $node.nextAll("script.__se_module_data").first().attr("data-module"),
-    )
+    const moduleData = getVideoModuleData({ $node })
     const data = getRecord(moduleData?.data)
     const title = compactText($node.find(".se_mediaCaption .se_textarea").text()) || "Video"
 
