@@ -35,9 +35,10 @@
 - Keep `createX` helpers for pure value construction, binding construction, or test/harness fixtures.
 - Parser block implementations should extend `ContainerBlock` for recursive wrapper parsing or `LeafBlock` for direct AST conversion, and return literal parser results with `as const` when inference would widen status or block types.
 - Keep editor and parser block relationships as direct `BaseBlock` instances inside each editor class.
-- Keep small helpers that only support one concrete parser block's `match` or `convert` logic inside that parser block file.
-- Inline single-use helpers when they only pass caller context through or hide a short expression; keep helpers when they name reused logic, a public/exported boundary, a test fixture factory, or a substantial domain step.
-- Split parser helper files only when at least two parser blocks reuse them or when the parsing logic is large enough that a separate file is easier to read.
+- Keep helpers that only support one concrete parser block's `match` or `convert` logic inside that parser block file.
+- Inline single-use helpers when they only pass caller context through or hide a short expression; keep named local helpers inside the same block file when they clarify a substantial block-specific step.
+- Split editor-local parser helper files only when at least two parser blocks reuse them.
+- Put shared editor-local parser helper files under that editor's `blocks/util/*`; keep block class files, single-block helpers, and adjacent specs directly under `blocks/*`.
 - Keep parser block `outputOptions` and option params in the concrete parser block file, even when similar options appear in another editor family.
 
 ## Date And Time

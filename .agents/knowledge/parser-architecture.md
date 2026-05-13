@@ -38,7 +38,8 @@
 - Parser block base/context는 `src/parsing/naver-blog/core/*`의 공통 파일에 둔다.
 - 에디터 전용 block은 `src/parsing/naver-blog/se2/blocks`, `src/parsing/naver-blog/se3/blocks`, `src/parsing/naver-blog/se4/blocks`에 둔다.
 - 두 개 이상의 parser family가 공유하는 helper는 `src/parsing/naver-blog/core/*`에 둔다.
-- 한 block만 쓰는 작은 helper는 해당 block 파일 안에 둔다.
+- 한 editor family 안에서 두 개 이상의 block이 공유하는 helper는 `src/parsing/naver-blog/se2|se3|se4/blocks/util/*`에 둔다.
+- 한 block만 쓰는 helper는 크기와 무관하게 해당 block 파일 안에 둔다.
 - Parser block spec은 구현 파일 옆에 둔다.
 - Public sample regression은 `tests/fixtures/samples/*`와 `tests/support/sample-fixtures.spec.ts`가 맡는다.
 

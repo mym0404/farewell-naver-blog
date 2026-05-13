@@ -4,11 +4,12 @@
 - Editor type은 `naver-se4`, label은 `SmartEditor 4`다.
 - Product surface에서는 ONE(SE4)로 부를 수 있다.
 - SE4는 component와 module metadata를 함께 쓰는 SmartEditor parser다.
-- Parser block 구현은 `src/parsing/naver-blog/se4/blocks/*`에 둔다.
+- Parser block class와 spec은 `src/parsing/naver-blog/se4/blocks/*`에 두고, 두 개 이상의 SE4 block이 공유하는 helper만 `src/parsing/naver-blog/se4/blocks/util/*`에 둔다.
 
 ## Module Context
 - Editor는 component 안의 module JSON을 읽어 parser block에 metadata context를 전달한다.
 - Metadata가 부족한 경우에도 class fallback으로 일부 block을 판별한다.
+- Module type 전용 block은 같은 component에 fallback class가 함께 있어도 의미 우선권을 가진다.
 - 구체 attribute 이름과 selector는 editor implementation과 focused specs가 source of truth다.
 
 ## Block Families
@@ -24,6 +25,8 @@
 - Link-like block은 Markdown link paragraph로 출력된다.
 - Formula는 inline/block 여부를 metadata와 class로 판단한다.
 - Text block은 SE4 list를 Markdown list 문단으로 만들고, 추천 상품형 text 묶음은 하나의 list paragraph로 정리한다.
+- Text block은 text module 안의 loose text-like child를 문단으로 보존한다.
+- Image group과 image strip은 같은 imageGroup AST/output option family를 공유한다.
 - Heading block은 text가 있는 section title만 heading으로 만들고, 빈 section title placeholder는 출력하지 않는다.
 - Sticker는 image AST지만 `mediaKind: "sticker"`로 표시되어 asset 정책의 영향을 받는다.
 - `videos`는 parsed `video` block에서 추출한다.

@@ -28,6 +28,8 @@ The skill is for repository workflow and parser block responsibility. Do not rec
 - Do not close because the implementation could be cleaner. Merge first when the block is valid, then refine locally.
 - Review the PR at the target block boundary: what input shape it claims, what AST it emits, where it sits in `supportedBlocks`, and which neighboring blocks might overlap.
 - Check whether the PR keeps first-match parser behavior coherent for the editor family.
+- Check whether the PR preserves meaningful content instead of silently returning an empty output.
+- Check whether descendant selectors and module-data lookup stay inside the owning editor component boundary.
 - If a PR has merge conflicts but should otherwise be merged, resolve every conflict, rerun required verification, and merge only after the branch is mergeable.
 - For every PR that will be merged, run the required verification before merging.
 
@@ -82,6 +84,11 @@ Refinement criteria:
 - The block should not make another block meaningless.
 - The block should not blur boundaries between neighboring blocks.
 - The editor family should keep mutually exclusive, justified parser block responsibilities.
+- A fallback block should not hide an unsupported concrete media, table, code, widget, or link-like component.
+- A matched node with meaningful content should emit AST output or throw; empty output is allowed only for explicit chrome, spacer, placeholder, or empty known component cases.
+- First-match ordering risks should be covered by focused specs with positive and near-miss cases.
+- Module or component data lookup should not cross into the next sibling component unless the editor format explicitly requires it.
+- Shared AST/output option families should have consistent output option behavior or a focused spec documenting the exception.
 - Aggressive refactoring is allowed when it makes these boundaries clearer, including modifying, merging, removing, or reordering existing blocks.
 - Keep the refactor scoped to parser block responsibility. Change renderer or AST contracts only when the parser block boundary cannot be made correct otherwise.
 

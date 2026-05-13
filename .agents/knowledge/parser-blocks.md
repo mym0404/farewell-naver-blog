@@ -12,7 +12,7 @@
 - 첫 번째로 match된 block만 convert를 실행한다.
 - match되는 block이 없으면 parser는 실패한다.
 - 빈 배열 반환은 document title, spacer, top-level line break, HTML 주석, 빈 editor component처럼 의도적으로 버리는 node에만 사용한다.
-- 알려진 component가 파싱 후 의미 있는 출력이 없으면 빈 배열을 반환할 수 있다.
+- 알려진 component가 파싱 후 의미 있는 출력이 없으면 빈 배열을 반환할 수 있지만, 내용 있는 node를 조용히 버리면 안 된다.
 - 내용이 있는 node를 match했는데 변환할 수 없으면 block이 throw한다.
 
 ## Context
@@ -27,6 +27,24 @@
 - Container는 AST를 직접 만들기보다 editor의 현재 parser block list를 재사용한다.
 - Leaf는 paragraph, image, table, code처럼 실제 output block을 만든다.
 - 현재 Container 계열은 legacy wrapper를 풀어 실제 content leaf로 넘기는 용도에 가깝다.
+
+## Block Utilities
+- Block class와 adjacent spec은 editor별 `blocks/*` 바로 아래에 둔다.
+- Block class가 아닌 editor-local helper module은 두 개 이상의 block이 공유할 때만 editor별 `blocks/util/*`에 둔다.
+- 두 개 이상의 editor family가 공유하는 helper는 `core` 또는 `common` 아래의 명확한 parser boundary로 올린다.
+- 한 block만 쓰는 helper는 크기와 무관하게 해당 block 파일 안에 둔다.
+- 기존 경로에서 새 helper 위치를 re-export하지 않고, 사용하는 block이 `blocks/util/*`를 직접 import한다.
+
+## Quality Criteria
+- Parser block은 하나의 명확한 DOM/content family를 책임진다.
+- `match()`는 root component, module type, semantic wrapper처럼 자기 책임의 경계를 먼저 확인한다.
+- Descendant selector는 nested component나 sibling module data를 훔치지 않도록 editor boundary 안에서만 쓴다.
+- Fallback block은 더 구체적인 media, table, code, widget block을 가리지 않아야 한다.
+- First-match 순서가 의미를 결정하면 adjacent spec으로 대표 충돌 사례를 고정한다.
+- 내용 있는 matched node는 AST로 보존하거나 명시적인 error로 드러낸다.
+- 빈 배열 반환은 document chrome, spacer, empty placeholder, empty known component처럼 의도된 discard만 허용한다.
+- 여러 block이 같은 AST/output option family를 만들면 output option 적용 여부를 spec으로 고정한다.
+- Public sample fixture는 live failure regression을 맡고, block boundary와 near-miss 사례는 adjacent parser block spec이 맡는다.
 
 ## Output Options
 - Parser block의 `outputOptions`는 사용자가 선택할 수 있는 Markdown 형식 차이가 남아 있는 block의 metadata다.
